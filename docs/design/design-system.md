@@ -44,7 +44,11 @@ Use inline, compact provenance labels such as `GARMIN · UPDATED TODAY`, `ENTERE
 
 ## Components and shadcn
 
-Use shadcn as the accessible primitive layer: inspect installed components and project configuration, search official components or registries before recreating an interaction, and compose primitives when appropriate. Apply Stride's semantic tokens to their surfaces, borders, focus, and states. Do not initialize or add components solely to make the repository look complete. Radix bones, Stride skin.
+Use shadcn as the accessible primitive layer: inspect installed components and project configuration, search official components or registries before recreating an interaction, and compose primitives when appropriate. Apply Stride's semantic tokens to their surfaces, borders, focus, and states. The foundation is initialized with the official shadcn CLI for Next.js, React 19, Tailwind v4, and Radix, with `components.json` and the CLI-generated `cn` utility at `src/lib/utils.ts`. No unused component catalog is installed. Add primitives only when an actual interaction needs them.
+
+Tailwind utilities inside React components own layout, responsive behavior, typography, and component appearance. Reserve `globals.css` for tokens, base styles, and global accessibility defaults. Use `bg-background`, `bg-surface`, `bg-surface-raised`, `bg-surface-inset`, `text-foreground`, `text-muted`, `text-muted-foreground`, `text-accent`, `border-border`, `outline-focus`, `font-sans`, `font-metric`, `font-mono`, `rounded-control`, and `rounded-surface`.
+
+Standard shadcn color aliases map to Night Track roles: card → surface, popover/secondary → raised surface, primary → accent, destructive → danger, input → border, and ring → focus. Standard small/medium radii map to control, large/extra-large to surface. Adapt registry styles before use: Stride's `muted` means supporting text, so replace registry `bg-muted` surfaces with `bg-surface-raised`. shadcn supplies primitive structure; Night Track remains the visual system.
 
 ## Loading and motion
 
@@ -59,3 +63,5 @@ Preserve information hierarchy from desktop to mobile. The references show a des
 ## Reference use
 
 Before styling a screen, inspect its matching PNG at the target viewport and the system references. Compare implementation screenshots at the same viewport, iterate on material differences, and retain accessible focus, contrast, and reduced-motion behavior. System patterns include the contextual sidebar, recommendation anatomy, decision ledger, provenance rows, sync-state banners, onboarding stepper, verdict rows, and restrained coach activity indicator; reuse these where the screen needs them rather than creating new visual idioms.
+
+Reference images are read-only inputs, never application assets. Do not modify, recreate, transform, or derive production assets from them without explicit instruction. Keep temporary comparison screenshots untracked in `test-results/` or outside the repository; do not commit visual validation evidence by default.

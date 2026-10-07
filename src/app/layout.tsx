@@ -4,6 +4,7 @@ import {
   IBM_Plex_Mono,
   Instrument_Sans,
 } from "next/font/google";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
 const instrumentSans = Instrument_Sans({
@@ -34,7 +35,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${instrumentSans.variable} ${barlowCondensed.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={cn(
+        instrumentSans.variable,
+        barlowCondensed.variable,
+        ibmPlexMono.variable,
+        "h-full antialiased",
+      )}
     >
       <body className="min-h-full">{children}</body>
     </html>

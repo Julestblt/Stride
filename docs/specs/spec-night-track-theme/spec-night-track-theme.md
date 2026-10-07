@@ -16,14 +16,14 @@ Stride needs a reusable visual foundation before its first authentication screen
 ## Capabilities
 
 - **CAP-1: Apply the Night Track visual language.** The application can apply consistent color, typography, surface, border, and state tokens. **Success:** the foundation page renders with semantic Night Track tokens, and components do not need scattered palette values.
-- **CAP-2: Provide usable global interaction states.** Keyboard focus, disabled, invalid, skeleton, and motion defaults are available. **Success:** focus and validation remain visible, and reduced-motion preference removes nonessential movement.
+- **CAP-2: Provide usable global interaction states.** Keyboard focus, disabled, invalid, and reduced-motion defaults are available globally; loading skeletons use shadcn when needed. **Success:** focus and validation remain visible, and reduced-motion preference removes nonessential movement.
 
 ## Constraints
 
 - Treat the supplied system PNGs as the visual source of truth.
 - Use the repository's Tailwind CSS v4, Next.js font loading, and accessible React patterns.
 - Use semantic CSS variables and Tailwind theme names.
-- Keep the current page a small foundation surface. Do not add an application shell, dashboard, authentication UI, or new dependency.
+- Keep the current page a small foundation surface. Do not add an application shell, dashboard, authentication UI, or unrelated dependency. Initialize shadcn as the accessible primitive foundation without adding unused components.
 - Keep the design predominantly graphite and chalk; reserve Volt for meaningful emphasis.
 
 ## Non-goals
