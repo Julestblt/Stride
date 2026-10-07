@@ -23,3 +23,31 @@ body:
       description: List reliable steps and relevant environment details.
     validations:
       required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Expected fix scope
+      description: Describe the intended correction and what is out of scope.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that show the issue is fixed.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Link relevant issues, PRD requirements, architecture, or design documents.
+    validations:
+      required: false
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing expectations
+      description: List expected regression tests and other verification evidence.
+    validations:
+      required: true

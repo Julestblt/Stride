@@ -16,24 +16,24 @@ body:
     validations:
       required: true
   - type: textarea
-    id: problem
+    id: objective
     attributes:
-      label: Problem
-      description: Who has this problem and what is difficult today?
-    validations:
-      required: true
-  - type: textarea
-    id: outcome
-    attributes:
-      label: Desired outcome
-      description: What should become possible?
+      label: Objective
+      description: State the outcome this issue should deliver.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
       label: Scope
-      description: State what is included and explicitly out of scope.
+      description: State what is included.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: State what this issue explicitly does not include.
     validations:
       required: true
   - type: textarea
@@ -52,10 +52,17 @@ body:
       description: Link prerequisite issues or enter None.
       placeholder: None
   - type: textarea
-    id: verification
+    id: references
     attributes:
-      label: Verification
-      description: List expected tests, review, or other completion evidence.
+      label: References
+      description: Link the BMAD spec, PRD requirements, epic, ADR, or design artifact.
+    validations:
+      required: true
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing expectations
+      description: List expected tests and other verification evidence.
     validations:
       required: true
   - type: textarea
