@@ -15,7 +15,7 @@ Open http://localhost:3000.
 
 ## Project direction
 
-See the [product vision](docs/product/vision.md) and [architecture overview](docs/architecture/overview.md). Agent contribution rules are in [AGENTS.md](AGENTS.md).
+See the [product vision](docs/product/vision.md), [planning workflow](docs/planning-workflow.md), and [architecture overview](docs/architecture/overview.md). Agent contribution rules are in [AGENTS.md](AGENTS.md).
 
 ## Configuration
 

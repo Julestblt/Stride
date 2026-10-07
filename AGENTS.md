@@ -32,6 +32,13 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 - Run the relevant lint, typecheck, unit, browser, and build checks for the change. Add meaningful domain unit tests; do not test implementation trivia.
 - Update documentation when decisions, setup, boundaries, or user-visible behavior change.
 
+## Product planning
+
+- Use the official BMAD skills installed under `.agents/skills` for discovery, product artifacts, UX, architecture, and scoped implementation when appropriate. See `docs/planning-workflow.md` for the mapping to Stride's canonical documents.
+- Keep accepted product and architecture decisions in `docs/product`, `docs/design`, `docs/architecture`, `docs/adr`, and `docs/epics`.
+- GitHub Issues are the only execution tracker. Do not create or maintain local ticket trees, TODO backlogs, or mirrored issue status. Epic documents describe capability boundaries without execution state.
+- Start implementation from a GitHub Issue and carry its acceptance criteria, linked artifacts, plan, and verification into the pull request.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
