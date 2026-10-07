@@ -6,7 +6,11 @@ GitHub Issues and Pull Requests are the project source of truth. GitHub Projects
 
 Discovery and product brief lead to a reviewed PRD, UX and architecture decisions, and capability epics where the scope warrants them. Epics are defined in BMAD/product documents; approved execution work is created only as GitHub Issues. Implementation issues should state acceptance criteria, dependencies, and verification. Work proceeds on a feature branch through implementation, tests, review, and pull request.
 
-Use the branch patterns in `AGENTS.md` and Conventional Commit prefixes. Keep changes small, inspect staged diffs before commits, and use pull requests for review. Do not merge your own pull requests in automated workflows.
+One GitHub Issue normally maps to one branch and one focused Pull Request. Start each branch from up-to-date `main`; use the branch patterns in `AGENTS.md` and do not create long-lived epic branches or use GitFlow. Keep changes small, inspect staged diffs before commits, and use Conventional Commits. Do not merge your own pull requests in automated workflows.
+
+The issue lifecycle is Planned → Ready → In Progress → In Review → Done. GitHub owns status. Claim work by setting `status:in-progress`; set `status:review` when its PR is ready. Do not mark an issue Done before its completing PR is merged. See the [planning workflow](planning-workflow.md) for issue context requirements, review separation, and native PR-to-Issue closure behavior.
+
+Pull requests must state purpose, scope, important decisions, validation, and any limitations; include screenshots for UI changes. Use `Closes #123` only when the PR fully completes the issue. Use `Related to #123` for partial work. GitHub closes a linked issue when the PR is merged into the default branch.
 
 ## Suggested labels
 
