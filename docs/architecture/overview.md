@@ -1,0 +1,21 @@
+# Architecture overview
+
+Stride is a web-first Next.js application using TypeScript and React Server Components. The initial repository contains an App Router shell, validated environment configuration, and a server-only Supabase client boundary.
+
+## Current boundaries
+
+- `src/app` owns routing, layouts, metadata, and page composition.
+- `src/lib` contains small environment-safe modules that are not tied to a product feature.
+- `src/server` contains server-only integrations. Supabase access starts here.
+- Product features should be grouped under `src/features/<feature>` when they exist.
+- Domain calculations should be framework-independent and live close to their domain.
+
+Directories are added when useful code needs them; empty future structures are intentionally omitted.
+
+## Request and data direction
+
+The browser talks to the Stride application. Server code owns privileged integrations and access control. Supabase provides PostgreSQL, Auth, and future Storage. Garmin data should pass through a dedicated integration service, be normalized, then enter the Stride backend.
+
+## Native client path
+
+The web application is the first client. Keep business rules and API contracts independent of page components so a native client can be added later without duplicating the domain.
