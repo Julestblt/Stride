@@ -3,19 +3,20 @@
 - Status: Proposed for discovery
 - Inputs: [Product brief](../product/brief.md), [draft PRD](../product/prd.md), and [design system direction](design-system.md)
 
-## Navigation recommendation
+## Approved navigation direction
 
-Use a small set of athlete jobs as the primary navigation. Do not expose every data domain or AI specialist as a top-level destination.
+Use the six athlete destinations shown in the approved system reference. Do not expose every data domain or AI specialist as a top-level destination.
 
-| Destination | Athlete question                             | Candidate contents                                                                      |
-| ----------- | -------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Today       | What matters for my next training decision?  | Next session, concise context, readiness caveats, and a route into Coach                |
-| Plan        | What am I training toward, and what is next? | Weekly plan, goal event, schedule, and reviewed plan changes                            |
-| Activities  | What have I done?                            | Road and trail history, activity details, and sync freshness                            |
-| Progress    | How is my training changing over time?       | Fitness and training trends, introduced only when the underlying measures are validated |
-| Coach       | What should I understand or discuss?         | Context-aware conversation and explainable proposals                                    |
+| Destination | Athlete question                             | Candidate contents                                                               |
+| ----------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
+| Today       | What matters for my next training decision?  | Next session, concise context, readiness caveats, and recent run                 |
+| Coach       | What should I understand or discuss?         | Context-aware conversation, open decisions, and explainable proposals            |
+| Plan        | What am I training toward, and what is next? | Weekly plan, goal event, schedule, and reviewed plan changes                     |
+| Activities  | What have I done?                            | Road and trail history, activity details, plan versus actual, and sync freshness |
+| Progress    | How is my training changing over time?       | Validated fitness, recovery, prediction, and record views                        |
+| Races       | How am I preparing for an event?             | Goal races, course strategy, roadbook, and fueling                               |
 
-Account, data connections, permissions, and preferences belong in a secondary profile/settings area. Race planning should appear within Plan when a goal race exists; a dedicated Races destination should be added only if race tasks form a frequent, distinct journey.
+Account, data connections, permissions, and preferences belong behind the profile/settings area. Keep destination-specific context in the sidebar group so navigation answers what is relevant around the current work. The global navigation must not duplicate that context.
 
 ## Primary navigation paths
 
@@ -31,6 +32,10 @@ Account, data connections, permissions, and preferences belong in a secondary pr
 - Put detailed calculations and activity fields behind a clear drill-down.
 - Keep Coach available from relevant contexts and pass only authorized context to it.
 - Use the same activity concepts for road and trail while allowing terrain-specific detail where it changes interpretation.
+
+## Responsive navigation
+
+On desktop, the sidebar scopes the athlete's current goal and exposes contextual navigation; the center inset holds the work, and an optional coach panel explains who is helping. On mobile, navigation becomes a sheet and four primary destinations remain thumb-reachable, with Ask in the center. Preserve the destination model and contextual hierarchy rather than shrinking the desktop sidebar.
 
 ## Open UX questions
 
