@@ -84,6 +84,18 @@
       "sourceType": "github",
       "skillPath": "skills/bmod-method/SKILL.md",
       "computedHash": "c2b24dcac0c2cdbbecaad179d1c86d8df031ccf7ed451bc3a9ebdbcdcb88a268"
+    },
+    "ponytail": {
+      "source": "jorgeasaurus/agent-skills",
+      "sourceType": "github",
+      "skillPath": "ponytail/SKILL.md",
+      "computedHash": "391e15aa94a33baaa9984e597f840c97481db8acd8c7d3e18cb485c8e2a24729"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "f615de216e085a84e31593ad0fa9062232adc40cd87b7c7ab2b8e49abf6500be"
     }
   }
 }
