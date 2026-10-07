@@ -1,0 +1,39 @@
+name: Product or architecture planning
+description: Scope discovery, design, research, or architecture work.
+title: "[Planning]: "
+body:
+  - type: textarea
+    id: source
+    attributes:
+      label: Context and source artifacts
+      description: Link the relevant product vision, brief, PRD, UX, architecture, or epic.
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision or outcome needed
+      description: State the uncertainty to resolve and the decision this work should enable.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and exclusions
+      description: Define the research or planning boundary and what is not included.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Completion criteria
+      description: List the artifact, evidence, and review that will complete this issue.
+    validations:
+      required: true
+  - type: textarea
+    id: handoff
+    attributes:
+      label: Implementation handoff
+      description: Note which product requirements, epics, or GitHub Issues may follow. Do not create a local task list.
+    validations:
+      required: false

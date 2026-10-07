@@ -1,8 +1,6 @@
 name: Bug report
 description: Report incorrect or unexpected behavior.
 title: "[Bug]: "
-labels:
-  - type:bug
 body:
   - type: textarea
     id: observed
