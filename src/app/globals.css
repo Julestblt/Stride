@@ -1,175 +1,130 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 :root {
-  --background: #f5f4ef;
-  --foreground: #1f2925;
-  --muted: #727a72;
-  --line: #d9dbd1;
-  --accent: #bd4f32;
+  color-scheme: dark;
+  --background: #080907;
+  --foreground: #edece6;
+  --surface: #131411;
+  --surface-raised: #1a1b18;
+  --surface-inset: #0c0d0b;
+  --border: #262722;
+  --muted: #b3b2aa;
+  --muted-foreground: #8a8981;
+  --accent: #d5ff3f;
+  --accent-foreground: #080907;
+  --success: #71d3a4;
+  --warning: #f4b544;
+  --danger: #ff6a3d;
+  --provider: #5e8fb8;
+  --focus: var(--accent);
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--foreground);
+  --primary: var(--accent);
+  --primary-foreground: var(--accent-foreground);
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--foreground);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--background);
+  --input: var(--border);
+  --ring: var(--focus);
+  --stride-radius-control: 6px;
+  --stride-radius-surface: 8px;
+  --stride-font-ui: var(--font-instrument-sans), sans-serif;
+  --stride-font-metric: var(--font-barlow-condensed), sans-serif;
+  --stride-font-technical: var(--font-ibm-plex-mono), monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-inset: var(--surface-inset);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-provider: var(--provider);
+  --color-focus: var(--focus);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--stride-font-ui);
+  --font-metric: var(--stride-font-metric);
+  --font-mono: var(--stride-font-technical);
+  --radius-control: var(--stride-radius-control);
+  --radius-surface: var(--stride-radius-surface);
+  --radius-sm: var(--stride-radius-control);
+  --radius-md: var(--stride-radius-control);
+  --radius-lg: var(--stride-radius-surface);
+  --radius-xl: var(--stride-radius-surface);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
-}
-
-.page-shell {
-  display: flex;
-  min-height: 100svh;
-  flex-direction: column;
-  padding: 0 clamp(1.25rem, 6vw, 6rem);
-}
-
-.topbar,
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.topbar {
-  min-height: 5.5rem;
-  border-bottom: 1px solid var(--line);
-}
-
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  color: inherit;
-  font-size: 1.25rem;
-  font-weight: 650;
-  letter-spacing: -0.06em;
-  text-decoration: none;
-}
-
-.wordmark-mark {
-  display: grid;
-  width: 1.8rem;
-  height: 1.8rem;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fffaf1;
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: -0.08em;
-}
-
-.topbar-note,
-.footer,
-.eyebrow,
-.note-index,
-.footer-meta {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.015em;
-}
-
-.topbar-note,
-.footer {
-  color: var(--muted);
-}
-
-.intro {
-  width: min(100%, 56rem);
-  margin: auto;
-  padding: 7rem 0 8rem;
-}
-
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.status-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-h1 {
-  margin: 2rem 0 1.5rem;
-  font-size: clamp(4rem, 10vw, 8rem);
-  font-weight: 500;
-  letter-spacing: -0.09em;
-  line-height: 0.91;
-}
-
-h1 span {
-  color: var(--accent);
-}
-
-.intro-copy {
-  max-width: 29rem;
-  margin: 0;
-  color: #626b64;
-  font-size: clamp(1rem, 1.7vw, 1.2rem);
-  line-height: 1.7;
-}
-
-.foundation-note {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  max-width: 31rem;
-  margin-top: 4rem;
-  padding: 1.1rem 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.note-index {
-  color: var(--accent);
-}
-.foundation-note p {
-  flex: 1;
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-.note-arrow {
-  color: var(--accent);
-  font-size: 1.2rem;
-}
-
-.footer {
-  min-height: 4.75rem;
-  border-top: 1px solid var(--line);
-}
-
-@media (max-width: 540px) {
-  .topbar-note {
-    display: none;
+@layer base {
+  * {
+    border-color: var(--border);
   }
-  .intro {
-    padding: 5rem 0;
+
+  html {
+    background: var(--background);
   }
-  h1 {
-    font-size: clamp(3.5rem, 17vw, 5.25rem);
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--stride-font-ui);
+    text-rendering: optimizeLegibility;
   }
-  .footer {
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.4rem;
+
+  ::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+
+  :where(button, input, select, textarea):disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+
+:where(input, select, textarea)[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

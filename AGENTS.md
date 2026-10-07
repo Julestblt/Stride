@@ -24,6 +24,28 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 - Never commit secrets. Do not manually edit generated files when tooling owns them.
 - Do not merge pull requests in automated workflows.
 
+## Frontend conventions
+
+- Tailwind CSS v4 is the primary styling system. Prefer utility classes inside React components, including responsive breakpoint utilities.
+- Reserve `globals.css` for theme tokens, resets, global accessibility behavior, and truly global styles. Do not add page-specific or component-specific global classes without a strong technical reason.
+- Consume semantic theme utilities instead of raw colors. Keep CSS variables and `@theme inline` as the token source of truth.
+- shadcn/ui is the preferred accessible primitive layer. Night Track controls colors, typography, radii, spacing, and final appearance; shadcn presets must not replace it.
+- Reuse existing primitives before adding abstractions. Avoid unnecessary wrappers, utilities, and duplicate UI libraries.
+- Use `next/font` for project fonts. Preserve keyboard navigation, focus-visible states, and reduced-motion behavior.
+
+## Component conventions
+
+- Prefer small, composable React components. Keep business/domain logic out of presentational primitives.
+- Add shadcn primitives only when they solve an actual interaction or accessibility need. Do not recreate an existing shadcn/Radix primitive without a good reason.
+- Do not add UI libraries that duplicate shadcn/Radix functionality.
+- Adapt registry component styles to Night Track before use. `text-muted` is supporting text in Stride; use `bg-surface-raised` for muted surfaces rather than shadcn's `bg-muted` assumption. Use `rounded-control` and `rounded-surface` for explicit shape roles.
+
+## Design reference conventions
+
+- `design/references/**` is read-only and interpreted visually only. Never modify, recreate, or use reference images as application assets.
+- Never generate, transform, or commit derivative images or derive production assets unless explicitly requested.
+- Temporary visual validation artifacts must remain untracked. Store local screenshots in ignored `test-results/` or outside the repository, never beside references.
+
 ## Delivery
 
 - Follow the GitHub issue workflow: clarify scope, plan, branch, implement, validate, review, and open a pull request.

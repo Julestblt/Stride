@@ -36,9 +36,10 @@ Scale planning to uncertainty and impact. A small, clear issue can go directly t
 | UX and information architecture | docs/design/information-architecture.md and docs/design | Navigation and accepted experience decisions                                                  |
 | Architecture                    | docs/architecture and docs/adr                          | Shared technical boundaries and durable decisions                                             |
 | Epics                           | docs/epics                                              | Capability contracts and dependency rationale, without status                                 |
+| BMAD implementation specs       | docs/specs                                              | Focused contracts linked from GitHub Issues                                                   |
 | Execution work and status       | GitHub Issues and Pull Requests                         | Assignment, acceptance, dependencies, implementation, review, and state                       |
 
-When a BMAD workflow creates a working draft or memlog in _bmad-output, use it to reach a reviewed decision and promote accepted content into the canonical artifact. Do not use a local backlog, ticket tree, TODO file, or BMAD status file to mirror GitHub execution state.
+When a BMAD workflow creates a working draft or memlog in _bmad-output, use it to reach a reviewed decision and promote accepted content into the canonical artifact. Focused implementation specs live in docs/specs and are linked by their GitHub Issue. Do not use a local backlog, ticket tree, TODO file, or BMAD status file to mirror GitHub execution state.
 
 ## Skill loading policy
 
@@ -98,7 +99,7 @@ One issue normally maps to one branch and one focused pull request. Branch from 
 2. Write the implementation plan into the GitHub issue before code when the work needs a plan; keep the issue as durable handoff context.
 3. Branch from current `main` using the required issue branch pattern.
 4. Implement only the scoped outcome, add relevant tests, and make small atomic Conventional Commits.
-5. Run relevant validation and open a PR linked to the issue. Include purpose, scope, material decisions, validation, screenshots for UI changes, limitations, and review notes. Replace the status label with `status:review`.
+5. Run relevant validation and open a PR linked to the issue. Include purpose, scope, material decisions, validation, visual verification results for UI changes, limitations, and review notes. Replace the status label with `status:review`.
 6. Request independent review; use the installed `bmad-code-review` skill for meaningful PRs. A lighter review is suitable for trivial changes. Never skip review for authentication, Supabase RLS, Garmin authentication or ingestion, athlete data, AI orchestration, plan adaptation, migrations, or security changes. The implementation agent does not approve or merge its own PR.
 7. When the PR fully completes its issue, include GitHub's native closing keyword such as `Closes #123`. For partial work, use `Related to #123` instead. GitHub closes the issue when the PR is merged into the repository's default branch. Do not add custom auto-close automation. Verify closure after merge when a GitHub connector is available; explicitly close only if native closure did not occur. Never close before merge.
 
@@ -106,4 +107,6 @@ GitHub Issues, PRs, labels, optional milestones, GitHub Actions, and optional Gi
 
 ## Initial use
 
-The current product brief and PRD are drafts based on the supplied product vision, not user research or approved MVP commitments. The first execution issue is [#1](https://github.com/Julestblt/Stride/issues/1), which tracks discovery for E-00. Before the first BMAD workflow run, ask `bmad` to create and activate the Stride product initiative. The next BMAD step is discovery to validate the primary athlete segment and the candidate first-release boundary. Do not create implementation issues from speculative roadmap items before those decisions are reviewed.
+The current product brief and PRD are drafts based on the supplied product vision, not user research or approved MVP commitments. The first execution issue is [#1](https://github.com/Julestblt/Stride/issues/1), which tracks discovery for E-00. Before the first BMAD workflow run, ask `bmad` to create and activate the Stride product initiative. The next product BMAD step is discovery to validate the primary athlete segment and the candidate first-release boundary. The explicitly approved Night Track frontend foundation can proceed independently under Issue #3. Do not create implementation issues from speculative roadmap items before those decisions are reviewed.
+
+Temporary screenshots for visual validation must remain untracked in `test-results/` or outside the repository. Reference images under `design/references/**` are read-only inputs, never application assets or generated evidence.
