@@ -18,10 +18,12 @@ export function SignInForm({
   action,
   magicAction,
   linkError = false,
+  missingRecoveryVerifier = false,
 }: {
   action: AuthAction;
   magicAction: AuthAction;
   linkError?: boolean;
+  missingRecoveryVerifier?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, initialAuthState);
   const [magicState, magicFormAction, magicPending] = useActionState(
@@ -66,8 +68,9 @@ export function SignInForm({
         <FormFeedback
           state={{
             status: "error",
-            message:
-              "This link is invalid or has expired. Request a fresh link to continue.",
+            message: missingRecoveryVerifier
+              ? "We couldn't find the verification state for this recovery link. Request a fresh link from this browser and open the newest message here. If you already did that, an email preview or link tracker may have used the one-time link first."
+              : "This link is invalid or has expired. Request a fresh link to continue.",
           }}
         />
       )}
