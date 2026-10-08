@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { initialAuthState, type AuthAction } from "@/features/auth/schemas";
 import { passwordPolicy } from "@/features/auth/password-policy";
@@ -27,7 +28,7 @@ export function ResetForm({
   const valid =
     passwordPolicy(password, email).valid && password === confirmation;
   return (
-    <div className="grid flex-1 md:grid-cols-3">
+    <div className="grid flex-1 content-start md:grid-cols-3 md:content-stretch">
       <RecoveryStage number={1} title="Ask for a link" active={false}>
         <p className="text-sm leading-relaxed text-muted">
           Need another link? Request a fresh one with your account email.
@@ -84,8 +85,16 @@ export function ResetForm({
               disabled={pending || state.status === "success"}
             />
             {confirmation && !mismatch && (
-              <p className="text-[13px] text-success" role="status">
-                ✓ Passwords match
+              <p
+                className="flex items-center gap-2 text-meta text-success"
+                role="status"
+              >
+                <CheckIcon
+                  aria-hidden="true"
+                  className="size-3"
+                  strokeWidth={3}
+                />
+                Passwords match
               </p>
             )}
             <FormFeedback state={state} />

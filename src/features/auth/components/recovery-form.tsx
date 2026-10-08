@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { MailIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   initialAuthState,
@@ -9,7 +8,7 @@ import {
   type AuthState,
 } from "@/features/auth/schemas";
 import { EmailField, FormFeedback } from "./form-controls";
-import { RecoveryStage } from "./recovery";
+import { EnvelopeMark, RecoveryStage } from "./recovery";
 
 export function RecoveryForm({ action }: { action: AuthAction }) {
   const [inbox, setInbox] = useState<AuthState>();
@@ -43,7 +42,7 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
     return () => clearInterval(timer);
   }, [sent, cooldownUntil]);
   return (
-    <div className="grid flex-1 md:grid-cols-3">
+    <div className="grid flex-1 content-start md:grid-cols-3 md:content-stretch">
       <RecoveryStage number={1} title="Ask for a link" active={!sent}>
         <p className="text-sm leading-relaxed text-muted">
           Enter the email you signed up with. Use the reset link in your inbox
@@ -77,17 +76,17 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
           <>
             <div
               role="status"
-              className="flex flex-col gap-3.5 rounded-surface border border-border bg-surface p-5"
+              className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4.5 md:gap-3.5 md:p-5"
             >
-              <MailIcon aria-hidden="true" className="h-7 w-9 text-accent" />
-              <p className="text-[15px] leading-relaxed">
+              <EnvelopeMark />
+              <p className="text-body">
                 If an account exists for{" "}
                 <strong className="font-semibold break-all">
                   {inbox?.email}
                 </strong>
                 , you&apos;ll receive a reset link.
               </p>
-              <p className="text-[13px] leading-relaxed text-muted-foreground">
+              <p className="text-meta text-muted-foreground">
                 Nothing after a few minutes? Check spam, or resend.
               </p>
             </div>
@@ -102,20 +101,27 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
                 type="submit"
                 variant="outline"
                 disabled={pending || remaining > 0}
-                className="w-full"
+                className="h-12 w-full text-body disabled:text-muted-foreground disabled:opacity-100 md:h-11.5"
               >
-                {pending
-                  ? "Requesting link…"
-                  : remaining > 0
-                    ? `Resend in 0:${String(remaining).padStart(2, "0")}`
-                    : "Resend reset link"}
+                {pending ? (
+                  "Requesting link…"
+                ) : remaining > 0 ? (
+                  <>
+                    Resend in{" "}
+                    <span className="font-metric text-[17px] font-semibold tabular-nums">
+                      0:{String(remaining).padStart(2, "0")}
+                    </span>
+                  </>
+                ) : (
+                  "Resend reset link"
+                )}
               </Button>
             </form>
             <Button
               type="button"
               variant="link"
               disabled={pending}
-              className="h-auto justify-start p-0 text-sm"
+              className="h-auto min-h-11 justify-start self-start p-0 text-sm md:min-h-0"
               onClick={() => {
                 setInbox(undefined);
                 setHideFeedback(true);

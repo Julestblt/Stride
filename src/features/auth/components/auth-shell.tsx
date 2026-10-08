@@ -2,23 +2,38 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function Wordmark() {
+export function Wordmark({
+  compactOnMobile = false,
+}: {
+  compactOnMobile?: boolean;
+}) {
   return (
     <Link
       href="/sign-in"
       aria-label="Stride sign in"
-      className="relative inline-flex w-fit items-center gap-2.5 text-foreground"
+      className={cn(
+        "relative inline-flex w-fit items-center text-foreground",
+        compactOnMobile ? "gap-2 md:gap-2.5" : "gap-2.5",
+      )}
     >
       <svg
         aria-hidden="true"
         viewBox="0 0 24 24"
-        className="size-6 fill-none stroke-accent"
+        className={cn(
+          "fill-none stroke-accent",
+          compactOnMobile ? "size-4.5 md:size-6" : "size-6",
+        )}
         strokeWidth="3"
         strokeLinecap="round"
       >
         <path d="m5 21 7-18m0 18 7-18" />
       </svg>
-      <span className="font-metric text-2xl font-bold tracking-wider italic">
+      <span
+        className={cn(
+          "font-metric font-bold tracking-wider italic",
+          compactOnMobile ? "text-lg md:text-2xl" : "text-2xl",
+        )}
+      >
         STRIDE
       </span>
     </Link>

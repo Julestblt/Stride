@@ -102,3 +102,30 @@ for (const width of [390, 1440]) {
     });
   }
 }
+
+for (const route of ["forgot-password", "reset-password"]) {
+  test(`${route} follows the mobile recovery layout`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/${route}`);
+    const back = page.getByRole("link", { name: "Back to sign in" });
+    const wordmark = page.getByRole("link", { name: "Stride sign in" });
+    const backBox = await back.boundingBox();
+    const wordmarkBox = await wordmark.boundingBox();
+    expect(backBox && wordmarkBox && backBox.x < wordmarkBox.x).toBe(true);
+    expect(backBox?.height).toBeGreaterThanOrEqual(44);
+    const stages = page.locator("section", {
+      has: page.getByRole("heading", { level: 2 }),
+    });
+    await expect(stages).toHaveCount(3);
+    const first = await stages.nth(0).boundingBox();
+    const second = await stages.nth(1).boundingBox();
+    expect(first && second && second.y > first.y && second.x === first.x).toBe(
+      true,
+    );
+    await expect(stages.nth(0)).toHaveCSS("border-top-width", "1px");
+    await expect(page.locator("main")).toHaveCSS(
+      "background-color",
+      "rgb(12, 13, 11)",
+    );
+  });
+}
