@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; reason?: string }>;
 }) {
   const parameters = await searchParams;
   return (
@@ -20,6 +20,7 @@ export default async function SignInPage({
         action={signIn}
         magicAction={sendMagicLink}
         linkError={parameters.error === "link"}
+        missingRecoveryVerifier={parameters.reason === "verifier"}
       />
     </AuthShell>
   );
