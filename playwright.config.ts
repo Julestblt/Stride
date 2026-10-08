@@ -7,6 +7,9 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3100",
     trace: "retain-on-failure",
+    launchOptions: {
+      args: ["--host-resolver-rules=MAP stride.test 127.0.0.1"],
+    },
   },
   projects: [
     {
@@ -14,10 +17,24 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: "npm run dev -- --port 3100",
-    url: "http://127.0.0.1:3100",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: "node tests/fixtures/auth-provider.mjs",
+      url: "http://127.0.0.1:3200",
+      reuseExistingServer: false,
+    },
+    {
+      command: "npm run dev -- --port 3100",
+      url: "http://127.0.0.1:3100",
+      reuseExistingServer: false,
+      timeout: 120_000,
+      env: {
+        PLAYWRIGHT_TEST: "1",
+        ALLOWED_DEV_ORIGINS: "stride.test",
+        NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:3200",
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "isolated-test-publishable-key",
+        SITE_URL: "http://127.0.0.1:3100",
+      },
+    },
+  ],
 });

@@ -12,6 +12,8 @@ Stride is a web-first Next.js application using TypeScript and React Server Comp
 
 Directories are added when useful code needs them; empty future structures are intentionally omitted.
 
+The authentication feature uses server actions, HTTP-only Supabase session cookies and a session-refresh proxy. See [authentication](authentication.md) for the routes, trusted callback origin, provider configuration and launch limitations.
+
 ## Request and data direction
 
 The browser talks to the Stride application. Server code owns privileged integrations and access control. Supabase provides PostgreSQL, Auth, and future Storage. Garmin data should pass through a dedicated integration service, be normalized, then enter the Stride backend.
