@@ -48,3 +48,6 @@ next-env.d.ts
 # Local workflow and visual validation artifacts
 /_bmad/render/
 /docs/design/evidence/
+
+# Raw design import archives
+/design/import/
