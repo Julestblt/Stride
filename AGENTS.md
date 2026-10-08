@@ -38,6 +38,7 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 - Prefer small, composable React components. Keep business/domain logic out of presentational primitives.
 - Add shadcn primitives only when they solve an actual interaction or accessibility need. Do not recreate an existing shadcn/Radix primitive without a good reason.
 - Do not add UI libraries that duplicate shadcn/Radix functionality.
+- UI has three layers: shadcn primitives in `src/components/ui`, Stride patterns in `src/components/stride`, and screen composition in `src/app` and `src/features`. Before creating a component or local style, check both layers and the `/design-system` gallery, then reuse or extend; add a new abstraction only for a genuinely new pattern. See `docs/design/design-system.md`.
 - Adapt registry component styles to Night Track before use. `text-muted` is supporting text in Stride; use `bg-surface-raised` for muted surfaces rather than shadcn's `bg-muted` assumption. Use `rounded-control` and `rounded-surface` for explicit shape roles.
 
 ## Design reference conventions

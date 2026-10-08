@@ -4,6 +4,7 @@ import {
   IBM_Plex_Mono,
   Instrument_Sans,
 } from "next/font/google";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -42,7 +43,9 @@ export default function RootLayout({
         "h-full antialiased",
       )}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <TooltipProvider>{children}</TooltipProvider>
+      </body>
     </html>
   );
 }
