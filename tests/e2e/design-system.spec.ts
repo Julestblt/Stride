@@ -165,3 +165,26 @@ test("mobile navigation uses a sheet and thumb-reachable tabs", async ({
   await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
 });
+
+test("interactive controls show a pointer cursor unless disabled", async ({
+  page,
+}) => {
+  await page.goto("/design-system");
+  await expect(
+    page.getByRole("button", { name: "Accept", exact: true }).first(),
+  ).toHaveCSS("cursor", "pointer");
+  await expect(page.getByRole("tab", { name: "Fitness" })).toHaveCSS(
+    "cursor",
+    "pointer",
+  );
+  await expect(page.getByRole("radio", { name: "Road" })).toHaveCSS(
+    "cursor",
+    "pointer",
+  );
+  await expect(
+    page.getByRole("checkbox", { name: "Keep me signed in" }),
+  ).toHaveCSS("cursor", "pointer");
+  await expect(
+    page.getByRole("button", { name: "Disabled", exact: true }),
+  ).toHaveCSS("cursor", "not-allowed");
+});
