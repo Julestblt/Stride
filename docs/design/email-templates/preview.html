@@ -15,7 +15,8 @@
         margin: 0;
         background: #0c0d0b;
         color: #edece6;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family:
+          "Instrument Sans", "Segoe UI", Arial, Helvetica, sans-serif;
       }
       .page {
         max-width: 1000px;
@@ -31,22 +32,32 @@
         padding-bottom: 24px;
       }
       .mark {
-        font-size: 25px;
-        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+        font-size: 27px;
+        font-weight: 700;
         font-style: italic;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
       }
-      .mark span {
+      .mark .bars {
+        display: inline-flex;
+        gap: 1px;
         color: #d5ff3f;
-        letter-spacing: -7px;
-        padding-right: 14px;
+        font:
+          normal 900 30px/1 Arial,
+          Helvetica,
+          sans-serif;
+        letter-spacing: 0;
       }
       .overline,
       .index,
       .meta-label {
         color: #8a8981;
         font:
-          11px/1.5 "Courier New",
+          11px/1.5 "IBM Plex Mono",
+          "Courier New",
           Courier,
           monospace;
         letter-spacing: 1.2px;
@@ -162,7 +173,11 @@
   <body>
     <main class="page">
       <header class="masthead">
-        <div class="mark"><span>//</span> STRIDE</div>
+        <div class="mark">
+          <span class="bars" aria-hidden="true"
+            ><span>/</span><span>/</span></span
+          ><span>STRIDE</span>
+        </div>
         <div class="overline">DESIGN STUDY / AUTH EMAILS</div>
       </header>
       <section class="intro">
