@@ -7,6 +7,9 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:3100",
     trace: "retain-on-failure",
+    launchOptions: {
+      args: ["--host-resolver-rules=MAP stride.test 127.0.0.1"],
+    },
   },
   projects: [
     {
@@ -27,6 +30,7 @@ export default defineConfig({
       timeout: 120_000,
       env: {
         PLAYWRIGHT_TEST: "1",
+        ALLOWED_DEV_ORIGINS: "stride.test",
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:3200",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "isolated-test-publishable-key",
         SITE_URL: "http://127.0.0.1:3100",

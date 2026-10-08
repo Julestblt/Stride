@@ -19,7 +19,7 @@ See the [product vision](docs/product/vision.md), [planning workflow](docs/plann
 
 ## Configuration
 
-The landing page runs without external credentials. Copy `.env.example` to `.env.local` when working on Supabase integration. Environment values are validated centrally; only public project URL and publishable key are currently used. Never add secrets to public variables or commit local environment files.
+The landing page runs without external credentials. Copy `.env.example` to `.env.local` when working on Supabase integration. Environment values are validated centrally; only public project URL and publishable key are currently used. Never add secrets to public variables or commit local environment files. When opening the dev server from another device or hostname, such as a LAN or Tailscale address, list the hostnames in `ALLOWED_DEV_ORIGINS` and restart the dev server. Use comma-separated hostnames without a scheme or port. Otherwise Next.js blocks the client bundles and pages render without interactivity.
 
 ## Validation
 
