@@ -2,8 +2,8 @@
 id: SPEC-night-track-theme
 companions:
   - ../../design/design-system.md
-  - ../../../design/references/system/01 · Product system.png
-  - ../../../design/references/system/02 · Reusable patterns.png
+  - ../../../design/references/system/product-system/screenshots/board.png
+  - ../../../design/references/system/reusable-patterns/screenshots/board.png
 sources: []
 ---
 
