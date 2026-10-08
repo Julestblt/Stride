@@ -4,21 +4,27 @@ Stride's approved visual direction is **Night Track**. The PNGs in [`design/refe
 
 ## Color
 
-| Token       | Value     | Use                                                                                   |
-| ----------- | --------- | ------------------------------------------------------------------------------------- |
-| Shell       | `#080907` | Global page background                                                                |
-| Inset       | `#0C0D0B` | Content inset and deepest panel                                                       |
-| Surface     | `#131411` | Cards and grouped content                                                             |
-| Raised      | `#1A1B18` | Selected rows and raised controls                                                     |
-| Hairline    | `#262722` | Subtle separators and restrained borders                                              |
-| Chalk       | `#EDECE6` | Primary text and high-contrast content                                                |
-| Secondary   | `#B3B2AA` | Body support text                                                                     |
-| Muted       | `#8A8981` | Metadata and quiet supporting text                                                    |
-| Volt        | `#D5FF3F` | Coach presence, primary action, selection, progress, and meaningful positive emphasis |
-| Garmin      | `#5E8FB8` | Provider provenance                                                                   |
-| Investigate | `#FF6A3D` | Failed or investigate state                                                           |
+| Token       | Utility root                        | Value     | Use                                                                                   |
+| ----------- | ----------------------------------- | --------- | ------------------------------------------------------------------------------------- |
+| Shell       | `background`                        | `#080907` | Global page background and sidebar                                                    |
+| Inset       | `surface-inset`                     | `#0C0D0B` | Content inset and deepest panel                                                       |
+| Surface     | `surface`                           | `#131411` | Cards, fields, menus and grouped content                                              |
+| Raised      | `surface-raised`                    | `#1A1B18` | Selected rows, hover and raised controls                                              |
+| Hairline    | `border`                            | `#262722` | Separators and restrained frames                                                      |
+| Strong line | `border-strong`, `input`            | `#34352F` | Field and outline-control borders, tags, chips                                        |
+| Subtle line | `border-subtle`                     | `#1F201C` | Inner dividers and progress tracks                                                    |
+| Chalk       | `foreground`                        | `#EDECE6` | Primary text and selected choice fill                                                 |
+| Secondary   | `muted`                             | `#B3B2AA` | Body support text                                                                     |
+| Muted       | `muted-foreground`                  | `#8A8981` | Metadata and quiet supporting text                                                    |
+| Dim         | `dim`                               | `#4A4B45` | Declined, removed and inactive marks                                                  |
+| Volt        | `accent`                            | `#D5FF3F` | Coach presence, primary action, selection, progress, and meaningful positive emphasis |
+| Success     | `success` (+ `-surface`, `-border`) | `#7FD4A0` | Done, accepted, improving, up to date                                                 |
+| Warning     | `warning` (+ `-border`)             | `#FFB547` | Needs you, watch, partial, retrying                                                   |
+| Investigate | `danger` (+ `-surface`, `-border`)  | `#FF6A3D` | Failed, expired or investigate state                                                  |
+| Garmin      | `provider`                          | `#5E8FB8` | Provider provenance                                                                   |
+| Zones       | `zone-1` … `zone-5`                 | see CSS   | Training intensity; zone 2 is the provider blue and zone 5 the danger orange          |
 
-Use Volt sparingly. Success, warning, danger, provider, and training-zone states need distinct semantic tokens; do not conflate status meaning with the brand accent. Do not scatter raw color values through components. Add or adjust semantic tokens only when a reference or actual state requires them.
+Values live once in `src/app/globals.css` and are exposed through `@theme inline`. Use Volt sparingly. Success, warning, danger, provider, and training-zone states have distinct semantic tokens; do not conflate status meaning with the brand accent. Do not scatter raw color values through components. Add or adjust semantic tokens only when a reference or actual state requires them.
 
 ## Typography
 
@@ -28,9 +34,13 @@ Use Volt sparingly. Success, warning, danger, provider, and training-zone states
 
 Load fonts with `next/font` from the root layout so they are self-hosted and avoid runtime font requests and layout shift. Use semantic Tailwind font tokens rather than repeating font stacks. Keep labels legible and avoid using condensed type for paragraphs.
 
+The type scale is tokenized as Tailwind font-size utilities with their own line height and tracking: `text-display` (52px), `text-headline` (26px), `text-title` (22px), `text-lead` (17px), `text-body` (15px), `text-meta` (13px), and the mono label sizes `text-label` (11px), `text-micro` (10px), and `text-nano` (9px). Tailwind's `text-xs`, `text-sm`, and `text-xl` cover 12, 14, and 20px. Metrics use `text-metric-sm`, `text-metric`, `text-metric-lg`, and `text-metric-hero`, normally through the `Metric` component. Mono labels are always uppercase; use `MonoLabel` instead of repeating the font, size, case, and tone classes.
+
+`cn` in `src/lib/utils.ts` is configured with these size and radius scales so that class merging keeps a Stride size next to a text color and lets a later radius override an earlier one. Extend that configuration when adding a font-size or radius token.
+
 ## Surfaces and shape
 
-Establish hierarchy with graphite surfaces and insets first. Prefer a one-pixel hairline over a decorative shadow. Use roughly 6px control radii and 8px surface radii; reserve stronger rounding for small chips where it aids recognition. Avoid glass effects, glow, startup gradients, and default-dashboard styling.
+Establish hierarchy with graphite surfaces and insets first. Prefer a one-pixel hairline over a decorative shadow; overlays use a dimmed shell and a strong hairline, never blur or glass. Radii are semantic: `rounded-mark` (2px) for bars and segments, `rounded-tag` (5px) for tags and keys, `rounded-control` (6px) for compact buttons, chips and rows, `rounded-surface` (8px) for fields, full-size buttons, choices and menus, `rounded-card` (12px) for cards, banners and ledger entries, and `rounded-panel` (14px) for the inset work area. Reserve full rounding for status dots, steps, and day toggles. Avoid glass effects, glow, startup gradients, and default-dashboard styling.
 
 ## Spacing and density
 
@@ -44,17 +54,46 @@ Use inline, compact provenance labels such as `GARMIN · UPDATED TODAY`, `ENTERE
 
 ## Components and shadcn
 
-Use shadcn as the accessible primitive layer: inspect installed components and project configuration, search official components or registries before recreating an interaction, and compose primitives when appropriate. Apply Stride's semantic tokens to their surfaces, borders, focus, and states. The foundation is initialized with the official shadcn CLI for Next.js, React 19, Tailwind v4, and Radix, with `components.json` and the CLI-generated `cn` utility at `src/lib/utils.ts`. No unused component catalog is installed. Add primitives only when an actual interaction needs them.
+Stride's UI has three layers:
 
-Tailwind utilities inside React components own layout, responsive behavior, typography, and component appearance. Reserve `globals.css` for tokens, base styles, and global accessibility defaults. Use `bg-background`, `bg-surface`, `bg-surface-raised`, `bg-surface-inset`, `text-foreground`, `text-muted`, `text-muted-foreground`, `text-accent`, `border-border`, `outline-focus`, `font-sans`, `font-metric`, `font-mono`, `rounded-control`, and `rounded-surface`.
+1. **Primitives** in `src/components/ui`: shadcn/Radix components installed with the official CLI and restyled to Night Track. They own accessibility and behavior and know nothing about running.
+2. **Stride patterns** in `src/components/stride`: reusable product compositions from the system references, built on the primitives. They take content and state through props and contain no data fetching or domain decisions.
+3. **Screens and features** in `src/app` and `src/features`: compose patterns and primitives. They do not recreate low-level styles.
 
-Standard shadcn color aliases map to Night Track roles: card → surface, popover/secondary → raised surface, primary → accent, destructive → danger, input → border, and ring → focus. Standard small/medium radii map to control, large/extra-large to surface. Adapt registry styles before use: Stride's `muted` means supporting text, so replace registry `bg-muted` surfaces with `bg-surface-raised`. shadcn supplies primitive structure; Night Track remains the visual system.
+Installed primitives: Alert, AlertDialog, Badge, Button, Checkbox, Collapsible, DropdownMenu, Field, Input, InputGroup, Kbd, Label, Progress, Separator, Sheet, Sidebar, Skeleton, Tabs, Textarea, Toggle, ToggleGroup, and Tooltip. Night Track specifics:
+
+- `Button` variants are `default` (Volt), `outline`, `secondary`, `ghost`, `destructive`, and `link`; size `default`/`lg` is the full-size form action, `md` the compact 38px action used in cards, and `sm`/`xs` the inline actions.
+- `Badge` is the mono status tag (`outline`, `accent`, `success`, `warning`, `danger`). Counts and readiness values in navigation use `NavBadge`.
+- `ToggleGroup` variants are `choice` (chalk fill when selected), `day` (round, Volt ring), and `segment` (connected range control). `Tabs` are underline tabs with a Volt indicator.
+- `Sidebar` is configured for 264px expanded, a 56px icon rail with tooltips, and an off-canvas sheet below 768px. Use `variant="inset"` and `collapsible="icon"`.
+- The product is dark-only: primitives do not use `dark:` variants, which would follow the operating system rather than Stride.
+
+Stride patterns: `MonoLabel`, `SectionHeader`, `Metric`, `StrideMark`, status marks (`TrendMark`, `TrendLabel`, `DirectionMark`, `SourceMark`, `DecisionMark`, `DoneMark`, `PulseDot`), `VerdictList`/`VerdictRow`, `ProvenanceLabel`, `SignalList`/`SignalRow`, `ProviderValueInput`, `SignalChip`, `ConfidenceMeter`, `Recommendation` and its parts, `LedgerEntry`/`DecisionLegend`, `CoachActivity`, `CoachNote`, `SyncStatus`, `Stepper`/`StepperItem`/`StepperSegments`, `SessionShape`, the sidebar parts (`NavGoalSwitcher`, `NavItem`, `NavBadge`, `NavDayRow`, `NavUser`), and `MobileTabBar`/`MobileTab`/`MobileAskAction`.
+
+Tailwind utilities inside React components own layout, responsive behavior, typography, and component appearance. Reserve `globals.css` for tokens, base styles, and global accessibility defaults. Standard shadcn color aliases map to Night Track roles: card → surface, popover → surface, secondary → raised surface, primary → accent, destructive → danger, input → strong line, and ring → focus. Adapt registry styles before use: Stride's `muted` means supporting text, so replace registry `bg-muted` surfaces with `bg-surface-raised`, and registry `bg-accent` hover states with `bg-surface-raised`, because Stride's accent is Volt.
+
+### Reuse rule
+
+Before creating a new component or local style:
+
+1. Check the installed shadcn primitives in `src/components/ui` and the official registry.
+2. Check the Stride patterns in `src/components/stride` and the design system gallery.
+3. Reuse or extend them, adding a variant or prop when the reference shows a genuine variation.
+4. Create a new abstraction only when the pattern is genuinely new, and put it in the right layer.
+
+Auth, onboarding, and application screens must compose this system rather than recreate local variants.
+
+### Validation gallery
+
+`/design-system` renders every token, primitive, pattern, and state, and `/design-system/shell` renders the application shell with the expanded sidebar, the icon rail, and the mobile sheet and tabs. Both routes are development-only: they return 404 in production builds. Use them to compare against `design/references/system` at the same viewport before and after changing the system. Browser tests in `tests/e2e/design-system.spec.ts` cover keyboard behavior, state exposure, reduced motion, and responsive fit.
 
 ## Loading and motion
 
 Prefer React Server Components and stable content. Use local skeletons only for independently loading content; their geometry should match the final content and their contrast should stay subtle. Long imports and synchronization need explicit progress and states such as partial, delayed, retrying, or reconnect required, not a full-page spinner or skeleton pretending to be progress.
 
 Motion explains state and hierarchy. Keep transitions restrained; reference timings are starting points, not required animations. Respect `prefers-reduced-motion` by resolving transitions and animations to their end state. Do not animate for decoration.
+
+Motion tokens: `ease-stride` (`cubic-bezier(0.4, 0, 0.2, 1)`), `animate-rise` (320ms rise 8px and fade for recommendations and findings), `animate-trace` (1.6s coach reading sweep), `animate-sheen` (1.8s import lane), and `animate-breathe` (2.4s sync dot). The sidebar collapses in 220ms. Apply looping animations with `motion-safe:` so reduced motion shows the static end state.
 
 ## Responsive behavior
 
