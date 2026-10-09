@@ -164,7 +164,9 @@ test("Welcome persists completion before moving on and stays reachable without r
     route.request().method() === "POST" ? route.abort() : route.continue(),
   );
   await page.getByRole("button", { name: "C’est parti", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Réessaie");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "L’enregistrement a échoué" }),
+  ).toBeVisible();
   await expect(page).toHaveURL(/\/onboarding\/welcome$/);
   expect((await read(user.id)).welcome_completed_at).toBeNull();
   await page.unroute("**/onboarding/welcome");
