@@ -633,3 +633,176 @@ test("history import shows real sync states without estimates and continues imme
   expect(progress.history_completed_at).not.toBeNull();
   expect(progress.current_step).toBe("about");
 });
+async function atAboutStep(page: Page) {
+  const user = await makeAthlete();
+  await signIn(page, user.email);
+  await seed(user.id);
+  await page.goto("/onboarding/about");
+  await expect(page.getByLabel("Prénom")).toBeVisible();
+  return user;
+}
+async function readProfileRow(user: Awaited<ReturnType<typeof makeAthlete>>) {
+  const response = await user.client
+    .from("athlete_profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (response.error) throw response.error;
+  return response.data;
+}
+const saved = (page: Page) => page.locator('p[data-status="saved"]');
+async function choose(page: Page, group: string, option: string) {
+  await page
+    .getByRole("group", { name: group })
+    .getByText(option, { exact: true })
+    .click();
+}
+test("About you autosaves, restores across refresh and devices, and completes only when required fields are saved", async ({
+  page,
+  browser,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  const user = await atAboutStep(page);
+  await page.getByLabel("Prénom").fill("Ada");
+  await page.getByLabel("Date de naissance").fill("1991-06-14");
+  await expect(saved(page)).toBeVisible();
+  await expect
+    .poll(async () => (await readProfileRow(user))?.first_name)
+    .toBe("Ada");
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Il manque encore" }),
+  ).toBeVisible();
+  expect((await read(user.id)).about_completed_at).toBeNull();
+  await page.reload();
+  await expect(page.getByLabel("Prénom")).toHaveValue("Ada");
+  const second = await browser.newContext();
+  const secondPage = await second.newPage();
+  await secondPage.goto("http://127.0.0.1:3110/sign-in");
+  await secondPage.getByLabel("Email", { exact: true }).fill(user.email);
+  await secondPage.getByLabel("Password", { exact: true }).fill(password);
+  await secondPage
+    .getByRole("button", { name: "Sign in", exact: true })
+    .click();
+  await expect(secondPage).toHaveURL(/\/onboarding\/about$/);
+  await expect(secondPage.getByLabel("Prénom")).toHaveValue("Ada");
+  await second.close();
+  await choose(page, "Sexe pour les estimations physiologiques", "Femme");
+  await page.getByLabel("Taille").fill("168");
+  await page.getByLabel("Poids").fill("58,5");
+  for (const day of ["Mardi", "Jeudi", "Samedi"])
+    await page.getByRole("button", { name: day, exact: true }).click();
+  await choose(page, "Jour de sortie longue", "Dimanche");
+  await choose(page, "Surtout…", "Route");
+  await choose(page, "Temps en semaine", "60'");
+  await expect(saved(page)).toBeVisible();
+  await page.screenshot({
+    path: "test-results/about-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+  await expect(page).toHaveURL(/\/onboarding\/goals$/);
+  const profile = await readProfileRow(user);
+  expect(profile).toMatchObject({
+    first_name: "Ada",
+    birth_date: "1991-06-14",
+    sex: "female",
+    weight_kg: 58.5,
+    available_weekdays: [2, 4, 6],
+    long_run_day: "sunday",
+    primary_terrain: "road",
+    weekday_session_minutes: 60,
+  });
+  expect(profile?.value_sources).toMatchObject({
+    first_name: { source: "athlete" },
+  });
+  expect((await read(user.id)).about_completed_at).not.toBeNull();
+});
+test("About you keeps input on save failure, retries, and never lets a slow save overwrite newer input", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  const user = await atAboutStep(page);
+  await page.route("**/onboarding/about", (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await page.getByLabel("Poids").fill("61");
+  await expect(page.locator('p[data-status="error"]')).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByLabel("Poids")).toHaveValue("61");
+  await page.unroute("**/onboarding/about");
+  await page
+    .locator('p[data-status="error"]')
+    .getByRole("button", { name: "Réessayer" })
+    .click();
+  await expect(saved(page)).toBeVisible();
+  await expect
+    .poll(async () => (await readProfileRow(user))?.weight_kg)
+    .toBe(61);
+  let delayed = false;
+  await page.route("**/onboarding/about", async (route) => {
+    if (route.request().method() === "POST" && !delayed) {
+      delayed = true;
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+    }
+    await route.continue();
+  });
+  await page.getByLabel("Prénom").fill("Ad");
+  await page.waitForTimeout(1_000);
+  await page.getByLabel("Prénom").fill("Ada Lovelace");
+  await expect(saved(page)).toBeVisible({ timeout: 15_000 });
+  await expect
+    .poll(async () => (await readProfileRow(user))?.first_name, {
+      timeout: 15_000,
+    })
+    .toBe("Ada Lovelace");
+  await expect(page.getByLabel("Prénom")).toHaveValue("Ada Lovelace");
+});
+test("About you surfaces a concurrent edit from another device instead of overwriting it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  const user = await atAboutStep(page);
+  await page.getByLabel("Prénom").fill("Ada");
+  await expect(saved(page)).toBeVisible();
+  const row = await readProfileRow(user);
+  const other = await user.client
+    .from("athlete_profiles")
+    .update({ weight_kg: 70 })
+    .eq("user_id", user.id)
+    .eq("revision", row!.revision);
+  expect(other.error).toBeNull();
+  await page.getByLabel("Poids").fill("62");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "changé sur un autre appareil" }),
+  ).toBeVisible();
+  expect((await readProfileRow(user))?.weight_kg).toBe(70);
+  await page.getByRole("button", { name: "Garder ma réponse" }).click();
+  await expect(saved(page)).toBeVisible();
+  await expect
+    .poll(async () => (await readProfileRow(user))?.weight_kg)
+    .toBe(62);
+});
+test("About you guides mobile athletes through five short screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await atAboutStep(page);
+  await expect(page.getByText("À propos de toi · 1/5")).toBeVisible();
+  await expect(page.getByLabel("Taille")).toBeHidden();
+  await page.getByRole("button", { name: "Suivant" }).click();
+  await page.getByRole("button", { name: "Suivant" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Quels jours peux-tu courir ?" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Mardi", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: "test-results/about-mobile.png" });
+});

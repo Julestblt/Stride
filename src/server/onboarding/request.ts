@@ -20,5 +20,5 @@ export async function getOnboardingRequest() {
     connection = { ok: false, failure: { code: "network" } };
   }
   if (connectionNotice(connection) === "session-expired") redirect("/sign-in");
-  return { progress, connection, email: context.email };
+  return { progress, connection, email: context.email, context };
 }
