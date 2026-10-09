@@ -14,6 +14,7 @@ import {
 } from "@/features/onboarding/import-history";
 import { cn } from "@/lib/utils";
 import { completeOnboarding } from "@/server/onboarding/actions";
+import { InsightsCard, useImportInsights } from "./insights-card";
 import { OnboardingActions } from "./onboarding-actions";
 import { useOnboardingStatus } from "./onboarding-status";
 import { useOnboardingTransition } from "./use-onboarding-transition";
@@ -57,104 +58,114 @@ export function HistoryStep({
     unavailable: sync.unavailable,
   });
   const activities = observation?.categories.activities.activityCount ?? null;
+  const insights = useImportInsights(
+    observation?.categories.activities.state ?? "unknown",
+  );
   return (
-    <div className="flex flex-1 flex-col gap-7 motion-safe:animate-rise lg:max-w-154 lg:gap-9">
-      <div className="flex flex-col gap-3">
-        <h1 className="text-[1.75rem] leading-[1.05] font-semibold tracking-[-0.035em] text-balance lg:text-[2.75rem]">
-          Création de ton profil d’athlète
-        </h1>
-        <p className="text-body text-pretty text-muted lg:text-lead">
-          <span className="hidden lg:inline">
-            Je lis tout ce que Garmin a gardé, du plus récent au plus ancien,
-            pour pouvoir te coacher avant l’arrivée des plus vieilles années. Un
-            long historique prend du temps — inutile d’attendre ici.
-          </span>
-          <span className="lg:hidden">
-            Lecture du plus récent au plus ancien. Tu peux continuer — je
-            poursuis en arrière-plan.
-          </span>
-        </p>
-      </div>
-      <HistoryTimeline
-        years={timeline.years}
-        reading={timeline.reading}
-        earlier={timeline.earlier}
-      />
-      <ul
-        aria-label="Import par catégorie"
-        className="flex flex-col border-t border-border"
-      >
-        {garminSyncCategories.map((category) => (
-          <CategoryRow
-            key={category}
-            title={categories[category].title}
-            subtitle={categories[category].subtitle}
-            view={
-              observation
-                ? categoryView(
-                    category,
-                    observation.categories[category],
-                    observation.firstActivityDate,
-                  )
-                : null
-            }
-          />
-        ))}
-      </ul>
-      {notice === "paused" && (
-        <SyncStatus
-          state="expired"
-          action={
-            <Button asChild variant="outline" size="md">
-              <Link href="/onboarding/garmin">Reconnecter Garmin</Link>
-            </Button>
-          }
-        >
-          <span className="font-semibold">Import en pause.</span> Garmin demande
-          de se reconnecter.
-          {activities !== null &&
-            ` ${new Intl.NumberFormat("fr-FR").format(activities)} activités sont déjà enregistrées.`}
-        </SyncStatus>
-      )}
-      {notice === "slow" && (
-        <SyncStatus state="retrying">
-          <span className="font-semibold">Garmin est lent en ce moment.</span>{" "}
-          Nouvelle tentative automatique. Rien n’est perdu — continue la
-          configuration.
-        </SyncStatus>
-      )}
-      {notice === "partial" && (
-        <SyncStatus state="partial">
-          <span className="font-semibold">Données partielles.</span> Garmin n’a
-          pas renvoyé une partie de l’historique. J’utiliserai ce qui est déjà
-          importé.
-        </SyncStatus>
-      )}
-      <OnboardingActions className="lg:flex-col lg:items-start lg:gap-3.5">
-        {message && (
-          <p role="alert" className="text-sm text-warning">
-            {message}
+    <div className="flex flex-1 flex-col gap-7 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-10 xl:gap-14">
+      <div className="flex flex-1 flex-col gap-7 motion-safe:animate-rise lg:gap-9">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-[1.75rem] leading-[1.05] font-semibold tracking-[-0.035em] text-balance lg:text-[2.75rem]">
+            Création de ton profil d’athlète
+          </h1>
+          <p className="text-body text-pretty text-muted lg:text-lead">
+            <span className="hidden lg:inline">
+              Je lis tout ce que Garmin a gardé, du plus récent au plus ancien,
+              pour pouvoir te coacher avant l’arrivée des plus vieilles années.
+              Un long historique prend du temps — inutile d’attendre ici.
+            </span>
+            <span className="lg:hidden">
+              Lecture du plus récent au plus ancien. Tu peux continuer — je
+              poursuis en arrière-plan.
+            </span>
           </p>
-        )}
-        <Button
-          className="w-full lg:w-auto lg:px-5.5"
-          disabled={pending}
-          aria-busy={pending}
-          onClick={() =>
-            run(
-              () => completeOnboarding({ step: "history", revision }),
-              "L’enregistrement a échoué. Réessaie dans un instant.",
-            )
-          }
+        </div>
+        <HistoryTimeline
+          years={timeline.years}
+          reading={timeline.reading}
+          earlier={timeline.earlier}
+        />
+        <ul
+          aria-label="Import par catégorie"
+          className="flex flex-col border-t border-border"
         >
-          {running ? "Continuer — je continue la lecture" : "Continuer"}
-        </Button>
-        <p className="text-center text-xs text-muted-foreground lg:text-left lg:text-meta">
-          {running
-            ? "La lecture continue en arrière-plan pendant que tu avances."
-            : "Tout l’historique disponible est lu."}
-        </p>
-      </OnboardingActions>
+          {garminSyncCategories.map((category) => (
+            <CategoryRow
+              key={category}
+              title={categories[category].title}
+              subtitle={categories[category].subtitle}
+              view={
+                observation
+                  ? categoryView(
+                      category,
+                      observation.categories[category],
+                      observation.firstActivityDate,
+                    )
+                  : null
+              }
+            />
+          ))}
+        </ul>
+        <InsightsCard insights={insights} className="lg:hidden" />
+        {notice === "paused" && (
+          <SyncStatus
+            state="expired"
+            action={
+              <Button asChild variant="outline" size="md">
+                <Link href="/onboarding/garmin">Reconnecter Garmin</Link>
+              </Button>
+            }
+          >
+            <span className="font-semibold">Import en pause.</span> Garmin
+            demande de se reconnecter.
+            {activities !== null &&
+              ` ${new Intl.NumberFormat("fr-FR").format(activities)} activités sont déjà enregistrées.`}
+          </SyncStatus>
+        )}
+        {notice === "slow" && (
+          <SyncStatus state="retrying">
+            <span className="font-semibold">Garmin est lent en ce moment.</span>{" "}
+            Nouvelle tentative automatique. Rien n’est perdu — continue la
+            configuration.
+          </SyncStatus>
+        )}
+        {notice === "partial" && (
+          <SyncStatus state="partial">
+            <span className="font-semibold">Données partielles.</span> Garmin
+            n’a pas renvoyé une partie de l’historique. J’utiliserai ce qui est
+            déjà importé.
+          </SyncStatus>
+        )}
+        <OnboardingActions className="lg:flex-col lg:items-start lg:gap-3.5">
+          {message && (
+            <p role="alert" className="text-sm text-warning">
+              {message}
+            </p>
+          )}
+          <Button
+            className="w-full lg:w-auto lg:px-5.5"
+            disabled={pending}
+            aria-busy={pending}
+            onClick={() =>
+              run(
+                () => completeOnboarding({ step: "history", revision }),
+                "L’enregistrement a échoué. Réessaie dans un instant.",
+              )
+            }
+          >
+            {running ? "Continuer — je continue la lecture" : "Continuer"}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground lg:text-left lg:text-meta">
+            {running
+              ? "La lecture continue en arrière-plan pendant que tu avances."
+              : "Tout l’historique disponible est lu."}
+          </p>
+        </OnboardingActions>
+      </div>
+      <InsightsCard
+        insights={insights}
+        className="hidden motion-safe:animate-rise lg:flex"
+      />
     </div>
   );
 }
