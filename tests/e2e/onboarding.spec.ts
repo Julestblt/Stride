@@ -145,7 +145,9 @@ test("explicit sidebar and Back navigation persist; a stale context reloads safe
     p_expected_revision: row.revision,
   });
   await page.getByRole("button", { name: "Retour", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("autre fenêtre");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "autre fenêtre" }),
+  ).toBeVisible();
   expect((await read(user.id)).current_step).toBe("welcome");
 });
 test("completed athletes reach the application and second athletes cannot read progress", async ({
