@@ -10,6 +10,7 @@ import {
   type GarminScreen,
   type GarminStage,
 } from "@/features/onboarding/garmin-flow";
+import type { GarminPhase } from "@/features/onboarding/shell-status";
 import {
   completeOnboarding,
   startGarminConnection,
@@ -19,8 +20,15 @@ import { GarminCode } from "./garmin-code";
 import { GarminConnected } from "./garmin-connected";
 import { GarminCredentials } from "./garmin-credentials";
 import { GarminIntro } from "./garmin-intro";
+import { useReportGarminPhase } from "./onboarding-status";
 import { useOnboardingTransition } from "./use-onboarding-transition";
 
+const garminPhases: Record<GarminScreen, GarminPhase> = {
+  intro: "intro",
+  credentials: "signing-in",
+  code: "verifying",
+  connected: "connected",
+};
 export function GarminStep({
   revision,
   initialScreen,
@@ -31,6 +39,7 @@ export function GarminStep({
   const router = useRouter();
   const completion = useOnboardingTransition();
   const [screen, setScreen] = useState(initialScreen);
+  useReportGarminPhase(garminPhases[screen]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
