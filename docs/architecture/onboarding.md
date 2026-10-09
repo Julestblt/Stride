@@ -28,7 +28,7 @@ The rules live in a framework-independent domain module that takes persisted pro
 
 - The resume step is the persisted `current_step` when it is allowed, otherwise the first incomplete allowed step.
 - Opening an allowed URL renders it without changing progress, so refreshing never advances or resets the flow.
-- Completed steps remain reachable and editable. Editing a completed step keeps it complete only while its data remains valid; a server-side validation failure reopens it.
+- Completed steps remain reachable and editable. A completed step stays complete; saves to it must keep its required fields valid, so an invalid edit is rejected rather than reopening the step.
 - `current_step` changes only through explicit actions: Continue, Back and sidebar navigation.
 
 ## Garmin reconciliation
@@ -54,6 +54,8 @@ Stride-owned tables live in `public`, keyed by `auth.users.id`, with RLS restric
 
 A database trigger increments `revision` and sets `updated_at` on every update. Updates are conditional on the client's expected revision.
 
+The athlete's role can write only data columns and `current_step`. Step completion goes through the `complete_onboarding_step` database function, which checks the expected revision, the step's prerequisites and its persisted data in one transaction, then records the first completion time and advances `current_step`. Completing the profile step completes onboarding. The Garmin step's completion is recorded by the Stride server only after garmin_mcp reports a connected account, and final completion is also checked against live Garmin status.
+
 ## Save strategy
 
 Server actions validate every write with Zod and write with the athlete's session under RLS. No service-role key is used.
@@ -65,7 +67,7 @@ Server actions validate every write with Zod and write with the athlete's sessio
 - On a revision conflict the client reloads the server snapshot. Untouched fields take server values. Dirty fields whose server value has not changed since the client's base are resent. Dirty fields changed on another device are shown as a conflict for the athlete to choose; nothing is silently overwritten.
 - Failed saves keep the local value, show an error with retry, and retry automatically with bounded backoff. Leaving the page with unsaved or failed edits asks for confirmation.
 - While offline, edits for non-sensitive profile, goal and race fields are cached in `localStorage` under the athlete's ID, sent when the connection returns, and discarded once persisted or when older than the server's `updated_at`. Sign-out clears them.
-- The completion action validates the persisted rows, not the client payload, so a step cannot be marked complete before its data is saved.
+- Completion validates the persisted rows in the database, not the client payload, so a step cannot be marked complete before its data is saved, even through direct Data API calls.
 
 Forms show `unsaved`, `saving`, `saved`, `offline` and `error` states near the Continue action, using existing Stride patterns.
 

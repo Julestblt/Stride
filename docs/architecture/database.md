@@ -15,7 +15,7 @@ Stride may read garmin_mcp's normalized tables through their owner-only policies
 
 ## Migrations
 
-Stride uses the Supabase CLI with versioned SQL migrations in `supabase/migrations`. Every Stride table has RLS enabled, owner-only policies using `(select auth.uid()) = user_id`, no `anon` grants, and only the `authenticated` privileges it needs. Migrations are reviewed in a pull request before they are applied anywhere. Local and CI stacks apply garmin_mcp migrations from a pinned revision before Stride migrations, so tests run against the real shared schema without copying it.
+Stride uses the Supabase CLI with versioned SQL migrations in `supabase/migrations`. Every Stride table has RLS enabled, owner-only policies using `(select auth.uid()) = user_id`, no `anon` grants, and only the `authenticated` privileges it needs. Migrations are reviewed in a pull request before they are applied anywhere. Local and CI stacks also apply garmin_mcp migrations from a pinned revision after Stride migrations, so tests run against the real shared schema without copying it. The two schemas do not reference each other, so the order is not significant.
 
 ## Environments
 

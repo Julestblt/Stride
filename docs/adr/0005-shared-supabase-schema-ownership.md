@@ -13,7 +13,7 @@ garmin_mcp already stores Garmin connections, encrypted sessions, sync jobs and 
 - Each service owns its tables and versioned migrations in its own repository. Stride uses the Supabase CLI and `supabase/migrations`.
 - Stride never writes garmin_mcp tables or duplicates Garmin connection, credential or synchronization state. It calls the garmin_mcp REST API for Garmin operations and status and may read normalized rows through owner-only RLS.
 - Stride reaches garmin_mcp from its server over the internal network and forwards the athlete's Supabase access token.
-- Local stacks apply garmin_mcp migrations from a pinned revision before Stride migrations.
+- Local stacks also apply garmin_mcp migrations from a pinned revision; Stride migrations never reference garmin_mcp tables.
 - Hosted projects receive migrations only after review and explicit approval. The current project stays protected until its environment role is confirmed; a separate staging project is used for live validation.
 
 ## Consequences
