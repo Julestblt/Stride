@@ -8,6 +8,7 @@ import {
   transitionOnboarding,
   type OnboardingServiceDependencies,
 } from "./service";
+import { saveProfile } from "./profile";
 import {
   connectGarmin,
   type GarminConnectionDependencies,
@@ -70,4 +71,11 @@ export async function startGarminConnection(input: unknown) {
 }
 export async function verifyGarminCode(input: unknown) {
   return connectGarmin(garminDependencies(), "verify", input);
+}
+export async function saveAthleteProfile(input: unknown) {
+  if (!onboardingEnabled()) return { status: "error" as const };
+  return saveProfile(
+    { context: () => getOnboardingContext({ writable: true }) },
+    input,
+  );
 }
