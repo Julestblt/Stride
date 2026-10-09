@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "garmin:smoke": "node scripts/garmin-smoke.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
