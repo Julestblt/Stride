@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(50);
+select plan(61);
 
 insert into auth.users (id, aud, role, email)
 values
@@ -67,7 +67,14 @@ select is((select count(*) from public.athlete_races)::int, 0, 'athlete cannot s
 
 update public.athlete_profiles set first_name = 'Changed' where user_id = 'b0000000-0000-4000-8000-00000000000b';
 update public.athlete_goals set focus = 'faster' where user_id = 'b0000000-0000-4000-8000-00000000000b';
-update public.onboarding_progress set current_step = 'profile' where user_id = 'b0000000-0000-4000-8000-00000000000b';
+select throws_ok(
+  $$update public.onboarding_progress set current_step = 'profile'$$,
+  '42501', null, 'athlete cannot change current_step directly'
+);
+select throws_ok(
+  $$select public.set_onboarding_current_step('profile', 1)$$,
+  'PT422', 'prerequisites_incomplete', 'navigation RPC cannot skip locked steps'
+);
 delete from public.athlete_races where id = 'b1000000-0000-4000-8000-00000000000b';
 
 select throws_ok(
@@ -77,6 +84,12 @@ select throws_ok(
 select throws_ok(
   $$update public.onboarding_progress set completed_at = now()$$,
   '42501', null, 'athlete cannot set onboarding completion directly'
+);
+select throws_ok(
+  $$select public.complete_onboarding_step_server(
+    'a0000000-0000-4000-8000-00000000000a', 'garmin', 1
+  )$$,
+  '42501', null, 'authenticated client cannot call server completion RPC'
 );
 select throws_ok(
   $$update public.athlete_profiles set user_id = 'b0000000-0000-4000-8000-00000000000b'$$,
@@ -117,8 +130,8 @@ update public.athlete_profiles set first_name = 'Stale' where revision = 1;
 select is((select first_name from public.athlete_profiles), 'Alexis', 'stale revision update changes nothing');
 
 select throws_ok(
-  $$select public.complete_onboarding_step('garmin', 1)$$, 'PT422', 'prerequisites_incomplete',
-  'garmin requires welcome'
+  $$select public.complete_onboarding_step('garmin', 1)$$, 'PT403', 'server_validation_required',
+  'Garmin completion always requires server validation'
 );
 select throws_ok(
   $$select public.complete_onboarding_step('welcome', 7)$$, 'PT409', 'revision_conflict',
@@ -128,14 +141,48 @@ select throws_ok(
   $$select public.complete_onboarding_step('finish', 1)$$, 'PT400', 'unknown_step',
   'unknown steps are rejected'
 );
+select throws_ok(
+  $$select public.complete_onboarding_step(null, 1)$$, 'PT400', 'unknown_step',
+  'null step names are rejected'
+);
+select throws_ok(
+  $$select public.complete_onboarding_step('welcome', null)$$, 'PT409', 'revision_conflict',
+  'null revisions are rejected'
+);
 select is(
   (select current_step from public.complete_onboarding_step('welcome', 1)), 'garmin',
   'welcome completes and advances'
 );
-select is(
-  (select current_step from public.complete_onboarding_step('garmin', 2)), 'history',
-  'garmin completes after welcome'
+select throws_ok(
+  $$select public.complete_onboarding_step('garmin', 2)$$, 'PT403', 'server_validation_required',
+  'authenticated client cannot forge a Garmin connection'
 );
+select throws_ok(
+  $$select public.complete_onboarding_step('history', 2)$$,
+  'PT422', 'prerequisites_incomplete', 'history remains blocked until server verifies Garmin'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-4000-8000-000000000000","role":"service_role"}',
+  true
+);
+set local role service_role;
+select throws_ok(
+  $$select public.complete_onboarding_step_server(
+    'a0000000-0000-4000-8000-00000000000a', 'profile', 2
+  )$$,
+  'PT422', 'prerequisites_incomplete', 'server cannot complete profile before goals and history'
+);
+select is(
+  (select current_step from public.complete_onboarding_step_server(
+    'a0000000-0000-4000-8000-00000000000a', 'garmin', 2
+  )), 'history', 'server completion records Garmin after live validation'
+);
+reset role;
+select pg_temp.act_as('a0000000-0000-4000-8000-00000000000a');
+
 select throws_ok(
   $$select public.complete_onboarding_step('about', 3)$$, 'PT422', 'step_data_incomplete',
   'about requires persisted profile data'
@@ -166,17 +213,32 @@ select is(
   'goals complete with a valid race'
 );
 select throws_ok(
-  $$select public.complete_onboarding_step('profile', 5)$$, 'PT422', 'prerequisites_incomplete',
-  'profile requires the history step'
+  $$select public.complete_onboarding_step('profile', 5)$$, 'PT403', 'server_validation_required',
+  'authenticated client cannot call final profile completion'
 );
 select isnt(
   (select history_completed_at from public.complete_onboarding_step('history', 5)), null,
   'history completes without waiting for import'
 );
-select isnt(
-  (select completed_at from public.complete_onboarding_step('profile', 6)), null,
-  'profile review completes onboarding'
+select throws_ok(
+  $$select public.complete_onboarding_step('profile', 6)$$, 'PT403', 'server_validation_required',
+  'authenticated client cannot complete onboarding through direct RPC'
 );
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"00000000-0000-4000-8000-000000000000","role":"service_role"}',
+  true
+);
+set local role service_role;
+select isnt(
+  (select completed_at from public.complete_onboarding_step_server(
+    'a0000000-0000-4000-8000-00000000000a', 'profile', 6
+  )), null, 'server completes final review after Garmin validation'
+);
+reset role;
+select pg_temp.act_as('a0000000-0000-4000-8000-00000000000a');
 select is(
   (select revision from public.onboarding_progress), 7, 'every completion advances the revision'
 );
@@ -187,8 +249,16 @@ select is(
   'completing a step again keeps its first completion time'
 );
 select lives_ok(
-  $$update public.onboarding_progress set current_step = 'about'$$,
-  'athlete can navigate back to a completed step'
+  $$select public.set_onboarding_current_step('about', 8)$$,
+  'athlete can navigate back through the guarded progression RPC'
+);
+select throws_ok(
+  $$select public.set_onboarding_current_step('welcome', 6)$$,
+  'PT409', 'revision_conflict', 'navigation RPC rejects stale revisions'
+);
+select throws_ok(
+  $$select public.set_onboarding_current_step('profile', null)$$,
+  'PT409', 'revision_conflict', 'navigation RPC rejects a null revision'
 );
 select lives_ok($$delete from public.athlete_races$$, 'athlete can delete their own race');
 

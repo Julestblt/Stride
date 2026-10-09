@@ -139,7 +139,6 @@ revoke all on function public.advance_revision() from public, anon, authenticate
 grant select on public.onboarding_progress, public.athlete_profiles, public.athlete_goals, public.athlete_races
   to authenticated;
 grant insert (user_id) on public.onboarding_progress to authenticated;
-grant update (current_step) on public.onboarding_progress to authenticated;
 grant insert (
   user_id, first_name, birth_date, sex, height_cm, weight_kg, primary_terrain,
   available_weekdays, long_run_day, weekday_session_minutes, training_access, value_sources
@@ -158,30 +157,35 @@ grant update (
 ) on public.athlete_races to authenticated;
 grant delete on public.athlete_races to authenticated;
 
-create function public.complete_onboarding_step(p_step text, p_expected_revision integer)
+create schema private;
+
+revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to service_role;
+
+create function private.apply_onboarding_completion(
+  p_user_id uuid,
+  p_step text,
+  p_expected_revision integer
+)
 returns public.onboarding_progress
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_user_id uuid := auth.uid();
   v_progress public.onboarding_progress;
   v_missing text[];
 begin
-  if v_user_id is null then
-    raise exception 'not_authenticated' using errcode = 'PT401';
-  end if;
-  if p_step not in ('welcome', 'garmin', 'history', 'about', 'goals', 'profile') then
+  if p_step is null or p_step not in ('welcome', 'garmin', 'history', 'about', 'goals', 'profile') then
     raise exception 'unknown_step' using errcode = 'PT400';
   end if;
 
   select * into v_progress from public.onboarding_progress
-    where user_id = v_user_id for update;
+    where user_id = p_user_id for update;
   if not found then
     raise exception 'onboarding_not_started' using errcode = 'PT404';
   end if;
-  if v_progress.revision <> p_expected_revision then
+  if p_expected_revision is null or v_progress.revision <> p_expected_revision then
     raise exception 'revision_conflict' using errcode = 'PT409';
   end if;
 
@@ -199,7 +203,7 @@ begin
 
   if p_step = 'about' and not exists (
     select 1 from public.athlete_profiles
-    where user_id = v_user_id
+    where user_id = p_user_id
       and first_name is not null and birth_date is not null and sex is not null
       and height_cm is not null and weight_kg is not null and primary_terrain is not null
       and cardinality(available_weekdays) > 0 and long_run_day is not null
@@ -209,10 +213,10 @@ begin
   end if;
 
   if p_step = 'goals' and (
-    not exists (select 1 from public.athlete_goals where user_id = v_user_id)
+    not exists (select 1 from public.athlete_goals where user_id = p_user_id)
     or exists (
       select 1 from public.athlete_races
-      where user_id = v_user_id and (name is null or race_date is null or distance_km is null)
+      where user_id = p_user_id and (name is null or race_date is null or distance_km is null)
     )
   ) then
     raise exception 'step_data_incomplete' using errcode = 'PT422', detail = 'goals';
@@ -233,6 +237,105 @@ begin
       when 'about' then 'goals'
       else 'profile'
     end
+  where user_id = p_user_id
+  returning * into v_progress;
+
+  return v_progress;
+end;
+$$;
+
+revoke all on function private.apply_onboarding_completion(uuid, text, integer)
+  from public, anon, authenticated, service_role;
+
+create function public.complete_onboarding_step(p_step text, p_expected_revision integer)
+returns public.onboarding_progress
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+begin
+  if v_user_id is null then
+    raise exception 'not_authenticated' using errcode = 'PT401';
+  end if;
+  if p_step is null or p_step not in ('welcome', 'garmin', 'history', 'about', 'goals', 'profile') then
+    raise exception 'unknown_step' using errcode = 'PT400';
+  end if;
+  if p_step not in ('welcome', 'history', 'about', 'goals') then
+    raise exception 'server_validation_required' using errcode = 'PT403';
+  end if;
+
+  return private.apply_onboarding_completion(v_user_id, p_step, p_expected_revision);
+end;
+$$;
+
+create function public.complete_onboarding_step_server(
+  p_user_id uuid,
+  p_step text,
+  p_expected_revision integer
+)
+returns public.onboarding_progress
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
+    raise exception 'server_role_required' using errcode = 'PT403';
+  end if;
+  if p_step is null or p_step not in ('garmin', 'profile') then
+    raise exception 'invalid_server_step' using errcode = 'PT400';
+  end if;
+
+  return private.apply_onboarding_completion(p_user_id, p_step, p_expected_revision);
+end;
+$$;
+
+create function public.set_onboarding_current_step(p_step text, p_expected_revision integer)
+returns public.onboarding_progress
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_progress public.onboarding_progress;
+  v_allowed boolean;
+begin
+  if v_user_id is null then
+    raise exception 'not_authenticated' using errcode = 'PT401';
+  end if;
+  if p_step is null or p_step not in ('welcome', 'garmin', 'history', 'about', 'goals', 'profile') then
+    raise exception 'unknown_step' using errcode = 'PT400';
+  end if;
+
+  select * into v_progress
+  from public.onboarding_progress
+  where user_id = v_user_id
+  for update;
+  if not found then
+    raise exception 'onboarding_not_started' using errcode = 'PT404';
+  end if;
+  if p_expected_revision is null or v_progress.revision <> p_expected_revision then
+    raise exception 'revision_conflict' using errcode = 'PT409';
+  end if;
+
+  v_allowed := case p_step
+    when 'welcome' then true
+    when 'garmin' then v_progress.welcome_completed_at is not null
+    when 'history' then v_progress.garmin_completed_at is not null
+    when 'about' then v_progress.garmin_completed_at is not null
+    when 'goals' then v_progress.about_completed_at is not null
+    when 'profile' then v_progress.goals_completed_at is not null
+      and v_progress.history_completed_at is not null
+  end;
+  if not v_allowed then
+    raise exception 'prerequisites_incomplete' using errcode = 'PT422';
+  end if;
+
+  update public.onboarding_progress
+  set current_step = p_step
   where user_id = v_user_id
   returning * into v_progress;
 
@@ -240,5 +343,12 @@ begin
 end;
 $$;
 
-revoke all on function public.complete_onboarding_step(text, integer) from public, anon, authenticated;
+revoke all on function public.complete_onboarding_step(text, integer)
+  from public, anon, authenticated, service_role;
+revoke all on function public.complete_onboarding_step_server(uuid, text, integer)
+  from public, anon, authenticated, service_role;
+revoke all on function public.set_onboarding_current_step(text, integer)
+  from public, anon, authenticated, service_role;
 grant execute on function public.complete_onboarding_step(text, integer) to authenticated;
+grant execute on function public.complete_onboarding_step_server(uuid, text, integer) to service_role;
+grant execute on function public.set_onboarding_current_step(text, integer) to authenticated;

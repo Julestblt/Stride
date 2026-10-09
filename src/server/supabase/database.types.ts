@@ -687,6 +687,33 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      complete_onboarding_step_server: {
+        Args: {
+          p_expected_revision: number;
+          p_step: string;
+          p_user_id: string;
+        };
+        Returns: {
+          about_completed_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          current_step: string;
+          garmin_completed_at: string | null;
+          goals_completed_at: string | null;
+          history_completed_at: string | null;
+          profile_completed_at: string | null;
+          revision: number;
+          updated_at: string;
+          user_id: string;
+          welcome_completed_at: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "onboarding_progress";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       consume_auth_challenge: {
         Args: { p_challenge_id: string; p_user_id: string };
         Returns: {
@@ -723,6 +750,29 @@ export type Database = {
       schedule_incremental_sync: {
         Args: Record<PropertyKey, never>;
         Returns: number;
+      };
+      set_onboarding_current_step: {
+        Args: { p_expected_revision: number; p_step: string };
+        Returns: {
+          about_completed_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          current_step: string;
+          garmin_completed_at: string | null;
+          goals_completed_at: string | null;
+          history_completed_at: string | null;
+          profile_completed_at: string | null;
+          revision: number;
+          updated_at: string;
+          user_id: string;
+          welcome_completed_at: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "onboarding_progress";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       store_provider_secret: {
         Args: {
