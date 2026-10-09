@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 80,
-    "html_exports": 80,
-    "matched": 80,
-    "exact": 80,
+    "screenshots": 82,
+    "html_exports": 82,
+    "matched": 82,
+    "exact": 82,
     "high": 0,
     "uncertain": 0
   },
@@ -1053,6 +1053,32 @@
       "original_export_name": "Auth · Account & email confirmation flow · Spec-html.zip",
       "matched_confidence": "exact",
       "notes": ""
+    },
+    {
+      "id": "system/page-not-found/desktop",
+      "area": "system",
+      "screen": "page-not-found",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/system/page-not-found/screenshots/desktop.png",
+      "html_reference_path": "design/references/system/page-not-found/source/desktop.zip",
+      "original_screenshot_name": "System · Page not found (404) · Desktop.png",
+      "original_export_name": "System · Page not found (404) · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "French v1 page-not-found screen."
+    },
+    {
+      "id": "system/page-not-found/mobile",
+      "area": "system",
+      "screen": "page-not-found",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/system/page-not-found/screenshots/mobile.png",
+      "html_reference_path": "design/references/system/page-not-found/source/mobile.zip",
+      "original_screenshot_name": "System · Page not found (404) · Mobile.png",
+      "original_export_name": "System · Page not found (404) · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "French v1 page-not-found screen."
     }
   ],
   "unresolved": []
