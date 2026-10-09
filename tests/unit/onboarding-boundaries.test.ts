@@ -161,6 +161,7 @@ describe("onboarding request guards", () => {
       progress,
       connection: { ok: false, failure: { code: "network" } },
       email: "athlete@example.com",
+      context: expect.objectContaining({ userId }),
     });
     expect(mocks.rpc).not.toHaveBeenCalled();
     mocks.connection.mockResolvedValue({
