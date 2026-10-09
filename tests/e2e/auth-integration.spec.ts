@@ -35,6 +35,7 @@ test("rejected credentials give safe feedback", async ({ page }) => {
 
 test("signup requiring confirmation shows inbox feedback", async ({ page }) => {
   await page.goto("/sign-up");
+  await page.getByLabel("Full name").fill("Jules Thibault");
   await page
     .getByLabel("Email", { exact: true })
     .fill("confirmation@example.com");
@@ -46,13 +47,70 @@ test("signup requiring confirmation shows inbox feedback", async ({ page }) => {
     .getByRole("button", { name: "Create account", exact: true })
     .click();
   await expect(
-    page.getByText("Check your inbox.", { exact: false }),
+    page.getByRole("heading", { name: "Check your inbox" }),
   ).toBeVisible();
   await expect(page).toHaveURL("/sign-up");
-  await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
   await expect(
-    page.getByLabel("Confirm password", { exact: true }),
-  ).toHaveValue("");
+    page.getByRole("button", { name: "Resend email" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "Change email" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Create your account" }),
+  ).toBeVisible();
+});
+
+test("unconfirmed sign-in resends a confirmation link", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/sign-in");
+  await page
+    .getByLabel("Email", { exact: true })
+    .fill("confirmation@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByText("Confirm your email to continue")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Resend email" }),
+  ).toBeDisabled();
+  const events = await (
+    await request.get("http://127.0.0.1:3200/__test__/events")
+  ).json();
+  expect(
+    events.some((event: { path: string }) => event.path === "/auth/v1/resend"),
+  ).toBe(true);
+});
+
+test("confirmed signup link reaches the confirmed page", async ({ page }) => {
+  await page.goto(
+    "/auth/callback?token_hash=valid-token&type=signup&next=/email-confirmed",
+  );
+  await expect(page).toHaveURL("/email-confirmed");
+  await expect(
+    page.getByRole("heading", { name: "You're in, Jules." }),
+  ).toBeVisible();
+});
+
+test("signup token links without a next parameter reach confirmation", async ({
+  page,
+}) => {
+  await page.goto("/auth/callback?token_hash=valid-token&type=signup");
+  await expect(page).toHaveURL("/email-confirmed");
+});
+
+test("expired signup link offers a replacement", async ({ page }) => {
+  await page.goto(
+    "/auth/callback?token_hash=expired-token&type=signup&next=/email-confirmed",
+  );
+  await expect(page).toHaveURL("/link-expired");
+  await expect(
+    page.getByRole("heading", { name: "This link is no longer valid" }),
+  ).toBeVisible();
+  await page.getByLabel("Email").fill("confirmation@example.com");
+  await page.getByRole("button", { name: "Send a new link" }).click();
+  await expect(
+    page.getByText("If this address needs confirmation", { exact: false }),
+  ).toBeVisible();
 });
 
 test("recovery reports the first provider failure", async ({ page }) => {
@@ -233,6 +291,7 @@ test("failed resend keeps the accepted inbox state", async ({ page }) => {
 
 test("signup with a provider session returns to Stride", async ({ page }) => {
   await page.goto("/sign-up");
+  await page.getByLabel("Full name").fill("Jules Thibault");
   await page
     .getByLabel("Email", { exact: true })
     .fill("new-account@example.com");

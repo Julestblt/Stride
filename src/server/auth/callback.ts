@@ -46,7 +46,10 @@ export async function completeAuthCallback(request: NextRequest) {
     token_hash: parameters.get("token_hash"),
     type: parameters.get("type"),
   });
-  let destination = "/sign-in?error=link";
+  const signupFlow =
+    parameters.get("next") === "/email-confirmed" ||
+    parameters.get("type") === "signup";
+  let destination = signupFlow ? "/link-expired" : "/sign-in?error=link";
   let origin = request.nextUrl.origin;
   let stage = "callback_input";
   try {
@@ -67,13 +70,15 @@ export async function completeAuthCallback(request: NextRequest) {
       if (response.error) {
         const details = authErrorDetails(response.error);
         console.warn("Supabase Auth callback failed", { stage, ...details });
-        if (details.code === "pkce_code_verifier_not_found")
+        if (details.code === "pkce_code_verifier_not_found" && !signupFlow)
           destination = "/sign-in?error=link&reason=verifier";
       } else if (response.data.session) {
         destination =
           input.data.type === "recovery"
             ? "/reset-password"
-            : safeDestination(parameters.get("next"));
+            : input.data.type === "signup"
+              ? "/email-confirmed"
+              : safeDestination(parameters.get("next"));
       } else {
         console.warn("Supabase Auth callback returned no session", { stage });
       }

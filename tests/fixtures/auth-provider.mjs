@@ -10,7 +10,7 @@ const user = {
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   app_metadata: { provider: "email", providers: ["email"] },
-  user_metadata: {},
+  user_metadata: { full_name: "Jules Thibault" },
 };
 const encode = (value) =>
   Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -59,6 +59,15 @@ createServer(async (request, response) => {
   });
   if (url.pathname === "/auth/v1/token") {
     const grant = url.searchParams.get("grant_type");
+    if (
+      grant === "password" &&
+      body.email === "confirmation@example.com" &&
+      body.password === "TrailMiles2026!"
+    )
+      return send(400, {
+        error_code: "email_not_confirmed",
+        msg: "Email not confirmed",
+      });
     const challenge = challenges.get(body.auth_code);
     const valid =
       grant === "password"
@@ -82,6 +91,7 @@ createServer(async (request, response) => {
         ? { user: { ...user, email: body.email }, session: null }
         : session,
     );
+  if (url.pathname === "/auth/v1/resend") return send(200, {});
   if (["/auth/v1/otp", "/auth/v1/recover"].includes(url.pathname)) {
     if (body.email === "unavailable@example.com")
       return send(503, { code: "unexpected_failure", msg: "Unavailable" });

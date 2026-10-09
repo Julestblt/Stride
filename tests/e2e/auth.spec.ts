@@ -31,6 +31,7 @@ test("auth navigation, accessible controls, focus and blank initial state", asyn
   await expect(
     page.getByRole("button", { name: "Create account", exact: true }),
   ).toBeDisabled();
+  await page.getByLabel("Full name").fill("Jules Thibault");
   await page.getByLabel("Email", { exact: true }).fill("runner@example.com");
   await page
     .getByLabel("Password", { exact: true })

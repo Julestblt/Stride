@@ -8,6 +8,7 @@ import {
   authenticate,
   changePassword,
   requestEmail,
+  resendConfirmation,
 } from "../../src/server/auth/service";
 import {
   parseSiteUrl,
@@ -18,6 +19,7 @@ import { authCookieOptions } from "../../src/server/supabase/cookie-policy";
 const provider = {
   signInWithPassword: vi.fn(),
   signUp: vi.fn(),
+  resend: vi.fn(),
   signInWithOtp: vi.fn(),
   resetPasswordForEmail: vi.fn(),
   getUser: vi.fn(),
@@ -32,6 +34,7 @@ function data(values: Record<string, string>) {
 }
 
 const credentials = {
+  fullName: "Jules Thibault",
   email: "runner@example.com",
   password: "a-quiet-trail-at-dawn",
   confirmation: "a-quiet-trail-at-dawn",
@@ -90,6 +93,11 @@ describe("provider outcomes", () => {
     expect(
       (await authenticate(provider, "sign-up", data(credentials))).status,
     ).toBe("success");
+    expect(provider.signUp).toHaveBeenCalledWith({
+      email: credentials.email,
+      password: credentials.password,
+      options: { data: { full_name: credentials.fullName } },
+    });
     provider.signUp.mockResolvedValue({
       data: { session: { access_token: "test" } },
       error: null,
@@ -97,6 +105,47 @@ describe("provider outcomes", () => {
     expect(
       (await authenticate(provider, "sign-up", data(credentials))).status,
     ).toBe("authenticated");
+  });
+  it("offers a fresh confirmation link for an unconfirmed sign-in", async () => {
+    provider.signInWithPassword.mockResolvedValue({
+      error: { code: "email_not_confirmed" },
+    });
+    provider.resend.mockResolvedValue({ error: null });
+    const result = await authenticate(
+      provider,
+      "sign-in",
+      data(credentials),
+      "https://stride.example/auth/callback?next=%2Femail-confirmed",
+    );
+    expect(result.status).toBe("unconfirmed");
+    expect(result.sentAt).toBeTypeOf("number");
+    expect(provider.resend).toHaveBeenCalledWith({
+      type: "signup",
+      email: credentials.email,
+      options: {
+        emailRedirectTo:
+          "https://stride.example/auth/callback?next=%2Femail-confirmed",
+      },
+    });
+  });
+  it("resends only a validated signup confirmation", async () => {
+    provider.resend.mockResolvedValue({ error: null });
+    const destination =
+      "https://stride.example/auth/callback?next=%2Femail-confirmed";
+    expect(
+      (await resendConfirmation(provider, data({ email: "bad" }), destination))
+        .status,
+    ).toBe("error");
+    expect(provider.resend).not.toHaveBeenCalled();
+    expect(
+      (
+        await resendConfirmation(
+          provider,
+          data({ email: credentials.email }),
+          destination,
+        )
+      ).status,
+    ).toBe("success");
   });
   it("hides provider errors and never returns passwords", async () => {
     provider.signInWithPassword.mockResolvedValue({
@@ -225,6 +274,7 @@ describe("callback origin and destinations", () => {
     ])
       expect(safeDestination(value)).toBe("/");
     expect(safeDestination("/reset-password")).toBe("/reset-password");
+    expect(safeDestination("/email-confirmed")).toBe("/email-confirmed");
   });
   it("validates trusted origin rather than accepting credentials, paths or remote HTTP", () => {
     expect(parseSiteUrl("http://localhost:3000")).toBe("http://localhost:3000");

@@ -13,6 +13,7 @@ import {
   authenticate,
   changePassword,
   requestEmail,
+  resendConfirmation,
   unavailableMessage,
 } from "./service";
 import {
@@ -41,7 +42,8 @@ async function runAuthentication(
       writable: true,
       persistent,
     });
-    const emailRedirectTo = mode === "sign-up" ? callbackUrl() : undefined;
+    const emailRedirectTo =
+      mode === "sign-up" ? callbackUrl("/email-confirmed") : undefined;
     result = await authenticate(client.auth, mode, data, emailRedirectTo);
     if (result.status === "authenticated" || result.status === "success") {
       const store = await cookies();
@@ -72,6 +74,22 @@ export async function signIn(_previous: AuthState, data: FormData) {
 
 export async function signUp(_previous: AuthState, data: FormData) {
   return runAuthentication("sign-up", data);
+}
+
+export async function resendConfirmationLink(
+  _previous: AuthState,
+  data: FormData,
+) {
+  try {
+    const client = await createSupabaseServerClient({ writable: true });
+    return await resendConfirmation(
+      client.auth,
+      data,
+      callbackUrl("/email-confirmed"),
+    );
+  } catch {
+    return { status: "error", message: unavailableMessage } satisfies AuthState;
+  }
 }
 
 async function sendEmail(

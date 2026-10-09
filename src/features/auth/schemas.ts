@@ -39,6 +39,11 @@ export const passwordSchema = z
 
 export const signUpSchema = emailSchema
   .extend({
+    fullName: z
+      .string()
+      .trim()
+      .min(2, "Enter your full name.")
+      .max(100, "Use no more than 100 characters."),
     password: z
       .string()
       .min(10, "Use at least 10 characters.")
@@ -61,10 +66,12 @@ export const signUpSchema = emailSchema
   });
 
 export type AuthState = {
-  status: "idle" | "error" | "success" | "authenticated";
+  status: "idle" | "error" | "success" | "authenticated" | "unconfirmed";
   message?: string;
   email?: string;
-  errors?: Partial<Record<"email" | "password" | "confirmation", string>>;
+  errors?: Partial<
+    Record<"fullName" | "email" | "password" | "confirmation", string>
+  >;
   sentAt?: number;
 };
 
@@ -76,6 +83,7 @@ export const initialAuthState: AuthState = { status: "idle" };
 
 export function formInput(data: FormData) {
   return {
+    fullName: data.get("fullName"),
     email: data.get("email"),
     password: data.get("password"),
     confirmation: data.get("confirmation"),
@@ -86,7 +94,12 @@ export function validationState(error: z.ZodError, email: unknown): AuthState {
   const errors: NonNullable<AuthState["errors"]> = {};
   for (const issue of error.issues) {
     const field = issue.path[0];
-    if (field === "email" || field === "password" || field === "confirmation")
+    if (
+      field === "fullName" ||
+      field === "email" ||
+      field === "password" ||
+      field === "confirmation"
+    )
       errors[field] ??= issue.message;
   }
   return {
