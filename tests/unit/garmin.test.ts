@@ -164,12 +164,16 @@ describe("Garmin client failures", () => {
       client(respond(502, "<html>Bad gateway</html>")).getConnection(context),
       client(respond(200, { status: "paused" })).getConnection(context),
       client(
+        respond(200, { status: "connected", connected_at: "n/a" }),
+      ).getConnection(context),
+      client(
         respond(200, { status: "mfa_required", challenge_id: "not-a-uuid" }),
       ).startConnection(context, { email: "a@example.com", password: "p" }),
     ]);
     expect(results.map((result) => !result.ok && result.failure.code)).toEqual([
       "timeout",
       "network",
+      "service_unavailable",
       "malformed",
       "malformed",
       "malformed",
@@ -177,6 +181,27 @@ describe("Garmin client failures", () => {
     for (const result of results)
       if (!result.ok)
         expect(connectFailure(result.failure).state).toBe("garmin_unavailable");
+  });
+
+  it("falls back to the HTTP status when an error body is not the contract", async () => {
+    const expired = await client(respond(401, "")).getConnection(context);
+    const limited = await client(
+      respond(429, "Too Many Requests", { "Retry-After": "120" }),
+    ).getConnection(context);
+    const rejected = await client(
+      respond(422, { detail: "Unprocessable" }),
+    ).getConnection(context);
+    expect(!expired.ok && connectFailure(expired.failure).state).toBe(
+      "session_expired",
+    );
+    expect(!limited.ok && connectFailure(limited.failure)).toEqual({
+      state: "rate_limited",
+      canRetryCode: false,
+      retryAfterSeconds: 120,
+    });
+    expect(!rejected.ok && connectFailure(rejected.failure).state).toBe(
+      "connection_failed",
+    );
   });
 
   it("uses retry timing only when the service returns it", async () => {

@@ -12,7 +12,7 @@ import {
   type GarminSyncStatus,
 } from "@/features/garmin/sync";
 
-const timestamp = z.string().min(1).nullable().optional();
+const timestamp = z.iso.datetime({ offset: true }).nullable().optional();
 
 export const connectionSchema = z
   .object({
@@ -90,14 +90,21 @@ const errorSchema = z.object({
 
 const knownCodes = new Set<string>(garminErrorCodes);
 
+function codeForStatus(status: number): GarminFailure["code"] {
+  if (status === 401) return "unauthorized";
+  if (status === 429) return "rate_limited";
+  if (status >= 500) return "service_unavailable";
+  return "unknown";
+}
+
 export function parseFailure(
   body: unknown,
+  status: number,
   retryAfterHeader: string | null,
 ): GarminFailure {
   const parsed = errorSchema.safeParse(body);
-  if (!parsed.success) return { code: "malformed" };
   const { code, retry_after_seconds, attempts_remaining, challenge_consumed } =
-    parsed.data.error;
+    parsed.success ? parsed.data.error : { code: codeForStatus(status) };
   const headerSeconds = retryAfterHeader ? Number(retryAfterHeader) : NaN;
   const retryAfterSeconds =
     retry_after_seconds ??

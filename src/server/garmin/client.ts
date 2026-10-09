@@ -57,16 +57,15 @@ export function createGarminClient({
         error instanceof DOMException && error.name === "TimeoutError";
       return { ok: false, failure: { code: timedOut ? "timeout" : "network" } };
     }
-    let payload: unknown;
-    try {
-      payload = await response.json();
-    } catch {
-      return { ok: false, failure: { code: "malformed" } };
-    }
+    const payload: unknown = await response.json().catch(() => undefined);
     if (!response.ok)
       return {
         ok: false,
-        failure: parseFailure(payload, response.headers.get("Retry-After")),
+        failure: parseFailure(
+          payload,
+          response.status,
+          response.headers.get("Retry-After"),
+        ),
       };
     const parsed = schema.safeParse(payload);
     return parsed.success

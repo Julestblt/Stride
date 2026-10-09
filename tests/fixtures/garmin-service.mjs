@@ -78,6 +78,8 @@ export function createGarminService() {
     let raw = "";
     for await (const chunk of request) raw += chunk;
     if (url.pathname === "/healthz") return json(response, 200, "ok");
+    if (url.pathname === "/readyz")
+      return json(response, 200, { status: "ready" });
     if (url.pathname === "/__test__/reset" && request.method === "POST") {
       connections.clear();
       challenges.clear();
