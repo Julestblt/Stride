@@ -44,7 +44,7 @@ export const minimumActivities = 8;
 export const minimumWeeks = 4;
 export const minimumRecoveryNights = 7;
 
-function isRunning(type: string) {
+export function isRunning(type: string) {
   return roadRunning.has(type) || trailRunning.has(type);
 }
 
@@ -74,6 +74,27 @@ function weekday(activity: InsightActivity) {
   return new Date(`${local.slice(0, 10)}T00:00:00Z`).getUTCDay();
 }
 
+export function usualWeekdays(activities: InsightActivity[]) {
+  if (activities.length === 0) return [];
+  const counts = Array.from({ length: 7 }, () => 0);
+  for (const activity of activities) counts[weekday(activity)]++;
+  return counts
+    .map((count, day) => ({ count, day }))
+    .filter(({ count }) => count / activities.length >= 0.14)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4)
+    .map(({ day }) => day);
+}
+
+export function runningTrailShare(activities: InsightActivity[]) {
+  const runs = activities.filter((activity) => isRunning(activity.type));
+  const distance = (items: InsightActivity[]) =>
+    items.reduce((total, item) => total + (item.distanceMeters ?? 0), 0);
+  const total = distance(runs);
+  if (runs.length < minimumActivities || total <= 0) return null;
+  return distance(runs.filter((run) => trailRunning.has(run.type))) / total;
+}
+
 function volumeFact(
   activities: InsightActivity[],
   today: Date,
@@ -92,14 +113,7 @@ function volumeFact(
   );
   const hours = Math.round((seconds / 3600 / weeks) * 2) / 2;
   if (hours <= 0) return null;
-  const counts = Array.from({ length: 7 }, () => 0);
-  for (const activity of activities) counts[weekday(activity)]++;
-  const days = counts
-    .map((count, day) => ({ count, day }))
-    .filter(({ count }) => count / activities.length >= 0.14)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 4)
-    .map(({ day }) => day);
+  const days = usualWeekdays(activities);
   const hoursLabel = decimal.format(hours);
   const daysLabel = days.length > 0 && days.length < 6 ? joinDays(days) : "";
   return {
@@ -117,13 +131,8 @@ function mixFact(
   activities: InsightActivity[],
   weeks: number,
 ): InsightFact | null {
-  const runs = activities.filter((activity) => isRunning(activity.type));
-  const distance = (items: InsightActivity[]) =>
-    items.reduce((total, item) => total + (item.distanceMeters ?? 0), 0);
-  const total = distance(runs);
-  if (runs.length < minimumActivities || total <= 0) return null;
-  const trail = distance(runs.filter((run) => trailRunning.has(run.type)));
-  const trailShare = trail / total;
+  const trailShare = runningTrailShare(activities);
+  if (trailShare === null) return null;
   const strengthPerWeek =
     activities.filter((activity) => strength.has(activity.type)).length /
     Math.max(weeks, 1);
