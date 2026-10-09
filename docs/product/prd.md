@@ -3,7 +3,17 @@
 - Status: Draft for discovery
 - Owner: Product
 - Source: [Product vision](vision.md), [product brief](brief.md), and [product principles](principles.md)
-- Scope: Candidate first release; requirements below are proposals until discovery validates them
+- Scope: Candidate first release; requirements below are proposals until discovery validates them, except the accepted onboarding decisions
+
+## Accepted onboarding decisions
+
+The product owner accepted these decisions for the E-07 onboarding on 2026-10-09:
+
+- Garmin is required to complete MVP onboarding. Full historical synchronization is not required to advance through onboarding or to complete it.
+- Onboarding uses the real garmin_mcp integration from the start. Mocked Garmin responses are limited to component development, automated tests and visual state validation.
+- Onboarding progress and everything the athlete enters persist in Stride's Supabase database and resume on any device.
+- Import progress shows only real synchronization data.
+- Onboarding UI copy is French, matching the approved references.
 
 ## Product goals
 
@@ -19,7 +29,7 @@ The primary persona is a recreational runner training toward a road or trail eve
 
 ### Start with useful context
 
-An athlete creates an account, provides running background and goals, selects training availability, reviews data permissions, and can see what information Stride has or still needs.
+An athlete creates an account, connects Garmin, continues while history imports, provides running background, availability and goals, and reviews a first athlete profile showing what Stride knows, where each value came from, and what is still missing. They can stop at any point and resume from any device.
 
 ### Understand recent training
 
@@ -43,6 +53,17 @@ An athlete records a goal event and later uses relevant training, course, and ra
 - FR-04: The athlete can see whether data is current, syncing, delayed, or unavailable and can distinguish missing information from a zero value.
 - FR-05: Road and trail activities retain shared fields such as duration and distance while allowing terrain-specific context such as elevation and surface when available.
 
+### Onboarding
+
+- FR-11: Completing onboarding requires a connected Garmin account; advancing through onboarding and completing it do not require the historical import to finish.
+- FR-12: Onboarding progress, per-step completion, profile information, preferences, goals and races persist to Stride's database as the athlete progresses and are restored after refresh, sign-out and sign-in, browser restart, network loss or on another device.
+- FR-13: Returning to an earlier step shows its saved values and allows editing; a later step cannot be reached before its prerequisites are complete.
+- FR-14: A step is marked complete only after its required data has persisted. The athlete can see whether edits are unsaved, saving, saved or failed, and failed saves can be retried without losing input.
+- FR-15: Concurrent edits from two devices and late responses never silently overwrite newer athlete input.
+- FR-16: Garmin import status shows real synchronization states, the oldest synchronized date and verified activity counts, and continues independently of onboarding navigation. Stride shows no fabricated percentages, totals, time estimates or insights.
+- FR-17: Each profile value identifies its source. Athlete edits to a Garmin-suggested value are kept and are not replaced by later Garmin data.
+- FR-18: Garmin passwords, one-time codes, provider tokens and MFA challenge secrets are never stored by Stride, in browser storage or in logs.
+
 ### Training and coaching
 
 - FR-06: Stride can present a proposed week of training that reflects the athlete's stated goal, availability, and available training history.
@@ -53,7 +74,7 @@ An athlete records a goal event and later uses relevant training, course, and ra
 
 ### Future capabilities
 
-Activity analytics, training load, readiness, multiple specialist agents, course segmentation, race prediction, race roadbooks, and broad provider support are not required for the candidate first release unless discovery changes the priority.
+Activity analytics, training load, readiness, multiple specialist agents, course segmentation, race prediction, race roadbooks, and broad provider support are not required for the candidate first release unless discovery changes the priority. Garmin race-calendar lookup, GPX course upload, Stride-derived performance predictions such as threshold pace, climbing speed, race-time estimates and heart-rate zones, and generated import insights are deferred onboarding capabilities.
 
 ## Non-functional requirements
 
@@ -65,6 +86,7 @@ Activity analytics, training load, readiness, multiple specialist agents, course
 - NFR-06 Accessibility: core journeys work with keyboard navigation, assistive technology, readable contrast, and reduced motion.
 - NFR-07 Maintainability: deterministic calculations remain independently testable; AI outputs are structured and validated at the server boundary.
 - NFR-08 Observability: record sync and coaching failures without logging secrets or unnecessary sensitive athlete data.
+- NFR-09 Resilience: onboarding remains usable while Garmin synchronization is slow or temporarily unavailable, and an interrupted save or network loss never discards athlete input without notice.
 
 ## Success measures
 
@@ -81,7 +103,7 @@ Do not optimize for recommendation acceptance alone; an informed decline can be 
 ## Assumptions and constraints
 
 - Web is the first client; the domain and service boundaries should permit a native client later.
-- Supabase is the initial platform and Garmin data flows through a dedicated integration service.
+- Supabase is the initial platform. Garmin authentication, MFA and synchronization are owned by the garmin_mcp integration service; Stride calls it from its server.
 - AI behavior is server-side, isolated from the UI, and uses validated structured outputs.
 - Deterministic training calculations do not depend on a language model where they can be implemented directly.
 - Garmin access, permitted data use, synchronization reliability, and data retention need technical and policy validation.
@@ -92,13 +114,11 @@ Do not optimize for recommendation acceptance alone; an informed decline can be 
 - Native apps, billing, notifications, social features, and coach/team accounts
 - Medical diagnoses or treatment plans
 - Unreviewed automated changes to a training plan
-- Garmin authentication/API implementation in the current planning task
 - A production schema or an exhaustive specialist-agent catalog
 
 ## Decisions needed before implementation
 
 - Confirm the first athlete segment, event type, and highest-value journey.
-- Confirm whether Garmin is a launch dependency or a later integration.
 - Define consent, retention, deletion, and data-source failure behavior.
 - Choose the minimum useful coaching output and the degree of user control.
 - Agree on pilot size, success thresholds, and safety review ownership.

@@ -16,7 +16,7 @@ The authentication feature uses server actions, HTTP-only Supabase session cooki
 
 ## Request and data direction
 
-The browser talks to the Stride application. Server code owns privileged integrations and access control. Supabase provides PostgreSQL, Auth, and future Storage. Garmin data should pass through a dedicated integration service, be normalized, then enter the Stride backend.
+The browser talks to the Stride application. Server code owns privileged integrations and access control. Supabase provides PostgreSQL, Auth, and future Storage. Garmin connection, MFA and synchronization are owned by the garmin_mcp service; the Stride server calls its REST API with the athlete's access token and reads normalized data. See [Garmin integration](garmin.md), [data platform](database.md) and [onboarding](onboarding.md).
 
 ## Native client path
 
