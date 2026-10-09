@@ -155,3 +155,15 @@ export async function savePassword(
   if (result.status === "authenticated") redirect("/");
   return result;
 }
+
+export async function signOut(): Promise<{ error: boolean }> {
+  try {
+    const client = await createSupabaseServerClient({ writable: true });
+    const { error } = await client.auth.signOut({ scope: "local" });
+    if (error) return { error: true };
+    (await cookies()).delete(persistenceCookie);
+  } catch {
+    return { error: true };
+  }
+  redirect("/");
+}

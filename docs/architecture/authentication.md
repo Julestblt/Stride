@@ -18,6 +18,8 @@ Enable email auth, set confirmation requirements deliberately, configure product
 
 ## Sessions and recovery
 
+The temporary home page reads the current user through Supabase Auth and shows the account email with a current-session sign-out control. Signed-in athletes are redirected from `/sign-in`, `/sign-up`, `/forgot-password` and `/link-expired` to `/`; the 404 page hides its sign-in link for them. `/reset-password` remains available for an authenticated password change and `/email-confirmed` remains available after signup confirmation. Sign-out uses Supabase's local scope and clears the persistence preference only after provider sign-out succeeds. Public pages continue to render if the provider is temporarily unavailable.
+
 The remember-device control applies to password and magic-link sign-in. Auth cookies and the persistence preference are HTTP-only, same-site lax and secure on HTTPS and in production. Unchecked sign-in uses session cookies, checked sign-in retains provider expiry. The preference survives callbacks and refreshes; signup and recovery default to session cookies. Browser session restoration can preserve session cookies, so closing the browser is not a guaranteed logout. There is no browser Supabase client. Next's proxy refreshes sessions and retains provider cookies and cache headers. Auth responses are private and not cached. Sensitive password updates validate the current user with `getUser`, including confirmed email, rather than trusting cookie contents or `getSession` alone.
 
 The password route also accepts an already signed-in, confirmed account as an authenticated password-change flow; it does not claim a separate recovery-only authorization grant. Anonymous users must follow a valid link or sign in.

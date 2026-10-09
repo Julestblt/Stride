@@ -6,6 +6,7 @@ import {
   sendMagicLink,
   signIn,
 } from "@/server/auth/actions";
+import { redirectIfAuthenticated } from "@/server/auth/session";
 
 export const metadata: Metadata = {
   title: "Sign in · Stride",
@@ -17,6 +18,7 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ error?: string; reason?: string }>;
 }) {
+  await redirectIfAuthenticated();
   const parameters = await searchParams;
   return (
     <AuthShell>

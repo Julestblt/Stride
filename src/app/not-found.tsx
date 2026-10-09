@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { HistoryBackButton } from "@/features/not-found/components/history-back-button";
+import { getCurrentUser } from "@/server/auth/session";
 
 export const metadata: Metadata = {
   title: "404 · Page introuvable | Stride",
@@ -108,27 +109,30 @@ function Wordmark() {
   );
 }
 
-function NotFoundActions() {
+function NotFoundActions({ authenticated }: { authenticated: boolean }) {
   return (
     <div className="mt-auto flex flex-col gap-2.5 pt-10 md:mt-7 md:pt-0">
       <Button asChild className="w-full">
         <Link href="/">Retour à Stride</Link>
       </Button>
       <HistoryBackButton />
-      <p className="pt-3 text-center text-sm text-muted-foreground">
-        Pas connecté ?{" "}
-        <Link
-          className="font-medium text-accent hover:underline"
-          href="/sign-in"
-        >
-          Se connecter
-        </Link>
-      </p>
+      {!authenticated && (
+        <p className="pt-3 text-center text-sm text-muted-foreground">
+          Pas connecté ?{" "}
+          <Link
+            className="font-medium text-accent hover:underline"
+            href="/sign-in"
+          >
+            Se connecter
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
 
-export default function NotFound() {
+export default async function NotFound() {
+  const authenticated = Boolean(await getCurrentUser());
   return (
     <main
       lang="fr"
@@ -173,7 +177,7 @@ export default function NotFound() {
               sur le tracé, on repart d&apos;ici.
             </p>
           </div>
-          <NotFoundActions />
+          <NotFoundActions authenticated={authenticated} />
         </div>
       </section>
     </main>
