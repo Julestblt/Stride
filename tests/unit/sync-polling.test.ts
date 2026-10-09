@@ -5,10 +5,10 @@ import {
   observeSync,
   syncObservationSchema,
 } from "../../src/features/onboarding/sync-polling";
-import type { GarminSyncStatus } from "../../src/features/garmin/sync";
+import type { SyncObservation } from "../../src/features/onboarding/sync-polling";
 function observation(
   state: "running" | "partial" | "complete" | "failed" = "running",
-): GarminSyncStatus {
+): SyncObservation {
   const category = {
     state,
     oldestSynchronizedDate: null,
@@ -26,6 +26,7 @@ function observation(
     },
     lastSyncAt: null,
     updatedAt: null,
+    firstActivityDate: null,
   };
 }
 describe("sync polling policy", () => {

@@ -23,7 +23,10 @@ export function OnboardingShell({
 }) {
   return (
     <OnboardingStatusProvider
-      connected={connectionNotice(connection) === "connected"}
+      polling={
+        connectionNotice(connection) === "connected" ||
+        isStepComplete(progress, "garmin")
+      }
     >
       <StepNavigation
         progress={progress}
@@ -31,7 +34,7 @@ export function OnboardingShell({
         email={email}
         connection={connection}
       >
-        {isStepComplete(progress, "garmin") && (
+        {isStepComplete(progress, "garmin") && step !== "history" && (
           <div className="w-full max-w-160 empty:hidden">
             <SyncNotice connection={connection} />
           </div>

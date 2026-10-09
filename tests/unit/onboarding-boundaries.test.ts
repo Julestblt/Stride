@@ -191,12 +191,34 @@ describe("sync route ownership and caching", () => {
       updatedAt: null,
     };
     mocks.sync.mockResolvedValue({ ok: true, value: observation });
+    const eq = vi.fn(() => ({
+      order: () => ({
+        limit: () => ({
+          maybeSingle: async () => ({
+            data: { started_at: "2025-03-14T07:12:00+00:00" },
+            error: null,
+          }),
+        }),
+      }),
+    }));
+    const from = vi.fn(() => ({ select: () => ({ eq }) }));
+    mocks.context.mockResolvedValue({
+      client: { from },
+      userId,
+      email: "athlete@example.com",
+      accessToken: "private-token",
+    });
     const response = await GET();
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     expect(response.headers.get("Vary")).toBe("Cookie");
-    expect(await response.json()).toEqual(observation);
+    expect(await response.json()).toEqual({
+      ...observation,
+      firstActivityDate: "2025-03-14",
+    });
     expect(mocks.sync).toHaveBeenCalledWith({ accessToken: "private-token" });
+    expect(from).toHaveBeenCalledWith("provider_activities");
+    expect(eq).toHaveBeenCalledWith("user_id", userId);
   });
   it("returns unauthorized for signed-out callers and never reads provider data", async () => {
     mocks.context.mockResolvedValue(null);

@@ -90,7 +90,7 @@ export function StepNavigation({
     <div lang="fr" className="flex min-h-svh bg-background">
       <aside
         aria-label="Configuration de ton coach"
-        className="hidden w-66 shrink-0 flex-col gap-8 px-4.5 py-5 lg:flex"
+        className="sticky top-0 hidden h-svh w-66 shrink-0 flex-col gap-8 overflow-y-auto px-4.5 py-5 lg:flex"
       >
         <span className="flex items-center gap-2.5 font-metric text-title font-semibold uppercase">
           <StrideMark /> Stride
