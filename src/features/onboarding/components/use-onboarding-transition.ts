@@ -12,11 +12,12 @@ export function useOnboardingTransition() {
     startTransition(async () => {
       try {
         const result = await action();
-        if (result.status === "success") {
-          router.push(result.href);
-          router.refresh();
-        } else if (result.code === "session-expired")
-          router.replace("/sign-in");
+        if (result.status === "success")
+          startTransition(() => {
+            router.push(result.href);
+            router.refresh();
+          });
+        else if (result.code === "session-expired") router.replace("/sign-in");
         else {
           setMessage(result.message);
           if (result.code === "conflict") router.refresh();
