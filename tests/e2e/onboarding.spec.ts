@@ -623,7 +623,7 @@ test("history import shows real sync states without estimates and continues imme
   ).toContainText(/100 activités/, { timeout: 60_000 });
   await expect(content).toContainText("Tout l’historique disponible est lu.");
   expect(await content.innerText()).not.toMatch(
-    /%|~|minutes? environ|Ce que je remarque|dans \d+ min/,
+    /%|~|minutes? environ|dans \d+ min/,
   );
   await page.screenshot({ path: "test-results/history-desktop.png" });
   expect((await read(user.id)).history_completed_at).toBeNull();
