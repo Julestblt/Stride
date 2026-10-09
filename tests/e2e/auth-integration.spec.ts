@@ -205,7 +205,7 @@ test("overlapping recovery requests retain the earlier link verifier", async ({
     )
   ).json();
   await anonymous.goto(later.url);
-  await expect(anonymous).toHaveURL(/\/sign-in\?error=link$/);
+  await expect(anonymous).toHaveURL(/\/sign-in\?error=link&reason=verifier$/);
   await isolated.close();
 });
 
