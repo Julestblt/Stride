@@ -60,6 +60,7 @@ beforeEach(() => {
   mocks.context.mockResolvedValue({
     client: { rpc: mocks.rpc },
     userId,
+    email: "athlete@example.com",
     accessToken: "private-token",
   });
   mocks.progress.mockResolvedValue(progress);
@@ -159,6 +160,7 @@ describe("onboarding request guards", () => {
     expect(await getOnboardingRequest()).toEqual({
       progress,
       connection: { ok: false, failure: { code: "network" } },
+      email: "athlete@example.com",
     });
     expect(mocks.rpc).not.toHaveBeenCalled();
     mocks.connection.mockResolvedValue({

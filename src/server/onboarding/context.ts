@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/server/supabase/client";
 export type OnboardingContext = {
   client: SupabaseClient<Database>;
   userId: string;
+  email: string | null;
   accessToken: string;
 };
 export async function verifyOnboardingContext(
@@ -29,6 +30,7 @@ export async function verifyOnboardingContext(
   return {
     client,
     userId: data.user.id,
+    email: data.user.email ?? null,
     accessToken: session.session.access_token,
   };
 }

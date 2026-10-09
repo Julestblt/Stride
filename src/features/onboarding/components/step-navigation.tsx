@@ -1,6 +1,4 @@
 "use client";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +17,7 @@ import {
 } from "@/features/onboarding/progress";
 import type { ProgressSnapshot } from "@/features/onboarding/schemas";
 import { navigateOnboarding } from "@/server/onboarding/actions";
+import { useOnboardingTransition } from "./use-onboarding-transition";
 const statusLabels: Record<StepStatus, string> = {
   done: "Terminée",
   current: "Étape actuelle",
@@ -28,15 +27,15 @@ const statusLabels: Record<StepStatus, string> = {
 export function StepNavigation({
   progress,
   step,
+  email,
   children,
 }: {
   progress: ProgressSnapshot;
   step: OnboardingStep;
+  email: string | null;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const { pending, message, run } = useOnboardingTransition();
   const position = onboardingSteps.indexOf(step);
   const statuses = onboardingSteps.map((target): StepStatus =>
     target === step
@@ -50,26 +49,10 @@ export function StepNavigation({
     .reverse()
     .find((target) => isStepAllowed(progress, target));
   function navigate(target: OnboardingStep) {
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        const result = await navigateOnboarding({
-          step: target,
-          revision: progress.revision,
-        });
-        if (result.status === "success") {
-          router.push(result.href);
-          router.refresh();
-        } else if (result.code === "session-expired")
-          router.replace("/sign-in");
-        else {
-          setMessage(result.message);
-          if (result.code === "conflict") router.refresh();
-        }
-      } catch {
-        setMessage("La navigation a échoué. Réessaie dans un instant.");
-      }
-    });
+    run(
+      () => navigateOnboarding({ step: target, revision: progress.revision }),
+      "La navigation a échoué. Réessaie dans un instant.",
+    );
   }
   return (
     <div lang="fr" className="flex min-h-svh bg-background">
@@ -106,6 +89,14 @@ export function StepNavigation({
             ))}
           </Stepper>
         </nav>
+        {email && (
+          <p className="mt-auto flex flex-col gap-1 px-0.5">
+            <span className="text-xs text-muted-foreground">
+              Connecté en tant que
+            </span>
+            <span className="text-meta break-all">{email}</span>
+          </p>
+        )}
       </aside>
       <main
         id="onboarding-content"
