@@ -36,3 +36,11 @@ export type OnboardingActionResult =
       message: string;
       progress?: ProgressSnapshot;
     };
+export const garminCredentialsSchema = z.strictObject({
+  email: z.email().max(254),
+  password: z.string().min(1).max(256),
+});
+export const garminCodeSchema = z.strictObject({
+  challengeId: z.uuid(),
+  otp: z.string().regex(/^\d{6}$/),
+});

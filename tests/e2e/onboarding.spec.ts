@@ -309,3 +309,230 @@ test("real sync count continues across navigation, shell geometry and keyboard a
   ).toBe(true);
   await page.screenshot({ path: "test-results/onboarding-mobile.png" });
 });
+async function atGarminStep(page: Page) {
+  const user = await makeAthlete();
+  await signIn(page, user.email);
+  const row = await read(user.id);
+  const welcome = await user.client.rpc("complete_onboarding_step", {
+    p_step: "welcome",
+    p_expected_revision: row.revision,
+  });
+  if (welcome.error) throw welcome.error;
+  await page.goto("/onboarding/garmin");
+  await expect(
+    page.getByRole("heading", { name: "Connecter Garmin" }),
+  ).toBeVisible();
+  return user;
+}
+function watchTraffic(page: Page) {
+  const urls: string[] = [];
+  const bodies: Promise<string>[] = [];
+  page.on("request", (request) => urls.push(request.url()));
+  page.on("response", (response) => {
+    if (response.request().method() === "POST")
+      bodies.push(response.text().catch(() => ""));
+  });
+  return async () => ({ urls, bodies: await Promise.all(bodies) });
+}
+async function expectNothingPersisted(
+  page: Page,
+  traffic: () => Promise<{ urls: string[]; bodies: string[] }>,
+  secrets: string[],
+) {
+  const stored = await page.evaluate(() =>
+    JSON.stringify({ ...localStorage, ...sessionStorage, url: location.href }),
+  );
+  const cookies = JSON.stringify(await page.context().cookies());
+  const { urls, bodies } = await traffic();
+  for (const secret of secrets) {
+    expect(stored).not.toContain(secret);
+    expect(cookies).not.toContain(secret);
+    for (const url of urls) expect(url).not.toContain(secret);
+    for (const body of bodies) expect(body).not.toContain(secret);
+  }
+}
+async function signInToGarmin(page: Page, email: string, password: string) {
+  await page.getByLabel("E-mail Garmin Connect").fill(email);
+  await page.getByLabel("Mot de passe Garmin Connect").fill(password);
+  await page.getByLabel("Mot de passe Garmin Connect").press("Enter");
+}
+test("Garmin connects without MFA, recovers from invalid credentials and keeps secrets out of storage", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const user = await atGarminStep(page);
+  const traffic = watchTraffic(page);
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Connecte-toi à Garmin Connect" }),
+  ).toBeVisible();
+  await signInToGarmin(page, "athlete@example.com", "wrong-password");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "n’a pas pu vérifier" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("E-mail Garmin Connect")).toHaveValue(
+    "athlete@example.com",
+  );
+  await expect(page.getByLabel("Mot de passe Garmin Connect")).toHaveValue("");
+  await expect(page.getByLabel("Mot de passe Garmin Connect")).toBeFocused();
+  await page.screenshot({ path: "test-results/garmin-invalid-desktop.png" });
+  await page.getByLabel("Mot de passe Garmin Connect").fill("correct-password");
+  await page.getByRole("button", { name: "Réessayer", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Garmin connecté" }),
+  ).toBeVisible();
+  await expect(page.getByText("Passage automatique dans")).toBeVisible();
+  await expect(page).toHaveURL(/\/onboarding\/history$/, { timeout: 10_000 });
+  const progress = await read(user.id);
+  expect(progress.garmin_completed_at).not.toBeNull();
+  expect(progress.current_step).toBe("history");
+  await expectNothingPersisted(page, traffic, [
+    "correct-password",
+    "wrong-password",
+  ]);
+  await page.goto("/onboarding/garmin");
+  await expect(
+    page.getByRole("heading", { name: "Garmin connecté" }),
+  ).toBeVisible();
+  await expect(page.getByText("Passage automatique dans")).toHaveCount(0);
+});
+test("Garmin MFA handles refresh, rejected and expired codes, then a pasted code", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const user = await atGarminStep(page);
+  const traffic = watchTraffic(page);
+  const toCode = async () => {
+    await signInToGarmin(page, "mfa@example.com", "correct-password");
+    await expect(
+      page.getByRole("heading", { name: "Confirme que c’est toi" }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Code de vérification")).toBeFocused();
+  };
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await toCode();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Connecter Garmin" }),
+  ).toBeVisible();
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await toCode();
+  const verify = page.getByRole("button", { name: "Vérifier", exact: true });
+  await expect(verify).toBeDisabled();
+  await page.getByLabel("Code de vérification").fill("000000");
+  await verify.click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Ce code n’a pas été accepté." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Se reconnecter" }).click();
+  await expect(page.getByLabel("E-mail Garmin Connect")).toHaveValue(
+    "mfa@example.com",
+  );
+  await expect(page.getByLabel("Mot de passe Garmin Connect")).toHaveValue("");
+  await toCode();
+  await page.getByLabel("Code de vérification").fill("111111");
+  await verify.click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Ce code a expiré." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Se reconnecter" }).click();
+  await toCode();
+  await page.getByLabel("Code de vérification").fill("482 716");
+  await expect(page.getByLabel("Code de vérification")).toHaveValue("482716");
+  await page.screenshot({ path: "test-results/garmin-code-mobile.png" });
+  await page.getByLabel("Code de vérification").press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "Garmin connecté" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Continuer vers l’import", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/onboarding\/history$/);
+  expect((await read(user.id)).garmin_completed_at).not.toBeNull();
+  await expectNothingPersisted(page, traffic, [
+    "correct-password",
+    "482716",
+    "000000",
+    "111111",
+  ]);
+});
+test("Garmin outages, rate limits and failed connections keep the athlete on sign-in", async ({
+  page,
+}) => {
+  const user = await atGarminStep(page);
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await signInToGarmin(page, "unavailable@example.com", "correct-password");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "plus de temps que d’habitude" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Mot de passe Garmin Connect")).toHaveValue(
+    "correct-password",
+  );
+  await signInToGarmin(page, "limited@example.com", "correct-password");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "en pause un instant" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Réessayer", exact: true }),
+  ).toBeEnabled();
+  await signInToGarmin(page, "paused@example.com", "correct-password");
+  await expect(
+    page.getByRole("button", { name: /^Réessayer dans [12]:\d\d$/ }),
+  ).toBeDisabled();
+  await page.reload();
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await signInToGarmin(page, "failed@example.com", "correct-password");
+  await expect(
+    page.getByRole("alert").filter({ hasText: "n’a pas pu aboutir" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Mot de passe Garmin Connect")).toHaveValue("");
+  await page
+    .getByRole("button", { name: "Retour", exact: true })
+    .last()
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Connecter Garmin" }),
+  ).toBeVisible();
+  expect((await read(user.id)).garmin_completed_at).toBeNull();
+});
+test("a slow Garmin sign-in explains the wait after 15 seconds", async ({
+  page,
+}) => {
+  await page.clock.install();
+  await atGarminStep(page);
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin" })
+    .click();
+  await signInToGarmin(page, "slow@example.com", "correct-password");
+  await expect(
+    page.getByRole("button", { name: "Connexion à Garmin…" }),
+  ).toBeVisible();
+  await page.clock.fastForward(15_000);
+  await expect(
+    page.getByText("Toujours en contact avec Garmin…"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Garmin connecté" }),
+  ).toBeVisible({ timeout: 10_000 });
+});

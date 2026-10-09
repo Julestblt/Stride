@@ -75,6 +75,8 @@ Forms show `unsaved`, `saving`, `saved`, `offline` and `error` states near the C
 
 Garmin email and password are posted from the browser to a Stride server action, forwarded once to garmin_mcp, and never stored, logged or returned. The password field is cleared after an invalid-credentials response. The MFA challenge identifier is held only in component memory for the active attempt and is never written to Supabase, cookies or browser storage; refreshing during MFA returns to the start of the Garmin step, as in the approved state model. OTP codes are never stored. Garmin codes and messages are mapped to approved French copy; raw provider messages are not shown.
 
+The `startGarminConnection` and `verifyGarminCode` server actions validate credentials and six-digit codes with Zod, require a verified session and an unlocked Garmin step, and return only `connected`, `mfa_required` with the challenge identifier, or an approved failure state. The browser maps those states with the framework-independent `garmin-flow` policy: invalid credentials clear the password and keep the email, Garmin outages keep every input, and rejected or expired codes return to sign-in because garmin_mcp consumes the challenge. The Garmin step is recorded only when the athlete continues from the connected screen. At that point the completion action reads a fresh `connected` status before invoking the constrained server RPC. Athletes who are already connected open directly on the connected screen.
+
 ## Testing
 
 - Unit: progression rules, resume-step resolution, Garmin error mapping, sync status mapping, save queue sequencing and conflict handling.

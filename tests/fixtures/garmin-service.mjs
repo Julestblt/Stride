@@ -115,8 +115,14 @@ export function createGarminService() {
       const { email, password } = body;
       if (typeof email !== "string" || typeof password !== "string")
         return failure(response, 400, "invalid_request");
+      if (email.startsWith("paused"))
+        return failure(response, 429, "rate_limited", { "Retry-After": "120" });
       if (email.startsWith("limited"))
         return failure(response, 429, "rate_limited");
+      if (email.startsWith("failed"))
+        return failure(response, 409, "connection_changed");
+      if (email.startsWith("slow"))
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       if (email.startsWith("unavailable"))
         return failure(response, 503, "provider_unavailable");
       if (password === "wrong-password")
@@ -138,6 +144,7 @@ export function createGarminService() {
         return failure(response, 410, "challenge_expired");
       challenges.delete(challengeId);
       if (otp === "000000") return failure(response, 401, "invalid_mfa");
+      if (otp === "111111") return failure(response, 410, "challenge_expired");
       return json(response, 200, connect(user));
     }
 
