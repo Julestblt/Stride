@@ -60,7 +60,8 @@ An athlete records a goal event and later uses relevant training, course, and ra
 - FR-13: Returning to an earlier step shows its saved values and allows editing; a later step cannot be reached before its prerequisites are complete.
 - FR-14: A step is marked complete only after its required data has persisted. The athlete can see whether edits are unsaved, saving, saved or failed, and failed saves can be retried without losing input.
 - FR-15: Concurrent edits from two devices and late responses never silently overwrite newer athlete input.
-- FR-16: Garmin import status shows real synchronization states, the oldest synchronized date and verified activity counts, and continues independently of onboarding navigation. Stride shows no fabricated percentages, totals, time estimates or insights.
+- FR-16: Garmin import status shows real synchronization states, the oldest synchronized date and verified activity counts, and continues independently of onboarding navigation. Stride shows no fabricated percentages, totals or time estimates.
+- FR-16a: The import step shows "Ce que je remarque": up to four observations computed deterministically from the athlete's imported activities and recovery data, each with its source window. A language model may rephrase them once the activity import is complete, but never adds numbers or advice; deterministic sentences are shown when the model is unavailable.
 - FR-17: Each profile value identifies its source. Athlete edits to a Garmin-suggested value are kept and are not replaced by later Garmin data.
 - FR-18: Garmin passwords, one-time codes, provider tokens and MFA challenge secrets are never stored by Stride, in browser storage or in logs.
 
