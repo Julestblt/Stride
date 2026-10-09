@@ -13,6 +13,7 @@ test("remote dev origin loads signup scripts and password guidance", async ({
     exact: true,
   });
   await expect(createAccount).toBeDisabled();
+  await page.getByLabel("Full name").fill("Jules Thibault");
   await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
   await password.fill("LongTrailAtSunrise2026!");
   await page

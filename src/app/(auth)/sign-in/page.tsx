@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
-import { sendMagicLink, signIn } from "@/server/auth/actions";
+import {
+  resendConfirmationLink,
+  sendMagicLink,
+  signIn,
+} from "@/server/auth/actions";
 
 export const metadata: Metadata = {
   title: "Sign in · Stride",
@@ -19,6 +23,7 @@ export default async function SignInPage({
       <SignInForm
         action={signIn}
         magicAction={sendMagicLink}
+        resendAction={resendConfirmationLink}
         linkError={parameters.error === "link"}
         missingRecoveryVerifier={parameters.reason === "verifier"}
       />

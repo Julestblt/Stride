@@ -10,11 +10,13 @@ import {
   type AuthState,
 } from "@/features/auth/schemas";
 import { passwordPolicy } from "@/features/auth/password-policy";
+import { callbackUrl } from "./environment";
 
 type AuthProvider = Pick<
   SupabaseClient["auth"],
   | "signInWithPassword"
   | "signUp"
+  | "resend"
   | "signInWithOtp"
   | "resetPasswordForEmail"
   | "getUser"
@@ -46,8 +48,31 @@ export async function authenticate(
         : await provider.signUp({
             email,
             password,
-            ...(emailRedirectTo ? { options: { emailRedirectTo } } : {}),
+            options: {
+              data: {
+                full_name:
+                  "fullName" in result.data ? result.data.fullName : "",
+              },
+              ...(emailRedirectTo ? { emailRedirectTo } : {}),
+            },
           });
+    if (response.error?.code === "email_not_confirmed" && mode === "sign-in") {
+      const confirmationRedirect =
+        emailRedirectTo ?? callbackUrl("/email-confirmed");
+      const resent = await provider.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: confirmationRedirect },
+      });
+      return {
+        status: "unconfirmed",
+        email,
+        sentAt: resent.error ? undefined : Date.now(),
+        message: resent.error
+          ? "Confirm your email to continue. Open the newest confirmation link or request another one."
+          : "Your address isn't confirmed yet. We sent a new confirmation link. Open the newest email to continue.",
+      };
+    }
     if (response.error)
       return {
         status: "error",
@@ -63,8 +88,40 @@ export async function authenticate(
     return {
       status: "success",
       email,
+      sentAt: Date.now(),
+    };
+  } catch {
+    return { status: "error", email, message: unavailableMessage };
+  }
+}
+
+export async function resendConfirmation(
+  provider: AuthProvider,
+  data: FormData,
+  redirectTo: string,
+): Promise<AuthState> {
+  const result = emailSchema.safeParse(formInput(data));
+  if (!result.success) return validationState(result.error, data.get("email"));
+  const { email } = result.data;
+  try {
+    const response = await provider.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: redirectTo },
+    });
+    if (response.error)
+      return {
+        status: "error",
+        email,
+        message:
+          "We couldn't send a new link. Please wait a minute and try again.",
+      };
+    return {
+      status: "success",
+      email,
+      sentAt: Date.now(),
       message:
-        "Check your inbox. If confirmation is needed for this email, follow the link before signing in.",
+        "If this address needs confirmation, check your inbox for the newest link.",
     };
   } catch {
     return { status: "error", email, message: unavailableMessage };

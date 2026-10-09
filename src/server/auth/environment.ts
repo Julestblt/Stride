@@ -31,12 +31,16 @@ export function parseSiteUrl(value: unknown) {
   return siteUrlSchema.parse(value);
 }
 
-export function callbackUrl(next: "/" | "/reset-password" = "/") {
+export function callbackUrl(
+  next: "/" | "/reset-password" | "/email-confirmed" = "/",
+) {
   const url = new URL("/auth/callback", parseSiteUrl(process.env.SITE_URL));
   url.searchParams.set("next", next);
   return url.toString();
 }
 
 export function safeDestination(value: string | null) {
-  return value === "/reset-password" ? "/reset-password" : "/";
+  return value === "/reset-password" || value === "/email-confirmed"
+    ? value
+    : "/";
 }

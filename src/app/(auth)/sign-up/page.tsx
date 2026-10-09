@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { SignUpForm } from "@/features/auth/components/sign-up-form";
-import { signUp } from "@/server/auth/actions";
+import { resendConfirmationLink, signUp } from "@/server/auth/actions";
 
 export const metadata: Metadata = {
   title: "Create account · Stride",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function SignUpPage() {
   return (
     <AuthShell signup>
-      <SignUpForm action={signUp} />
+      <SignUpForm action={signUp} resendAction={resendConfirmationLink} />
     </AuthShell>
   );
 }
