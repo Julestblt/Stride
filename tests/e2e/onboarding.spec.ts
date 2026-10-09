@@ -159,7 +159,9 @@ test("Welcome persists completion before moving on and stays reachable without r
   await expect(
     page.getByRole("heading", { name: "Configurons ton coach." }),
   ).toBeVisible();
-  await expect(page.getByRole("complementary")).toContainText(user.email);
+  await expect(
+    page.getByRole("complementary", { name: "Configuration de ton coach" }),
+  ).toContainText(user.email);
   await page.route("**/onboarding/welcome", (route) =>
     route.request().method() === "POST" ? route.abort() : route.continue(),
   );
@@ -284,10 +286,12 @@ test("real sync count continues across navigation, shell geometry and keyboard a
   await expect(importCard).toContainText(
     /\d+ activités · actuellement en \d{4}/,
   );
-  await expect(page.getByRole("complementary")).toContainText(
-    /Lecture en cours · \d{4}/,
-  );
-  const sidebar = await page.getByRole("complementary").boundingBox();
+  await expect(
+    page.getByRole("complementary", { name: "Configuration de ton coach" }),
+  ).toContainText(/Lecture en cours · \d{4}/);
+  const sidebar = await page
+    .getByRole("complementary", { name: "Configuration de ton coach" })
+    .boundingBox();
   expect(sidebar?.width).toBe(264);
   await page.screenshot({ path: "test-results/onboarding-desktop.png" });
   await page.getByRole("button", { name: "Retour", exact: true }).focus();
@@ -298,7 +302,10 @@ test("real sync count continues across navigation, shell geometry and keyboard a
   await expect(page).toHaveURL(/\/onboarding\/history$/);
   await expect(importCard).toContainText(/(50|75|100) activités/);
   await expect(
-    page.locator("header").getByText("Garmin connecté"),
+    page
+      .locator("header")
+      .getByText("Garmin connecté")
+      .filter({ visible: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -374,9 +381,9 @@ test("Garmin connects without MFA, recovers from invalid credentials and keeps s
   await expect(
     page.getByRole("heading", { name: "Connecte-toi à Garmin Connect" }),
   ).toBeVisible();
-  await expect(page.getByRole("complementary")).toContainText(
-    "Connexion en cours",
-  );
+  await expect(
+    page.getByRole("complementary", { name: "Configuration de ton coach" }),
+  ).toContainText("Connexion en cours");
   await signInToGarmin(page, "athlete@example.com", "wrong-password");
   await expect(
     page.getByRole("alert").filter({ hasText: "n’a pas pu vérifier" }),
@@ -394,10 +401,15 @@ test("Garmin connects without MFA, recovers from invalid credentials and keeps s
   ).toBeVisible();
   await expect(page.getByText("Passage automatique dans")).toBeVisible();
   await expect(
-    page.getByRole("complementary").getByText("Connecté", { exact: true }),
+    page
+      .getByRole("complementary", { name: "Configuration de ton coach" })
+      .getByText("Connecté", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.locator("header").getByText("Garmin connecté"),
+    page
+      .locator("header")
+      .getByText("Garmin connecté")
+      .filter({ visible: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/onboarding\/history$/, { timeout: 10_000 });
   const progress = await read(user.id);
