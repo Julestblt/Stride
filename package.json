@@ -19,7 +19,8 @@
     "db:test": "supabase test db",
     "db:advisors": "supabase db advisors --local --type all --fail-on warn",
     "db:types": "supabase gen types typescript --local --schema public > src/server/supabase/database.types.ts && prettier --write src/server/supabase/database.types.ts",
-    "garmin:smoke": "node scripts/garmin-smoke.mjs"
+    "garmin:smoke": "node scripts/garmin-smoke.mjs",
+    "test:e2e:onboarding": "node tests/fixtures/onboarding-setup.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

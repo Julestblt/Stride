@@ -45,6 +45,7 @@ export function StepperItem({
   index,
   label,
   detail,
+  statusLabels = statusText,
   className,
   ...props
 }: Omit<React.ComponentProps<"li">, "children"> & {
@@ -52,6 +53,7 @@ export function StepperItem({
   index: number;
   label: React.ReactNode;
   detail?: React.ReactNode;
+  statusLabels?: Record<StepStatus, string>;
 }) {
   return (
     <li
@@ -75,7 +77,7 @@ export function StepperItem({
           )}
         >
           {label}
-          <span className="sr-only">, {statusText[status]}</span>
+          <span className="sr-only">, {statusLabels[status]}</span>
         </span>
         {detail && (
           <span className="text-xs text-muted-foreground">{detail}</span>

@@ -1,6 +1,6 @@
 # Data platform
 
-Supabase provides PostgreSQL, Auth, and future Storage. Application access uses server integration modules and typed domain boundaries. Never use a service-role key in Stride or a browser, and never bypass row-level security for convenience. Keep provider payloads and normalized domain records distinguishable.
+Supabase provides PostgreSQL, Auth, and future Storage. Application access uses server integration modules and typed domain boundaries. Ordinary Stride operations use the athlete session under RLS. Following #42, the server-only completion module uses `SUPABASE_ONBOARDING_COMPLETION_KEY` solely for the constrained `complete_onboarding_step_server` RPC after verified identity and fresh connected Garmin. A missing key fails closed; no key reaches the browser. Keep provider payloads and normalized domain records distinguishable.
 
 ## Schema ownership
 
@@ -15,13 +15,13 @@ Stride may read garmin_mcp's normalized tables through their owner-only policies
 
 ## Migrations
 
-Stride uses the Supabase CLI with versioned SQL migrations in `supabase/migrations`. Every Stride table has RLS enabled, owner-only policies using `(select auth.uid()) = user_id`, no `anon` grants, and only the `authenticated` privileges it needs. Migrations are reviewed in a pull request before they are applied anywhere. Local and CI stacks also apply garmin_mcp migrations from a pinned revision after Stride migrations, so tests run against the real shared schema without copying it. The two schemas do not reference each other, so the order is not significant.
+Stride uses the Supabase CLI with versioned SQL migrations in `supabase/migrations`. Every Stride table has RLS enabled, owner-only policies using `(select auth.uid()) = user_id`, no `anon` grants, and only the `authenticated` privileges it needs. Migrations are reviewed in a pull request before they are applied anywhere. Isolated CI stacks also apply garmin_mcp migrations from a pinned revision after Stride migrations, so tests run against the real shared schema without copying it. The two schemas do not reference each other, so the order is not significant.
 
 ## Environments
 
 | Environment | Use                                                                                  |
 | ----------- | ------------------------------------------------------------------------------------ |
-| Local       | Supabase CLI stack for development, CI integration, RLS and browser tests            |
+| CI          | Isolated Supabase CLI stack for schema, RLS and onboarding browser tests             |
 | Staging     | Separate Supabase project for deployed Stride, garmin_mcp and live Garmin validation |
 | Protected   | The current shared project; its production or staging role is unconfirmed            |
 
@@ -30,3 +30,5 @@ Do not apply destructive or unreviewed changes to the protected project. Applyin
 ## Data handling
 
 Athlete profile, goals and races are personal data. Collect only fields with a documented onboarding purpose. Deleting an auth user cascades to Stride-owned rows. Retention, export and deletion behavior beyond account deletion remain E-01 decisions.
+
+The application uses hosted Supabase, including local frontend development. Local Supabase runs only in isolated CI. Do not start a local stack or create test athletes against the protected hosted project. Production uses the publishable key plus session cookies for ordinary operations; the completion credential is configured separately by an explicitly approved deployment action. The typed cookie client uses the tooling-generated `Database` type.

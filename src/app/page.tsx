@@ -1,9 +1,23 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { onboardingEnabled } from "@/server/onboarding/environment";
+import { getOnboardingContext } from "@/server/onboarding/context";
+import { ensureProgress } from "@/server/onboarding/progress";
+import { onboardingPath, resumeStep } from "@/features/onboarding/progress";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
 import { getCurrentUser } from "@/server/auth/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const user = await getCurrentUser();
+  if (user && onboardingEnabled()) {
+    const context = await getOnboardingContext();
+    if (!context) redirect("/sign-in");
+    const progress = await ensureProgress(context).catch(() => null);
+    if (!progress) redirect("/onboarding");
+    if (!progress.completed_at) redirect(onboardingPath(resumeStep(progress)));
+  }
   return (
     <main className="flex min-h-svh flex-col px-5 sm:px-10 lg:px-24">
       <header className="flex min-h-22 items-center justify-between border-b border-border">

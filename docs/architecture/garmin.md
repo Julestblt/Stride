@@ -55,3 +55,7 @@ garmin_mcp should be reachable from Stride over the internal Dokploy network onl
 ## Testing
 
 Unit and browser tests use recorded fixtures and a local fixture server that implements this contract. Live tests run against staging with dedicated Garmin and Supabase test accounts supplied from a secret manager, never in default CI.
+
+## Onboarding foundation
+
+Each enabled onboarding render reads live connection status. Recorded Garmin completion preserves unlocked steps during disconnect, reconnect or provider outage, while Garmin/profile completion requires a new connected response immediately before its constrained server RPC. The authenticated `/api/onboarding/sync` handler forwards only the verified session token, normalizes responses, and disables caching. Category states, activity counts and oldest synchronized dates are displayed directly without percentages or estimates. Browser polling never starts or modifies synchronization jobs.

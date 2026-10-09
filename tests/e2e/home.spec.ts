@@ -76,3 +76,13 @@ test("Night Track utilities and global accessibility defaults resolve in the bro
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(raised).toHaveCSS("animation-name", "none");
 });
+
+test("deferred onboarding routes and sync endpoint remain unavailable", async ({
+  request,
+}) => {
+  expect((await request.get("/onboarding")).status()).toBe(404);
+  expect((await request.get("/onboarding/welcome")).status()).toBe(404);
+  const sync = await request.get("/api/onboarding/sync");
+  expect(sync.status()).toBe(404);
+  expect(sync.headers()["cache-control"]).toContain("no-store");
+});
