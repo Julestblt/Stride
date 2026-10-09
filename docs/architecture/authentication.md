@@ -1,6 +1,6 @@
 # Authentication
 
-The public `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password` and `/link-expired` routes use feature-local React forms and server actions. Supabase access lives under `src/server`. Signup confirmation reaches `/email-confirmed` only with a verified session; other successful Auth flows return to the existing `/`. Onboarding and a protected dashboard are outside this change.
+The public `/sign-in`, `/sign-up`, `/forgot-password`, `/reset-password` and `/link-expired` routes use feature-local React forms and server actions. Supabase access lives under `src/server`. Signup confirmation reaches `/email-confirmed` only with a verified session; other successful Auth flows return to the existing `/`. Onboarding routing and restoration are described in [onboarding](onboarding.md); a protected dashboard is outside this change.
 
 Email, Full name and password input is validated with Zod before provider calls. Signup stores the trimmed Full name in Supabase Auth `user_metadata.full_name` for display only; it is never used for authorization. New passwords require 10–128 characters, matching confirmation, and must not contain the email's local part (three or more characters) or match a small local list of common/repeated passwords. The strength meter describes this local length policy, not an entropy estimate or a breach check. Configure Supabase's password policy to at least the same minimum; leaked-password protection is a separate provider setting and is not claimed by the UI.
 
