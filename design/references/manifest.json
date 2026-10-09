@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 71,
-    "html_exports": 71,
-    "matched": 71,
-    "exact": 71,
+    "screenshots": 80,
+    "html_exports": 80,
+    "matched": 80,
+    "exact": 80,
     "high": 0,
     "uncertain": 0
   },
@@ -90,7 +90,7 @@
       "original_screenshot_name": "Auth · Sign up · Desktop.png",
       "original_export_name": "Auth · Sign up · Desktop-html.zip",
       "matched_confidence": "exact",
-      "notes": ""
+      "notes": "Updated signup with Full name."
     },
     {
       "id": "auth/sign-up/mobile",
@@ -103,7 +103,7 @@
       "original_screenshot_name": "Auth · Sign up · Mobile.png",
       "original_export_name": "Auth · Sign up · Mobile-html.zip",
       "matched_confidence": "exact",
-      "notes": ""
+      "notes": "Updated signup with Full name."
     },
     {
       "id": "auth/password-recovery/desktop",
@@ -936,6 +936,123 @@
       "original_export_name": "Settings · Account menu · Desktop-html.zip",
       "matched_confidence": "exact",
       "notes": "Desktop only; no mobile export."
+    },
+    {
+      "id": "auth/check-inbox/desktop",
+      "area": "auth",
+      "screen": "check-inbox",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/auth/check-inbox/screenshots/desktop.png",
+      "html_reference_path": "design/references/auth/check-inbox/source/desktop.zip",
+      "original_screenshot_name": "Auth · Check your inbox · Desktop.png",
+      "original_export_name": "Auth · Check your inbox · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/check-inbox/mobile",
+      "area": "auth",
+      "screen": "check-inbox",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/auth/check-inbox/screenshots/mobile.png",
+      "html_reference_path": "design/references/auth/check-inbox/source/mobile.zip",
+      "original_screenshot_name": "Auth · Check your inbox · Mobile.png",
+      "original_export_name": "Auth · Check your inbox · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/email-confirmed/desktop",
+      "area": "auth",
+      "screen": "email-confirmed",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/auth/email-confirmed/screenshots/desktop.png",
+      "html_reference_path": "design/references/auth/email-confirmed/source/desktop.zip",
+      "original_screenshot_name": "Auth · Email confirmed · Desktop.png",
+      "original_export_name": "Auth · Email confirmed · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/email-confirmed/mobile",
+      "area": "auth",
+      "screen": "email-confirmed",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/auth/email-confirmed/screenshots/mobile.png",
+      "html_reference_path": "design/references/auth/email-confirmed/source/mobile.zip",
+      "original_screenshot_name": "Auth · Email confirmed · Mobile.png",
+      "original_export_name": "Auth · Email confirmed · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/link-expired/desktop",
+      "area": "auth",
+      "screen": "link-expired",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/auth/link-expired/screenshots/desktop.png",
+      "html_reference_path": "design/references/auth/link-expired/source/desktop.zip",
+      "original_screenshot_name": "Auth · Link expired · Desktop.png",
+      "original_export_name": "Auth · Link expired · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/link-expired/mobile",
+      "area": "auth",
+      "screen": "link-expired",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/auth/link-expired/screenshots/mobile.png",
+      "html_reference_path": "design/references/auth/link-expired/source/mobile.zip",
+      "original_screenshot_name": "Auth · Link expired · Mobile.png",
+      "original_export_name": "Auth · Link expired · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/sign-in-unconfirmed/desktop",
+      "area": "auth",
+      "screen": "sign-in-unconfirmed",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/auth/sign-in-unconfirmed/screenshots/desktop.png",
+      "html_reference_path": "design/references/auth/sign-in-unconfirmed/source/desktop.zip",
+      "original_screenshot_name": "Auth · Sign in, email not confirmed · Desktop.png",
+      "original_export_name": "Auth · Sign in, email not confirmed · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/sign-in-unconfirmed/mobile",
+      "area": "auth",
+      "screen": "sign-in-unconfirmed",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/auth/sign-in-unconfirmed/screenshots/mobile.png",
+      "html_reference_path": "design/references/auth/sign-in-unconfirmed/source/mobile.zip",
+      "original_screenshot_name": "Auth · Sign in, email not confirmed · Mobile.png",
+      "original_export_name": "Auth · Sign in, email not confirmed · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
+    },
+    {
+      "id": "auth/confirmation-flow/spec",
+      "area": "auth",
+      "screen": "confirmation-flow",
+      "state": "spec",
+      "device": "spec",
+      "screenshot_path": "design/references/auth/confirmation-flow/screenshots/spec.png",
+      "html_reference_path": "design/references/auth/confirmation-flow/source/spec.zip",
+      "original_screenshot_name": "Auth · Account & email confirmation flow · Spec.png",
+      "original_export_name": "Auth · Account & email confirmation flow · Spec-html.zip",
+      "matched_confidence": "exact",
+      "notes": ""
     }
   ],
   "unresolved": []
