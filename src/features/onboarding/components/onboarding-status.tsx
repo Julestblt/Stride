@@ -19,14 +19,14 @@ type OnboardingStatus = {
 const OnboardingStatusContext = createContext<OnboardingStatus | null>(null);
 
 export function OnboardingStatusProvider({
-  connected,
+  polling,
   children,
 }: {
-  connected: boolean;
+  polling: boolean;
   children: React.ReactNode;
 }) {
   const [garminPhase, setGarminPhase] = useState<GarminPhase | null>(null);
-  const sync = useSyncPolling(connected || garminPhase === "connected");
+  const sync = useSyncPolling(polling || garminPhase === "connected");
   return (
     <OnboardingStatusContext value={{ garminPhase, setGarminPhase, sync }}>
       {children}
