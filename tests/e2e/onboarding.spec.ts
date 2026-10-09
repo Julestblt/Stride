@@ -612,9 +612,12 @@ test("history import shows real sync states without estimates and continues imme
   await expect(
     content.getByRole("list", { name: "Import par catégorie" }),
   ).toContainText(/\d+ activités/);
-  await expect(
-    content.getByRole("region", { name: "Historique lu" }),
-  ).toContainText(/\d{4} : lue/);
+  const years = await content
+    .getByRole("region", { name: "Historique lu" })
+    .getByRole("listitem")
+    .count();
+  expect(years).toBeGreaterThanOrEqual(1);
+  expect(years).toBeLessThanOrEqual(12);
   await expect(
     content.getByRole("list", { name: "Import par catégorie" }),
   ).toContainText(/100 activités/, { timeout: 60_000 });

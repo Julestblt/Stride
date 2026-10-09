@@ -25,7 +25,20 @@ export async function GET() {
         },
         { status: result.failure.code === "unauthorized" ? 401 : 503, headers },
       );
-    return Response.json(result.value, { headers });
+    const first = await context.client
+      .from("provider_activities")
+      .select("started_at")
+      .eq("user_id", context.userId)
+      .order("started_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    return Response.json(
+      {
+        ...result.value,
+        firstActivityDate: first.data?.started_at?.slice(0, 10) ?? null,
+      },
+      { headers },
+    );
   } catch {
     return Response.json({ code: "unavailable" }, { status: 503, headers });
   }

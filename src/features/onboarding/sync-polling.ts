@@ -21,9 +21,13 @@ export const syncObservationSchema = z.object({
   }),
   lastSyncAt: z.iso.datetime({ offset: true }).nullable(),
   updatedAt: z.iso.datetime({ offset: true }).nullable(),
+  firstActivityDate: z.iso.date().nullable().default(null),
 });
+export type SyncObservation = GarminSyncStatus & {
+  firstActivityDate: string | null;
+};
 export type SyncPollingState = {
-  observation: GarminSyncStatus | null;
+  observation: SyncObservation | null;
   unavailable: boolean;
   unchanged: number;
   failures: number;
@@ -36,7 +40,7 @@ export const initialSyncPollingState: SyncPollingState = {
 };
 export function observeSync(
   state: SyncPollingState,
-  observation: GarminSyncStatus | null,
+  observation: SyncObservation | null,
 ): SyncPollingState {
   if (!observation)
     return { ...state, unavailable: true, failures: state.failures + 1 };

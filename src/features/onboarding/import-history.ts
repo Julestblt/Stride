@@ -4,9 +4,14 @@ import {
   type GarminSyncCategoryStatus,
   type GarminSyncStatus,
 } from "@/features/garmin/sync";
+import type { SyncObservation } from "./sync-polling";
 
 export type TimelineYear = { year: number; fill: number };
-export type Timeline = { years: TimelineYear[]; reading: string | null };
+export type Timeline = {
+  years: TimelineYear[];
+  reading: string | null;
+  earlier: boolean;
+};
 export type CategoryTone = "muted" | "accent" | "success" | "warning";
 export type CategoryView = {
   value: string;
@@ -16,7 +21,7 @@ export type CategoryView = {
 };
 export type ImportNotice = "paused" | "slow" | "partial" | null;
 
-export const timelineSpan = 9;
+export const maxTimelineYears = 12;
 
 const day = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
@@ -40,30 +45,30 @@ export function formatMonth(value: string) {
 }
 
 export function buildTimeline(
-  observation: GarminSyncStatus | null,
+  observation: SyncObservation | null,
   today: Date,
 ): Timeline {
   const current = today.getUTCFullYear();
-  const oldest = observation?.categories.activities.oldestSynchronizedDate;
-  const complete = observation?.categories.activities.state === "complete";
-  const oldestYear = oldest ? date(oldest).getUTCFullYear() : null;
-  const first =
-    complete && oldestYear !== null
-      ? oldestYear
-      : Math.min(current - timelineSpan + 1, oldestYear ?? current);
-  const years = Array.from({ length: current - first + 1 }, (_, index) => {
-    const year = first + index;
-    if (!oldest || oldestYear === null || year < oldestYear)
-      return { year, fill: 0 };
-    if (year > oldestYear) return { year, fill: 1 };
+  const activities = observation?.categories.activities;
+  const scanned = activities?.oldestSynchronizedDate ?? null;
+  const reading =
+    scanned && activities?.state !== "complete" ? formatMonth(scanned) : null;
+  const first = observation?.firstActivityDate ?? null;
+  if (!first)
+    return { years: [{ year: current, fill: 0 }], reading, earlier: false };
+  const firstYear = Math.min(date(first).getUTCFullYear(), current);
+  const startYear = Math.max(firstYear, current - maxTimelineYears + 1);
+  const years = Array.from({ length: current - startYear + 1 }, (_, index) => {
+    const year = startYear + index;
+    if (year > firstYear) return { year, fill: 1 };
     const start = Date.UTC(year, 0, 1);
     const end = Date.UTC(year + 1, 0, 1);
-    return { year, fill: (end - date(oldest).getTime()) / (end - start) };
+    return {
+      year,
+      fill: Math.max(0.05, (end - date(first).getTime()) / (end - start)),
+    };
   });
-  return {
-    years,
-    reading: oldest && !complete ? formatMonth(oldest) : null,
-  };
+  return { years, reading, earlier: firstYear < startYear };
 }
 
 const unavailableDetail = "En attente de Garmin";
@@ -71,6 +76,7 @@ const unavailableDetail = "En attente de Garmin";
 export function categoryView(
   category: GarminSyncCategory,
   status: GarminSyncCategoryStatus,
+  firstActivityDate: string | null = null,
 ): CategoryView {
   const since = status.oldestSynchronizedDate;
   const activities =
@@ -108,15 +114,17 @@ export function categoryView(
         : status.state === "complete"
           ? "D’après tout ton historique d’activités"
           : "D’après les activités déjà lues";
+    if (category === "activities" && status.state === "complete")
+      return firstActivityDate
+        ? `Première activité le ${day.format(date(firstActivityDate))}`
+        : "Aucune activité trouvée";
     if (!since)
       return status.state === "failed"
         ? "Garmin n’a pas renvoyé ces données"
         : unavailableDetail;
     if (category === "activities")
-      return status.state === "complete"
-        ? `Historique lu depuis le ${day.format(date(since))}`
-        : `Lecture · ${day.format(date(since))}`;
-    return `Depuis ${formatMonth(since)}`;
+      return `Lecture · ${day.format(date(since))}`;
+    return `Lu depuis ${formatMonth(since)}`;
   })();
   return { value, tone, detail, bar };
 }

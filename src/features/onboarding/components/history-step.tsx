@@ -75,7 +75,11 @@ export function HistoryStep({
           </span>
         </p>
       </div>
-      <HistoryTimeline years={timeline.years} reading={timeline.reading} />
+      <HistoryTimeline
+        years={timeline.years}
+        reading={timeline.reading}
+        earlier={timeline.earlier}
+      />
       <ul
         aria-label="Import par catégorie"
         className="flex flex-col border-t border-border"
@@ -87,7 +91,11 @@ export function HistoryStep({
             subtitle={categories[category].subtitle}
             view={
               observation
-                ? categoryView(category, observation.categories[category])
+                ? categoryView(
+                    category,
+                    observation.categories[category],
+                    observation.firstActivityDate,
+                  )
                 : null
             }
           />
@@ -154,11 +162,13 @@ export function HistoryStep({
 function HistoryTimeline({
   years,
   reading,
+  earlier,
 }: {
   years: TimelineYear[];
   reading: string | null;
+  earlier: boolean;
 }) {
-  const first = years[0]?.year;
+  const first = earlier ? `≤ ${years[0]?.year}` : years[0]?.year;
   const last = years.at(-1)?.year;
   return (
     <section aria-label="Historique lu" className="flex flex-col gap-2.5">
@@ -200,13 +210,11 @@ function HistoryTimeline({
                 fill > 0 && fill < 1 && "font-semibold text-foreground",
               )}
             >
-              {year}
+              {earlier && year === years[0]?.year ? `≤ ${year}` : year}
               <span className="sr-only">
-                {fill === 1
-                  ? " : lue"
-                  : fill > 0
-                    ? " : en cours de lecture"
-                    : " : pas encore lue"}
+                {fill > 0
+                  ? " : activités importées"
+                  : " : aucune activité pour l’instant"}
               </span>
             </span>
           </li>

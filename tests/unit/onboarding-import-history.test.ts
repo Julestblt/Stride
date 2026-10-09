@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import type {
   GarminSyncCategoryStatus,
   GarminSyncState,
-  GarminSyncStatus,
 } from "../../src/features/garmin/sync";
+import type { SyncObservation } from "../../src/features/onboarding/sync-polling";
 import {
   buildTimeline,
   categoryView,
@@ -29,7 +29,8 @@ function sync(
   activities: GarminSyncCategoryStatus,
   rest: GarminSyncState = "running",
   started = true,
-): GarminSyncStatus {
+  firstActivityDate: string | null = null,
+): SyncObservation {
   return {
     started,
     categories: {
@@ -40,44 +41,61 @@ function sync(
     },
     lastSyncAt: null,
     updatedAt: null,
+    firstActivityDate,
   };
 }
 
 describe("import timeline", () => {
-  it("shows nine unread years before anything is synchronized", () => {
-    const timeline = buildTimeline(null, today);
-    expect(timeline.years.map(({ year }) => year)).toEqual([
-      2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026,
-    ]);
-    expect(timeline.years.every(({ fill }) => fill === 0)).toBe(true);
-    expect(timeline.reading).toBeNull();
-  });
-  it("fills from today back to the oldest synchronized date", () => {
-    const timeline = buildTimeline(
-      sync(category("running", { oldestSynchronizedDate: "2021-03-14" })),
+  it("shows only the current year before any activity is found", () => {
+    expect(buildTimeline(null, today)).toEqual({
+      years: [{ year: 2026, fill: 0 }],
+      reading: null,
+      earlier: false,
+    });
+    const scanning = buildTimeline(
+      sync(category("running", { oldestSynchronizedDate: "2003-02-01" })),
       today,
     );
-    const fills = Object.fromEntries(
-      timeline.years.map(({ year, fill }) => [year, fill]),
+    expect(scanning.years).toEqual([{ year: 2026, fill: 0 }]);
+    expect(scanning.reading).toBe("février 2003");
+  });
+  it("starts at the first real activity, not at the scanned floor", () => {
+    const timeline = buildTimeline(
+      sync(
+        category("complete", { oldestSynchronizedDate: "2000-01-01" }),
+        "complete",
+        true,
+        "2025-03-14",
+      ),
+      today,
     );
-    expect(fills[2020]).toBe(0);
-    expect(fills[2021]).toBeCloseTo(293 / 365, 3);
-    expect(fills[2022]).toBe(1);
-    expect(fills[2026]).toBe(1);
+    expect(timeline.years.map(({ year }) => year)).toEqual([2025, 2026]);
+    expect(timeline.years[0]?.fill).toBeCloseTo(293 / 365, 3);
+    expect(timeline.years[1]?.fill).toBe(1);
+    expect(timeline.reading).toBeNull();
+    expect(timeline.earlier).toBe(false);
+  });
+  it("keeps reading the scan position while the import runs", () => {
+    const timeline = buildTimeline(
+      sync(
+        category("running", { oldestSynchronizedDate: "2021-03-14" }),
+        "running",
+        true,
+        "2022-06-01",
+      ),
+      today,
+    );
+    expect(timeline.years[0]?.year).toBe(2022);
     expect(timeline.reading).toBe("mars 2021");
   });
-  it("extends past nine years for long histories and trims empty years once complete", () => {
-    const running = buildTimeline(
-      sync(category("running", { oldestSynchronizedDate: "2012-06-01" })),
+  it("caps very long histories at twelve years", () => {
+    const timeline = buildTimeline(
+      sync(category("complete"), "complete", true, "2001-05-01"),
       today,
     );
-    expect(running.years[0]?.year).toBe(2012);
-    const complete = buildTimeline(
-      sync(category("complete", { oldestSynchronizedDate: "2020-01-01" })),
-      today,
-    );
-    expect(complete.years[0]).toEqual({ year: 2020, fill: 1 });
-    expect(complete.reading).toBeNull();
+    expect(timeline.years).toHaveLength(12);
+    expect(timeline.years[0]).toEqual({ year: 2015, fill: 1 });
+    expect(timeline.earlier).toBe(true);
   });
 });
 
@@ -101,16 +119,26 @@ describe("import category rows", () => {
       categoryView(
         "activities",
         category("complete", {
-          oldestSynchronizedDate: "2019-01-02",
+          oldestSynchronizedDate: "2000-01-01",
           activityCount: 444,
         }),
+        "2019-01-02",
       ),
     ).toMatchObject({
       value: "444",
       tone: "success",
-      detail: "Historique lu depuis le 2 janvier 2019",
+      detail: "Première activité le 2 janvier 2019",
       bar: "full",
     });
+    expect(
+      categoryView(
+        "activities",
+        category("complete", {
+          oldestSynchronizedDate: "2000-01-01",
+          activityCount: 0,
+        }),
+      ).detail,
+    ).toBe("Aucune activité trouvée");
   });
   it.each([
     ["pending", "En attente", "muted", "empty"],
@@ -134,7 +162,7 @@ describe("import category rows", () => {
         "recovery",
         category("complete", { oldestSynchronizedDate: "2026-07-01" }),
       ).detail,
-    ).toBe("Depuis juillet 2026");
+    ).toBe("Lu depuis juillet 2026");
     expect(categoryView("fitness", category("running")).detail).toBe(
       "En attente de Garmin",
     );
