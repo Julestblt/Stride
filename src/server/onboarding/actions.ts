@@ -1,0 +1,46 @@
+"use server";
+import { getGarminClient } from "@/server/garmin/session";
+import { createCompletionClient } from "@/server/supabase/completion-client";
+import { getOnboardingContext } from "./context";
+import { ensureProgress } from "./progress";
+import { onboardingEnabled } from "./environment";
+import {
+  transitionOnboarding,
+  type OnboardingServiceDependencies,
+} from "./service";
+function dependencies(): OnboardingServiceDependencies {
+  return {
+    enabled: onboardingEnabled,
+    context: () => getOnboardingContext({ writable: true }),
+    progress: ensureProgress,
+    connection: (context) =>
+      getGarminClient().getConnection({ accessToken: context.accessToken }),
+    navigate: (context, step, revision) =>
+      Promise.resolve(
+        context.client.rpc("set_onboarding_current_step", {
+          p_step: step,
+          p_expected_revision: revision,
+        }),
+      ),
+    complete: (context, step, revision) => {
+      if (step === "garmin" || step === "profile") {
+        const completion = createCompletionClient();
+        return completion
+          ? Promise.resolve(completion.complete(context.userId, step, revision))
+          : Promise.resolve({ data: null, error: { code: "unavailable" } });
+      }
+      return Promise.resolve(
+        context.client.rpc("complete_onboarding_step", {
+          p_step: step,
+          p_expected_revision: revision,
+        }),
+      );
+    },
+  };
+}
+export async function navigateOnboarding(input: unknown) {
+  return transitionOnboarding(dependencies(), "navigate", input);
+}
+export async function completeOnboarding(input: unknown) {
+  return transitionOnboarding(dependencies(), "complete", input);
+}

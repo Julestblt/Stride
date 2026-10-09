@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
+import type { Database } from "./database.types";
 import { cookies } from "next/headers";
 import { getPublicEnvironment } from "@/lib/env";
 import {
@@ -27,7 +28,7 @@ export async function createSupabaseServerClient({
   const keep =
     persistent ?? cookieStore.get(persistenceCookie)?.value === "persistent";
 
-  return createServerClient(url, publishableKey, {
+  return createServerClient<Database>(url, publishableKey, {
     auth: { experimental: { appendPkceFlowIdToRedirects: true } },
     cookies: {
       getAll() {

@@ -42,7 +42,7 @@ Stride's first useful moment depends on an athlete connecting Garmin and describ
 
 - Supabase is the durable source of truth; React state, context and browser storage are caches only.
 - A step is never marked complete before its required data has persisted; completion validates persisted rows.
-- Stride-owned tables use owner-only RLS; Stride uses the athlete's session, never a service-role key.
+- Stride-owned tables use owner-only RLS. Ordinary reads/writes/navigation/completion use the athlete session. Following #42, Garmin/profile completion alone uses a server-only credential and constrained RPC after verified identity and fresh connected Garmin; absence fails closed.
 - Garmin authentication, MFA, sessions and synchronization stay in garmin_mcp; Stride never duplicates that state or logic.
 - `GARMIN_API_URL` is server-only; the browser talks only to Stride.
 - Import status presents only real data: no percentages, totals, time estimates or insights.
@@ -72,3 +72,7 @@ A browser test connects a fixture Garmin account, enters About you, refreshes, s
 - Which Garmin profile and biometric fields are reliably available (garmin_mcp investigation)?
 - Can a Garmin MFA challenge be retried after an invalid code (garmin_mcp investigation)?
 - Is the current Supabase project production or staging?
+
+## Foundation activation
+
+Issue #32 provides policies, per-request route guards, durable actions, the responsive shared shell and truthful live import status. The shell has a content slot; screen bodies and editing belong to #33–#38. The server-only `ONBOARDING_ENABLED` flag defaults to false until those screens are ready. Isolated CI enables it explicitly and tests local Supabase with the pinned Garmin schema and fixture API. The app and frontend development use hosted Supabase. This work does not apply hosted migrations, configure secrets or deploy changes.
