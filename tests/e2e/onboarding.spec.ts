@@ -150,6 +150,62 @@ test("explicit sidebar and Back navigation persist; a stale context reloads safe
   ).toBeVisible();
   expect((await read(user.id)).current_step).toBe("welcome");
 });
+test("Welcome persists completion before moving on and stays reachable without resetting progress", async ({
+  page,
+}) => {
+  const user = await makeAthlete();
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page, user.email);
+  await expect(
+    page.getByRole("heading", { name: "Configurons ton coach." }),
+  ).toBeVisible();
+  await expect(page.getByRole("complementary")).toContainText(user.email);
+  await page.route("**/onboarding/welcome", (route) =>
+    route.request().method() === "POST" ? route.abort() : route.continue(),
+  );
+  await page.getByRole("button", { name: "C’est parti", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Réessaie");
+  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  expect((await read(user.id)).welcome_completed_at).toBeNull();
+  await page.unroute("**/onboarding/welcome");
+  const retry = page.getByRole("button", { name: "Réessayer", exact: true });
+  await retry.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/onboarding\/garmin$/);
+  const completed = await read(user.id);
+  expect(completed.welcome_completed_at).not.toBeNull();
+  expect(completed.current_step).toBe("garmin");
+  await page.goBack();
+  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  await page.reload();
+  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  expect(await read(user.id)).toEqual(completed);
+  await seed(user.id);
+  const advanced = await read(user.id);
+  await page.goto("/onboarding/welcome");
+  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  expect(await read(user.id)).toEqual(advanced);
+  await page.getByRole("button", { name: "C’est parti", exact: true }).click();
+  await expect(page).toHaveURL(/\/onboarding\/garmin$/);
+  const returned = await read(user.id);
+  for (const step of ["welcome", "garmin", "history"] as const)
+    expect(returned[`${step}_completed_at`]).toBe(
+      advanced[`${step}_completed_at`],
+    );
+  await page.goto("/onboarding/about");
+  await expect(page).toHaveURL(/\/onboarding\/about$/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/onboarding/welcome");
+  const start = page.getByRole("button", { name: "C’est parti", exact: true });
+  await expect(start).toBeInViewport();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: "test-results/onboarding-welcome-mobile.png" });
+});
 test("completed athletes reach the application and second athletes cannot read progress", async ({
   page,
 }) => {

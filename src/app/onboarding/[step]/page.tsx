@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { guardOnboarding } from "@/features/onboarding/progress";
 import { OnboardingShell } from "@/features/onboarding/components/onboarding-shell";
+import { WelcomeStep } from "@/features/onboarding/components/welcome-step";
 import { getOnboardingRequest } from "@/server/onboarding/request";
 export default async function OnboardingStepPage({
   params,
@@ -17,6 +18,8 @@ export default async function OnboardingStepPage({
       connection={connection}
       email={email}
       step={guard.step}
-    />
+    >
+      {guard.step === "welcome" && <WelcomeStep revision={progress.revision} />}
+    </OnboardingShell>
   );
 }

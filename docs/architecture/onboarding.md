@@ -83,7 +83,7 @@ Garmin email and password are posted from the browser to a Stride server action,
 
 ## Foundation rollout
 
-The server-only `ONBOARDING_ENABLED` switch defaults to false. Until the six screen issues #33–#38 are ready, onboarding routes return 404, actions are disabled, the sync endpoint returns 404, and the existing landing/auth behavior remains available. Enabling the switch makes `/` resume incomplete authenticated athletes; signed-out visitors retain the public landing. The shared shell supplies a content slot without screen forms or completion controls.
+The server-only `ONBOARDING_ENABLED` switch defaults to false. Until the six screen issues #33–#38 are ready, onboarding routes return 404, actions are disabled, the sync endpoint returns 404, and the existing landing/auth behavior remains available. Enabling the switch makes `/` resume incomplete authenticated athletes; signed-out visitors retain the public landing. The shared shell supplies a content slot for each screen body, the verified account email, and live Garmin status once the Garmin step is recorded. Each screen issue adds its own body and completion controls; Welcome (#33) completes through the ordinary completion action and moves on only after the save succeeds.
 
 `src/features/onboarding` owns pure progression and polling policies; `src/server/onboarding` verifies each request with `getUser`, obtains the verified session token, parses persisted progress with Zod and owns server actions. First entry inserts only the verified user ID and accepts a concurrent duplicate insert. GET requests never alter an existing row. Back and sidebar actions use `set_onboarding_current_step` and expected revisions. Conflicts return a fresh snapshot for reload.
 
