@@ -12,7 +12,14 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset && scripts/supabase-garmin-schema.sh",
+    "db:test": "supabase test db",
+    "db:advisors": "supabase db advisors --local --type all --fail-on warn",
+    "db:types": "supabase gen types typescript --local --schema public > src/server/supabase/database.types.ts && prettier --write src/server/supabase/database.types.ts",
+    "garmin:smoke": "node scripts/garmin-smoke.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -38,6 +45,7 @@
     "prettier": "^3.9.9",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "shadcn": "^4.21.4",
+    "supabase": "^2.120.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.3"
