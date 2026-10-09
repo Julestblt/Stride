@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { onboardingTestClients } from "../fixtures/onboarding-setup.mjs";
+import { onboardingTestClients } from "../fixtures/onboarding-clients";
 const password = "Str1de-!test-athlete-passphrase";
 const { admin, athlete } = onboardingTestClients();
 const createdUsers: string[] = [];
