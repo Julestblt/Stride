@@ -41,6 +41,7 @@ function setup() {
   const context = {
     client: {} as SupabaseClient<Database>,
     userId,
+    email: "athlete@example.com",
     accessToken: "private-athlete-token",
   };
   const dependencies: OnboardingServiceDependencies = {
@@ -277,7 +278,10 @@ describe("verified request boundary", () => {
     const auth = {
       getUser: vi.fn(async () => {
         order.push("user");
-        return { data: { user: { id: userId } }, error: null };
+        return {
+          data: { user: { id: userId, email: "athlete@example.com" } },
+          error: null,
+        };
       }),
       getSession: vi.fn(async () => {
         order.push("session");
@@ -292,6 +296,7 @@ describe("verified request boundary", () => {
     const client = { auth } as unknown as SupabaseClient<Database>;
     expect(await verifyOnboardingContext(client)).toMatchObject({
       userId,
+      email: "athlete@example.com",
       accessToken: "private-token",
     });
     expect(order).toEqual(["user", "session"]);
@@ -374,6 +379,7 @@ describe("idempotent first entry", () => {
       const context = {
         client: { from } as unknown as SupabaseClient<Database>,
         userId,
+        email: null,
         accessToken: "token",
       };
       expect(await ensureProgress(context)).toEqual(row);
@@ -391,6 +397,7 @@ describe("idempotent first entry", () => {
     const context = {
       client: { from } as unknown as SupabaseClient<Database>,
       userId,
+      email: null,
       accessToken: "token",
     };
     await ensureProgress(context);
@@ -415,6 +422,7 @@ describe("idempotent first entry", () => {
       ensureProgress({
         client: { from } as unknown as SupabaseClient<Database>,
         userId,
+        email: null,
         accessToken: "token",
       }),
     ).rejects.toThrow("Unable to create onboarding progress");
