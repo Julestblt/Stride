@@ -562,3 +562,71 @@ test("a slow Garmin sign-in explains the wait after 15 seconds", async ({
     page.getByRole("heading", { name: "Garmin connecté" }),
   ).toBeVisible({ timeout: 10_000 });
 });
+test("history import shows real sync states without estimates and continues immediately", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const user = await makeAthlete();
+  await signIn(page, user.email);
+  for (const step of ["welcome", "garmin"] as const) {
+    const row = await read(user.id);
+    const response =
+      step === "garmin"
+        ? await admin.rpc("complete_onboarding_step_server", {
+            p_user_id: user.id,
+            p_step: step,
+            p_expected_revision: row.revision,
+          })
+        : await user.client.rpc("complete_onboarding_step", {
+            p_step: step,
+            p_expected_revision: row.revision,
+          });
+    if (response.error) throw response.error;
+  }
+  await page.goto("/onboarding/history");
+  const content = page.getByRole("region", { name: "Contenu de l’étape" });
+  await expect(
+    content.getByRole("heading", { name: "Création de ton profil d’athlète" }),
+  ).toBeVisible();
+  await expect(content.getByText("Import en pause.")).toBeVisible();
+  await expect(
+    content.getByRole("list", { name: "Import par catégorie" }),
+  ).toContainText("En attente");
+  const connection = await fetch(
+    "http://127.0.0.1:3310/v1/connections/garmin/start",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "athlete@example.com",
+        password: "correct-password",
+      }),
+    },
+  );
+  expect(connection.ok).toBe(true);
+  await page.reload();
+  await expect(content.getByText("Import en pause.")).toHaveCount(0);
+  await expect(
+    content.getByRole("list", { name: "Import par catégorie" }),
+  ).toContainText(/\d+ activités/);
+  await expect(
+    content.getByRole("region", { name: "Historique lu" }),
+  ).toContainText(/\d{4} : lue/);
+  await expect(
+    content.getByRole("list", { name: "Import par catégorie" }),
+  ).toContainText(/100 activités/, { timeout: 60_000 });
+  await expect(content).toContainText("Tout l’historique disponible est lu.");
+  expect(await content.innerText()).not.toMatch(
+    /%|~|minutes? environ|Ce que je remarque|dans \d+ min/,
+  );
+  await page.screenshot({ path: "test-results/history-desktop.png" });
+  expect((await read(user.id)).history_completed_at).toBeNull();
+  await content.getByRole("button", { name: "Continuer", exact: true }).click();
+  await expect(page).toHaveURL(/\/onboarding\/about$/);
+  const progress = await read(user.id);
+  expect(progress.history_completed_at).not.toBeNull();
+  expect(progress.current_step).toBe("about");
+});

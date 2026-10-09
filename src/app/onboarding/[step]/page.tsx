@@ -1,8 +1,12 @@
 import { notFound, redirect } from "next/navigation";
-import { guardOnboarding } from "@/features/onboarding/progress";
+import {
+  connectionNotice,
+  guardOnboarding,
+} from "@/features/onboarding/progress";
 import { OnboardingShell } from "@/features/onboarding/components/onboarding-shell";
 import { WelcomeStep } from "@/features/onboarding/components/welcome-step";
 import { GarminStep } from "@/features/onboarding/components/garmin-step";
+import { HistoryStep } from "@/features/onboarding/components/history-step";
 import { initialGarminScreen } from "@/features/onboarding/garmin-flow";
 import { getOnboardingRequest } from "@/server/onboarding/request";
 export default async function OnboardingStepPage({
@@ -26,6 +30,12 @@ export default async function OnboardingStepPage({
         <GarminStep
           revision={progress.revision}
           initialScreen={initialGarminScreen(connection)}
+        />
+      )}
+      {guard.step === "history" && (
+        <HistoryStep
+          revision={progress.revision}
+          reconnect={connectionNotice(connection) === "reconnect"}
         />
       )}
     </OnboardingShell>
