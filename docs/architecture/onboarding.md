@@ -13,14 +13,14 @@ Onboarding is a resumable state machine persisted in Supabase. React state and b
 
 ## Steps and routes
 
-| Step      | Route                 | Completion rule                                                | Prerequisite       |
-| --------- | --------------------- | -------------------------------------------------------------- | ------------------ |
-| `welcome` | `/onboarding/welcome` | Athlete continues                                              | None               |
-| `garmin`  | `/onboarding/garmin`  | garmin_mcp reports the connection as `connected`               | `welcome`          |
-| `history` | `/onboarding/history` | Athlete continues; import completion is not required           | `garmin`           |
-| `about`   | `/onboarding/about`   | Required profile fields persisted and valid                    | `garmin`           |
-| `goals`   | `/onboarding/goals`   | Goal focus persisted; every saved race valid; no race is valid | `about`            |
-| `profile` | `/onboarding/profile` | Athlete confirms the reviewed profile                          | `goals`, `history` |
+| Step      | Route                 | Completion rule                                                                      | Prerequisite       |
+| --------- | --------------------- | ------------------------------------------------------------------------------------ | ------------------ |
+| `welcome` | `/onboarding/welcome` | Athlete continues                                                                    | None               |
+| `garmin`  | `/onboarding/garmin`  | garmin_mcp reports the connection as `connected`                                     | `welcome`          |
+| `history` | `/onboarding/history` | Athlete continues; import completion is not required                                 | `garmin`           |
+| `about`   | `/onboarding/about`   | Required profile fields persisted and valid                                          | `garmin`           |
+| `goals`   | `/onboarding/goals`   | Goal focus persisted; zero or more races may be saved, and every saved race is valid | `about`            |
+| `profile` | `/onboarding/profile` | Athlete confirms the reviewed profile                                                | `goals`, `history` |
 
 Onboarding is complete when every step is complete and garmin_mcp confirms a usable connection at completion time. Completed athletes entering `/onboarding/*` are sent to the application destination, which is `/` until the application shell exists. Incomplete athletes entering `/` are sent to their resume step. Signed-out visitors are sent to `/sign-in`.
 
@@ -54,7 +54,7 @@ Stride-owned tables live in `public`, keyed by `auth.users.id`, with RLS restric
 
 A database trigger increments `revision` and sets `updated_at` on every update. Updates are conditional on the client's expected revision.
 
-The athlete's role can write only data columns and `current_step`. Step completion goes through the `complete_onboarding_step` database function, which checks the expected revision, the step's prerequisites and its persisted data in one transaction, then records the first completion time and advances `current_step`. Completing the profile step completes onboarding. The Garmin step's completion is recorded by the Stride server only after garmin_mcp reports a connected account, and final completion is also checked against live Garmin status.
+The athlete's role can write only data columns and `current_step`. Step completion goes through the `complete_onboarding_step` database function, which checks the expected revision, the step's prerequisites and its persisted data in one transaction, then records the first completion time and advances `current_step`. Authenticated clients must not have permission to execute this function directly; only the Stride server may invoke it through a server-only database credential after applying the required server-side validation. Completing the profile step completes onboarding. PostgreSQL cannot independently verify the live Garmin connection, so the Garmin step's completion is recorded by the Stride server only after garmin_mcp reports a connected account, and final completion is also checked against live Garmin status before the server invokes the function.
 
 ## Save strategy
 
