@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { Button } from "@/components/ui/button";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { createSupabaseServerClient } from "@/server/supabase/client";
@@ -8,6 +9,7 @@ import { createSupabaseServerClient } from "@/server/supabase/client";
 export const metadata: Metadata = { title: "Email confirmed · Stride" };
 
 export default async function EmailConfirmedPage() {
+  await connection();
   const client = await createSupabaseServerClient();
   const { data, error } = await client.auth.getUser();
   if (error || !data.user?.email_confirmed_at) redirect("/sign-in");
