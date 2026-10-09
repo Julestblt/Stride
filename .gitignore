@@ -46,6 +46,7 @@ next-env.d.ts
 /test-results/
 
 # Local workflow and visual validation artifacts
+/_bmad-output/
 /_bmad/render/
 /docs/design/evidence/
 
