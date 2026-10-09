@@ -43,7 +43,7 @@ export default function RootLayout({
         "h-full antialiased",
       )}
     >
-      <body className="min-h-full">
+      <body suppressHydrationWarning className="min-h-full">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
