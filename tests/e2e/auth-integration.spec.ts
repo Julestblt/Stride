@@ -1,5 +1,56 @@
 import { expect, test } from "@playwright/test";
 
+test("signed-in session updates home, visitor routes, 404, and sign-out", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await expect(
+    page.getByText("Connecté en tant que :", { exact: false }),
+  ).toContainText("athlete@example.com");
+
+  for (const path of [
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/link-expired",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL("/");
+  }
+
+  await page.goto("/missing-route");
+  await expect(
+    page.getByRole("heading", { name: "Page introuvable" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Se connecter" })).toHaveCount(0);
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Se déconnecter" }).click();
+  await expect(page).toHaveURL("/");
+  await expect(
+    page.getByText("Connecté en tant que :", { exact: false }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
+  await page.goto("/sign-in");
+  await expect(
+    page.getByRole("heading", { name: "Welcome back" }),
+  ).toBeVisible();
+  await page.goto("/missing-route");
+  await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
+
+  const events = await (
+    await request.get("http://127.0.0.1:3200/__test__/events")
+  ).json();
+  expect(events).toContainEqual(
+    expect.objectContaining({ path: "/auth/v1/logout", scope: "local" }),
+  );
+});
+
 for (const remember of [true, false]) {
   test(`password sign-in preserves ${remember ? "persistent" : "session"} cookies`, async ({
     page,

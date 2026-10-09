@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { getCurrentUser } from "@/server/auth/session";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getCurrentUser();
   return (
     <main className="flex min-h-svh flex-col px-5 sm:px-10 lg:px-24">
       <header className="flex min-h-22 items-center justify-between border-b border-border">
@@ -17,9 +20,19 @@ export default function Home() {
           </span>
           <span>stride</span>
         </Link>
-        <span className="hidden font-mono text-xs tracking-wide text-muted-foreground sm:inline">
-          A more thoughtful way to train
-        </span>
+        {user ? (
+          <div className="flex flex-col items-end gap-1 py-3 text-right">
+            <p className="max-w-50 text-sm break-all text-muted sm:max-w-none">
+              Connecté en tant que :{" "}
+              <span className="text-foreground">{user.email}</span>
+            </p>
+            <SignOutButton />
+          </div>
+        ) : (
+          <Link className="text-sm text-accent hover:underline" href="/sign-in">
+            Se connecter
+          </Link>
+        )}
       </header>
       <section
         className="m-auto w-full max-w-4xl py-20 sm:pt-28 sm:pb-32"
