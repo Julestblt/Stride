@@ -8,6 +8,10 @@ import {
   transitionOnboarding,
   type OnboardingServiceDependencies,
 } from "./service";
+import {
+  connectGarmin,
+  type GarminConnectionDependencies,
+} from "./garmin-connection";
 function dependencies(): OnboardingServiceDependencies {
   return {
     enabled: onboardingEnabled,
@@ -43,4 +47,27 @@ export async function navigateOnboarding(input: unknown) {
 }
 export async function completeOnboarding(input: unknown) {
   return transitionOnboarding(dependencies(), "complete", input);
+}
+function garminDependencies(): GarminConnectionDependencies {
+  return {
+    enabled: onboardingEnabled,
+    context: () => getOnboardingContext({ writable: true }),
+    progress: ensureProgress,
+    start: (context, credentials) =>
+      getGarminClient().startConnection(
+        { accessToken: context.accessToken },
+        credentials,
+      ),
+    verify: (context, challenge) =>
+      getGarminClient().continueMfa(
+        { accessToken: context.accessToken },
+        challenge,
+      ),
+  };
+}
+export async function startGarminConnection(input: unknown) {
+  return connectGarmin(garminDependencies(), "start", input);
+}
+export async function verifyGarminCode(input: unknown) {
+  return connectGarmin(garminDependencies(), "verify", input);
 }
