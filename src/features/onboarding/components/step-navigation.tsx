@@ -108,6 +108,7 @@ export function StepNavigation({
           </span>
           <StepperSegments
             statuses={statuses}
+            currentProgress={1}
             aria-label="Progression du parcours"
             aria-valuetext={`Étape ${position + 1} sur 6`}
             className="w-full lg:max-w-60"
