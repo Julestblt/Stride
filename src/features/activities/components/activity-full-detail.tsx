@@ -64,7 +64,7 @@ export function ActivityFullDetail({
   return (
     <>
       <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
-        <SidebarTrigger />
+        <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
         <Separator
           orientation="vertical"
           className="data-vertical:h-4 data-vertical:self-center"
@@ -135,12 +135,12 @@ export function ActivityFullDetail({
             <RouteCard view={view.route} gain={activity.elevationGainMeters} />
           ) : (
             <section
-              aria-label="Route"
+              aria-label="Parcours"
               className="rounded-card border border-border bg-surface px-4 py-5"
             >
-              <MonoLabel>Route</MonoLabel>
+              <MonoLabel>Parcours</MonoLabel>
               <p className="mt-2 text-body text-muted">
-                No GPS route is available for this activity.
+                Aucun tracé GPS n’est disponible pour cette activité.
               </p>
             </section>
           )}
@@ -182,10 +182,10 @@ export function ActivityFullDetail({
               )}
               {view.zoneTime && (
                 <section
-                  aria-label="Time in zones"
+                  aria-label="Temps dans les zones"
                   className="flex flex-col gap-3"
                 >
-                  <MonoLabel>Time in zones</MonoLabel>
+                  <MonoLabel>Temps dans les zones</MonoLabel>
                   <div className="flex flex-col gap-2">
                     {view.zoneTime.map(({ zone, seconds }) => {
                       const total = view.zoneTime!.reduce(
@@ -217,10 +217,10 @@ export function ActivityFullDetail({
                     })}
                   </div>
                   <ProvenanceLabel source="estimate">
-                    Stride estimate · Garmin histogram ·{" "}
+                    Estimation Stride · histogramme Garmin ·{" "}
                     {zoneMethod === "karvonen"
-                      ? "heart rate reserve zones"
-                      : "maximum heart rate zones"}
+                      ? "zones selon la réserve cardiaque"
+                      : "zones selon la FC maximale"}
                   </ProvenanceLabel>
                 </section>
               )}

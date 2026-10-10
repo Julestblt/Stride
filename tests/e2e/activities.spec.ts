@@ -254,32 +254,38 @@ test("normalized tracks show real charts, zone time and a usable route fallback"
   await expect(
     page.getByRole("heading", { level: 1, name: "Threshold 3 × 10 min" }),
   ).toBeVisible();
-  const route = page.getByRole("region", { name: "Route", exact: true });
+  const route = page.getByRole("region", { name: "Parcours", exact: true });
   await expect(route).toBeVisible();
-  await expect(route.getByRole("img", { name: /GPS route/ })).toBeVisible();
-  const modes = route.getByRole("radiogroup", { name: "Color route by" });
-  await modes.getByRole("radio", { name: "Pace", exact: true }).click();
+  await expect(route.getByRole("img", { name: /Tracé GPS/ })).toBeVisible();
+  const modes = route.getByRole("radiogroup", { name: "Colorer le tracé par" });
+  await modes.getByRole("radio", { name: "Allure", exact: true }).click();
   await expect(
-    modes.getByRole("radio", { name: "Pace", exact: true }),
+    modes.getByRole("radio", { name: "Allure", exact: true }),
   ).toHaveAttribute("aria-checked", "true");
-  await modes.getByRole("radio", { name: "Heart rate", exact: true }).click();
+  await modes.getByRole("radio", { name: "FC", exact: true }).click();
   await expect(
-    modes.getByRole("radio", { name: "Heart rate", exact: true }),
+    modes.getByRole("radio", { name: "FC", exact: true }),
   ).toHaveAttribute("aria-checked", "true");
+  await expect(
+    page.getByText("Gris : tours plus rapides · estimation Stride"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Bande jaune : Z4 estimée par Stride"),
+  ).toBeVisible();
   await page.screenshot({
     path: "test-results/activity-detail-desktop-top.png",
   });
   await page
-    .getByRole("region", { name: "Activity charts" })
+    .getByRole("region", { name: "Graphiques de l’activité" })
     .scrollIntoViewIfNeeded();
   await expect(
     page.getByRole("img", {
-      name: "Heart rate over elapsed time",
+      name: "Fréquence cardiaque selon le temps écoulé",
       exact: true,
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("region", { name: "Time in zones" }),
+    page.getByRole("region", { name: "Temps dans les zones" }),
   ).toBeVisible();
   await page.getByRole("region", { name: "Effort" }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("region", { name: "Effort" })).toContainText(
@@ -297,19 +303,22 @@ test("samples without GPS retain heart rate charts without running pace", async 
   await signIn(page);
   await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000003/details");
   await expect(
-    page.getByText("No GPS route is available for this activity."),
+    page.getByText("Aucun tracé GPS n’est disponible pour cette activité."),
   ).toBeVisible();
   await expect(
     page.getByRole("img", {
-      name: "Heart rate over elapsed time",
+      name: "Fréquence cardiaque selon le temps écoulé",
       exact: true,
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("img", { name: "Pace over elapsed time", exact: true }),
+    page.getByRole("img", {
+      name: "Allure selon le temps écoulé",
+      exact: true,
+    }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("radiogroup", { name: "Color route by" }),
+    page.getByRole("radiogroup", { name: "Colorer le tracé par" }),
   ).toHaveCount(0);
 });
 
@@ -321,9 +330,9 @@ test("route controls and full detail fit narrow screens", async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
-    const route = page.getByRole("region", { name: "Route", exact: true });
+    const route = page.getByRole("region", { name: "Parcours", exact: true });
     await expect(route).toBeVisible();
-    await route.getByRole("radio", { name: "Elevation", exact: true }).click();
+    await route.getByRole("radio", { name: "Altitude", exact: true }).click();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -368,12 +377,12 @@ test("the bundled map worker renders a GPS route with map controls", async ({
   );
   await signIn(page);
   await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
-  const route = page.getByRole("region", { name: "Route", exact: true });
-  await expect(route.getByRole("button", { name: "Zoom in" })).toBeVisible({
+  const route = page.getByRole("region", { name: "Parcours", exact: true });
+  await expect(route.getByRole("button", { name: "Zoom avant" })).toBeVisible({
     timeout: 15000,
   });
-  await route.getByRole("button", { name: "Zoom in" }).click();
-  await route.getByRole("button", { name: "Fit route" }).click();
+  await route.getByRole("button", { name: "Zoom avant" }).click();
+  await route.getByRole("button", { name: "Recentrer le tracé" }).click();
   await expect(route.locator("canvas")).toBeVisible();
   await page.screenshot({ path: "test-results/activity-detail-map.png" });
 });

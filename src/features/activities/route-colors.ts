@@ -5,9 +5,9 @@ export type ColorMode = "zones" | "pace" | "heartRate" | "elevation";
 
 export const colorModes: { mode: ColorMode; label: string }[] = [
   { mode: "zones", label: "Zones" },
-  { mode: "pace", label: "Pace" },
-  { mode: "heartRate", label: "Heart rate" },
-  { mode: "elevation", label: "Elevation" },
+  { mode: "pace", label: "Allure" },
+  { mode: "heartRate", label: "FC" },
+  { mode: "elevation", label: "Altitude" },
 ];
 
 export const zoneHex = {

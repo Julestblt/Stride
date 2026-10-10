@@ -35,7 +35,7 @@ function ChartFrame({
         </div>
         <svg
           role="img"
-          aria-label={`${title} over ${view.axis}`}
+          aria-label={`${title} selon ${view.axis === "elapsed time" ? "le temps écoulé" : "la position des échantillons"}`}
           viewBox={`0 0 ${chartWidth} ${chart.height}`}
           preserveAspectRatio="none"
           className="w-full"
@@ -71,7 +71,7 @@ function ChartFrame({
           />
         </svg>
         {view.axis === "sample position" && (
-          <MonoLabel size="nano">Sample position</MonoLabel>
+          <MonoLabel size="nano">Position des échantillons</MonoLabel>
         )}
         <div className="flex justify-between font-mono text-nano text-muted-foreground">
           {view.timeLabels.map((label, index) => (
@@ -88,16 +88,44 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
     return null;
   return (
     <section
-      aria-label="Activity charts"
+      aria-label="Graphiques de l’activité"
       className="flex min-w-0 flex-col gap-4"
     >
-      <MonoLabel>Activity charts</MonoLabel>
+      <MonoLabel>Graphiques de l’activité</MonoLabel>
+      {(view.bands.length > 0 || view.heartRate?.zoneBand) && (
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
+          {view.bands.length > 0 && (
+            <p className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="size-3 shrink-0 rounded-mark bg-surface-raised"
+              />
+              Gris : tours plus rapides · estimation Stride
+            </p>
+          )}
+          {view.heartRate?.zoneBand && (
+            <p className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="h-2 w-4 shrink-0 rounded-mark bg-zone-4/20"
+              />
+              Bande jaune : Z4 estimée par Stride
+            </p>
+          )}
+        </div>
+      )}
+      {view.bands.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Les tours grisés durent au moins une minute et leur allure moyenne est
+          au moins 8 % plus rapide que celle de l’activité.
+        </p>
+      )}
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-4">
           {view.pace && (
             <ChartFrame
               inverted
-              title="Pace"
+              title="Allure"
               unit="min/km"
               chart={view.pace}
               view={view}
@@ -106,7 +134,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
           )}
           {view.heartRate && (
             <ChartFrame
-              title="Heart rate"
+              title="Fréquence cardiaque"
               unit="bpm"
               chart={view.heartRate}
               view={view}
@@ -149,7 +177,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
           {view.cadence && (
             <ChartFrame
               title="Cadence"
-              unit="steps/min"
+              unit="pas/min"
               chart={view.cadence}
               view={view}
               tone="stroke-muted"
@@ -157,7 +185,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
           )}
           {view.elevation && (
             <ChartFrame
-              title="Elevation"
+              title="Altitude"
               unit="m"
               chart={view.elevation}
               view={view}
@@ -176,13 +204,18 @@ export function ActivityScatter({ view }: { view: ChartsView }) {
       {" "}
       {view.scatter && (
         <section
-          aria-label="Pace and heart rate"
+          aria-label="Allure et fréquence cardiaque"
           className="min-w-0 border-t border-border-subtle pt-5"
         >
           <div className="flex items-baseline justify-between">
-            <MonoLabel>Pace and heart rate</MonoLabel>
+            <MonoLabel>Allure et fréquence cardiaque</MonoLabel>
             <MonoLabel size="nano">bpm · min/km · Garmin</MonoLabel>
           </div>
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+            Chaque point associe l’allure et la fréquence cardiaque d’un même
+            échantillon Garmin. À gauche : plus rapide ; à droite : plus lent.
+            Plus le point est haut, plus la FC est élevée.
+          </p>
           <div className="relative mt-3 pl-8">
             <div className="absolute inset-y-0 left-0 flex flex-col justify-between py-4 font-mono text-nano text-muted-foreground">
               <span>{view.scatter.heartRateLabels[1]}</span>
@@ -190,7 +223,7 @@ export function ActivityScatter({ view }: { view: ChartsView }) {
             </div>
             <svg
               role="img"
-              aria-label="Heart rate by running pace"
+              aria-label="Fréquence cardiaque selon l’allure de course"
               viewBox={`0 0 ${chartWidth} ${view.scatter.height}`}
               className="h-52 w-full"
               preserveAspectRatio="none"

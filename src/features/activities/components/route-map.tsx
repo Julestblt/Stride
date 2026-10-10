@@ -179,12 +179,13 @@ export function RouteMap({
           attributionControl: false,
           cooperativeGestures: true,
           locale: {
+            "Map.Title": "Carte du parcours",
             "CooperativeGesturesHandler.WindowsHelpText":
-              "Ctrl + scroll to zoom the map",
+              "Ctrl + molette pour zoomer la carte",
             "CooperativeGesturesHandler.MacHelpText":
-              "⌘ + scroll to zoom the map",
+              "⌘ + molette pour zoomer la carte",
             "CooperativeGesturesHandler.MobileHelpText":
-              "Use two fingers to move the map",
+              "Deux doigts pour déplacer la carte",
           },
         });
         const current = map;
@@ -281,8 +282,8 @@ export function RouteMap({
                 .addTo(current),
             );
           };
-          marker(first, closed ? "Start · finish" : "Start", true);
-          if (!closed) marker(last, "Finish", false);
+          marker(first, closed ? "Départ · arrivée" : "Départ", true);
+          if (!closed) marker(last, "Arrivée", false);
           setActiveMap(current);
           setEngine("map");
         });
@@ -402,7 +403,7 @@ export function RouteMap({
         )}
         viewBox={`0 0 ${size.width} ${size.height}`}
         role="img"
-        aria-label={`GPS route, ${kilometers.format(view.distanceKm)} km`}
+        aria-label={`Tracé GPS, ${kilometers.format(view.distanceKm)} km`}
         onPointerMove={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           onHover(
@@ -473,7 +474,7 @@ export function RouteMap({
         <ToggleGroup
           variant="segment"
           type="single"
-          aria-label="Color route by"
+          aria-label="Colorer le tracé par"
           value={mode}
           onValueChange={(value) => {
             if (modes.includes(value as ColorMode))
@@ -500,7 +501,7 @@ export function RouteMap({
             variant="ghost"
             size="icon"
             type="button"
-            aria-label="Zoom in"
+            aria-label="Zoom avant"
             onClick={() => map?.zoomIn()}
             className="grid size-8 place-items-center border-b border-border text-muted hover:text-foreground"
           >
@@ -510,7 +511,7 @@ export function RouteMap({
             variant="ghost"
             size="icon"
             type="button"
-            aria-label="Zoom out"
+            aria-label="Zoom arrière"
             onClick={() => map?.zoomOut()}
             className="grid size-8 place-items-center border-b border-border text-muted hover:text-foreground"
           >
@@ -520,7 +521,7 @@ export function RouteMap({
             variant="ghost"
             size="icon"
             type="button"
-            aria-label="Reset north"
+            aria-label="Orienter au nord"
             onClick={() => map?.resetNorth()}
             className="grid size-8 place-items-center border-b border-border"
           >
@@ -536,7 +537,7 @@ export function RouteMap({
             variant="ghost"
             size="icon"
             type="button"
-            aria-label="Fit route"
+            aria-label="Recentrer le tracé"
             onClick={() => {
               const latitudes = view.route.map((point) => point[0]);
               const longitudes = view.route.map((point) => point[1]);
@@ -642,13 +643,15 @@ export function RouteMap({
           role="status"
           className="absolute top-14 left-3 rounded-control bg-surface px-2 py-1 text-xs text-muted"
         >
-          Map unavailable · GPS route shown
+          Carte indisponible · tracé GPS affiché
         </span>
       )}
-      {engine === "loading" && <span className="sr-only">Loading map</span>}
+      {engine === "loading" && (
+        <span className="sr-only">Chargement de la carte</span>
+      )}
       <span className="sr-only" aria-live="polite">
         {gradientStops(view, mode).length > 0
-          ? `Route colored by ${colorModes.find((item) => item.mode === mode)?.label}`
+          ? `Tracé coloré par ${colorModes.find((item) => item.mode === mode)?.label}`
           : ""}
       </span>
     </div>

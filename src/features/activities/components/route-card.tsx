@@ -42,7 +42,7 @@ function ElevationProfile({
   return (
     <div className="border-t border-border bg-surface-inset px-3.5 pt-2.5 pb-2">
       <div className="flex items-baseline justify-between">
-        <MonoLabel size="nano">Elevation profile</MonoLabel>
+        <MonoLabel size="nano">Profil d’altitude</MonoLabel>
         <MonoLabel size="nano">
           {gain !== null ? `D+ ${Math.round(gain)} m · ` : ""}min{" "}
           {Math.round(range.min)} m · max {Math.round(range.max)} m
@@ -69,7 +69,7 @@ function ElevationProfile({
         preserveAspectRatio="none"
         className="block h-16 w-full touch-pan-y"
         role="img"
-        aria-label="Route elevation profile"
+        aria-label="Profil d’altitude du parcours"
         onPointerMove={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           const fraction = (event.clientX - rect.left) / rect.width;
@@ -155,11 +155,11 @@ export function RouteCard({
   const [mode, setMode] = useState<ColorMode>(modes[0] ?? "zones");
   const [hover, setHover] = useState<number | null>(null);
   return (
-    <section aria-label="Route" className="flex flex-col gap-2.5">
+    <section aria-label="Parcours" className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <MonoLabel>Route</MonoLabel>
+        <MonoLabel>Parcours</MonoLabel>
         <MonoLabel size="micro">
-          {kilometers.format(view.distanceKm)} km · Garmin track
+          {kilometers.format(view.distanceKm)} km · tracé Garmin
         </MonoLabel>
       </div>
       <div className="overflow-hidden rounded-card border border-border bg-surface-inset">

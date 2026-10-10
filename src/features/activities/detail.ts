@@ -211,7 +211,7 @@ export function effortStats(activity: ActivityDetailData): DetailStat[] {
     activity.calories !== null
       ? {
           key: "calories",
-          label: "Energy",
+          label: "Calories",
           value: integer.format(activity.calories),
           unit: "kcal",
         }
@@ -219,7 +219,7 @@ export function effortStats(activity: ActivityDetailData): DetailStat[] {
     activity.perceivedEffort !== null && activity.perceivedEffort <= 10
       ? {
           key: "perceivedEffort",
-          label: "Perceived effort",
+          label: "Effort ressenti",
           value: effect.format(activity.perceivedEffort),
           unit: "/10",
         }
@@ -227,7 +227,7 @@ export function effortStats(activity: ActivityDetailData): DetailStat[] {
     activity.feel !== null
       ? {
           key: "feel",
-          label: "Workout feel",
+          label: "Ressenti après séance",
           value: integer.format(activity.feel),
           unit: "/100",
         }
@@ -251,7 +251,7 @@ export function effortStats(activity: ActivityDetailData): DetailStat[] {
           key: "cadence",
           label: "Cadence moy.",
           value: integer.format(activity.averageCadence),
-          unit: "spm",
+          unit: "pas/min",
         }
       : null,
     activity.maxHeartRate !== null

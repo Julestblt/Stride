@@ -125,7 +125,7 @@ describe("effort stats", () => {
     ).toEqual([
       ["Effet aérobie", "3,4", undefined],
       ["Effet anaérobie", "1,8", undefined],
-      ["Cadence moy.", "168", "spm"],
+      ["Cadence moy.", "168", "pas/min"],
       ["FC max", "176", "bpm"],
       ["D−", "58", "m"],
     ]);
