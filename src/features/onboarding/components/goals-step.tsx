@@ -35,6 +35,7 @@ import { RaceForm, type RaceHandle } from "./race-form";
 import { useAutosave, type AutosaveResult } from "./use-autosave";
 import { useOnboardingTransition } from "./use-onboarding-transition";
 
+const goalCacheFields: (keyof GoalValues)[] = ["focus"];
 const focuses: { value: GoalFocus; title: string; detail: string }[] = [
   {
     value: "general_fitness",
@@ -91,7 +92,7 @@ export function GoalsStep({
     initial: { values: goals.goal.values, revision: goals.goal.revision },
     save: saveGoal,
     cacheKey: `stride:onboarding:goal:${userId}`,
-    cacheFields: ["focus"],
+    cacheFields: goalCacheFields,
     serverUpdatedAt: goals.goal.updatedAt,
   });
   const register = useCallback((id: string, handle: RaceHandle | null) => {
