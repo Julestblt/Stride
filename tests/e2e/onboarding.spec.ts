@@ -28,12 +28,16 @@ async function makeAthlete() {
     token: signedIn.data.session.access_token,
   };
 }
-async function signIn(page: Page, email: string) {
+async function signIn(page: Page, email: string, destination = "welcome") {
   await page.goto("/sign-in");
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  await expect(page).toHaveURL(
+    destination === "application"
+      ? "http://127.0.0.1:3110/"
+      : new RegExp(`/onboarding/${destination}$`),
+  );
 }
 async function seed(userId: string, currentStep = "about") {
   const client = clients.get(userId)!;
@@ -1170,4 +1174,383 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
   expect((await read(user.id)).completed_at).not.toBeNull();
   await page.goto("/onboarding/about");
   await expect(page).toHaveURL("http://127.0.0.1:3110/");
+});
+
+test("unseeded six-screen journey survives refresh, another device, Back edits and real sign-out", async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  const user = await makeAthlete();
+  await signIn(page, user.email);
+  const refresh = async (active: Page, step: string) => {
+    const before = await read(user.id);
+    await active.reload();
+    await expect(active).toHaveURL(new RegExp(`/onboarding/${step}$`));
+    expect(await read(user.id)).toEqual(before);
+  };
+  await refresh(page, "welcome");
+  await page.goto("/onboarding/profile");
+  await expect(page).toHaveURL(/\/onboarding\/welcome$/);
+  await page.getByRole("button", { name: "C’est parti", exact: true }).click();
+  await expect
+    .poll(async () => (await read(user.id)).welcome_completed_at)
+    .not.toBeNull();
+  await expect(page).toHaveURL(/\/onboarding\/garmin$/);
+  await refresh(page, "garmin");
+  await page
+    .getByRole("main")
+    .getByRole("button", { name: "Connecter Garmin", exact: true })
+    .click();
+  await signInToGarmin(page, "athlete@example.com", "correct-password");
+  await expect(
+    page.getByRole("heading", { name: "Garmin connecté", exact: true }),
+  ).toBeVisible();
+  const control = await fetch("http://127.0.0.1:3310/__test__/sync", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${user.token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ readsUntilComplete: 1000 }),
+  });
+  expect(control.ok).toBe(true);
+  await expect(page).toHaveURL(/\/onboarding\/history$/, { timeout: 10_000 });
+  await refresh(page, "history");
+  const observation = async (active: Page) => {
+    const response = await active.request.get("/api/onboarding/sync");
+    expect(response.ok()).toBe(true);
+    const data = await response.json();
+    return data;
+  };
+  const firstImport = await observation(page);
+  await page.getByRole("button", { name: /^Continuer/ }).click();
+  await expect(page).toHaveURL(/\/onboarding\/about$/);
+  await page.getByLabel("Prénom").fill("Journey Athlete");
+  await page.getByLabel("Date de naissance").fill("14/06/1991");
+  await expect
+    .poll(async () => (await readProfileRow(user))?.first_name)
+    .toBe("Journey Athlete");
+  await refresh(page, "about");
+  await expect(page.getByLabel("Prénom")).toHaveValue("Journey Athlete");
+  const second = await browser.newContext({
+    baseURL: "http://127.0.0.1:3110",
+    viewport: { width: 1440, height: 1200 },
+  });
+  try {
+    const device = await second.newPage();
+    expect(await second.cookies()).toEqual([]);
+    await signIn(device, user.email, "about");
+    await expect(device.getByLabel("Prénom")).toHaveValue("Journey Athlete");
+    await expect(device.getByLabel("Date de naissance")).toHaveValue(
+      "14/06/1991",
+    );
+    await choose(device, "Sexe pour les estimations physiologiques", "Femme");
+    await device.getByLabel("Taille").fill("168");
+    await device.getByLabel("Poids").fill("58,5");
+    for (const day of ["Mardi", "Jeudi", "Samedi"])
+      await device.getByRole("button", { name: day, exact: true }).click();
+    await choose(device, "Jour de sortie longue", "Dimanche");
+    await choose(device, "Surtout…", "Route");
+    await choose(device, "Temps en semaine", "60'");
+    await device
+      .getByRole("button", { name: "Continuer", exact: true })
+      .click();
+    await expect(device).toHaveURL(/\/onboarding\/goals$/);
+    await chooseFocus(device, /Ultra-trail/);
+    await device.getByRole("button", { name: "Ajouter une course" }).click();
+    await device.getByLabel("Course", { exact: true }).fill("Journey Race");
+    await device.getByLabel("Date", { exact: true }).fill("20/03/2027");
+    await device.getByLabel("Distance", { exact: true }).fill("120");
+    await expect
+      .poll(async () => (await races(user))[0])
+      .toMatchObject({
+        name: "Journey Race",
+        race_date: "2027-03-20",
+        distance_km: 120,
+      });
+    await refresh(device, "goals");
+    await expect(device.getByLabel("Course", { exact: true })).toHaveValue(
+      "Journey Race",
+    );
+    await device
+      .getByRole("button", { name: "Voir mon profil d’athlète" })
+      .click();
+    await expect(device).toHaveURL(/\/onboarding\/profile$/);
+    const completed = await read(user.id);
+    await refresh(device, "profile");
+    await device.getByRole("button", { name: "Retour", exact: true }).click();
+    await expect(device).toHaveURL(/\/onboarding\/goals$/);
+    await chooseFocus(device, /Forme générale/);
+    await expect
+      .poll(async () => {
+        const goal = await user.client
+          .from("athlete_goals")
+          .select("focus")
+          .eq("user_id", user.id)
+          .single();
+        expect(goal.error).toBeNull();
+        return goal.data?.focus;
+      })
+      .toBe("general_fitness");
+    await device.getByRole("button", { name: "Retour", exact: true }).click();
+    await expect(device).toHaveURL(/\/onboarding\/about$/);
+    await device.getByLabel("Prénom").fill("Edited Athlete");
+    await expect
+      .poll(async () => (await readProfileRow(user))?.first_name)
+      .toBe("Edited Athlete");
+    await device
+      .getByRole("button", { name: "Continuer", exact: true })
+      .click();
+    await expect(device).toHaveURL(/\/onboarding\/goals$/);
+    await expect(
+      device.getByRole("radio", { name: /Forme générale/ }),
+    ).toHaveAttribute("aria-checked", "true");
+    await device
+      .getByRole("button", { name: "Voir mon profil d’athlète" })
+      .click();
+    await expect(device).toHaveURL(/\/onboarding\/profile$/);
+    for (const step of ["welcome", "garmin", "history", "about", "goals"])
+      expect((await read(user.id))[`${step}_completed_at`]).toBe(
+        completed[`${step}_completed_at`],
+      );
+    const laterImport = await observation(device);
+    expect(laterImport.categories.activities.state).toBe("running");
+    expect(laterImport.categories.activities.activityCount).toBeGreaterThan(
+      firstImport.categories.activities.activityCount,
+    );
+    await expect(
+      device.getByRole("region", { name: "Import depuis Garmin" }),
+    ).toContainText(/\d+ activités/);
+    await device.getByRole("button", { name: "Entrer dans Stride" }).click();
+    await expect(device).toHaveURL("http://127.0.0.1:3110/");
+    const final = await read(user.id);
+    for (const step of [
+      "welcome",
+      "garmin",
+      "history",
+      "about",
+      "goals",
+      "profile",
+    ])
+      expect(final[`${step}_completed_at`]).not.toBeNull();
+    expect(final.completed_at).not.toBeNull();
+    const signOutRequest = device.waitForRequest(
+      (request) =>
+        request.method() === "POST" &&
+        Boolean(request.headers()["next-action"]),
+    );
+    await device.getByRole("button", { name: "Se déconnecter" }).click();
+    await expect(
+      device.getByRole("link", { name: "Se connecter", exact: true }),
+    ).toBeVisible();
+    const signOutAction = await signOutRequest;
+    await device.goto("/onboarding/about");
+    await expect(device).toHaveURL(/\/sign-in$/);
+    expect((await device.request.get("/api/onboarding/sync")).status()).toBe(
+      401,
+    );
+    await signIn(device, user.email, "application");
+    expect(await read(user.id)).toEqual(final);
+    expect(await readProfileRow(user)).toMatchObject({
+      first_name: "Edited Athlete",
+      weight_kg: 58.5,
+      available_weekdays: [2, 4, 6],
+    });
+    expect((await races(user))[0].name).toBe("Journey Race");
+    await device.getByRole("button", { name: "Se déconnecter" }).click();
+    await expect(
+      device.getByRole("link", { name: "Se connecter", exact: true }),
+    ).toBeVisible();
+    const interrupted = await makeAthlete();
+    await signIn(device, interrupted.email);
+    await device
+      .getByRole("button", { name: "C’est parti", exact: true })
+      .click();
+    await expect(device).toHaveURL(/\/onboarding\/garmin$/);
+    const partial = await read(interrupted.id);
+    const termination = await device.request.post("/", {
+      headers: {
+        "next-action": signOutAction.headers()["next-action"],
+        "content-type": signOutAction.headers()["content-type"],
+        origin: "http://127.0.0.1:3110",
+      },
+      data: signOutAction.postDataBuffer()!,
+    });
+    expect(termination.ok()).toBe(true);
+    await device.goto("/onboarding/garmin");
+    await expect(device).toHaveURL(/\/sign-in$/);
+    expect((await device.request.get("/api/onboarding/sync")).status()).toBe(
+      401,
+    );
+    await signIn(device, interrupted.email, "garmin");
+    expect(await read(interrupted.id)).toEqual(partial);
+  } finally {
+    await second.close();
+  }
+});
+
+test("real offline preferences retain supported cache and save automatically on reconnect", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  const user = await atAboutStep(page);
+  await choose(page, "Temps en semaine", "60'");
+  await expect
+    .poll(async () => (await readProfileRow(user))?.weekday_session_minutes)
+    .toBe(60);
+  const before = await readProfileRow(user);
+  await page.context().setOffline(true);
+  try {
+    expect(await page.evaluate(() => navigator.onLine)).toBe(false);
+    await choose(page, "Temps en semaine", "45'");
+    await expect(page.locator('p[data-status="offline"]')).toBeVisible();
+    expect(await readProfileRow(user)).toEqual(before);
+    const cache = await page.evaluate(
+      (id) =>
+        JSON.parse(
+          localStorage.getItem(`stride:onboarding:about:${id}`) ?? "null",
+        ),
+      user.id,
+    );
+    expect(cache.values).toEqual({ weekday_session_minutes: 45 });
+  } finally {
+    await page.context().setOffline(false);
+  }
+  await expect(saved(page)).toBeVisible();
+  await expect
+    .poll(async () => (await readProfileRow(user))?.weekday_session_minutes)
+    .toBe(45);
+  expect(
+    await page.evaluate(
+      (id) => localStorage.getItem(`stride:onboarding:about:${id}`),
+      user.id,
+    ),
+  ).toBeNull();
+  await page.reload();
+  await expect(
+    page
+      .getByRole("group", { name: "Temps en semaine" })
+      .getByText("45'", { exact: true }),
+  ).toHaveAttribute("data-state", "on");
+});
+
+test("another athlete cannot target owner data through application requests or REST reads and writes", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  const owner = await atGoalsStep(page);
+  const ownerConnection = await fetch(
+    "http://127.0.0.1:3310/v1/connections/garmin/start",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${owner.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "athlete@example.com",
+        password: "correct-password",
+      }),
+    },
+  );
+  expect(ownerConnection.ok).toBe(true);
+  expect(
+    (await (await page.request.get("/api/onboarding/sync")).json()).started,
+  ).toBe(true);
+  await chooseFocus(page, /Ultra-trail/);
+  await page.getByRole("button", { name: "Ajouter une course" }).click();
+  const raceSaveRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      Boolean(request.headers()["next-action"]) &&
+      Boolean(request.postData()?.includes("Private Owner Race")),
+  );
+  await page.getByLabel("Course", { exact: true }).fill("Private Owner Race");
+  await expect
+    .poll(async () => (await races(owner))[0]?.name)
+    .toBe("Private Owner Race");
+  const ownerRaceAction = await raceSaveRequest;
+  const tables = [
+    "onboarding_progress",
+    "athlete_profiles",
+    "athlete_goals",
+    "athlete_races",
+  ] as const;
+  const snapshot = async () =>
+    Promise.all(
+      tables.map(async (table) => {
+        const response = await owner.client
+          .from(table)
+          .select("*")
+          .eq("user_id", owner.id);
+        expect(response.error).toBeNull();
+        return response.data;
+      }),
+    );
+  const before = await snapshot();
+  const other = await makeAthlete();
+  await page.context().clearCookies();
+  await signIn(page, other.email);
+  await seed(other.id);
+  await page.goto(`/onboarding/about?userId=${owner.id}`);
+  await expect(page.getByLabel("Prénom")).toHaveValue("");
+  await page.getByLabel("Prénom").fill("Other Athlete");
+  await expect
+    .poll(async () => (await readProfileRow(other))?.first_name)
+    .toBe("Other Athlete");
+  const sync = await page.request.get(
+    `/api/onboarding/sync?userId=${owner.id}&accessToken=${owner.token}`,
+  );
+  expect(sync.ok()).toBe(true);
+  expect(sync.headers()["cache-control"]).toContain("no-store");
+  expect((await sync.json()).started).toBe(false);
+  const foreignMutation = await page.request.post("/onboarding/about", {
+    headers: {
+      "next-action": ownerRaceAction.headers()["next-action"],
+      "content-type": ownerRaceAction.headers()["content-type"],
+      origin: "http://127.0.0.1:3110",
+    },
+    data: ownerRaceAction.postDataBuffer()!,
+  });
+  expect(foreignMutation.ok()).toBe(true);
+  expect(await foreignMutation.text()).toContain('"status":"missing"');
+  for (const table of tables) {
+    const foreignRead = await other.client
+      .from(table)
+      .select("*")
+      .eq("user_id", owner.id);
+    expect(foreignRead.error).toBeNull();
+    expect(foreignRead.data).toEqual([]);
+    const change =
+      table === "onboarding_progress"
+        ? { current_step: "welcome" }
+        : table === "athlete_profiles"
+          ? { first_name: "Intruder" }
+          : table === "athlete_goals"
+            ? { focus: "general_fitness" }
+            : { name: "Intruder Race" };
+    const update = await other.client
+      .from(table)
+      .update(change)
+      .eq("user_id", owner.id)
+      .select();
+    expect(update.data ?? []).toEqual([]);
+    const deletion = await other.client
+      .from(table)
+      .delete()
+      .eq("user_id", owner.id)
+      .select();
+    expect(deletion.data ?? []).toEqual([]);
+    const insertion = await other.client
+      .from(table)
+      .insert(
+        table === "athlete_goals"
+          ? { user_id: owner.id, focus: "general_fitness" }
+          : { user_id: owner.id },
+      );
+    expect(insertion.error?.code).toBe("42501");
+  }
+  expect(await snapshot()).toEqual(before);
 });

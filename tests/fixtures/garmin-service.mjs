@@ -36,14 +36,15 @@ function category(state, extra = {}) {
 
 function syncFor(connection) {
   const reads = ++connection.syncReads;
-  const done = reads >= 4;
+  const limit = connection.syncLimit ?? 4;
+  const done = reads >= limit;
   const oldest = `${2026 - reads}-01-01`;
   return {
     connection_id: connection.id,
     categories: {
       activities: category(done ? "complete" : "running", {
         oldest_synchronized_date: oldest,
-        activity_count: Math.min(reads, 4) * 25,
+        activity_count: Math.min(reads, limit) * 25,
       }),
       recovery: category(reads >= 2 ? "complete" : "running", {
         oldest_synchronized_date: "2026-07-01",
@@ -94,6 +95,18 @@ export function createGarminService() {
       return failure(response, 400, "invalid_request");
     }
     const connection = connections.get(user);
+
+    if (url.pathname === "/__test__/sync" && request.method === "POST") {
+      if (
+        !connection ||
+        !Number.isInteger(body.readsUntilComplete) ||
+        body.readsUntilComplete < 4 ||
+        body.readsUntilComplete > 1000
+      )
+        return failure(response, 400, "invalid_request");
+      connection.syncLimit = body.readsUntilComplete;
+      return json(response, 200, { configured: true });
+    }
 
     if (url.pathname === "/v1/connections/garmin" && request.method === "GET")
       return json(
