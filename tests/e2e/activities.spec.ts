@@ -132,6 +132,77 @@ test("the list and the detail scroll independently inside a fixed-height shell",
   await expect(list.locator('[aria-current="true"]')).toBeInViewport();
 });
 
+test("the full detail shows laps, effort and provenance from stored rows", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto(
+    "/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004?filter=road",
+  );
+  await page.getByRole("link", { name: /Détail complet/ }).click();
+  await expect(page).toHaveURL(
+    /\/activities\/aaaaaaaa-aaaa-4aaa-8aaa-000000000004\/details\?filter=road$/,
+  );
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Course à pied" }),
+  ).toBeVisible();
+  const table = page.getByRole("table", { name: "Tours" });
+  await expect(table.getByRole("row")).toHaveCount(8);
+  const rep = table.getByRole("row").nth(2);
+  await expect(rep.getByRole("rowheader")).toHaveText("2");
+  await expect(rep).toContainText("10:00");
+  await expect(rep).toContainText("2,27");
+  await expect(rep).toContainText("4:24");
+  await expect(rep).toContainText("161");
+  const effort = page.getByRole("region", { name: "Effort" });
+  await expect(effort).toContainText("Effet aérobie");
+  await expect(effort).toContainText("3,4");
+  await expect(effort).toContainText("FC max");
+  await expect(effort).toContainText("176");
+  await expect(effort).not.toContainText("Puissance");
+  await expect(page.getByText("détail importé le 07/10/2026")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight <= window.innerHeight,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("navigation", { name: "Fil d’Ariane" })
+    .getByRole("link", { name: "Activités" })
+    .click();
+  await expect(page).toHaveURL(/\/activities\?filter=road$/);
+});
+
+test("the full detail says when Garmin sent no laps and stays within 320px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000001/details");
+  await expect(
+    page.getByText("Garmin n’a transmis aucun tour pour cette activité."),
+  ).toBeVisible();
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+  await expect(page.getByRole("table", { name: "Tours" })).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Cad." })).toBeHidden();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    await page
+      .getByRole("table", { name: "Tours" })
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  const response = await page.goto(
+    "/activities/cccccccc-cccc-4ccc-8ccc-cccccccccccc/details",
+  );
+  expect(response?.status()).toBe(404);
+});
+
 test("an unknown or foreign activity is not found", async ({ page }) => {
   await signIn(page);
   for (const id of ["not-an-id", "cccccccc-cccc-4ccc-8ccc-cccccccccccc"]) {

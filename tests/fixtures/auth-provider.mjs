@@ -41,7 +41,15 @@ const activity = (id, days, values) => ({
   distance_meters: null,
   duration_seconds: null,
   elevation_gain_meters: null,
+  elevation_loss_meters: null,
   average_heart_rate: null,
+  max_heart_rate: null,
+  average_cadence: null,
+  average_power_watts: null,
+  max_power_watts: null,
+  aerobic_training_effect: null,
+  anaerobic_training_effect: null,
+  detail_imported_at: null,
   ...daysAgo(days),
   ...values,
 });
@@ -68,7 +76,13 @@ const tables = {
       distance_meters: 11300,
       duration_seconds: 3520,
       elevation_gain_meters: 64,
+      elevation_loss_meters: 58,
       average_heart_rate: 152,
+      max_heart_rate: 176,
+      average_cadence: 168,
+      aerobic_training_effect: 3.4,
+      anaerobic_training_effect: 1.8,
+      detail_imported_at: "2026-10-07T04:12:00Z",
     }),
     activity(5, 38, {
       activity_type: "trail_running",
@@ -84,6 +98,28 @@ const tables = {
       }),
     ),
   ],
+  provider_activity_segments: [
+    [900, 2570, 5.5, 134, 168, 6],
+    [600, 2270, 4.4, 161, 182, 4],
+    [120, 320, 6.2, 141, 164, 0],
+    [600, 2230, 4.49, 167, 181, 3],
+    [120, 320, 6.18, 146, 163, 0],
+    [440, 1600, 4.36, 171, 180, 2],
+    [740, 1990, 6.12, 136, 158, 1],
+  ].map(([duration, distance, , heartRate, cadence, gain], index) => ({
+    activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
+    user_id: user.id,
+    segment_type: "lap",
+    segment_index: index,
+    started_at: null,
+    distance_meters: distance,
+    duration_seconds: duration,
+    average_heart_rate: heartRate,
+    average_cadence: cadence,
+    average_power_watts: null,
+    elevation_gain_meters: gain,
+    elevation_loss_meters: null,
+  })),
   athlete_profiles: [{ first_name: "Jules" }],
   athlete_goals: [
     {
@@ -112,6 +148,8 @@ function selectRows(table, params) {
   let rows = tables[table] ?? [];
   const id = params.get("id");
   if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
+  const owner = params.get("activity_id");
+  if (owner) rows = rows.filter((row) => `eq.${row.activity_id}` === owner);
   const types = params.get("activity_type")?.match(/^in\.\((.*)\)$/);
   if (types) {
     const allowed = types[1].split(",").map((type) => type.replace(/"/g, ""));
@@ -119,6 +157,8 @@ function selectRows(table, params) {
   }
   if (table === "provider_activities")
     rows = [...rows].sort((a, b) => b.started_at.localeCompare(a.started_at));
+  if (table === "provider_activity_segments")
+    rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
   const total = rows.length;
   const limit = Number(params.get("limit"));
   if (limit > 0) rows = rows.slice(0, limit);

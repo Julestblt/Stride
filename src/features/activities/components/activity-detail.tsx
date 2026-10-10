@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Metric } from "@/components/stride/metric";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { ProvenanceLabel } from "@/components/stride/provenance";
@@ -10,9 +11,11 @@ import {
 export function ActivityDetail({
   activity,
   current,
+  detailHref,
 }: {
   activity: Activity;
   current: boolean;
+  detailHref: string;
 }) {
   const Heading = current ? "h1" : "h2";
   const metrics = detailMetrics(activity);
@@ -42,9 +45,17 @@ export function ActivityDetail({
           Garmin n’a transmis aucune mesure pour cette activité.
         </p>
       )}
-      <ProvenanceLabel source="provider">
-        Garmin · données importées
-      </ProvenanceLabel>
+      <div className="flex flex-col items-start gap-5">
+        <Link
+          href={detailHref}
+          className="text-meta text-accent hover:text-foreground"
+        >
+          Détail complet : tours et effort →
+        </Link>
+        <ProvenanceLabel source="provider">
+          Garmin · données importées
+        </ProvenanceLabel>
+      </div>
     </article>
   );
 }

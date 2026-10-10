@@ -46,7 +46,7 @@ Sync status reports `categories.activities`, `recovery`, `fitness` and `patterns
 
 ## Data use
 
-Stride reads normalized garmin_mcp rows (`provider_activities`, `provider_activity_segments`, `provider_observations`, `provider_training_weeks`) under their owner-only RLS policies. It does not call Garmin directly or depend on Garmin response shapes. Profile and biometric values are not imported yet; that capability is tracked in garmin_mcp.
+Stride reads normalized garmin_mcp rows (`provider_activities`, `provider_activity_segments`, `provider_observations`, `provider_training_weeks`) under their owner-only RLS policies. It does not call Garmin directly or depend on Garmin response shapes. Profile and biometric values are not imported yet; that capability is tracked in garmin_mcp. The activity detail reads the activity summary and its `lap`/`split` rows only. Route geometry, chart samples and time in zone are not retained by the worker, so Stride shows no map or charts until garmin_mcp imports them as normalized rows.
 
 ## Network access
 

@@ -6,6 +6,12 @@ import {
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
+import {
+  activityDetailColumns,
+  activityDetailRowSchema,
+  segmentColumns,
+  segmentRowSchema,
+} from "@/features/activities/detail";
 import type { OnboardingContext } from "@/server/onboarding/context";
 
 export async function listActivities(
@@ -42,4 +48,33 @@ export async function readActivity(
     .maybeSingle();
   if (error) throw new Error("Unable to read activity");
   return data ? activityRowSchema.parse(data) : null;
+}
+
+export async function readActivityDetail(
+  context: OnboardingContext,
+  id: string,
+) {
+  const [activity, segments] = await Promise.all([
+    context.client
+      .from("provider_activities")
+      .select(activityDetailColumns)
+      .eq("user_id", context.userId)
+      .eq("id", id)
+      .not("started_at", "is", null)
+      .maybeSingle(),
+    context.client
+      .from("provider_activity_segments")
+      .select(segmentColumns)
+      .eq("user_id", context.userId)
+      .eq("activity_id", id)
+      .order("segment_type", { ascending: true })
+      .order("segment_index", { ascending: true }),
+  ]);
+  if (activity.error || segments.error)
+    throw new Error("Unable to read activity detail");
+  if (!activity.data) return null;
+  return {
+    activity: activityDetailRowSchema.parse(activity.data),
+    segments: (segments.data ?? []).map((row) => segmentRowSchema.parse(row)),
+  };
 }

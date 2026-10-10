@@ -133,7 +133,11 @@ export function ActivitiesView({
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {selected ? (
-            <ActivityDetail activity={selected} current={current} />
+            <ActivityDetail
+              activity={selected}
+              current={current}
+              detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit)}`}
+            />
           ) : (
             <p className="px-5 pt-8 text-body text-muted sm:px-10">
               Les activités importées depuis Garmin apparaîtront ici.
