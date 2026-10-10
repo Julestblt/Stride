@@ -1194,6 +1194,10 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
   await page.goto("/onboarding/profile");
   await expect(page).toHaveURL(/\/onboarding\/welcome$/);
   await page.getByRole("button", { name: "C’est parti", exact: true }).click();
+  await expect
+    .poll(async () => (await read(user.id)).welcome_completed_at)
+    .not.toBeNull();
+  await expect(page).toHaveURL(/\/onboarding\/garmin$/);
   await refresh(page, "garmin");
   await page
     .getByRole("main")
