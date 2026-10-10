@@ -38,7 +38,7 @@ const typeLabels: Record<string, string> = {
 export const activityColumns =
   "id, activity_type, route_name, started_at, local_started_at, distance_meters, duration_seconds, elevation_gain_meters, average_heart_rate";
 
-const measure = z
+export const positiveMeasure = z
   .union([z.number(), z.string()])
   .nullable()
   .transform((value) => {
@@ -53,10 +53,10 @@ export const activityRowSchema = z
     route_name: z.string().nullable(),
     started_at: z.string(),
     local_started_at: z.string().nullable(),
-    distance_meters: measure,
-    duration_seconds: measure,
-    elevation_gain_meters: measure,
-    average_heart_rate: measure,
+    distance_meters: positiveMeasure,
+    duration_seconds: positiveMeasure,
+    elevation_gain_meters: positiveMeasure,
+    average_heart_rate: positiveMeasure,
   })
   .transform((row) => ({
     id: row.id,

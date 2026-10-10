@@ -9,7 +9,7 @@ export type ShellRace = {
 export type ShellGoal = { name: string; detail: string };
 export type ShellAthlete = { name: string; initials: string; detail: string };
 
-const displayTimeZone = "Europe/Paris";
+export const displayTimeZone = "Europe/Paris";
 const dayMs = 86_400_000;
 const priorityRank: Record<string, number> = { A: 0, B: 1, C: 2 };
 const localDay = new Intl.DateTimeFormat("en-CA", {
@@ -26,6 +26,12 @@ const localDate = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: displayTimeZone,
 });
+
+export function formatLocalDate(iso: string | null) {
+  if (!iso) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : localDate.format(date);
+}
 
 export function localToday(now: Date) {
   return localDay.format(now);
