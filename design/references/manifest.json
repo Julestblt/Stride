@@ -542,10 +542,10 @@
       "device": "desktop",
       "screenshot_path": "design/references/app/activities/screenshots/desktop.png",
       "html_reference_path": "design/references/app/activities/source/desktop.zip",
-      "original_screenshot_name": "App · Activities · Desktop.png",
+      "original_screenshot_name": "App · Activities · Desktop@1x.png",
       "original_export_name": "App · Activities · Desktop-html.zip",
       "matched_confidence": "exact",
-      "notes": ""
+      "notes": "Revised 2026-10-10: fixed-height shell with independent list and detail scrolling, sticky period headers, load-more footer and route map."
     },
     {
       "id": "app/activities/mobile",
