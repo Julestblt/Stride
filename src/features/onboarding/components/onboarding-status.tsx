@@ -1,5 +1,5 @@
 "use client";
-import { createContext, use, useEffect, useState } from "react";
+import { createContext, use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   initialSyncPollingState,
@@ -21,12 +21,17 @@ const OnboardingStatusContext = createContext<OnboardingStatus | null>(null);
 export function OnboardingStatusProvider({
   polling,
   children,
+  initialSync = initialSyncPollingState,
 }: {
   polling: boolean;
+  initialSync?: SyncPollingState;
   children: React.ReactNode;
 }) {
   const [garminPhase, setGarminPhase] = useState<GarminPhase | null>(null);
-  const sync = useSyncPolling(polling || garminPhase === "connected");
+  const sync = useSyncPolling(
+    polling || garminPhase === "connected",
+    initialSync,
+  );
   return (
     <OnboardingStatusContext value={{ garminPhase, setGarminPhase, sync }}>
       {children}
@@ -46,13 +51,14 @@ export function useReportGarminPhase(phase: GarminPhase) {
   useEffect(() => setGarminPhase(phase), [phase, setGarminPhase]);
 }
 
-function useSyncPolling(active: boolean) {
+function useSyncPolling(active: boolean, initialSync: SyncPollingState) {
   const router = useRouter();
-  const [state, setState] = useState(initialSyncPollingState);
+  const [state, setState] = useState(initialSync);
+  const latest = useRef(initialSync);
   useEffect(() => {
     if (!active) return;
     let disposed = false;
-    let current = initialSyncPollingState;
+    let current = latest.current;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let controller: AbortController | undefined;
     let inFlight = false;
@@ -85,6 +91,7 @@ function useSyncPolling(active: boolean) {
       }
       if (disposed) return;
       current = observeSync(current, observation);
+      latest.current = current;
       setState(current);
       const delay = nextSyncPollDelay(current);
       if (delay !== null) timer = setTimeout(poll, delay);

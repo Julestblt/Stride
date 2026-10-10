@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   sync: vi.fn(),
   completion: vi.fn(),
   rpc: vi.fn(),
+  from: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/server/onboarding/context", () => ({
@@ -57,8 +58,18 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.unstubAllEnvs();
   vi.stubEnv("ONBOARDING_ENABLED", "true");
+  mocks.from.mockReturnValue({
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    maybeSingle: vi
+      .fn()
+      .mockResolvedValue({ data: { started_at: date }, error: null }),
+  });
+  mocks.sync.mockResolvedValue({ ok: false, failure: { code: "network" } });
   mocks.context.mockResolvedValue({
-    client: { rpc: mocks.rpc },
+    client: { rpc: mocks.rpc, from: mocks.from },
     userId,
     email: "athlete@example.com",
     accessToken: "private-token",
@@ -138,6 +149,54 @@ describe("onboarding server wiring", () => {
   });
 });
 describe("onboarding request guards", () => {
+  it.each(["running", "complete"])(
+    "seeds the verified %s sync state before rendering",
+    async (state) => {
+      const category = {
+        state,
+        oldestSynchronizedDate: "2021-01-01",
+        lastSuccessAt: date,
+        lastErrorCode: null,
+        activityCount: 444,
+      };
+      mocks.sync.mockResolvedValue({
+        ok: true,
+        value: {
+          started: true,
+          categories: {
+            activities: category,
+            recovery: category,
+            fitness: category,
+            patterns: category,
+          },
+          lastSyncAt: date,
+          updatedAt: date,
+        },
+      });
+      const { initialSync } = await getOnboardingRequest();
+      expect(initialSync).toMatchObject({
+        unavailable: false,
+        failures: 0,
+        observation: {
+          firstActivityDate: "2026-10-09",
+          categories: { activities: { state, activityCount: 444 } },
+        },
+      });
+      expect(mocks.sync).toHaveBeenCalledWith({ accessToken: "private-token" });
+      expect(mocks.from.mock.results[0].value.eq).toHaveBeenCalledWith(
+        "user_id",
+        userId,
+      );
+      expect(JSON.stringify(initialSync)).not.toContain("private-token");
+    },
+  );
+  it("redirects when the verified session expires during the SSR sync read", async () => {
+    mocks.sync.mockResolvedValue({
+      ok: false,
+      failure: { code: "unauthorized" },
+    });
+    await expect(getOnboardingRequest()).rejects.toThrow("redirect:/sign-in");
+  });
   it("gates disabled routes and redirects signed-out visitors", async () => {
     vi.stubEnv("ONBOARDING_ENABLED", "false");
     await expect(getOnboardingRequest()).rejects.toThrow("not-found");
@@ -160,10 +219,22 @@ describe("onboarding request guards", () => {
     expect(await getOnboardingRequest()).toEqual({
       progress,
       connection: { ok: false, failure: { code: "network" } },
+      initialSync: {
+        observation: null,
+        unavailable: true,
+        unchanged: 0,
+        failures: 1,
+      },
       email: "athlete@example.com",
       context: expect.objectContaining({ userId }),
     });
     expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.sync).toHaveBeenCalledWith({ accessToken: "private-token" });
+    expect(mocks.from).toHaveBeenCalledWith("provider_activities");
+    expect(mocks.from.mock.results[0].value.eq).toHaveBeenCalledWith(
+      "user_id",
+      userId,
+    );
     mocks.connection.mockResolvedValue({
       ok: false,
       failure: { code: "unauthorized" },
