@@ -19,6 +19,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
       - run: npx playwright install --with-deps chromium
       - run: npm run lint
       - run: npm run typecheck
@@ -41,6 +47,12 @@ jobs:
       - run: scripts/supabase-garmin-schema.sh
       - run: npm run db:test
       - run: npm run db:types && git diff --exit-code src/server/supabase/database.types.ts
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e:onboarding
       - uses: actions/upload-artifact@v4
