@@ -1,3 +1,7 @@
+import type { ActivityView } from "../activity-view";
+import { formatClock } from "../charts";
+import { RouteCard } from "./route-card";
+import { ActivityCharts, ActivityScatter } from "./activity-charts";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -28,6 +32,8 @@ import { LapTableSection } from "./lap-table";
 export function ActivityFullDetail({
   activity,
   segments,
+  view,
+  zoneMethod,
   filter,
   limit,
   sync,
@@ -35,6 +41,8 @@ export function ActivityFullDetail({
 }: {
   activity: ActivityDetailData;
   segments: ActivitySegment[];
+  view: ActivityView;
+  zoneMethod: "karvonen" | "percentage_maximum" | null;
   filter: ActivityFilter;
   limit: number;
   sync: string | null;
@@ -95,11 +103,11 @@ export function ActivityFullDetail({
         )}
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <article className="mx-auto flex w-full max-w-290 flex-col gap-10 px-5 pt-8 pb-12 sm:px-10">
+        <article className="mx-auto flex w-full max-w-360 flex-col gap-10 px-5 pt-8 pb-12 sm:px-[4vw]">
           <header className="flex flex-col gap-3">
             <MonoLabel size="label">{kicker.join(" · ")}</MonoLabel>
             <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
-              <h1 className="text-headline font-semibold text-balance sm:text-[2.375rem] sm:leading-none sm:tracking-[-0.03em]">
+              <h1 className="text-headline font-semibold text-balance sm:text-display sm:leading-none sm:tracking-[-0.03em]">
                 {activityTitle(activity)}
               </h1>
               {metrics.length > 0 && (
@@ -111,7 +119,8 @@ export function ActivityFullDetail({
                       </MonoLabel>
                       <dd>
                         <Metric
-                          size="lg"
+                          className="text-[1.625rem] sm:text-[2.125rem]"
+                          size="md"
                           value={metric.value}
                           unit={metric.unit}
                         />
@@ -122,37 +131,101 @@ export function ActivityFullDetail({
               )}
             </div>
           </header>
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_21rem]">
-            {laps ? (
-              <LapTableSection table={laps} />
-            ) : (
-              <p className="text-body text-muted">
-                Garmin n’a transmis aucun tour pour cette activité.
+          {view.route ? (
+            <RouteCard view={view.route} gain={activity.elevationGainMeters} />
+          ) : (
+            <section
+              aria-label="Route"
+              className="rounded-card border border-border bg-surface px-4 py-5"
+            >
+              <MonoLabel>Route</MonoLabel>
+              <p className="mt-2 text-body text-muted">
+                No GPS route is available for this activity.
               </p>
-            )}
-            {effort.length > 0 && (
-              <section
-                aria-labelledby="activity-effort"
-                className="flex flex-col gap-3"
-              >
-                <MonoLabel asChild>
-                  <h2 id="activity-effort">Effort</h2>
-                </MonoLabel>
-                <SignalList>
-                  {effort.map((stat) => (
-                    <SignalRow
-                      key={stat.key}
-                      label={stat.label}
-                      value={stat.value}
-                      unit={stat.unit}
-                      source="provider"
-                      provenance="Garmin"
-                      provenanceVariant="mono"
-                    />
-                  ))}
-                </SignalList>
-              </section>
-            )}
+            </section>
+          )}
+          <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(0,1fr)_21rem]">
+            <div className="flex min-w-0 flex-col gap-10">
+              {view.charts && <ActivityCharts view={view.charts} />}
+              {laps ? (
+                <LapTableSection table={laps} />
+              ) : (
+                <p className="text-body text-muted">
+                  Garmin n’a transmis aucun tour pour cette activité.
+                </p>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-col gap-8">
+              {effort.length > 0 && (
+                <section
+                  aria-labelledby="activity-effort"
+                  className="flex flex-col gap-3"
+                >
+                  <MonoLabel asChild>
+                    <h2 id="activity-effort">Effort</h2>
+                  </MonoLabel>
+                  <SignalList className="grid grid-cols-2 gap-x-5 lg:flex">
+                    {effort.map((stat) => (
+                      <SignalRow
+                        className="flex flex-col gap-1 lg:grid"
+                        key={stat.key}
+                        label={stat.label}
+                        value={stat.value}
+                        unit={stat.unit}
+                        source="provider"
+                        provenance="Garmin"
+                        provenanceVariant="mono"
+                      />
+                    ))}
+                  </SignalList>
+                </section>
+              )}
+              {view.zoneTime && (
+                <section
+                  aria-label="Time in zones"
+                  className="flex flex-col gap-3"
+                >
+                  <MonoLabel>Time in zones</MonoLabel>
+                  <div className="flex flex-col gap-2">
+                    {view.zoneTime.map(({ zone, seconds }) => {
+                      const total = view.zoneTime!.reduce(
+                        (sum, item) => sum + item.seconds,
+                        0,
+                      );
+                      const percentage =
+                        total > 0 ? (seconds / total) * 100 : 0;
+                      return (
+                        <div
+                          key={zone}
+                          className="grid grid-cols-[2rem_minmax(0,1fr)_3rem] items-center gap-3"
+                        >
+                          <MonoLabel size="micro">Z{zone}</MonoLabel>
+                          <div className="h-2 overflow-hidden rounded-mark bg-surface-raised">
+                            <div
+                              className="h-full rounded-mark"
+                              style={{
+                                width: `${percentage}%`,
+                                background: `var(--zone-${zone})`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-right font-mono text-micro text-muted">
+                            {formatClock(seconds)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <ProvenanceLabel source="estimate">
+                    Stride estimate · Garmin histogram ·{" "}
+                    {zoneMethod === "karvonen"
+                      ? "heart rate reserve zones"
+                      : "maximum heart rate zones"}
+                  </ProvenanceLabel>
+                </section>
+              )}
+              {view.charts && <ActivityScatter view={view.charts} />}
+            </div>
           </div>
           <ProvenanceLabel source="provider">
             {imported

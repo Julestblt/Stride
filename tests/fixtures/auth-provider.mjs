@@ -37,6 +37,7 @@ const daysAgo = (days, time = "07:12:00") => {
 const activity = (id, days, values) => ({
   id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(id).padStart(12, "0")}`,
   activity_type: "running",
+  activity_name: null,
   route_name: null,
   distance_meters: null,
   duration_seconds: null,
@@ -50,6 +51,9 @@ const activity = (id, days, values) => ({
   aerobic_training_effect: null,
   anaerobic_training_effect: null,
   detail_imported_at: null,
+  calories: null,
+  workout_rpe: null,
+  workout_feel: null,
   ...daysAgo(days),
   ...values,
 });
@@ -73,6 +77,10 @@ const tables = {
       duration_seconds: 3300,
     }),
     activity(4, 6, {
+      activity_name: "Threshold 3 × 10 min",
+      calories: 720,
+      workout_rpe: 8,
+      workout_feel: 75,
       distance_meters: 11300,
       duration_seconds: 3520,
       elevation_gain_meters: 64,
@@ -120,6 +128,81 @@ const tables = {
     elevation_gain_meters: gain,
     elevation_loss_meters: null,
   })),
+  provider_activity_tracks: [
+    {
+      activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
+      user_id: user.id,
+      status: "available",
+      route: Array.from({ length: 100 }, (_, index) => {
+        const angle = (index / 99) * Math.PI * 2;
+        return [
+          48.827 + Math.sin(angle) * 0.008,
+          2.418 + Math.cos(angle) * 0.014,
+        ];
+      }),
+      bounds: {
+        min_lat: 48.819,
+        max_lat: 48.835,
+        min_lon: 2.404,
+        max_lon: 2.432,
+      },
+      series: {
+        elapsed_s: Array.from(
+          { length: 100 },
+          (_, index) => (index * 3520) / 99,
+        ),
+        distance_m: Array.from(
+          { length: 100 },
+          (_, index) => (index * 11300) / 99,
+        ),
+        heart_rate: Array.from(
+          { length: 100 },
+          (_, index) => 125 + Math.round(51 * Math.abs(Math.sin(index / 11))),
+        ),
+        speed_mps: Array.from(
+          { length: 100 },
+          (_, index) => 3 + Math.sin(index / 8) * 0.7,
+        ),
+        elevation_m: Array.from(
+          { length: 100 },
+          (_, index) => 42 + Math.sin(index / 12) * 12,
+        ),
+        cadence: Array.from(
+          { length: 100 },
+          (_, index) => 168 + Math.round(Math.sin(index / 8) * 12),
+        ),
+      },
+      heart_rate_histogram: {
+        110: 180,
+        130: 700,
+        145: 1000,
+        160: 1180,
+        176: 460,
+      },
+      source_point_count: 3520,
+    },
+    {
+      activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000003",
+      user_id: user.id,
+      status: "available",
+      route: null,
+      bounds: null,
+      series: {
+        elapsed_s: [0, 600, 1200, 1800, 2400, 3300],
+        heart_rate: [100, 120, 140, 130, 125, 105],
+        speed_mps: [1, 2, 3, 2, 1, 1],
+      },
+      heart_rate_histogram: { 100: 600, 120: 900, 140: 1800 },
+      source_point_count: 3300,
+    },
+  ],
+  provider_observations: Array.from({ length: 10 }, (_, index) => ({
+    user_id: user.id,
+    metric: "resting_heart_rate_bpm",
+    observed_on: new Date(Date.now() - index * day).toISOString().slice(0, 10),
+    value_numeric: 50,
+    availability: "available",
+  })),
   athlete_profiles: [{ first_name: "Jules" }],
   athlete_goals: [
     {
@@ -146,6 +229,19 @@ const tables = {
 };
 function selectRows(table, params) {
   let rows = tables[table] ?? [];
+  const ownerId = params.get("user_id");
+  if (ownerId)
+    rows = rows.filter(
+      (row) => !row.user_id || `eq.${row.user_id}` === ownerId,
+    );
+  for (const [key, filter] of params) {
+    if (filter.startsWith("gte."))
+      rows = rows.filter((row) => row[key] >= filter.slice(4));
+    if (filter === "not.is.null")
+      rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
+    if (["metric", "availability"].includes(key) && filter.startsWith("eq."))
+      rows = rows.filter((row) => row[key] === filter.slice(3));
+  }
   const id = params.get("id");
   if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
   const owner = params.get("activity_id");
@@ -156,7 +252,11 @@ function selectRows(table, params) {
     rows = rows.filter((row) => allowed.includes(row.activity_type));
   }
   if (table === "provider_activities")
-    rows = [...rows].sort((a, b) => b.started_at.localeCompare(a.started_at));
+    rows = [...rows].sort((a, b) =>
+      params.get("order")?.startsWith("max_heart_rate")
+        ? (b.max_heart_rate ?? 0) - (a.max_heart_rate ?? 0)
+        : b.started_at.localeCompare(a.started_at),
+    );
   if (table === "provider_activity_segments")
     rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
   const total = rows.length;

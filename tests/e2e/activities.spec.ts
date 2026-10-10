@@ -145,7 +145,7 @@ test("the full detail shows laps, effort and provenance from stored rows", async
     /\/activities\/aaaaaaaa-aaaa-4aaa-8aaa-000000000004\/details\?filter=road$/,
   );
   await expect(
-    page.getByRole("heading", { level: 1, name: "Course à pied" }),
+    page.getByRole("heading", { level: 1, name: "Threshold 3 × 10 min" }),
   ).toBeVisible();
   const table = page.getByRole("table", { name: "Tours" });
   await expect(table.getByRole("row")).toHaveCount(8);
@@ -240,4 +240,140 @@ test("mobile shows the list, then the activity alone, without overflow", async (
   await expect(
     page.getByRole("dialog").getByRole("link", { name: "Activités" }),
   ).toBeVisible();
+});
+
+test("normalized tracks show real charts, zone time and a usable route fallback", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.abort(),
+  );
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Threshold 3 × 10 min" }),
+  ).toBeVisible();
+  const route = page.getByRole("region", { name: "Route", exact: true });
+  await expect(route).toBeVisible();
+  await expect(route.getByRole("img", { name: /GPS route/ })).toBeVisible();
+  const modes = route.getByRole("radiogroup", { name: "Color route by" });
+  await modes.getByRole("radio", { name: "Pace", exact: true }).click();
+  await expect(
+    modes.getByRole("radio", { name: "Pace", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await modes.getByRole("radio", { name: "Heart rate", exact: true }).click();
+  await expect(
+    modes.getByRole("radio", { name: "Heart rate", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await page.screenshot({
+    path: "test-results/activity-detail-desktop-top.png",
+  });
+  await page
+    .getByRole("region", { name: "Activity charts" })
+    .scrollIntoViewIfNeeded();
+  await expect(
+    page.getByRole("img", {
+      name: "Heart rate over elapsed time",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Time in zones" }),
+  ).toBeVisible();
+  await page.getByRole("region", { name: "Effort" }).scrollIntoViewIfNeeded();
+  await expect(page.getByRole("region", { name: "Effort" })).toContainText(
+    "720",
+  );
+  await page.screenshot({
+    path: "test-results/activity-detail-desktop.png",
+    fullPage: true,
+  });
+});
+
+test("samples without GPS retain heart rate charts without running pace", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000003/details");
+  await expect(
+    page.getByText("No GPS route is available for this activity."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Heart rate over elapsed time",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Pace over elapsed time", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("radiogroup", { name: "Color route by" }),
+  ).toHaveCount(0);
+});
+
+test("route controls and full detail fit narrow screens", async ({ page }) => {
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.abort(),
+  );
+  await signIn(page);
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+    const route = page.getByRole("region", { name: "Route", exact: true });
+    await expect(route).toBeVisible();
+    await route.getByRole("radio", { name: "Elevation", exact: true }).click();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const article = page.getByRole("article");
+    expect(
+      await article.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    if (width === 390) {
+      await article.evaluate((element) => {
+        if (element.parentElement) element.parentElement.scrollTop = 0;
+      });
+      await page.screenshot({
+        path: "test-results/activity-detail-mobile.png",
+        fullPage: true,
+      });
+    }
+  }
+});
+
+test("the bundled map worker renders a GPS route with map controls", async ({
+  page,
+}) => {
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        version: 8,
+        sources: {},
+        layers: [
+          {
+            id: "background",
+            type: "background",
+            paint: { "background-color": "#080907" },
+          },
+        ],
+      }),
+    }),
+  );
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+  const route = page.getByRole("region", { name: "Route", exact: true });
+  await expect(route.getByRole("button", { name: "Zoom in" })).toBeVisible({
+    timeout: 15000,
+  });
+  await route.getByRole("button", { name: "Zoom in" }).click();
+  await route.getByRole("button", { name: "Fit route" }).click();
+  await expect(route.locator("canvas")).toBeVisible();
+  await page.screenshot({ path: "test-results/activity-detail-map.png" });
 });

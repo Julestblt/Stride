@@ -46,7 +46,11 @@ Sync status reports `categories.activities`, `recovery`, `fitness` and `patterns
 
 ## Data use
 
-Stride reads normalized garmin_mcp rows (`provider_activities`, `provider_activity_segments`, `provider_observations`, `provider_training_weeks`) under their owner-only RLS policies. It does not call Garmin directly or depend on Garmin response shapes. Profile and biometric values are not imported yet; that capability is tracked in garmin_mcp. The activity detail reads the activity summary and its `lap`/`split` rows only. Route geometry, chart samples and time in zone are not retained by the worker, so Stride shows no map or charts until garmin_mcp imports them as normalized rows.
+Stride reads normalized garmin_mcp rows (`provider_activities`, `provider_activity_segments`, `provider_activity_tracks`, `provider_observations`, `provider_training_weeks`) under their owner-only RLS policies. It does not call Garmin directly or depend on Garmin response shapes. Profile and biometric values are not imported yet; that capability is tracked in garmin_mcp. The activity detail reads the activity summary, its `lap`/`split` rows and an optional compact track. Activity names, calories and Garmin perceived effort come from normalized summary columns. Track parsing validates GPS coordinates and aligned series before pure domain functions derive chart geometry, route coloring and time in zones from the full-resolution heart-rate histogram. Running pace is only shown for running activities; samples without GPS still support charts.
+
+The map uses MapLibre GL with CARTO's dark basemap and OpenStreetMap attribution. Its worker is bundled locally. Tile/style requests come from the browser and disclose the viewed area to the tile provider; no Garmin credentials or Supabase secrets are sent. If tiles or WebGL are unavailable, a local SVG preserves the actual route. Elevation and route hover share the same distance position.
+
+Zone boundaries use the existing Stride calculation: the maximum heart rate observed over the last year, with the median resting heart rate from the last 28 days when there are at least seven observations (Karvonen), otherwise percentages of maximum heart rate. The UI identifies these as Stride estimates, not imported Garmin zone settings. Missing calibration omits zone assignments. Missing tracks omit unavailable plots; coach analyses, prescribed targets and compliance are not fabricated from the design reference.
 
 ## Network access
 
