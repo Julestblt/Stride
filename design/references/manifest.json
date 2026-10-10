@@ -568,10 +568,10 @@
       "device": "desktop",
       "screenshot_path": "design/references/app/activity-detail/screenshots/desktop.png",
       "html_reference_path": "design/references/app/activity-detail/source/desktop.zip",
-      "original_screenshot_name": "App · Activity detail · Desktop.png",
+      "original_screenshot_name": "App · Activity detail · Desktop@1x.png",
       "original_export_name": "App · Activity detail · Desktop-html.zip",
       "matched_confidence": "exact",
-      "notes": ""
+      "notes": "Revised 2026-10-10: full-width route map section under the coach analysis, laid out for the /activities/[id]/details page. The mobile reference was not revised."
     },
     {
       "id": "app/activity-detail/mobile",
