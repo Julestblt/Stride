@@ -664,7 +664,7 @@ test("About you autosaves, restores across refresh and devices, and completes on
   await page.setViewportSize({ width: 1440, height: 1100 });
   const user = await atAboutStep(page);
   await page.getByLabel("Prénom").fill("Ada");
-  await page.getByLabel("Date de naissance").fill("1991-06-14");
+  await page.getByLabel("Date de naissance").fill("14/06/1991");
   await expect(saved(page)).toBeVisible();
   await expect
     .poll(async () => (await readProfileRow(user))?.first_name)
@@ -882,7 +882,8 @@ test("Goals persist focus and races, block incomplete races and complete", async
     2,
   );
   expect((await read(user.id)).goals_completed_at).toBeNull();
-  await page.getByLabel("Date", { exact: true }).fill("2027-03-20");
+  await page.getByLabel("Date", { exact: true }).fill("20/03/2027");
+  await expect(page.getByText("Samedi 20 mars 2027")).toBeVisible();
   await page.getByLabel("Distance", { exact: true }).fill("120");
   await page.getByLabel("D+", { exact: true }).fill("2000");
   await page.getByLabel(/Objectif de temps/).fill("18:30");

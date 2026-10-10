@@ -15,6 +15,7 @@ import {
 import { saveAthleteRace } from "@/server/onboarding/actions";
 import {
   ChoiceField,
+  DateField,
   NumberField,
   SaveIndicator,
   TextField,
@@ -116,11 +117,11 @@ export function RaceForm({
           onCommit={(value) => change("name", value)}
         />
         <div className="grid gap-5 lg:grid-cols-3">
-          <TextField
+          <DateField
             id={`race-${race.id}-date`}
             label="Date"
-            type="date"
             min={today}
+            longDate
             value={local.race_date}
             error={missing.includes("race_date") ? required : undefined}
             onCommit={(value) => change("race_date", value)}
