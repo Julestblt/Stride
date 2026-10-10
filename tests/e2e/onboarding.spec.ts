@@ -835,6 +835,15 @@ async function atGoalsStep(page: Page) {
   ).toBeVisible();
   return user;
 }
+async function chooseFocus(page: Page, name: RegExp) {
+  const card = page.getByRole("radio", { name });
+  await expect(async () => {
+    await card.click();
+    await expect(card).toHaveAttribute("aria-checked", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
 async function races(user: Awaited<ReturnType<typeof makeAthlete>>) {
   const response = await user.client
     .from("athlete_races")
@@ -849,7 +858,7 @@ test("Goals persist focus and races, block incomplete races and complete", async
 }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
   const user = await atGoalsStep(page);
-  await page.getByRole("radio", { name: /Ultra-trail/ }).click();
+  await chooseFocus(page, /Ultra-trail/);
   await expect
     .poll(async () => {
       const goal = await user.client
@@ -912,7 +921,7 @@ test("Goals persist focus and races, block incomplete races and complete", async
 test("Goals accept no race at all", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const user = await atGoalsStep(page);
-  await page.getByRole("radio", { name: /Forme générale/ }).click();
+  await chooseFocus(page, /Forme générale/);
   await page.getByRole("button", { name: "Ajouter une course" }).click();
   await expect.poll(async () => (await races(user)).length).toBe(1);
   await page
