@@ -227,12 +227,14 @@ export type Database = {
       };
       provider_activities: {
         Row: {
+          activity_name: string | null;
           activity_type: string | null;
           aerobic_training_effect: number | null;
           anaerobic_training_effect: number | null;
           average_cadence: number | null;
           average_heart_rate: number | null;
           average_power_watts: number | null;
+          calories: number | null;
           connection_id: string;
           detail_imported_at: string | null;
           distance_meters: number | null;
@@ -253,15 +255,19 @@ export type Database = {
           time_zone_id: string | null;
           updated_at: string;
           user_id: string;
+          workout_feel: number | null;
+          workout_rpe: number | null;
         };
         ComputedFields: never;
         Insert: {
+          activity_name?: string | null;
           activity_type?: string | null;
           aerobic_training_effect?: number | null;
           anaerobic_training_effect?: number | null;
           average_cadence?: number | null;
           average_heart_rate?: number | null;
           average_power_watts?: number | null;
+          calories?: number | null;
           connection_id: string;
           detail_imported_at?: string | null;
           distance_meters?: number | null;
@@ -282,14 +288,18 @@ export type Database = {
           time_zone_id?: string | null;
           updated_at?: string;
           user_id: string;
+          workout_feel?: number | null;
+          workout_rpe?: number | null;
         };
         Update: {
+          activity_name?: string | null;
           activity_type?: string | null;
           aerobic_training_effect?: number | null;
           anaerobic_training_effect?: number | null;
           average_cadence?: number | null;
           average_heart_rate?: number | null;
           average_power_watts?: number | null;
+          calories?: number | null;
           connection_id?: string;
           detail_imported_at?: string | null;
           distance_meters?: number | null;
@@ -310,6 +320,8 @@ export type Database = {
           time_zone_id?: string | null;
           updated_at?: string;
           user_id?: string;
+          workout_feel?: number | null;
+          workout_rpe?: number | null;
         };
         Relationships: [
           {
@@ -379,6 +391,63 @@ export type Database = {
             foreignKeyName: "provider_activity_segments_activity_id_fkey";
             columns: ["activity_id"];
             isOneToOne: false;
+            referencedRelation: "provider_activities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      provider_activity_tracks: {
+        Row: {
+          activity_id: string;
+          bounds: Json | null;
+          heart_rate_histogram: Json | null;
+          imported_at: string;
+          provider: string;
+          route: Json | null;
+          route_point_count: number;
+          series: Json | null;
+          series_point_count: number;
+          source_point_count: number;
+          source_updated_at: string | null;
+          status: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activity_id: string;
+          bounds?: Json | null;
+          heart_rate_histogram?: Json | null;
+          imported_at?: string;
+          provider: string;
+          route?: Json | null;
+          route_point_count?: number;
+          series?: Json | null;
+          series_point_count?: number;
+          source_point_count?: number;
+          source_updated_at?: string | null;
+          status: string;
+          user_id: string;
+        };
+        Update: {
+          activity_id?: string;
+          bounds?: Json | null;
+          heart_rate_histogram?: Json | null;
+          imported_at?: string;
+          provider?: string;
+          route?: Json | null;
+          route_point_count?: number;
+          series?: Json | null;
+          series_point_count?: number;
+          source_point_count?: number;
+          source_updated_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_activity_tracks_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: true;
             referencedRelation: "provider_activities";
             referencedColumns: ["id"];
           },
@@ -729,6 +798,14 @@ export type Database = {
         Args: { p_user_id: string };
         Returns: boolean;
       };
+      list_activities_missing_tracks: {
+        Args: { p_connection_id: string; p_limit: number; p_since: string };
+        Returns: {
+          id: string;
+          provider_activity_id: string;
+          source_updated_at: string;
+        }[];
+      };
       persist_provider_secret: {
         Args: {
           p_ciphertext: string;
@@ -779,6 +856,17 @@ export type Database = {
           p_ciphertext: string;
           p_connection_id: string;
           p_provider: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      upsert_activity_track: {
+        Args: {
+          p_activity_id: string;
+          p_attempts: number;
+          p_connection_id: string;
+          p_job_id: string;
+          p_track: Json;
           p_user_id: string;
         };
         Returns: boolean;

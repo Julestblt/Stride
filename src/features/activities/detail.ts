@@ -9,7 +9,7 @@ import {
 } from "./activities";
 
 export const activityDetailColumns =
-  "id, activity_type, route_name, started_at, local_started_at, distance_meters, duration_seconds, elevation_gain_meters, elevation_loss_meters, average_heart_rate, max_heart_rate, average_cadence, average_power_watts, max_power_watts, aerobic_training_effect, anaerobic_training_effect, detail_imported_at";
+  "id, activity_type, activity_name, route_name, started_at, local_started_at, distance_meters, duration_seconds, elevation_gain_meters, elevation_loss_meters, average_heart_rate, max_heart_rate, average_cadence, average_power_watts, max_power_watts, aerobic_training_effect, anaerobic_training_effect, calories, workout_rpe, workout_feel, detail_imported_at";
 export const segmentColumns =
   "segment_type, segment_index, started_at, distance_meters, duration_seconds, average_heart_rate, average_cadence, average_power_watts, elevation_gain_meters, elevation_loss_meters";
 
@@ -17,6 +17,7 @@ export const activityDetailRowSchema = z
   .object({
     id: z.string(),
     activity_type: z.string().nullable(),
+    activity_name: z.string().nullable().optional(),
     route_name: z.string().nullable(),
     started_at: z.string(),
     local_started_at: z.string().nullable(),
@@ -31,6 +32,19 @@ export const activityDetailRowSchema = z
     max_power_watts: positiveMeasure,
     aerobic_training_effect: positiveMeasure,
     anaerobic_training_effect: positiveMeasure,
+    calories: positiveMeasure.optional().default(null),
+    workout_rpe: positiveMeasure.optional().default(null),
+    workout_feel: z
+      .union([z.number(), z.string()])
+      .nullable()
+      .optional()
+      .transform((value) => {
+        if (value === null || value === undefined || value === "") return null;
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100
+          ? parsed
+          : null;
+      }),
     detail_imported_at: z.string().nullable(),
   })
   .transform((row) => {
@@ -38,6 +52,7 @@ export const activityDetailRowSchema = z
     return {
       id: row.id,
       type: row.activity_type,
+      name: row.activity_name?.trim() || null,
       routeName: row.route_name?.trim() || null,
       date: local.slice(0, 10),
       localTime: row.local_started_at
@@ -54,6 +69,9 @@ export const activityDetailRowSchema = z
       maxPowerWatts: row.max_power_watts,
       aerobicTrainingEffect: row.aerobic_training_effect,
       anaerobicTrainingEffect: row.anaerobic_training_effect,
+      calories: row.calories,
+      perceivedEffort: row.workout_rpe,
+      feel: row.workout_feel,
       detailImportedAt: row.detail_imported_at,
     };
   });
@@ -190,6 +208,30 @@ export function lapTable(
 
 export function effortStats(activity: ActivityDetailData): DetailStat[] {
   const stats: (DetailStat | null)[] = [
+    activity.calories !== null
+      ? {
+          key: "calories",
+          label: "Energy",
+          value: integer.format(activity.calories),
+          unit: "kcal",
+        }
+      : null,
+    activity.perceivedEffort !== null && activity.perceivedEffort <= 10
+      ? {
+          key: "perceivedEffort",
+          label: "Perceived effort",
+          value: effect.format(activity.perceivedEffort),
+          unit: "/10",
+        }
+      : null,
+    activity.feel !== null
+      ? {
+          key: "feel",
+          label: "Workout feel",
+          value: integer.format(activity.feel),
+          unit: "/100",
+        }
+      : null,
     activity.aerobicTrainingEffect !== null
       ? {
           key: "aerobic",
