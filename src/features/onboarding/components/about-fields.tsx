@@ -42,6 +42,8 @@ export function NumberField({
   max,
   onCommit,
   description,
+  integer = false,
+  error,
 }: {
   id: string;
   label: string;
@@ -51,6 +53,8 @@ export function NumberField({
   max: number;
   onCommit: (value: number | null) => void;
   description?: React.ReactNode;
+  integer?: boolean;
+  error?: string;
 }) {
   const [text, setText] = useState(value === null ? "" : String(value));
   const [invalid, setInvalid] = useState(false);
@@ -59,11 +63,13 @@ export function NumberField({
     return raw.trim() === ""
       ? null
       : Number.isFinite(number) && number >= min && number <= max
-        ? Math.round(number * 10) / 10
+        ? integer
+          ? Math.round(number)
+          : Math.round(number * 10) / 10
         : undefined;
   };
   return (
-    <Field data-invalid={invalid}>
+    <Field data-invalid={invalid || Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <InputGroup>
         <InputGroupInput
@@ -90,6 +96,8 @@ export function NumberField({
         <FieldDescription id={`${id}-error`} className="text-warning">
           Entre une valeur entre {min} et {max} {unit}.
         </FieldDescription>
+      ) : error ? (
+        <FieldDescription className="text-warning">{error}</FieldDescription>
       ) : (
         description
       )}
@@ -105,6 +113,9 @@ export function TextField({
   onCommit,
   autoComplete,
   max,
+  min,
+  maxLength = 80,
+  error,
 }: {
   id: string;
   label: string;
@@ -113,17 +124,22 @@ export function TextField({
   onCommit: (value: string | null) => void;
   autoComplete?: string;
   max?: string;
+  min?: string;
+  maxLength?: number;
+  error?: string;
 }) {
   const [text, setText] = useState(value ?? "");
   return (
-    <Field>
+    <Field data-invalid={Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Input
         id={id}
         type={type}
         value={text}
         max={max}
-        maxLength={type === "text" ? 80 : undefined}
+        min={min}
+        aria-invalid={Boolean(error) || undefined}
+        maxLength={type === "text" ? maxLength : undefined}
         autoComplete={autoComplete}
         onChange={(event) => {
           setText(event.target.value);
@@ -133,6 +149,9 @@ export function TextField({
           onCommit(next === "" ? null : next);
         }}
       />
+      {error && (
+        <FieldDescription className="text-warning">{error}</FieldDescription>
+      )}
     </Field>
   );
 }

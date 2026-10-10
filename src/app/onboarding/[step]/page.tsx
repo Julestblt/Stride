@@ -8,6 +8,8 @@ import { WelcomeStep } from "@/features/onboarding/components/welcome-step";
 import { GarminStep } from "@/features/onboarding/components/garmin-step";
 import { HistoryStep } from "@/features/onboarding/components/history-step";
 import { AboutStep } from "@/features/onboarding/components/about-step";
+import { GoalsStep } from "@/features/onboarding/components/goals-step";
+import { readGoals } from "@/server/onboarding/goals";
 import { readProfile } from "@/server/onboarding/profile";
 import { loadKnownValues } from "@/server/onboarding/known-values";
 import { initialGarminScreen } from "@/features/onboarding/garmin-flow";
@@ -33,6 +35,7 @@ export default async function OnboardingStepPage({
           })),
         ])
       : null;
+  const goals = guard.step === "goals" ? await readGoals(context) : null;
   return (
     <OnboardingShell
       progress={progress}
@@ -61,6 +64,13 @@ export default async function OnboardingStepPage({
           updatedAt={about[0].updatedAt}
           known={about[1].known}
           suggestions={about[1].suggestions}
+        />
+      )}
+      {goals && (
+        <GoalsStep
+          userId={context.userId}
+          revision={progress.revision}
+          goals={goals}
         />
       )}
     </OnboardingShell>
