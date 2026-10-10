@@ -35,7 +35,10 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      className="h-svh overflow-hidden"
+    >
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <NavGoalSwitcher
@@ -78,7 +81,7 @@ export function AppShell({
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <SidebarInset className="min-h-svh md:min-h-[calc(100svh-1rem)]">
+      <SidebarInset className="h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)]">
         {children}
       </SidebarInset>
     </SidebarProvider>

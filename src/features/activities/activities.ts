@@ -266,3 +266,21 @@ export function groupActivities(activities: Activity[], today: string) {
   }
   return groups;
 }
+
+export const activityPageSize = 50;
+export const maxActivityWindow = 1000;
+
+export function parseActivityLimit(value: unknown) {
+  const requested =
+    typeof value === "string" && /^\d{1,5}$/.test(value) ? Number(value) : 0;
+  const pages = Math.max(1, Math.ceil(requested / activityPageSize));
+  return Math.min(pages * activityPageSize, maxActivityWindow);
+}
+
+export function activitiesQuery(filter: ActivityFilter, limit: number) {
+  const params = new URLSearchParams();
+  if (filter !== "all") params.set("filter", filter);
+  if (limit > activityPageSize) params.set("limit", String(limit));
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}

@@ -77,6 +77,12 @@ const tables = {
       duration_seconds: 40500,
       elevation_gain_meters: 1620,
     }),
+    ...Array.from({ length: 70 }, (_, index) =>
+      activity(100 + index, 40 + index, {
+        distance_meters: 8000 + index * 10,
+        duration_seconds: 3000 + index,
+      }),
+    ),
   ],
   athlete_profiles: [{ first_name: "Jules" }],
   athlete_goals: [
@@ -111,7 +117,12 @@ function selectRows(table, params) {
     const allowed = types[1].split(",").map((type) => type.replace(/"/g, ""));
     rows = rows.filter((row) => allowed.includes(row.activity_type));
   }
-  return rows;
+  if (table === "provider_activities")
+    rows = [...rows].sort((a, b) => b.started_at.localeCompare(a.started_at));
+  const total = rows.length;
+  const limit = Number(params.get("limit"));
+  if (limit > 0) rows = rows.slice(0, limit);
+  return { rows, total };
 }
 const events = [];
 const links = new Map();
@@ -123,8 +134,8 @@ createServer(async (request, response) => {
   for await (const chunk of request) raw += chunk;
   const body = raw ? JSON.parse(raw) : {};
   response.setHeader("Content-Type", "application/json");
-  const send = (status, value) => {
-    response.writeHead(status);
+  const send = (status, value, headers = {}) => {
+    response.writeHead(status, headers);
     response.end(JSON.stringify(value));
   };
   if (url.pathname === "/__test__/events") return send(200, events);
@@ -207,9 +218,15 @@ createServer(async (request, response) => {
       ? send(200, user)
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
-  if (url.pathname.startsWith("/rest/v1/"))
-    return request.headers.authorization === `Bearer ${token}`
-      ? send(200, selectRows(url.pathname.slice(9), url.searchParams))
-      : send(401, { message: "JWT required" });
+  if (url.pathname.startsWith("/rest/v1/")) {
+    if (request.headers.authorization !== `Bearer ${token}`)
+      return send(401, { message: "JWT required" });
+    const { rows, total } = selectRows(url.pathname.slice(9), url.searchParams);
+    return send(200, rows, {
+      "Content-Range": rows.length
+        ? `0-${rows.length - 1}/${total}`
+        : `*/${total}`,
+    });
+  }
   return send(404, { msg: "Unknown fixture endpoint" });
 }).listen(3200, "127.0.0.1");

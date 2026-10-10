@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  activitiesQuery,
   activityKind,
   activityPeriod,
   activityRowSchema,
@@ -12,6 +13,7 @@ import {
   groupActivities,
   listMetrics,
   parseActivityFilter,
+  parseActivityLimit,
 } from "../../src/features/activities/activities";
 import {
   localToday,
@@ -83,6 +85,26 @@ describe("activity rows", () => {
     expect(activityTitle(activity({ activity_type: "paragliding" }))).toBe(
       "Activité",
     );
+  });
+});
+
+describe("activity list window", () => {
+  it("rounds the requested window up to whole pages within bounds", () => {
+    expect(parseActivityLimit(undefined)).toBe(50);
+    expect(parseActivityLimit("0")).toBe(50);
+    expect(parseActivityLimit("100")).toBe(100);
+    expect(parseActivityLimit("101")).toBe(150);
+    expect(parseActivityLimit("5000")).toBe(1000);
+    expect(parseActivityLimit("-50")).toBe(50);
+    expect(parseActivityLimit("abc")).toBe(50);
+    expect(parseActivityLimit(["100"])).toBe(50);
+  });
+
+  it("keeps the filter and the loaded window in URLs and omits defaults", () => {
+    expect(activitiesQuery("all", 50)).toBe("");
+    expect(activitiesQuery("trail", 50)).toBe("?filter=trail");
+    expect(activitiesQuery("all", 100)).toBe("?limit=100");
+    expect(activitiesQuery("road", 150)).toBe("?filter=road&limit=150");
   });
 });
 

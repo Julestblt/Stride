@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActivitiesView } from "@/features/activities/components/activities-view";
-import { parseActivityFilter } from "@/features/activities/activities";
+import {
+  parseActivityFilter,
+  parseActivityLimit,
+} from "@/features/activities/activities";
 import { localToday } from "@/features/app-shell/shell";
 import { listActivities, readActivity } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
@@ -17,17 +20,20 @@ export default async function ActivityPage({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
   const filter = parseActivityFilter(query.filter);
+  const limit = parseActivityLimit(query.limit);
   const context = await requireAthlete();
-  const [selected, activities, shell] = await Promise.all([
+  const [selected, { activities, total }, shell] = await Promise.all([
     readActivity(context, id),
-    listActivities(context, filter),
+    listActivities(context, filter, limit),
     getShell(),
   ]);
   if (!selected) notFound();
   return (
     <ActivitiesView
       activities={activities}
+      total={total}
       filter={filter}
+      limit={limit}
       selected={selected}
       current
       sync={shell.sync}

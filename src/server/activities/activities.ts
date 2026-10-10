@@ -8,25 +8,25 @@ import {
 } from "@/features/activities/activities";
 import type { OnboardingContext } from "@/server/onboarding/context";
 
-export const activityListLimit = 100;
-
 export async function listActivities(
   context: OnboardingContext,
   filter: ActivityFilter,
-): Promise<Activity[]> {
+  limit: number,
+): Promise<{ activities: Activity[]; total: number }> {
   let query = context.client
     .from("provider_activities")
-    .select(activityColumns)
+    .select(activityColumns, { count: "exact" })
     .eq("user_id", context.userId)
     .not("started_at", "is", null);
   if (filter !== "all")
     query = query.in("activity_type", [...activityTypesByFilter[filter]]);
-  const { data, error } = await query
+  const { data, error, count } = await query
     .order("started_at", { ascending: false })
     .order("id", { ascending: false })
-    .limit(activityListLimit);
+    .limit(limit);
   if (error) throw new Error("Unable to read activities");
-  return (data ?? []).map((row) => activityRowSchema.parse(row));
+  const activities = (data ?? []).map((row) => activityRowSchema.parse(row));
+  return { activities, total: Math.max(count ?? 0, activities.length) };
 }
 
 export async function readActivity(

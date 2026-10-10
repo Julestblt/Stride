@@ -66,6 +66,72 @@ test("activities are grouped, filtered through the URL and opened in place", asy
   ).toHaveAttribute("aria-current", "true");
 });
 
+test("the list and the detail scroll independently inside a fixed-height shell", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await signIn(page);
+  await page.goto("/activities");
+  const list = page.getByRole("region", { name: "Liste des activités" });
+  await expect(list.getByText("50 sur 75 activités")).toBeVisible();
+  const fits = () =>
+    page.evaluate(
+      () =>
+        document.documentElement.scrollHeight <= window.innerHeight &&
+        document.documentElement.scrollTop === 0,
+    );
+  expect(await fits()).toBe(true);
+  const breadcrumb = page.getByRole("navigation", { name: "Fil d’Ariane" });
+  await expect(breadcrumb).toBeInViewport();
+  const detail = page.getByRole("article").locator("xpath=..");
+  const scrollable = await list.evaluate(
+    (element) => element.scrollHeight - element.clientHeight,
+  );
+  expect(scrollable).toBeGreaterThan(1500);
+
+  await list.evaluate((element) => {
+    element.scrollTop = 1500;
+  });
+  await expect
+    .poll(() => list.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(1400);
+  expect(await detail.evaluate((element) => element.scrollTop)).toBe(0);
+  expect(await fits()).toBe(true);
+  await expect(breadcrumb).toBeInViewport();
+  const stuck = await list.evaluate((element) => {
+    const top = element.getBoundingClientRect().top;
+    return Array.from(element.querySelectorAll("h2")).some(
+      (heading) => Math.abs(heading.getBoundingClientRect().top - top) <= 1,
+    );
+  });
+  expect(stuck).toBe(true);
+
+  await page.getByRole("link", { name: "Charger les suivantes" }).click();
+  await expect(page).toHaveURL(/\/activities\?limit=100$/);
+  await expect(list.getByText("75 sur 75 activités")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Charger les suivantes" }),
+  ).toHaveCount(0);
+  expect(await list.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    1000,
+  );
+  const target = list.getByRole("link", { name: /Course à pied/ }).nth(30);
+  await target.scrollIntoViewIfNeeded();
+  const before = await list.evaluate((element) => element.scrollTop);
+  await target.click();
+  await expect(page).toHaveURL(
+    /\/activities\/aaaaaaaa-aaaa-4aaa-8aaa-[0-9a-f]{12}\?limit=100$/,
+  );
+  await expect(page.getByRole("article")).toBeVisible();
+  await expect
+    .poll(() => list.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(before - 5);
+  expect(await list.evaluate((element) => element.scrollTop)).toBeLessThan(
+    before + 5,
+  );
+  await expect(list.locator('[aria-current="true"]')).toBeInViewport();
+});
+
 test("an unknown or foreign activity is not found", async ({ page }) => {
   await signIn(page);
   for (const id of ["not-an-id", "cccccccc-cccc-4ccc-8ccc-cccccccccccc"]) {

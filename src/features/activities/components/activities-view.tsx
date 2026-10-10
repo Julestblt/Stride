@@ -4,24 +4,34 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { PulseDot, SourceMark } from "@/components/stride/marks";
 import {
+  activitiesQuery,
   formatActivityDate,
   groupActivities,
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
 import { ActivityDetail } from "./activity-detail";
-import { ActivityFilters, ActivityList } from "./activity-list";
+import {
+  ActivityFilters,
+  ActivityList,
+  ActivityListFooter,
+} from "./activity-list";
+import { ListScrollRegion } from "./list-scroll-region";
 
 export function ActivitiesView({
   activities,
+  total,
   filter,
+  limit,
   selected,
   current,
   sync,
   today,
 }: {
   activities: Activity[];
+  total: number;
   filter: ActivityFilter;
+  limit: number;
   selected: Activity | null;
   current: boolean;
   sync: string | null;
@@ -29,14 +39,14 @@ export function ActivitiesView({
 }) {
   const ListHeading = current ? "h2" : "h1";
   return (
-    <div className="flex flex-1">
+    <div className="flex min-h-0 flex-1">
       <div
         className={cn(
-          "w-full flex-col lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-border-subtle",
+          "min-h-0 w-full flex-col bg-surface-inset lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-border-subtle",
           current ? "hidden" : "flex",
         )}
       >
-        <div className="flex flex-col gap-3 border-b border-border-subtle px-5 pt-5 pb-3 lg:px-3.5 lg:pt-3.5 lg:pb-2.5">
+        <div className="flex shrink-0 flex-col gap-3 border-b border-border-subtle px-5 pt-5 pb-3 lg:px-3.5 lg:pt-3.5 lg:pb-2.5">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-2 lg:hidden" />
             <ListHeading className="flex-1 text-headline font-semibold lg:text-base">
@@ -55,27 +65,42 @@ export function ActivitiesView({
           </div>
           <ActivityFilters filter={filter} />
         </div>
-        <ActivityList
-          groups={groupActivities(activities, today)}
-          filter={filter}
-          selectedId={selected?.id ?? null}
-          current={current}
-          today={today}
-        />
-        {activities.length > 0 && (
-          <p className="flex items-center gap-1.75 px-5 py-4 text-xs text-muted-foreground lg:px-3.5">
-            <SourceMark source="provider" />
-            Tout vient de Garmin
-          </p>
-        )}
+        <ListScrollRegion
+          storageKey={`stride:activities:list:${filter}`}
+          label="Liste des activités"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        >
+          <ActivityList
+            groups={groupActivities(activities, today)}
+            filter={filter}
+            limit={limit}
+            selectedId={selected?.id ?? null}
+            current={current}
+            today={today}
+          />
+          {activities.length > 0 && (
+            <>
+              <ActivityListFooter
+                filter={filter}
+                limit={limit}
+                shown={activities.length}
+                total={total}
+              />
+              <p className="flex items-center gap-1.75 px-5 pb-4 text-xs text-muted-foreground lg:px-3.5">
+                <SourceMark source="provider" />
+                Tout vient de Garmin
+              </p>
+            </>
+          )}
+        </ListScrollRegion>
       </div>
       <div
         className={cn(
-          "min-w-0 flex-1 flex-col lg:flex",
+          "min-h-0 min-w-0 flex-1 flex-col lg:flex",
           current ? "flex" : "hidden",
         )}
       >
-        <header className="flex min-h-14 items-center gap-3 border-b border-border-subtle px-4">
+        <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
           <SidebarTrigger />
           <Separator
             orientation="vertical"
@@ -86,7 +111,7 @@ export function ActivitiesView({
             className="flex min-w-0 items-center gap-2 text-sm"
           >
             <Link
-              href={`/activities${filter === "all" ? "" : `?filter=${filter}`}`}
+              href={`/activities${activitiesQuery(filter, limit)}`}
               className="text-muted-foreground hover:text-foreground"
             >
               Activités
@@ -106,13 +131,15 @@ export function ActivitiesView({
             )}
           </nav>
         </header>
-        {selected ? (
-          <ActivityDetail activity={selected} current={current} />
-        ) : (
-          <p className="px-5 pt-8 text-body text-muted sm:px-10">
-            Les activités importées depuis Garmin apparaîtront ici.
-          </p>
-        )}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {selected ? (
+            <ActivityDetail activity={selected} current={current} />
+          ) : (
+            <p className="px-5 pt-8 text-body text-muted sm:px-10">
+              Les activités importées depuis Garmin apparaîtront ici.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

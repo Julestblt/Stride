@@ -3,22 +3,17 @@ import { cn } from "@/lib/utils";
 import { Metric } from "@/components/stride/metric";
 import { MonoLabel } from "@/components/stride/mono-label";
 import {
+  activitiesQuery,
   activityFilterLabels,
   activityFilters,
+  activityPageSize,
   activityTitle,
   formatActivityDate,
   listMetrics,
+  maxActivityWindow,
   type ActivityFilter,
   type ActivityGroup,
 } from "@/features/activities/activities";
-
-function filterQuery(filter: ActivityFilter) {
-  return filter === "all" ? "" : `?filter=${filter}`;
-}
-
-export function activityHref(id: string, filter: ActivityFilter) {
-  return `/activities/${id}${filterQuery(filter)}`;
-}
 
 export function ActivityFilters({ filter }: { filter: ActivityFilter }) {
   return (
@@ -26,7 +21,7 @@ export function ActivityFilters({ filter }: { filter: ActivityFilter }) {
       {activityFilters.map((item) => (
         <Link
           key={item}
-          href={`/activities${filterQuery(item)}`}
+          href={`/activities${activitiesQuery(item, activityPageSize)}`}
           aria-current={item === filter ? "page" : undefined}
           className={cn(
             "inline-flex min-h-11 items-center rounded-surface border px-3.5 text-sm transition-colors duration-150 ease-stride lg:min-h-7 lg:rounded-control lg:px-2.5 lg:text-xs",
@@ -45,12 +40,14 @@ export function ActivityFilters({ filter }: { filter: ActivityFilter }) {
 export function ActivityList({
   groups,
   filter,
+  limit,
   selectedId,
   current,
   today,
 }: {
   groups: ActivityGroup[];
   filter: ActivityFilter;
+  limit: number;
   selectedId: string | null;
   current: boolean;
   today: string;
@@ -70,7 +67,7 @@ export function ActivityList({
           <MonoLabel
             size="nano"
             asChild
-            className="block px-5 pt-2.5 pb-1 lg:px-3.5"
+            className="sticky top-0 z-10 block border-b border-border-subtle bg-surface-inset px-5 pt-2.5 pb-1 lg:px-3.5"
           >
             <h2>{group.label}</h2>
           </MonoLabel>
@@ -80,7 +77,7 @@ export function ActivityList({
               return (
                 <li key={activity.id}>
                   <Link
-                    href={activityHref(activity.id, filter)}
+                    href={`/activities/${activity.id}${activitiesQuery(filter, limit)}`}
                     aria-current={selected && current ? "true" : undefined}
                     className={cn(
                       "flex flex-col gap-1.5 border-b border-border-subtle px-5 py-3 transition-colors duration-150 ease-stride hover:bg-surface lg:px-3.5",
@@ -129,6 +126,37 @@ export function ActivityList({
           </ul>
         </section>
       ))}
+    </div>
+  );
+}
+
+export function ActivityListFooter({
+  filter,
+  limit,
+  shown,
+  total,
+}: {
+  filter: ActivityFilter;
+  limit: number;
+  shown: number;
+  total: number;
+}) {
+  const next = Math.min(limit + activityPageSize, maxActivityWindow);
+  const more = shown < total && shown >= limit && next > limit;
+  return (
+    <div className="flex flex-col items-center gap-2 px-5 py-4 lg:px-3.5">
+      {more && (
+        <Link
+          href={`/activities${activitiesQuery(filter, next)}`}
+          scroll={false}
+          className="inline-flex min-h-11 items-center rounded-control border border-border-strong px-3.5 text-sm text-foreground transition-colors duration-150 ease-stride hover:bg-surface-raised lg:min-h-8 lg:text-xs"
+        >
+          Charger les suivantes
+        </Link>
+      )}
+      <MonoLabel size="nano">
+        {shown} sur {total} activités
+      </MonoLabel>
     </div>
   );
 }
