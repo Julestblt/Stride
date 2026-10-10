@@ -14,7 +14,10 @@ const runningTypes = [
   "ultra_run",
 ];
 
-export async function loadKnownValues(context: OnboardingContext, today: Date) {
+export async function loadGarminSignals(
+  context: OnboardingContext,
+  today: Date,
+) {
   const year = new Date(today.getTime() - 365 * 86_400_000).toISOString();
   const [history, firstRun, vo2, maxHr] = await Promise.all([
     loadHistoryContext(context, today),
@@ -69,6 +72,11 @@ export async function loadKnownValues(context: OnboardingContext, today: Date) {
           }
         : null,
   };
+  return inputs;
+}
+
+export async function loadKnownValues(context: OnboardingContext, today: Date) {
+  const inputs = await loadGarminSignals(context, today);
   return {
     known: buildKnownValues(inputs),
     suggestions: buildSuggestions(inputs),

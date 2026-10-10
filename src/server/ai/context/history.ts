@@ -19,6 +19,7 @@ const recoveryMetrics = [
 ];
 const activityColumns =
   "started_at, local_started_at, activity_type, distance_meters, duration_seconds, elevation_gain_meters";
+const activityPageSize = 1000;
 type ActivityRow = {
   started_at: string | null;
   local_started_at: string | null;
@@ -45,6 +46,24 @@ function activity(row: ActivityRow): InsightActivity | null {
   };
 }
 
+async function loadActivities(context: OnboardingContext, year: string) {
+  const rows: ActivityRow[] = [];
+  for (let offset = 0; ; offset += activityPageSize) {
+    const page = await context.client
+      .from("provider_activities")
+      .select(activityColumns)
+      .eq("user_id", context.userId)
+      .gte("started_at", year)
+      .order("started_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(offset, offset + activityPageSize - 1);
+    if (page.error) throw new Error("Unable to read imported history");
+    const data = page.data ?? [];
+    rows.push(...data);
+    if (data.length < activityPageSize) return rows;
+  }
+}
+
 export async function loadHistoryContext(
   context: OnboardingContext,
   today: Date,
@@ -54,13 +73,7 @@ export async function loadHistoryContext(
     .toISOString()
     .slice(0, 10);
   const [activities, longest, observations] = await Promise.all([
-    context.client
-      .from("provider_activities")
-      .select(activityColumns)
-      .eq("user_id", context.userId)
-      .gte("started_at", year)
-      .order("started_at", { ascending: true })
-      .limit(5000),
+    loadActivities(context, year),
     context.client
       .from("provider_activities")
       .select(activityColumns)
@@ -79,10 +92,10 @@ export async function loadHistoryContext(
       .gte("observed_on", month)
       .limit(500),
   ]);
-  if (activities.error || longest.error || observations.error)
+  if (longest.error || observations.error)
     throw new Error("Unable to read imported history");
   return {
-    activities: (activities.data ?? [])
+    activities: activities
       .map(activity)
       .filter((item): item is InsightActivity => item !== null),
     longest: longest.data ? activity(longest.data) : null,
