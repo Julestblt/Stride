@@ -4,6 +4,7 @@ import {
   type OnboardingConnection,
   type OnboardingStep,
 } from "@/features/onboarding/progress";
+import type { SyncPollingState } from "@/features/onboarding/sync-polling";
 import type { ProgressSnapshot } from "@/features/onboarding/schemas";
 import { OnboardingStatusProvider } from "./onboarding-status";
 import { StepNavigation } from "./step-navigation";
@@ -14,15 +15,18 @@ export function OnboardingShell({
   email,
   step,
   children,
+  initialSync,
 }: {
   progress: ProgressSnapshot;
   connection: OnboardingConnection;
   email: string | null;
   step: OnboardingStep;
   children?: React.ReactNode;
+  initialSync?: SyncPollingState;
 }) {
   return (
     <OnboardingStatusProvider
+      initialSync={initialSync}
       polling={
         connectionNotice(connection) === "connected" ||
         isStepComplete(progress, "garmin")

@@ -21,7 +21,8 @@ export default async function OnboardingStepPage({
 }: {
   params: Promise<{ step: string }>;
 }) {
-  const { progress, connection, email, context } = await getOnboardingRequest();
+  const { progress, connection, email, context, initialSync } =
+    await getOnboardingRequest();
   const guard = guardOnboarding(progress, (await params).step);
   if (guard.kind === "not-found") notFound();
   if (guard.kind === "redirect") redirect(guard.href);
@@ -44,6 +45,7 @@ export default async function OnboardingStepPage({
       : null;
   return (
     <OnboardingShell
+      initialSync={initialSync}
       progress={progress}
       connection={connection}
       email={email}

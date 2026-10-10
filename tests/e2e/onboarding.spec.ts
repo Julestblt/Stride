@@ -320,6 +320,47 @@ test("real sync count continues across navigation, shell geometry and keyboard a
     ),
   ).toBe(true);
   await page.screenshot({ path: "test-results/onboarding-mobile.png" });
+  for (let read = 0; read < 4; read++) {
+    const response = await fetch(
+      "http://127.0.0.1:3310/v1/connections/garmin/sync",
+      {
+        headers: { Authorization: `Bearer ${user.token}` },
+      },
+    );
+    expect(response.ok).toBe(true);
+  }
+  const html = await (await page.request.get("/onboarding/about")).text();
+  expect(html.replace(/<script[\s\S]*?<\/script>/g, "")).toContain(
+    "Historique à jour",
+  );
+  await page.route("**/api/onboarding/sync", () => {});
+  await page.addInitScript(() => {
+    new MutationObserver(() => {
+      const sidebar = document.querySelector(
+        'aside[aria-label="Configuration de ton coach"]',
+      );
+      if (sidebar?.textContent?.includes("Démarrage…"))
+        document.documentElement.dataset.importRestarted = "true";
+    }).observe(document, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/onboarding/about");
+  await expect(importCard).toContainText("Historique à jour");
+  await page.getByRole("button", { name: "Retour", exact: true }).click();
+  await expect(page).toHaveURL(/\/onboarding\/history$/);
+  await expect(importCard).toContainText("Historique à jour");
+  await page
+    .getByRole("button", { name: "À propos de toi", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/onboarding\/about$/);
+  await expect(importCard).toContainText("Historique à jour");
+  expect(
+    await page.locator("html").getAttribute("data-import-restarted"),
+  ).toBeNull();
 });
 async function atGarminStep(page: Page) {
   const user = await makeAthlete();
