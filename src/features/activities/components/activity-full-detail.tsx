@@ -173,8 +173,6 @@ export function ActivityFullDetail({
                         value={stat.value}
                         unit={stat.unit}
                         source="provider"
-                        provenance="Garmin"
-                        provenanceVariant="mono"
                       />
                     ))}
                   </SignalList>

@@ -265,3 +265,80 @@ describe("chart and map regressions", () => {
     expect(absent?.timeLabels.join(" ")).not.toContain("0:00");
   });
 });
+
+describe("chart sample inspection", () => {
+  it("aligns recorded values, plotted points and actual elapsed times for every unit", () => {
+    const view = buildChartsView(
+      track({
+        route: null,
+        series: {
+          elapsed_s: [10, 20, 60],
+          speed_mps: [4, null, 3],
+          heart_rate: [130, null, 170],
+          cadence: [168, null, 172.5],
+          elevation_m: [20, null, 25.75],
+        },
+      }),
+      { zones, bands: [] },
+    );
+    expect(view?.pace?.samples[0]).toMatchObject({
+      value: "4:10 min/km",
+      position: "Temps écoulé · 0:10",
+      x: 150,
+    });
+    expect(view?.heartRate?.samples[2].value).toBe("170 bpm");
+    expect(view?.cadence?.samples[2].value).toBe("172,5 pas/min");
+    expect(view?.elevation?.samples[2].value).toBe("25,75 m");
+    for (const chart of [
+      view?.pace,
+      view?.heartRate,
+      view?.cadence,
+      view?.elevation,
+    ]) {
+      expect(chart?.samples).toHaveLength(3);
+      expect(chart?.samples[1]).toEqual({
+        x: 300,
+        y: null,
+        value: null,
+        position: "Temps écoulé · 0:20",
+      });
+      expect(chart?.samples[2].y).not.toBeNull();
+    }
+  });
+
+  it("reports true outlier pace even when its plotted position is trimmed", () => {
+    const speeds = Array.from({ length: 100 }, (_, index) =>
+      index === 50 ? 1 : 4,
+    );
+    const view = buildChartsView(
+      track({ route: null, series: { speed_mps: speeds } }),
+      { zones, bands: [] },
+    );
+    expect(view?.pace?.samples[50]).toMatchObject({
+      value: "16:40 min/km",
+      y: 120,
+      position: "Échantillon 51 sur 100",
+    });
+  });
+
+  it.each([
+    [0, null, 20],
+    [0, 20, 10],
+    [0, 0, 0],
+    [-1, 10, 20],
+  ])(
+    "uses sample labels when elapsed times are incomplete or invalid: %j",
+    (...elapsed) => {
+      const view = buildChartsView(
+        track({
+          route: null,
+          series: { elapsed_s: elapsed, heart_rate: [110, 120, 130] },
+        }),
+        { zones, bands: [] },
+      );
+      expect(view?.heartRate?.samples.map((sample) => sample.position)).toEqual(
+        ["Échantillon 1 sur 3", "Échantillon 2 sur 3", "Échantillon 3 sur 3"],
+      );
+    },
+  );
+});

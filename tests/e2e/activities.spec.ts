@@ -140,7 +140,12 @@ test("the full detail shows laps, effort and provenance from stored rows", async
   await page.goto(
     "/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004?filter=road",
   );
-  await page.getByRole("link", { name: /Détail complet/ }).click();
+  await Promise.all([
+    page.waitForURL(
+      /\/activities\/aaaaaaaa-aaaa-4aaa-8aaa-000000000004\/details\?filter=road$/,
+    ),
+    page.getByRole("link", { name: /Détail complet/ }).click(),
+  ]);
   await expect(page).toHaveURL(
     /\/activities\/aaaaaaaa-aaaa-4aaa-8aaa-000000000004\/details\?filter=road$/,
   );
@@ -161,16 +166,22 @@ test("the full detail shows laps, effort and provenance from stored rows", async
   await expect(effort).toContainText("FC max");
   await expect(effort).toContainText("176");
   await expect(effort).not.toContainText("Puissance");
+  await expect(effort).not.toContainText("Garmin");
+  await expect(effort.locator('[data-slot="provenance"]')).toHaveCount(0);
+  await expect(effort.locator("dd:empty")).toHaveCount(0);
   await expect(page.getByText("détail importé le 07/10/2026")).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollHeight <= window.innerHeight,
     ),
   ).toBe(true);
-  await page
-    .getByRole("navigation", { name: "Fil d’Ariane" })
-    .getByRole("link", { name: "Activités" })
-    .click();
+  await Promise.all([
+    page.waitForURL(/\/activities\?filter=road$/),
+    page
+      .getByRole("navigation", { name: "Fil d’Ariane" })
+      .getByRole("link", { name: "Activités" })
+      .click(),
+  ]);
   await expect(page).toHaveURL(/\/activities\?filter=road$/);
 });
 
@@ -385,4 +396,93 @@ test("the bundled map worker renders a GPS route with map controls", async ({
   await route.getByRole("button", { name: "Recentrer le tracé" }).click();
   await expect(route.locator("canvas")).toBeVisible();
   await page.screenshot({ path: "test-results/activity-detail-map.png" });
+});
+
+test("all four charts inspect recorded values on hover and with the keyboard", async ({
+  page,
+}) => {
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.abort(),
+  );
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+  for (const [title, value] of [
+    ["Allure", "5:33 min/km"],
+    ["Fréquence cardiaque", "125 bpm"],
+    ["Cadence", "168 pas/min"],
+    ["Altitude", "42 m"],
+  ]) {
+    const chart = page.getByRole("region", { name: title, exact: true });
+    const plot = chart.getByRole("img");
+    await expect(async () => {
+      await page.mouse.move(0, 0);
+      await plot.hover({ position: { x: 1, y: 60 } });
+      await expect(chart.getByRole("status")).toContainText(value);
+    }).toPass({ timeout: 15_000 });
+    await expect(chart.getByRole("status")).toContainText(
+      "Temps écoulé · 0:00",
+    );
+    await page.mouse.move(0, 0);
+    await expect(chart.getByRole("status")).toHaveCount(0);
+    const inspection = chart.getByRole("group");
+    await inspection.focus();
+    await expect(chart.getByRole("status")).toContainText(value);
+    await inspection.press("ArrowRight");
+    await expect(chart.getByRole("status")).toContainText(
+      "Temps écoulé · 0:36",
+    );
+    await inspection.press("End");
+    await expect(chart.getByRole("status")).toContainText(
+      "Temps écoulé · 58:40",
+    );
+    await inspection.press("Home");
+    await expect(chart.getByRole("status")).toContainText(
+      "Temps écoulé · 0:00",
+    );
+    await inspection.press("Escape");
+    await expect(chart.getByRole("status")).toHaveCount(0);
+    await inspection.press("ArrowRight");
+    await inspection.press("Tab");
+    await expect(chart.getByRole("status")).toHaveCount(0);
+    await page
+      .getByRole("navigation", { name: "Fil d’Ariane" })
+      .getByRole("link", { name: "Activités" })
+      .focus();
+  }
+});
+
+test.describe("touch chart inspection", () => {
+  test.use({ hasTouch: true, viewport: { width: 320, height: 844 } });
+  test("keeps all chart annotations readable within a narrow screen", async ({
+    page,
+  }) => {
+    await page.route("https://basemaps.cartocdn.com/**", (route) =>
+      route.abort(),
+    );
+    await signIn(page);
+    await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
+    for (const title of [
+      "Allure",
+      "Fréquence cardiaque",
+      "Cadence",
+      "Altitude",
+    ]) {
+      const chart = page.getByRole("region", { name: title, exact: true });
+      await chart.getByRole("img").tap();
+      const annotation = chart.getByRole("status");
+      await expect(annotation).toBeVisible();
+      await expect(annotation).not.toContainText("Temps écoulé · 0:00");
+      const bounds = await annotation.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+    }
+    await page.screenshot({
+      path: "test-results/activity-chart-inspection-mobile.png",
+    });
+  });
 });

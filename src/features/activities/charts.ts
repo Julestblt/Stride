@@ -10,7 +10,14 @@ const topPadding = 22;
 const bottomPadding = 20;
 
 export type ChartBand = { x: number; width: number; label: string };
+export type InspectionSample = {
+  x: number;
+  y: number | null;
+  value: string | null;
+  position: string;
+};
 export type LineChart = {
+  samples: InspectionSample[];
   height: number;
   path: string;
   minLabel: string;
@@ -69,8 +76,6 @@ function path(
   height: number,
   invert: boolean,
 ) {
-  const usable = height - topPadding - bottomPadding;
-  const span = domain.max - domain.min || 1;
   let drawing = false;
   let data = "";
   values.forEach((value, index) => {
@@ -78,9 +83,7 @@ function path(
       drawing = false;
       return;
     }
-    const clamped = Math.min(domain.max, Math.max(domain.min, value));
-    const ratio = (clamped - domain.min) / span;
-    const y = topPadding + (invert ? ratio : 1 - ratio) * usable;
+    const y = yOf(value, domain, height, invert);
     data += `${drawing ? "L" : "M"}${round(xs[index])},${round(y)}`;
     drawing = true;
   });
@@ -125,6 +128,27 @@ export function buildChartsView(
         ? elapsed![index]! / duration
         : index / (track.length - 1)) * chartWidth,
   );
+  const samplesOf = (
+    values: readonly (number | null)[],
+    domain: { min: number; max: number },
+    height: number,
+    invert: boolean,
+    format: (value: number) => string,
+  ): InspectionSample[] =>
+    xs.map((x, index) => {
+      const value = values[index] ?? null;
+      return {
+        x: round(x),
+        y: value === null ? null : round(yOf(value, domain, height, invert)),
+        value: value === null ? null : format(value),
+        position:
+          duration !== null
+            ? `Temps écoulé · ${formatClock(elapsed![index]!)}`
+            : `Échantillon ${index + 1} sur ${track.length}`,
+      };
+    });
+  const measurement = (value: number) =>
+    value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
   const bands = (duration !== null ? options.bands : []).map((band) => ({
     x: round(band.from * chartWidth),
     width: round((band.to - band.from) * chartWidth),
@@ -137,6 +161,13 @@ export function buildChartsView(
   const paceHeight = 140;
   const pace: LineChart | null = paceDomain
     ? {
+        samples: samplesOf(
+          paceValues,
+          paceDomain,
+          paceHeight,
+          true,
+          (value) => `${formatClock(value)} min/km`,
+        ),
         height: paceHeight,
         path: path(xs, paceValues, paceDomain, paceHeight, true),
         minLabel: formatClock(paceDomain.min),
@@ -161,6 +192,13 @@ export function buildChartsView(
     const top = zone ? yOf(zone.upper + 1, heartDomain, heartHeight, false) : 0;
     const bottom = zone ? yOf(zone.lower, heartDomain, heartHeight, false) : 0;
     heartRate = {
+      samples: samplesOf(
+        heartRates,
+        heartDomain,
+        heartHeight,
+        false,
+        (value) => `${measurement(value)} bpm`,
+      ),
       height: heartHeight,
       path: path(xs, heartRates, heartDomain, heartHeight, false),
       minLabel: String(Math.round(heartDomain.min)),
@@ -186,11 +224,19 @@ export function buildChartsView(
     values: (number | null)[] | undefined,
     height: number,
     format: (value: number) => string,
+    unit: string,
   ): LineChart | null => {
     if (!values) return null;
     const domain = domainOf(values, false);
     if (!domain) return null;
     return {
+      samples: samplesOf(
+        values,
+        domain,
+        height,
+        false,
+        (value) => `${measurement(value)} ${unit}`,
+      ),
       height,
       path: path(xs, values, domain, height, false),
       minLabel: format(domain.min),
@@ -252,13 +298,17 @@ export function buildChartsView(
     bands,
     pace,
     heartRate,
-    cadence: lineOf(track.series.cadence, 140, (value) =>
-      String(Math.round(value)),
+    cadence: lineOf(
+      track.series.cadence,
+      140,
+      (value) => String(Math.round(value)),
+      "pas/min",
     ),
     elevation: lineOf(
       track.series.elevation_m,
       140,
       (value) => `${Math.round(value)} m`,
+      "m",
     ),
     scatter,
   };

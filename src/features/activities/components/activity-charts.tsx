@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ChartInspection } from "./chart-inspection";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { chartWidth, type ChartsView, type LineChart } from "../charts";
 
@@ -33,13 +34,14 @@ function ChartFrame({
           <span>{inverted ? chart.minLabel : chart.maxLabel}</span>
           <span>{inverted ? chart.maxLabel : chart.minLabel}</span>
         </div>
-        <svg
-          role="img"
-          aria-label={`${title} selon ${view.axis === "elapsed time" ? "le temps écoulé" : "la position des échantillons"}`}
-          viewBox={`0 0 ${chartWidth} ${chart.height}`}
-          preserveAspectRatio="none"
-          className="w-full"
-          style={{ height: chart.height }}
+        <ChartInspection
+          title={title}
+          chart={chart}
+          axis={
+            view.axis === "elapsed time"
+              ? "le temps écoulé"
+              : "la position des échantillons"
+          }
         >
           {[0.25, 0.5, 0.75].map((fraction) => (
             <line
@@ -69,7 +71,7 @@ function ChartFrame({
             strokeWidth={1.6}
             vectorEffect="non-scaling-stroke"
           />
-        </svg>
+        </ChartInspection>
         {view.axis === "sample position" && (
           <MonoLabel size="nano">Position des échantillons</MonoLabel>
         )}

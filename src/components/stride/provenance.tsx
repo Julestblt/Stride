@@ -69,7 +69,7 @@ export function SignalRow({
   value: React.ReactNode;
   unit?: React.ReactNode;
   source: Source;
-  provenance: React.ReactNode;
+  provenance?: React.ReactNode;
   provenanceVariant?: "inline" | "mono";
 }) {
   return (
@@ -82,14 +82,16 @@ export function SignalRow({
       {...props}
     >
       <dt className="text-sm">{label}</dt>
-      <dd className="row-span-2 self-start">
+      <dd className={cn("self-start", provenance != null && "row-span-2")}>
         <Metric size="sm" value={value} unit={unit} />
       </dd>
-      <dd>
-        <ProvenanceLabel source={source} variant={provenanceVariant}>
-          {provenance}
-        </ProvenanceLabel>
-      </dd>
+      {provenance != null && (
+        <dd>
+          <ProvenanceLabel source={source} variant={provenanceVariant}>
+            {provenance}
+          </ProvenanceLabel>
+        </dd>
+      )}
     </div>
   );
 }
