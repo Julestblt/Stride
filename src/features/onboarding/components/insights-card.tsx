@@ -49,12 +49,14 @@ export function InsightsCard({
   title = "Ce que je remarque",
   footer = "Tu confirmeras ou corrigeras tout ça à la fin.",
   unavailable,
+  variant = "card",
 }: {
   insights: InsightsResponse | null;
   className?: string;
   title?: string;
   footer?: string;
   unavailable?: string;
+  variant?: "card" | "section";
 }) {
   const headingId = useId();
   const items = insights?.items ?? [];
@@ -65,15 +67,21 @@ export function InsightsCard({
       aria-labelledby={headingId}
       aria-busy={insights === null}
       className={cn(
-        "flex flex-col gap-5 rounded-card border border-border bg-surface p-5 lg:p-6",
+        "flex flex-col",
+        variant === "card"
+          ? "gap-5 rounded-card border border-border bg-surface p-5 lg:p-6"
+          : "gap-4 border-t border-border pt-5",
         className,
       )}
     >
       <h2
         id={headingId}
-        className="flex items-center gap-3 text-body font-semibold"
+        className={cn(
+          "flex items-center gap-3 font-semibold",
+          variant === "card" ? "text-body" : "text-xl",
+        )}
       >
-        <StrideMark className="size-4" />
+        {variant === "card" && <StrideMark className="size-4" />}
         {title}
       </h2>
       {!pending && items.length === 0 && (
@@ -83,7 +91,12 @@ export function InsightsCard({
         {items.map((item, index) => (
           <li
             key={item.key}
-            className="grid grid-cols-[0.375rem_1fr] gap-x-4 border-b border-border py-4 first:pt-0"
+            className={cn(
+              "grid border-b border-border",
+              variant === "card"
+                ? "grid-cols-[0.375rem_1fr] gap-x-4 py-4 first:pt-0"
+                : "grid-cols-[0.375rem_1fr] gap-x-2 py-3",
+            )}
           >
             <span
               aria-hidden="true"
@@ -93,7 +106,14 @@ export function InsightsCard({
               )}
             />
             <span className="flex flex-col gap-1.5">
-              <span className="text-body text-pretty">{item.text}</span>
+              <span
+                className={cn(
+                  "text-pretty",
+                  variant === "card" ? "text-body" : "text-sm",
+                )}
+              >
+                {item.text}
+              </span>
               <span className="font-mono text-micro text-muted-foreground uppercase">
                 {item.source}
               </span>

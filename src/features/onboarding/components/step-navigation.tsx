@@ -154,6 +154,19 @@ export function StepNavigation({
         className="flex min-w-0 flex-1 flex-col bg-surface-inset lg:my-2 lg:mr-2 lg:rounded-panel lg:border lg:border-border"
       >
         <header className="flex flex-col gap-5 px-5 pt-8 pb-5 lg:flex-row lg:items-center lg:gap-3 lg:border-b lg:border-border lg:px-6 lg:py-5">
+          {previous && step === "profile" && (
+            <Button
+              variant="ghost"
+              size="md"
+              className="hidden lg:inline-flex"
+              disabled={pending}
+              aria-busy={pending}
+              onClick={() => navigate(previous)}
+            >
+              <ArrowLeftIcon data-icon="inline-start" />
+              Retour
+            </Button>
+          )}
           <div className="flex items-center justify-between gap-3">
             <span className="font-mono text-label tracking-wide text-muted-foreground uppercase">
               Étape {position + 1} sur 6
@@ -214,12 +227,17 @@ export function StepNavigation({
             </select>
           </nav>
         </header>
-        <div className="flex flex-1 flex-col gap-6 px-5 py-6 lg:px-18 lg:py-10">
+        <div
+          className={cn(
+            "flex flex-1 flex-col gap-6 px-5 py-6 lg:py-10",
+            step === "profile" ? "lg:px-14.5" : "lg:px-18",
+          )}
+        >
           {previous && (
             <Button
               variant="ghost"
               size="md"
-              className="self-start"
+              className={cn("self-start", step === "profile" && "lg:hidden")}
               disabled={pending}
               aria-busy={pending}
               onClick={() => navigate(previous)}

@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SourceMark } from "@/components/stride/marks";
+import { zoneFills } from "@/components/stride/session-shape";
+import type { Zone } from "@/components/stride/session-blocks";
 import { StrideMark } from "@/components/stride/stride-mark";
 import {
   formatHours,
@@ -67,16 +69,16 @@ export function ProfileStep({
     );
   return (
     <div className="flex flex-1 flex-col gap-8 motion-safe:animate-rise lg:gap-10">
-      <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
-        <div className="flex max-w-176 flex-col gap-3">
-          <p className="font-mono text-label text-muted-foreground uppercase">
+      <header className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-x-10">
+        <div className="contents">
+          <p className="font-mono text-label text-muted-foreground uppercase lg:col-span-2">
             Profil d’athlète · première version
           </p>
-          <h1 className="text-[1.75rem] leading-[1.05] font-semibold tracking-[-0.035em] text-balance lg:text-[2.75rem]">
+          <h1 className="text-[1.75rem] leading-[1.05] font-semibold tracking-[-0.035em] text-balance lg:col-span-2 lg:text-[2.75rem]">
             Voici ce que je sais de toi
             {profile.firstName ? `, ${profile.firstName}` : ""}.
           </h1>
-          <p className="text-body text-pretty text-muted lg:text-lead">
+          <p className="max-w-176 text-body text-pretty text-muted lg:text-lead">
             Construit à partir de {integer.format(profile.activityCount)}{" "}
             activités
             {profile.history ? ` sur ${profile.history}` : ""}
@@ -87,7 +89,7 @@ export function ProfileStep({
             sortie, et tu peux tout corriger.
           </p>
         </div>
-        <div className="flex flex-col gap-4 lg:items-end">
+        <div className="mt-2 flex flex-col gap-4 lg:mt-0 lg:items-end">
           <dl className="flex gap-8">
             <Total
               label="Activités · tous sports"
@@ -105,7 +107,7 @@ export function ProfileStep({
           <WeeklyBars weeks={profile.weeks} />
           <Facts facts={training.facts} />
         </Section>
-        {others.map((section) => (
+        {others.slice(0, 2).map((section) => (
           <Section key={section.key} title={section.title}>
             <Facts facts={section.facts} />
           </Section>
@@ -113,15 +115,20 @@ export function ProfileStep({
         <Section title="Zones de FC">
           {profile.heartRateZones ? (
             <>
-              <dl className="flex flex-col">
+              <dl className="grid grid-cols-5 gap-x-0.5 gap-y-2">
                 {profile.heartRateZones.zones.map((zone) => (
-                  <div
-                    key={zone.zone}
-                    className="flex justify-between gap-4 border-b border-border py-3"
-                  >
-                    <dt>Zone {zone.zone}</dt>
-                    <dd className="font-metric font-semibold">
-                      {zone.lower}–{zone.upper} bpm
+                  <div key={zone.zone} className="flex min-w-0 flex-col gap-2">
+                    <div
+                      aria-hidden="true"
+                      className={cn(
+                        "h-3 rounded-mark",
+                        zoneFills[zone.zone as Zone],
+                      )}
+                    />
+                    <dt className="sr-only">Zone {zone.zone}</dt>
+                    <dd className="font-metric text-sm font-semibold lg:text-metric-sm">
+                      {zone.lower}–{zone.upper}
+                      <span className="sr-only"> bpm</span>
                     </dd>
                   </div>
                 ))}
@@ -143,7 +150,13 @@ export function ProfileStep({
             </p>
           )}
         </Section>
+        {others.slice(2).map((section) => (
+          <Section key={section.key} title={section.title}>
+            <Facts facts={section.facts} />
+          </Section>
+        ))}
         <InsightsCard
+          variant="section"
           insights={habits}
           title="Habitudes que je garde en tête"
           footer="Activités Garmin · tous sports sur les 12 derniers mois. Cette fenêtre diffère du résumé de course à pied sur 16 semaines."
@@ -254,7 +267,7 @@ function Legend() {
   return (
     <ul
       aria-label="Sources"
-      className="flex gap-4 font-mono text-nano text-muted-foreground uppercase"
+      className="flex flex-wrap gap-x-4 gap-y-2 font-mono text-nano text-muted-foreground uppercase"
     >
       <li className="flex items-center gap-1.5">
         <SourceMark source="provider" />
@@ -263,6 +276,10 @@ function Legend() {
       <li className="flex items-center gap-1.5">
         <SourceMark source="manual" />
         Toi
+      </li>
+      <li className="flex items-center gap-1.5">
+        <SourceMark source="estimate" />
+        Estimation Stride
       </li>
     </ul>
   );
@@ -277,7 +294,7 @@ function Section({
 }) {
   return (
     <section className="flex flex-col gap-4 border-t border-border pt-5">
-      <h2 className="text-title font-semibold">{title}</h2>
+      <h2 className="text-xl font-semibold">{title}</h2>
       {children}
     </section>
   );
