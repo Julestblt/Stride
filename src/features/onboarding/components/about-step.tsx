@@ -24,6 +24,7 @@ import {
 import {
   AccessField,
   ChoiceField,
+  DateField,
   DaysField,
   KnownPanel,
   NumberField,
@@ -268,10 +269,11 @@ export function AboutStep({
                 value={local.first_name}
                 onCommit={(value) => set("first_name", value, "debounce")}
               />
-              <TextField
+              <DateField
                 id="birth-date"
                 label="Date de naissance"
-                type="date"
+                autoComplete="bday"
+                min="1900-01-01"
                 max={new Date().toISOString().slice(0, 10)}
                 value={local.birth_date}
                 onCommit={(value) => set("birth_date", value, "debounce")}

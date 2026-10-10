@@ -13,6 +13,12 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { StrideMark } from "@/components/stride/stride-mark";
 import type { SaveStatus } from "@/features/onboarding/autosave";
+import {
+  formatFrenchDate,
+  formatLongFrenchDate,
+  maskFrenchDate,
+  parseFrenchDate,
+} from "@/features/onboarding/dates";
 import type { KnownValue } from "@/features/onboarding/known-values";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +48,8 @@ export function NumberField({
   max,
   onCommit,
   description,
+  integer = false,
+  error,
 }: {
   id: string;
   label: string;
@@ -51,6 +59,8 @@ export function NumberField({
   max: number;
   onCommit: (value: number | null) => void;
   description?: React.ReactNode;
+  integer?: boolean;
+  error?: string;
 }) {
   const [text, setText] = useState(value === null ? "" : String(value));
   const [invalid, setInvalid] = useState(false);
@@ -59,11 +69,13 @@ export function NumberField({
     return raw.trim() === ""
       ? null
       : Number.isFinite(number) && number >= min && number <= max
-        ? Math.round(number * 10) / 10
+        ? integer
+          ? Math.round(number)
+          : Math.round(number * 10) / 10
         : undefined;
   };
   return (
-    <Field data-invalid={invalid}>
+    <Field data-invalid={invalid || Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <InputGroup>
         <InputGroupInput
@@ -90,6 +102,8 @@ export function NumberField({
         <FieldDescription id={`${id}-error`} className="text-warning">
           Entre une valeur entre {min} et {max} {unit}.
         </FieldDescription>
+      ) : error ? (
+        <FieldDescription className="text-warning">{error}</FieldDescription>
       ) : (
         description
       )}
@@ -104,35 +118,104 @@ export function TextField({
   value,
   onCommit,
   autoComplete,
-  max,
+  maxLength = 80,
+  error,
 }: {
   id: string;
   label: string;
-  type?: "text" | "date";
+  type?: "text";
   value: string | null;
   onCommit: (value: string | null) => void;
   autoComplete?: string;
-  max?: string;
+  maxLength?: number;
+  error?: string;
 }) {
   const [text, setText] = useState(value ?? "");
   return (
-    <Field>
+    <Field data-invalid={Boolean(error)}>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Input
         id={id}
         type={type}
         value={text}
-        max={max}
-        maxLength={type === "text" ? 80 : undefined}
+        aria-invalid={Boolean(error) || undefined}
+        maxLength={maxLength}
         autoComplete={autoComplete}
         onChange={(event) => {
           setText(event.target.value);
           const next = event.target.value.trim();
-          if (type === "date" && next && !/^\d{4}-\d{2}-\d{2}$/.test(next))
-            return;
           onCommit(next === "" ? null : next);
         }}
       />
+      {error && (
+        <FieldDescription className="text-warning">{error}</FieldDescription>
+      )}
+    </Field>
+  );
+}
+
+export function DateField({
+  id,
+  label,
+  value,
+  onCommit,
+  min,
+  max,
+  autoComplete,
+  longDate = false,
+  error,
+}: {
+  id: string;
+  label: string;
+  value: string | null;
+  onCommit: (value: string | null) => void;
+  min?: string;
+  max?: string;
+  autoComplete?: string;
+  longDate?: boolean;
+  error?: string;
+}) {
+  const [text, setText] = useState(formatFrenchDate(value));
+  const [invalid, setInvalid] = useState<string | null>(null);
+  const check = (raw: string) => {
+    const iso = parseFrenchDate(raw);
+    if (iso === undefined) return "Date attendue au format JJ/MM/AAAA.";
+    if (iso && min && iso < min)
+      return `Choisis une date à partir du ${formatFrenchDate(min)}.`;
+    if (iso && max && iso > max)
+      return `Choisis une date jusqu’au ${formatFrenchDate(max)}.`;
+    return null;
+  };
+  const iso = parseFrenchDate(text);
+  const message = invalid ?? error;
+  return (
+    <Field data-invalid={Boolean(message)}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input
+        id={id}
+        inputMode="numeric"
+        placeholder="JJ/MM/AAAA"
+        autoComplete={autoComplete}
+        value={text}
+        aria-invalid={Boolean(message) || undefined}
+        aria-describedby={`${id}-hint`}
+        onChange={(event) => {
+          const next = maskFrenchDate(event.target.value);
+          setText(next);
+          if (check(next) === null) {
+            setInvalid(null);
+            onCommit(parseFrenchDate(next) ?? null);
+          }
+        }}
+        onBlur={() => setInvalid(check(text))}
+      />
+      <FieldDescription
+        id={`${id}-hint`}
+        className={message ? "text-warning" : undefined}
+      >
+        {message ??
+          (longDate && iso ? formatLongFrenchDate(iso) : "JJ/MM/AAAA")}
+      </FieldDescription>
     </Field>
   );
 }

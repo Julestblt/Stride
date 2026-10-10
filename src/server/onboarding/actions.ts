@@ -9,6 +9,7 @@ import {
   type OnboardingServiceDependencies,
 } from "./service";
 import { saveProfile } from "./profile";
+import { createRace, deleteRaces, saveGoal, saveRace } from "./goals";
 import {
   connectGarmin,
   type GarminConnectionDependencies,
@@ -78,4 +79,23 @@ export async function saveAthleteProfile(input: unknown) {
     { context: () => getOnboardingContext({ writable: true }) },
     input,
   );
+}
+function goalsDependencies() {
+  return { context: () => getOnboardingContext({ writable: true }) };
+}
+export async function saveAthleteGoal(input: unknown) {
+  if (!onboardingEnabled()) return { status: "error" as const };
+  return saveGoal(goalsDependencies(), input);
+}
+export async function saveAthleteRace(input: unknown) {
+  if (!onboardingEnabled()) return { status: "error" as const };
+  return saveRace(goalsDependencies(), input);
+}
+export async function addAthleteRace() {
+  if (!onboardingEnabled()) return { status: "error" as const };
+  return createRace(goalsDependencies());
+}
+export async function removeAthleteRaces(input: unknown) {
+  if (!onboardingEnabled()) return { status: "error" as const };
+  return deleteRaces(goalsDependencies(), input);
 }

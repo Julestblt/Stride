@@ -43,17 +43,19 @@ export function useAutosave<V extends FieldValues>({
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const running = useRef<Promise<void> | null>(null);
   const saveRef = useRef(save);
+  const fieldsRef = useRef(cacheFields);
   const runRef = useRef<() => Promise<void>>(() => Promise.resolve());
   useEffect(() => {
     saveRef.current = save;
-  }, [save]);
+    fieldsRef.current = cacheFields;
+  }, [cacheFields, save]);
   const update = useCallback(
     (change: (state: AutosaveState<V>) => AutosaveState<V>) => {
       current.current = change(current.current);
       setState(current.current);
-      writeCache(cacheKey, cacheFields, current.current);
+      writeCache(cacheKey, fieldsRef.current, current.current);
     },
-    [cacheKey, cacheFields],
+    [cacheKey],
   );
   const run = useCallback((): Promise<void> => {
     if (running.current) return running.current;
@@ -147,12 +149,12 @@ export function useAutosave<V extends FieldValues>({
     if (!cache || cache.at <= Date.parse(serverUpdatedAt ?? "1970-01-01"))
       return;
     for (const [field, value] of Object.entries(cache.values))
-      if (cacheFields.includes(field as keyof V))
+      if (fieldsRef.current.includes(field as keyof V))
         update((state) =>
           editField(state, field as keyof V, value as V[keyof V]),
         );
     timer.current = setTimeout(() => void run(), 0);
-  }, [cacheFields, cacheKey, run, serverUpdatedAt, update]);
+  }, [cacheKey, run, serverUpdatedAt, update]);
   useEffect(() => {
     const online = () => void run();
     const leave = (event: BeforeUnloadEvent) => {
@@ -164,9 +166,9 @@ export function useAutosave<V extends FieldValues>({
     return () => {
       window.removeEventListener("online", online);
       window.removeEventListener("beforeunload", leave);
-      clearTimeout(timer.current);
     };
   }, [run]);
+  useEffect(() => () => clearTimeout(timer.current), []);
   return { state, change, flush, resolve, retry: run };
 }
 

@@ -664,7 +664,7 @@ test("About you autosaves, restores across refresh and devices, and completes on
   await page.setViewportSize({ width: 1440, height: 1100 });
   const user = await atAboutStep(page);
   await page.getByLabel("Prénom").fill("Ada");
-  await page.getByLabel("Date de naissance").fill("1991-06-14");
+  await page.getByLabel("Date de naissance").fill("14/06/1991");
   await expect(saved(page)).toBeVisible();
   await expect
     .poll(async () => (await readProfileRow(user))?.first_name)
@@ -805,4 +805,140 @@ test("About you guides mobile athletes through five short screens", async ({
     ),
   ).toBe(true);
   await page.screenshot({ path: "test-results/about-mobile.png" });
+});
+async function atGoalsStep(page: Page) {
+  const user = await makeAthlete();
+  await signIn(page, user.email);
+  await seed(user.id);
+  const profile = await user.client.from("athlete_profiles").insert({
+    user_id: user.id,
+    first_name: "Ada",
+    birth_date: "1991-06-14",
+    sex: "female",
+    height_cm: 168,
+    weight_kg: 58,
+    primary_terrain: "trail",
+    available_weekdays: [2, 4, 6],
+    long_run_day: "sunday",
+    weekday_session_minutes: 60,
+  });
+  if (profile.error) throw profile.error;
+  const row = await read(user.id);
+  const about = await user.client.rpc("complete_onboarding_step", {
+    p_step: "about",
+    p_expected_revision: row.revision,
+  });
+  if (about.error) throw about.error;
+  await page.goto("/onboarding/goals");
+  await expect(
+    page.getByRole("heading", { name: "Pour quoi t’entraînes-tu ?" }),
+  ).toBeVisible();
+  return user;
+}
+async function chooseFocus(page: Page, name: RegExp) {
+  const card = page.getByRole("radio", { name });
+  await expect(async () => {
+    await card.click();
+    await expect(card).toHaveAttribute("aria-checked", "true", {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+async function races(user: Awaited<ReturnType<typeof makeAthlete>>) {
+  const response = await user.client
+    .from("athlete_races")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at");
+  if (response.error) throw response.error;
+  return response.data;
+}
+test("Goals persist focus and races, block incomplete races and complete", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  const user = await atGoalsStep(page);
+  await chooseFocus(page, /Ultra-trail/);
+  await expect
+    .poll(async () => {
+      const goal = await user.client
+        .from("athlete_goals")
+        .select("focus")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return goal.data?.focus;
+    })
+    .toBe("ultra_trail");
+  await page.getByRole("button", { name: "Ajouter une course" }).click();
+  await page.getByLabel("Course", { exact: true }).fill("EcoTrail Paris 120K");
+  await expect
+    .poll(async () => (await races(user))[0]?.name)
+    .toBe("EcoTrail Paris 120K");
+  await page.getByRole("button", { name: "Voir mon profil d’athlète" }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "courses incomplètes" }),
+  ).toBeVisible();
+  await expect(page.getByText("Requis pour garder cette course.")).toHaveCount(
+    2,
+  );
+  expect((await read(user.id)).goals_completed_at).toBeNull();
+  await page.getByLabel("Date", { exact: true }).fill("20/03/2027");
+  await expect(page.getByText("Samedi 20 mars 2027")).toBeVisible();
+  await page.getByLabel("Distance", { exact: true }).fill("120");
+  await page.getByLabel("D+", { exact: true }).fill("2000");
+  await page.getByLabel(/Objectif de temps/).fill("18:30");
+  await expect
+    .poll(async () => (await races(user))[0])
+    .toMatchObject({
+      race_date: "2027-03-20",
+      distance_km: 120,
+      elevation_gain_m: 2000,
+      target_duration_seconds: 66_600,
+    });
+  await page.getByRole("button", { name: "Ajouter une course" }).click();
+  await expect(page.getByRole("group", { name: "Course 2" })).toBeVisible();
+  await expect.poll(async () => (await races(user)).length).toBe(2);
+  await page.reload();
+  await expect(
+    page.getByRole("radio", { name: /Ultra-trail/ }),
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByLabel("Course", { exact: true }).first()).toHaveValue(
+    "EcoTrail Paris 120K",
+  );
+  await page
+    .getByRole("button", { name: "Retirer", exact: true })
+    .last()
+    .click();
+  await expect.poll(async () => (await races(user)).length).toBe(1);
+  await expect(page.getByRole("group", { name: "Course 2" })).toHaveCount(0);
+  await page.screenshot({
+    path: "test-results/goals-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Voir mon profil d’athlète" }).click();
+  await expect(page).toHaveURL(/\/onboarding\/profile$/);
+  expect((await read(user.id)).goals_completed_at).not.toBeNull();
+});
+test("Goals accept no race at all", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const user = await atGoalsStep(page);
+  await chooseFocus(page, /Forme générale/);
+  await page.getByRole("button", { name: "Ajouter une course" }).click();
+  await expect.poll(async () => (await races(user)).length).toBe(1);
+  await page
+    .getByRole("button", { name: "Pas de course pour l’instant" })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Retirer" })
+    .click();
+  await expect.poll(async () => (await races(user)).length).toBe(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Voir mon profil d’athlète" }).click();
+  await expect(page).toHaveURL(/\/onboarding\/profile$/);
+  expect((await read(user.id)).goals_completed_at).not.toBeNull();
 });
