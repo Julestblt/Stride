@@ -957,6 +957,27 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
     p_expected_revision: row.revision,
   });
   expect(goals.error).toBeNull();
+  await page.route("**/api/onboarding/insights", (route) =>
+    route.fulfill({
+      json: {
+        final: false,
+        items: [
+          {
+            key: "volume",
+            text: "Supported training habit",
+            source: "Activities · last twelve months",
+            origin: "facts",
+          },
+          {
+            key: "recovery",
+            text: "Recovery must not appear in habits",
+            source: "Recovery",
+            origin: "facts",
+          },
+        ],
+      },
+    }),
+  );
   await page.goto("/onboarding/profile");
   const content = page.getByRole("region", { name: "Contenu de l’étape" });
   await expect(
@@ -964,10 +985,28 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
   ).toBeVisible();
   await expect(content.getByText("Course trail")).toBeVisible();
   await expect(
+    content.getByRole("heading", {
+      name: "Zones de FC",
+    }),
+  ).toBeVisible();
+  await expect(
+    content.getByText(
+      "Les zones ne sont pas disponibles sans FC max observée valide.",
+    ),
+  ).toBeVisible();
+  await expect(content.getByText("Supported training habit")).toBeVisible();
+  await expect(
+    content.getByText("Recovery must not appear in habits"),
+  ).toHaveCount(0);
+  await expect(
+    content.getByText("J’analyse encore ton historique…"),
+  ).toHaveCount(0);
+
+  await expect(
     content.getByText("Pas encore disponible").first(),
   ).toBeVisible();
   expect(await content.innerText()).not.toMatch(
-    /Allure au seuil|Vitesse ascensionnelle|Zones de FC|Estimation du temps|si course aujourd/,
+    /Allure au seuil|Vitesse ascensionnelle|Estimation du temps|si course aujourd/,
   );
   await page.getByRole("button", { name: "Entrer dans Stride" }).click();
   await expect(
@@ -994,11 +1033,97 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
     },
   );
   expect(connection.ok).toBe(true);
+  const providerConnection = await admin
+    .from("provider_connections")
+    .insert({ user_id: user.id, provider: "garmin", status: "connected" })
+    .select("id")
+    .single();
+  expect(providerConnection.error).toBeNull();
+  const maximum = await admin.from("provider_activities").insert({
+    user_id: user.id,
+    connection_id: providerConnection.data!.id,
+    provider: "garmin",
+    provider_activity_id: "profile-zone-maximum",
+    activity_type: "running",
+    started_at: new Date(Date.now() - 86_400_000).toISOString(),
+    max_heart_rate: 200,
+    duration_seconds: 3600,
+    distance_meters: 10000,
+  });
+  expect(maximum.error).toBeNull();
   await page.goto("/onboarding/profile");
+  await expect(
+    content.getByText(/Pourcentage de la FC max observée \(200 bpm\)/),
+  ).toBeVisible();
+  await expect(content.getByText("100–119 bpm")).toBeVisible();
+  const resting = await admin.from("provider_observations").insert(
+    Array.from({ length: 7 }, (_, index) => ({
+      user_id: user.id,
+      connection_id: providerConnection.data!.id,
+      provider: "garmin",
+      domain: "recovery",
+      availability: "available",
+      metric: "resting_heart_rate_bpm",
+      observed_on: new Date(Date.now() - (index + 1) * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+      value_numeric: 50,
+      unit: "bpm",
+    })),
+  );
+  expect(resting.error).toBeNull();
+  await page.unroute("**/api/onboarding/insights");
+  await page.route("**/api/onboarding/insights", (route) =>
+    route.fulfill({ status: 503, json: { code: "unavailable" } }),
+  );
+  await page.goto("/onboarding/profile");
+  await expect(content.getByText(/FC au repos : 50 bpm/)).toBeVisible();
+  await expect(
+    content.getByText(/médiane de 7 observations Garmin/),
+  ).toBeVisible();
+  await expect(content.getByText("125–139 bpm")).toBeVisible();
+  await expect(
+    content.getByText(
+      "Pas encore assez de données pour décrire tes habitudes d’entraînement.",
+    ),
+  ).toBeVisible();
+  await expect(
+    content.getByText("J’analyse encore ton historique…"),
+  ).toHaveCount(0);
   await page.screenshot({
     path: "test-results/profile-desktop.png",
     fullPage: true,
   });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const completion = page
+    .getByRole("button", { name: "Entrer dans Stride" })
+    .filter({ visible: true });
+  const fitness = content.getByRole("heading", { name: "Où en est ta forme" });
+  for (const position of [0, 0.5, 1]) {
+    await page.evaluate(
+      (ratio) =>
+        window.scrollTo(
+          0,
+          (document.documentElement.scrollHeight - innerHeight) * ratio,
+        ),
+      position,
+    );
+    const actionTop = await completion.evaluate(
+      (button) => button.getBoundingClientRect().top + scrollY,
+    );
+    const fitnessBottom = await fitness.evaluate(
+      (heading) =>
+        heading.parentElement!.getBoundingClientRect().bottom + scrollY,
+    );
+    expect(actionTop).toBeGreaterThan(fitnessBottom);
+    if (position === 1) await expect(completion).toBeInViewport();
+    else await expect(completion).not.toBeInViewport();
+  }
+  await page.screenshot({
+    path: "test-results/profile-mobile.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("button", { name: "Entrer dans Stride" }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3110/");
   expect((await read(user.id)).completed_at).not.toBeNull();

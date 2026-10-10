@@ -6,6 +6,7 @@ import {
   recentWeeks,
   type AthleteProfileInputs,
 } from "../../src/features/onboarding/athlete-profile";
+import type { InsightActivity } from "../../src/features/insights/facts";
 import { emptyProfile } from "../../src/features/onboarding/profile";
 
 const today = new Date("2026-10-10T12:00:00Z");
@@ -38,11 +39,6 @@ function inputs(
         priority: "B",
         target_duration_seconds: null,
       },
-    ],
-    weeks: [
-      { weekStart: "2026-10-05", activityCount: 5, durationSeconds: 6 * 3600 },
-      { weekStart: "2026-09-28", activityCount: 3, durationSeconds: 3 * 3600 },
-      { weekStart: "2026-01-05", activityCount: 9, durationSeconds: 9 * 3600 },
     ],
     activityCount: 444,
     firstActivityAt: "2025-06-13T07:00:00Z",
@@ -88,29 +84,31 @@ const fact = (view: ReturnType<typeof buildAthleteProfile>, key: string) =>
 
 describe("athlete profile", () => {
   it("fills sixteen Monday weeks and ignores older ones", () => {
-    const weeks = recentWeeks(inputs().weeks, today);
+    const weeks = recentWeeks(inputs().activities, today);
     expect(weeks).toHaveLength(16);
     expect(weeks[15]).toEqual({
       weekStart: "2026-10-05",
-      hours: 6,
-      activities: 5,
+      hours: 0,
+      activities: 0,
     });
     expect(weeks[14]).toEqual({
       weekStart: "2026-09-28",
-      hours: 3,
-      activities: 3,
+      hours: 0,
+      activities: 0,
     });
     expect(weeks[0].weekStart).toBe("2026-06-22");
-    expect(weeks.reduce((total, week) => total + week.hours, 0)).toBe(9);
+    expect(weeks.reduce((total, week) => total + week.hours, 0)).toBeCloseTo(
+      18.333333,
+    );
   });
   it("derives each training value from stored weeks, activities and answers", () => {
     const view = buildAthleteProfile(inputs());
     expect(fact(view, "typical_week")).toMatchObject({
-      value: "0h34 · 0,5 séances",
+      value: "1h09 · 0,7 séances",
       source: "garmin",
-      detail: "Moyenne · 16 dernières semaines",
+      detail: "Course à pied · moyenne sur 16 dernières semaines",
     });
-    expect(fact(view, "regularity")?.value).toBe("2 semaines sur 16");
+    expect(fact(view, "regularity")?.value).toBe("4 semaines sur 16");
     expect(fact(view, "terrain")).toMatchObject({
       value: "Trail · un tiers",
       detail: "Course à pied · 12 derniers mois",
@@ -158,7 +156,6 @@ describe("athlete profile", () => {
   it("marks everything missing without data instead of inventing values", () => {
     const view = buildAthleteProfile(
       inputs({
-        weeks: [],
         activities: [],
         observations: [],
         vo2Max: null,
@@ -179,6 +176,68 @@ describe("athlete profile", () => {
     ])
       expect(fact(view, key)?.value).toBeNull();
     expect(view.history).toBeNull();
+    expect(view.heartRateZones).toBeNull();
+    expect(view.habits).toEqual({ final: true, items: [] });
+  });
+  it("keeps deterministic training habits available without an AI response", () => {
+    const view = buildAthleteProfile(inputs());
+    expect(view.habits.final).toBe(true);
+    expect(view.habits.items.map((item) => item.key)).toEqual(["volume", "mix"]);
+    for (const item of view.habits.items) {
+      expect(item.origin).toBe("facts");
+      expect(item.source).toMatch(/Activités/);
+      expect(item.text.length).toBeGreaterThan(0);
+    }
+  });
+  it("counts only running types, keeps missing time empty and excludes future entries", () => {
+    const base = inputs().activities[0];
+    const activities: InsightActivity[] = [
+      "running",
+      "trail_running",
+      "treadmill_running",
+      "track_running",
+      "ultra_run",
+      "strength_training",
+      "cycling",
+    ].map((type) => ({
+      ...base,
+      type,
+      startedAt: "2026-10-05T00:00:00Z",
+      durationSeconds: 3600,
+    }));
+    activities.push({
+      ...base,
+      type: "running",
+      startedAt: "2026-10-04T23:59:59Z",
+      durationSeconds: null,
+    });
+    activities.push({
+      ...base,
+      type: "running",
+      startedAt: "2026-10-10T13:00:00Z",
+      durationSeconds: 3600,
+    });
+    const view = buildAthleteProfile(inputs({ activities }));
+    expect(view.weeks[15]).toEqual({
+      weekStart: "2026-10-05",
+      hours: 5,
+      activities: 5,
+    });
+    expect(view.weeks[14]).toEqual({
+      weekStart: "2026-09-28",
+      hours: 0,
+      activities: 1,
+    });
+    expect(view.activityCount).toBe(444);
+    const otherSports = buildAthleteProfile(
+      inputs({
+        activities: activities.filter(
+          (activity) => activity.type === "cycling",
+        ),
+      }),
+    );
+    expect(otherSports.weeks.every((week) => week.activities === 0)).toBe(true);
+    expect(fact(otherSports, "typical_week")?.value).toBeNull();
   });
   it("formats durations and history spans in French", () => {
     expect(formatHours(4.72)).toBe("4h43");

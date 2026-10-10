@@ -1,9 +1,16 @@
 import {
+  buildInsightFacts,
+  isRunning,
   runningTrailShare,
   shareLabel,
   type InsightActivity,
   type InsightObservation,
 } from "@/features/insights/facts";
+import type { InsightsResponse } from "@/features/insights/schemas";
+import {
+  calculateHeartRateZones,
+  type HeartRateZones,
+} from "./heart-rate-zones";
 import type { GoalValues, RaceValues } from "./goals";
 import type { ProfileValues } from "./profile";
 
@@ -35,7 +42,6 @@ export type AthleteProfileInputs = {
   profile: ProfileValues;
   goal: GoalValues;
   races: RaceValues[];
-  weeks: TrainingWeek[];
   activityCount: number;
   firstActivityAt: string | null;
   activities: InsightActivity[];
@@ -48,6 +54,8 @@ export type AthleteProfileView = {
   activityCount: number;
   history: string | null;
   sleepNights: number;
+  heartRateZones: HeartRateZones | null;
+  habits: InsightsResponse;
   weeks: WeekBar[];
   sections: ProfileSection[];
 };
@@ -104,9 +112,33 @@ export function historySpan(first: string | null, today: Date) {
   return `${Math.floor(months / 12)} ans`;
 }
 
-export function recentWeeks(weeks: TrainingWeek[], today: Date): WeekBar[] {
+export function recentWeeks(
+  activities: InsightActivity[],
+  today: Date,
+): WeekBar[] {
+  const aggregates = new Map<string, TrainingWeek>();
+  for (const activity of activities) {
+    const timestamp = Date.parse(activity.startedAt);
+    if (
+      !isRunning(activity.type) ||
+      !Number.isFinite(timestamp) ||
+      timestamp > today.getTime()
+    )
+      continue;
+    const weekStart = mondayOf(new Date(timestamp)).toISOString().slice(0, 10);
+    const week = aggregates.get(weekStart) ?? {
+      weekStart,
+      activityCount: 0,
+      durationSeconds: 0,
+    };
+    week.activityCount++;
+    const duration = activity.durationSeconds;
+    if (duration !== null && Number.isFinite(duration) && duration > 0)
+      week.durationSeconds += duration;
+    aggregates.set(weekStart, week);
+  }
   const current = mondayOf(today);
-  const byStart = new Map(weeks.map((week) => [week.weekStart, week]));
+  const byStart = aggregates;
   return Array.from({ length: profileWeeks }, (_, index) => {
     const start = new Date(
       current.getTime() - (profileWeeks - 1 - index) * 7 * dayMs,
@@ -153,7 +185,7 @@ function relativeDay(observedOn: string, today: Date) {
 export function buildAthleteProfile(
   input: AthleteProfileInputs,
 ): AthleteProfileView {
-  const weeks = recentWeeks(input.weeks, input.today);
+  const weeks = recentWeeks(input.activities, input.today);
   const trained = weeks.filter((week) => week.activities > 0);
   const averageHours =
     weeks.reduce((total, week) => total + week.hours, 0) / weeks.length;
@@ -164,20 +196,14 @@ export function buildAthleteProfile(
   const sleep = series(input.observations, "sleep_duration_seconds");
   const recentCut = input.today.getTime() - 28 * dayMs;
   const recent = input.observations.filter(
-    (observation) => Date.parse(observation.observedOn) >= recentCut,
+    (observation) =>
+      Date.parse(observation.observedOn) >= recentCut &&
+      Date.parse(observation.observedOn) <= input.today.getTime(),
   );
   const recentHrv = series(recent, "hrv_last_night_ms");
   const recentResting = series(recent, "resting_heart_rate_bpm");
   const runs = input.activities.filter(
-    (activity) =>
-      activity.distanceMeters !== null &&
-      [
-        "running",
-        "trail_running",
-        "treadmill_running",
-        "track_running",
-        "ultra_run",
-      ].includes(activity.type),
+    (activity) => activity.distanceMeters !== null && isRunning(activity.type),
   );
   const longest = runs.reduce<InsightActivity | null>(
     (best, run) =>
@@ -189,13 +215,13 @@ export function buildAthleteProfile(
   const training: ProfileFact[] = [
     {
       key: "typical_week",
-      label: "Semaine type",
+      label: "Semaine type · course à pied",
       value:
         trained.length > 0
           ? `${formatHours(averageHours)} · ${decimal.format(Math.round(averageSessions * 10) / 10)} séances`
           : null,
       source: "garmin",
-      detail: "Moyenne · 16 dernières semaines",
+      detail: "Course à pied · moyenne sur 16 dernières semaines",
     },
     {
       key: "regularity",
@@ -205,7 +231,7 @@ export function buildAthleteProfile(
           ? `${trained.length} semaines sur ${profileWeeks}`
           : null,
       source: "garmin",
-      detail: "Semaines avec au moins une séance",
+      detail: "Semaines avec au moins une course",
     },
     {
       key: "terrain",
@@ -338,7 +364,30 @@ export function buildAthleteProfile(
     activityCount: input.activityCount,
     history: historySpan(input.firstActivityAt, input.today),
     sleepNights: sleep.length,
+    heartRateZones: calculateHeartRateZones({
+      maximum: input.maxHeartRate?.value ?? null,
+      observations: input.observations,
+      today: input.today,
+    }),
     weeks,
+    habits: {
+      final: true,
+      items: buildInsightFacts({
+        activities: input.activities.filter(
+          (activity) => Date.parse(activity.startedAt) <= input.today.getTime(),
+        ),
+        observations: [],
+        longest: null,
+        today: input.today,
+      })
+        .filter((item) => item.key === "volume" || item.key === "mix")
+        .map((item) => ({
+          key: item.key,
+          text: item.sentence,
+          source: item.source,
+          origin: "facts",
+        })),
+    },
     sections: [
       { key: "training", title: "Comment tu t’entraînes", facts: training },
       { key: "fitness", title: "Où en est ta forme", facts: fitness },

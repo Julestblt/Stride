@@ -21,6 +21,7 @@ import {
   completeOnboarding,
   navigateOnboarding,
 } from "@/server/onboarding/actions";
+import { InsightsCard, useImportInsights } from "./insights-card";
 import { OnboardingActions } from "./onboarding-actions";
 import { useOnboardingTransition } from "./use-onboarding-transition";
 
@@ -44,6 +45,15 @@ export function ProfileStep({
   revision: number;
 }) {
   const { pending, message, run } = useOnboardingTransition();
+  const insights = useImportInsights("profile", profile.habits);
+  const habits = insights
+    ? {
+        final: true,
+        items: insights.items.filter(
+          (item) => item.key === "volume" || item.key === "mix",
+        ),
+      }
+    : null;
   const [training, ...others] = profile.sections;
   const complete = () =>
     run(
@@ -80,7 +90,7 @@ export function ProfileStep({
         <div className="flex flex-col gap-4 lg:items-end">
           <dl className="flex gap-8">
             <Total
-              label="Activités lues"
+              label="Activités · tous sports"
               value={integer.format(profile.activityCount)}
             />
             {profile.history && (
@@ -100,6 +110,45 @@ export function ProfileStep({
             <Facts facts={section.facts} />
           </Section>
         ))}
+        <Section title="Zones de FC">
+          {profile.heartRateZones ? (
+            <>
+              <dl className="flex flex-col">
+                {profile.heartRateZones.zones.map((zone) => (
+                  <div
+                    key={zone.zone}
+                    className="flex justify-between gap-4 border-b border-border py-3"
+                  >
+                    <dt>Zone {zone.zone}</dt>
+                    <dd className="font-metric font-semibold">
+                      {zone.lower}–{zone.upper} bpm
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="text-sm text-muted">
+                {profile.heartRateZones.method === "karvonen"
+                  ? `Estimation Stride · Karvonen (réserve cardiaque). FC max observée : ${profile.heartRateZones.maximum} bpm. FC au repos : ${profile.heartRateZones.resting} bpm, médiane de ${profile.heartRateZones.restingSamples} observations Garmin du ${profile.heartRateZones.windowStart} au ${profile.heartRateZones.windowEnd}.`
+                  : `Estimation Stride · Pourcentage de la FC max observée (${profile.heartRateZones.maximum} bpm). Karvonen nécessite au moins sept observations récentes de FC au repos ; cette base n’est pas encore disponible.`}
+              </p>
+              <p className="text-meta text-muted-foreground">
+                Activités Garmin · 12 derniers mois. Bornes : 50/60/70/80/90/100
+                %. La FC max observée n’est pas un maximum physiologique mesuré.
+                Ces zones estimées ne proviennent pas des réglages Garmin.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-muted">
+              Les zones ne sont pas disponibles sans FC max observée valide.
+            </p>
+          )}
+        </Section>
+        <InsightsCard
+          insights={habits}
+          title="Habitudes que je garde en tête"
+          footer="Activités Garmin · tous sports sur les 12 derniers mois. Cette fenêtre diffère du résumé de course à pied sur 16 semaines."
+          unavailable="Pas encore assez de données pour décrire tes habitudes d’entraînement."
+        />
       </div>
       <section
         aria-labelledby="next-title"
@@ -126,7 +175,7 @@ export function ProfileStep({
           />
         </div>
       </section>
-      <OnboardingActions className="lg:hidden">
+      <OnboardingActions className="static lg:hidden">
         <ProfileActions
           message={message}
           pending={pending}
@@ -274,7 +323,7 @@ function WeeklyBars({ weeks }: { weeks: WeekBar[] }) {
   return (
     <figure className="flex flex-col gap-2">
       <ol
-        aria-label="Heures d’entraînement par semaine, 16 dernières semaines"
+        aria-label="Heures de course à pied par semaine, 16 dernières semaines"
         className="flex h-14 items-end gap-0.5"
       >
         {weeks.map((week) => {

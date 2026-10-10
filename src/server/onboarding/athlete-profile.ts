@@ -1,7 +1,6 @@
 import "server-only";
 import {
   buildAthleteProfile,
-  profileWeeks,
   type AthleteProfileView,
 } from "@/features/onboarding/athlete-profile";
 import type { OnboardingContext } from "./context";
@@ -19,22 +18,14 @@ export async function loadAthleteProfile(
   context: OnboardingContext,
   today: Date,
 ): Promise<AthleteProfileView> {
-  const since = new Date(today.getTime() - (profileWeeks + 1) * 7 * 86_400_000)
-    .toISOString()
-    .slice(0, 10);
   const nights = new Date(today.getTime() - 90 * 86_400_000)
     .toISOString()
     .slice(0, 10);
-  const [profile, goals, signals, weeks, count, first, observations] =
+  const [profile, goals, signals, count, first, observations] =
     await Promise.all([
       readProfile(context),
       readGoals(context),
       loadGarminSignals(context, today),
-      context.client
-        .from("provider_training_weeks")
-        .select("week_start, activity_count, duration_seconds")
-        .eq("user_id", context.userId)
-        .gte("week_start", since),
       context.client
         .from("provider_activities")
         .select("id", { count: "exact", head: true })
@@ -55,24 +46,13 @@ export async function loadAthleteProfile(
         .gte("observed_on", nights)
         .limit(1000),
     ]);
-  if (weeks.error || count.error || first.error || observations.error)
+  if (count.error || first.error || observations.error)
     throw new Error("Unable to read athlete history");
   return buildAthleteProfile({
     today,
     profile: profile.values,
     goal: goals.goal.values,
     races: goals.races.map((race) => race.values),
-    weeks: (weeks.data ?? []).flatMap((week) =>
-      week.week_start
-        ? [
-            {
-              weekStart: week.week_start,
-              activityCount: week.activity_count ?? 0,
-              durationSeconds: Number(week.duration_seconds ?? 0),
-            },
-          ]
-        : [],
-    ),
     activityCount: count.count ?? 0,
     firstActivityAt: first.data?.started_at ?? null,
     activities: signals.activities,
