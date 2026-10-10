@@ -75,7 +75,7 @@ const fullDate = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: "UTC",
 });
-const focusLabels: Record<NonNullable<GoalValues["focus"]>, string> = {
+export const focusLabels: Record<NonNullable<GoalValues["focus"]>, string> = {
   general_fitness: "Forme générale",
   faster: "Aller plus vite",
   short_distance: "5 km · 10 km",

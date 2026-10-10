@@ -26,6 +26,104 @@ const session = {
   token_type: "bearer",
   user,
 };
+const day = 86_400_000;
+const daysAgo = (days, time = "07:12:00") => {
+  const date = new Date(Date.now() - days * day).toISOString().slice(0, 10);
+  return {
+    started_at: `${date}T${time}Z`,
+    local_started_at: `${date} ${time}`,
+  };
+};
+const activity = (id, days, values) => ({
+  id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(id).padStart(12, "0")}`,
+  activity_type: "running",
+  route_name: null,
+  distance_meters: null,
+  duration_seconds: null,
+  elevation_gain_meters: null,
+  average_heart_rate: null,
+  ...daysAgo(days),
+  ...values,
+});
+const tables = {
+  provider_activities: [
+    activity(1, 1, {
+      distance_meters: 8320,
+      duration_seconds: 3014,
+      average_heart_rate: 138,
+    }),
+    activity(2, 3, {
+      activity_type: "trail_running",
+      route_name: "Fontainebleau",
+      distance_meters: 21400,
+      duration_seconds: 7500,
+      elevation_gain_meters: 540,
+      average_heart_rate: 146,
+    }),
+    activity(3, 4, {
+      activity_type: "strength_training",
+      duration_seconds: 3300,
+    }),
+    activity(4, 6, {
+      distance_meters: 11300,
+      duration_seconds: 3520,
+      elevation_gain_meters: 64,
+      average_heart_rate: 152,
+    }),
+    activity(5, 38, {
+      activity_type: "trail_running",
+      route_name: "Trail 80K",
+      distance_meters: 80200,
+      duration_seconds: 40500,
+      elevation_gain_meters: 1620,
+    }),
+    ...Array.from({ length: 70 }, (_, index) =>
+      activity(100 + index, 40 + index, {
+        distance_meters: 8000 + index * 10,
+        duration_seconds: 3000 + index,
+      }),
+    ),
+  ],
+  athlete_profiles: [{ first_name: "Jules" }],
+  athlete_goals: [
+    {
+      user_id: user.id,
+      focus: "ultra_trail",
+      revision: 1,
+      updated_at: "2026-01-01T00:00:00Z",
+    },
+  ],
+  athlete_races: [
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      user_id: user.id,
+      name: "EcoTrail Paris 120K",
+      race_date: new Date(Date.now() + 164 * day).toISOString().slice(0, 10),
+      distance_km: 120,
+      elevation_gain_m: 1800,
+      priority: "A",
+      target_duration_seconds: null,
+      revision: 1,
+      updated_at: "2026-01-01T00:00:00Z",
+    },
+  ],
+};
+function selectRows(table, params) {
+  let rows = tables[table] ?? [];
+  const id = params.get("id");
+  if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
+  const types = params.get("activity_type")?.match(/^in\.\((.*)\)$/);
+  if (types) {
+    const allowed = types[1].split(",").map((type) => type.replace(/"/g, ""));
+    rows = rows.filter((row) => allowed.includes(row.activity_type));
+  }
+  if (table === "provider_activities")
+    rows = [...rows].sort((a, b) => b.started_at.localeCompare(a.started_at));
+  const total = rows.length;
+  const limit = Number(params.get("limit"));
+  if (limit > 0) rows = rows.slice(0, limit);
+  return { rows, total };
+}
 const events = [];
 const links = new Map();
 const challenges = new Map();
@@ -36,8 +134,8 @@ createServer(async (request, response) => {
   for await (const chunk of request) raw += chunk;
   const body = raw ? JSON.parse(raw) : {};
   response.setHeader("Content-Type", "application/json");
-  const send = (status, value) => {
-    response.writeHead(status);
+  const send = (status, value, headers = {}) => {
+    response.writeHead(status, headers);
     response.end(JSON.stringify(value));
   };
   if (url.pathname === "/__test__/events") return send(200, events);
@@ -120,5 +218,15 @@ createServer(async (request, response) => {
       ? send(200, user)
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
+  if (url.pathname.startsWith("/rest/v1/")) {
+    if (request.headers.authorization !== `Bearer ${token}`)
+      return send(401, { message: "JWT required" });
+    const { rows, total } = selectRows(url.pathname.slice(9), url.searchParams);
+    return send(200, rows, {
+      "Content-Range": rows.length
+        ? `0-${rows.length - 1}/${total}`
+        : `*/${total}`,
+    });
+  }
   return send(404, { msg: "Unknown fixture endpoint" });
 }).listen(3200, "127.0.0.1");
