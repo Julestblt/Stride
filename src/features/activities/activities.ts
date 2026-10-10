@@ -36,9 +36,9 @@ const typeLabels: Record<string, string> = {
 };
 
 export const activityColumns =
-  "id, activity_type, route_name, started_at, local_started_at, distance_meters, duration_seconds, elevation_gain_meters, average_heart_rate";
+  "id, activity_type, activity_name, route_name, started_at, local_started_at, distance_meters, duration_seconds, elevation_gain_meters, average_heart_rate";
 
-const measure = z
+export const positiveMeasure = z
   .union([z.number(), z.string()])
   .nullable()
   .transform((value) => {
@@ -50,17 +50,19 @@ export const activityRowSchema = z
   .object({
     id: z.string(),
     activity_type: z.string().nullable(),
+    activity_name: z.string().nullable().optional(),
     route_name: z.string().nullable(),
     started_at: z.string(),
     local_started_at: z.string().nullable(),
-    distance_meters: measure,
-    duration_seconds: measure,
-    elevation_gain_meters: measure,
-    average_heart_rate: measure,
+    distance_meters: positiveMeasure,
+    duration_seconds: positiveMeasure,
+    elevation_gain_meters: positiveMeasure,
+    average_heart_rate: positiveMeasure,
   })
   .transform((row) => ({
     id: row.id,
     type: row.activity_type,
+    name: row.activity_name?.trim() || null,
     routeName: row.route_name?.trim() || null,
     date: (row.local_started_at ?? row.started_at).slice(0, 10),
     distanceMeters: row.distance_meters,
@@ -134,7 +136,10 @@ export function activityKind(type: string | null): ActivityKind {
   return "other";
 }
 
-export function activityTitle(activity: Activity) {
+export function activityTitle(
+  activity: Pick<Activity, "name" | "type" | "routeName">,
+) {
+  if (activity.name) return activity.name;
   const label = (activity.type && typeLabels[activity.type]) || "Activité";
   return activity.routeName ? `${label} · ${activity.routeName}` : label;
 }

@@ -19,6 +19,8 @@ A destination appears in the application navigation only once it is backed by re
 
 On desktop the application shell is fixed to the viewport height and the page itself never scrolls. Each pane scrolls on its own: the Activities list keeps its title, search and filters fixed with sticky period headers, and the detail keeps its header fixed while its content scrolls. The list shows 50 activities at a time with a count and a load-more action, and remembers its scroll position when an activity is opened. Selection and the loaded window live in the URL.
 
+`/activities/[id]/details` is the full-page detail reached from the activity panel. It shows the kicker, headline measures, a laps table from stored `lap` rows (falling back to `split` rows, shown only with at least two segments) and an effort panel with only the stored measures, each marked with its Garmin provenance. The reference's coach analysis, plan targets, charts, time in zone, route map and perceived effort are omitted until their data exists. On narrow screens the table keeps time, distance, pace and heart rate.
+
 Account, data connections, permissions, and preferences belong in a secondary profile/settings area. Race planning should appear within Plan when a goal race exists; a dedicated Races destination should be added only if race tasks form a frequent, distinct journey.
 
 ## Primary navigation paths
