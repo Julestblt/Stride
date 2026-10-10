@@ -896,7 +896,7 @@ test("Goals persist focus and races, block incomplete races and complete", async
       target_duration_seconds: 66_600,
     });
   await page.getByRole("button", { name: "Ajouter une course" }).click();
-  await expect(page.getByText("Course 2")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Course 2" })).toBeVisible();
   await expect.poll(async () => (await races(user)).length).toBe(2);
   await page.reload();
   await expect(
@@ -910,7 +910,7 @@ test("Goals persist focus and races, block incomplete races and complete", async
     .last()
     .click();
   await expect.poll(async () => (await races(user)).length).toBe(1);
-  await expect(page.getByText("Course 2")).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Course 2" })).toHaveCount(0);
   await page.screenshot({
     path: "test-results/goals-desktop.png",
     fullPage: true,
