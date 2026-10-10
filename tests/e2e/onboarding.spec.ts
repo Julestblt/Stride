@@ -1225,7 +1225,7 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
     return data;
   };
   const firstImport = await observation(page);
-  await page.getByRole("button", { name: "Continuer", exact: true }).click();
+  await page.getByRole("button", { name: /^Continuer/ }).click();
   await expect(page).toHaveURL(/\/onboarding\/about$/);
   await page.getByLabel("Prénom").fill("Journey Athlete");
   await page.getByLabel("Date de naissance").fill("14/06/1991");
