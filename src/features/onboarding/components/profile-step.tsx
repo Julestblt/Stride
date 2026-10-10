@@ -102,7 +102,7 @@ export function ProfileStep({
           <Legend />
         </div>
       </header>
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-10">
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-10 xl:grid-cols-3">
         <Section title={training.title}>
           <WeeklyBars weeks={profile.weeks} />
           <Facts facts={training.facts} />

@@ -28,4 +28,4 @@ Profile feedback (#38): weekly bars, typical week and regularity use running ses
 
 Mobile profile actions stay in the page flow beneath all profile sections so completion and correction controls cannot cover fitness values. Other onboarding screens retain their sticky mobile actions.
 
-Profile layout follows the reference section order: training/fitness, recovery/zones, goals/habits on desktop and the same reading order on mobile. Five zone ranges share a colored horizontal strip; habits use section dividers, while the import screen retains its framed insights card. The desktop profile moves the back action into the step header and uses the reference content inset.
+Profile sections use three columns on desktop (1280px and wider), two columns on compact desktop, and one column on mobile. Reading order remains training, fitness, recovery, zones, goals, habits. Five zone ranges share a colored horizontal strip; habits use section dividers, while the import screen retains its framed insights card. The desktop profile moves the back action into the step header and uses the reference content inset.
