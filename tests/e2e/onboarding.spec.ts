@@ -942,3 +942,66 @@ test("Goals accept no race at all", async ({ page }) => {
   await expect(page).toHaveURL(/\/onboarding\/profile$/);
   expect((await read(user.id)).goals_completed_at).not.toBeNull();
 });
+test("Athlete profile shows only real values, needs Garmin to finish, and ends onboarding", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1200 });
+  const user = await atGoalsStep(page);
+  const goal = await user.client
+    .from("athlete_goals")
+    .insert({ user_id: user.id, focus: "trail" });
+  expect(goal.error).toBeNull();
+  const row = await read(user.id);
+  const goals = await user.client.rpc("complete_onboarding_step", {
+    p_step: "goals",
+    p_expected_revision: row.revision,
+  });
+  expect(goals.error).toBeNull();
+  await page.goto("/onboarding/profile");
+  const content = page.getByRole("region", { name: "Contenu de l’étape" });
+  await expect(
+    content.getByRole("heading", { name: "Voici ce que je sais de toi, Ada." }),
+  ).toBeVisible();
+  await expect(content.getByText("Course trail")).toBeVisible();
+  await expect(
+    content.getByText("Pas encore disponible").first(),
+  ).toBeVisible();
+  expect(await content.innerText()).not.toMatch(
+    /Allure au seuil|Vitesse ascensionnelle|Zones de FC|Estimation du temps|si course aujourd/,
+  );
+  await page.getByRole("button", { name: "Entrer dans Stride" }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Garmin" }),
+  ).toBeVisible();
+  expect((await read(user.id)).completed_at).toBeNull();
+  await page.getByRole("button", { name: "Corriger quelque chose" }).click();
+  await page
+    .getByRole("menuitem", { name: "Mes objectifs et courses" })
+    .click();
+  await expect(page).toHaveURL(/\/onboarding\/goals$/);
+  const connection = await fetch(
+    "http://127.0.0.1:3310/v1/connections/garmin/start",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${user.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: "athlete@example.com",
+        password: "correct-password",
+      }),
+    },
+  );
+  expect(connection.ok).toBe(true);
+  await page.goto("/onboarding/profile");
+  await page.screenshot({
+    path: "test-results/profile-desktop.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Entrer dans Stride" }).click();
+  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+  expect((await read(user.id)).completed_at).not.toBeNull();
+  await page.goto("/onboarding/about");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+});

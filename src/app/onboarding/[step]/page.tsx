@@ -9,6 +9,8 @@ import { GarminStep } from "@/features/onboarding/components/garmin-step";
 import { HistoryStep } from "@/features/onboarding/components/history-step";
 import { AboutStep } from "@/features/onboarding/components/about-step";
 import { GoalsStep } from "@/features/onboarding/components/goals-step";
+import { ProfileStep } from "@/features/onboarding/components/profile-step";
+import { loadAthleteProfile } from "@/server/onboarding/athlete-profile";
 import { readGoals } from "@/server/onboarding/goals";
 import { readProfile } from "@/server/onboarding/profile";
 import { loadKnownValues } from "@/server/onboarding/known-values";
@@ -36,6 +38,10 @@ export default async function OnboardingStepPage({
         ])
       : null;
   const goals = guard.step === "goals" ? await readGoals(context) : null;
+  const athlete =
+    guard.step === "profile"
+      ? await loadAthleteProfile(context, new Date())
+      : null;
   return (
     <OnboardingShell
       progress={progress}
@@ -72,6 +78,9 @@ export default async function OnboardingStepPage({
           revision={progress.revision}
           goals={goals}
         />
+      )}
+      {athlete && (
+        <ProfileStep profile={athlete} revision={progress.revision} />
       )}
     </OnboardingShell>
   );
