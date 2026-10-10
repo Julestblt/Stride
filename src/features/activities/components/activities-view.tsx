@@ -1,0 +1,119 @@
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { PulseDot, SourceMark } from "@/components/stride/marks";
+import {
+  formatActivityDate,
+  groupActivities,
+  type Activity,
+  type ActivityFilter,
+} from "@/features/activities/activities";
+import { ActivityDetail } from "./activity-detail";
+import { ActivityFilters, ActivityList } from "./activity-list";
+
+export function ActivitiesView({
+  activities,
+  filter,
+  selected,
+  current,
+  sync,
+  today,
+}: {
+  activities: Activity[];
+  filter: ActivityFilter;
+  selected: Activity | null;
+  current: boolean;
+  sync: string | null;
+  today: string;
+}) {
+  const ListHeading = current ? "h2" : "h1";
+  return (
+    <div className="flex flex-1">
+      <div
+        className={cn(
+          "w-full flex-col lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-border-subtle",
+          current ? "hidden" : "flex",
+        )}
+      >
+        <div className="flex flex-col gap-3 border-b border-border-subtle px-5 pt-5 pb-3 lg:px-3.5 lg:pt-3.5 lg:pb-2.5">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-2 lg:hidden" />
+            <ListHeading className="flex-1 text-headline font-semibold lg:text-base">
+              Activités
+            </ListHeading>
+            {sync && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <PulseDot tone="success" breathing={false} />
+                <span>
+                  <span className="lg:hidden">Garmin </span>
+                  <span className="lg:hidden">{sync.toLowerCase()}</span>
+                  <span className="hidden lg:inline">{sync}</span>
+                </span>
+              </span>
+            )}
+          </div>
+          <ActivityFilters filter={filter} />
+        </div>
+        <ActivityList
+          groups={groupActivities(activities, today)}
+          filter={filter}
+          selectedId={selected?.id ?? null}
+          current={current}
+          today={today}
+        />
+        {activities.length > 0 && (
+          <p className="flex items-center gap-1.75 px-5 py-4 text-xs text-muted-foreground lg:px-3.5">
+            <SourceMark source="provider" />
+            Tout vient de Garmin
+          </p>
+        )}
+      </div>
+      <div
+        className={cn(
+          "min-w-0 flex-1 flex-col lg:flex",
+          current ? "flex" : "hidden",
+        )}
+      >
+        <header className="flex min-h-14 items-center gap-3 border-b border-border-subtle px-4">
+          <SidebarTrigger />
+          <Separator
+            orientation="vertical"
+            className="data-vertical:h-4 data-vertical:self-center"
+          />
+          <nav
+            aria-label="Fil d’Ariane"
+            className="flex min-w-0 items-center gap-2 text-sm"
+          >
+            <Link
+              href={`/activities${filter === "all" ? "" : `?filter=${filter}`}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Activités
+            </Link>
+            {selected && (
+              <>
+                <span aria-hidden="true" className="text-dim">
+                  /
+                </span>
+                <span
+                  aria-current={current ? "page" : undefined}
+                  className="truncate"
+                >
+                  {formatActivityDate(selected.date, today)}
+                </span>
+              </>
+            )}
+          </nav>
+        </header>
+        {selected ? (
+          <ActivityDetail activity={selected} current={current} />
+        ) : (
+          <p className="px-5 pt-8 text-body text-muted sm:px-10">
+            Les activités importées depuis Garmin apparaîtront ici.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -35,7 +35,7 @@ async function signIn(page: Page, email: string, destination = "welcome") {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(
     destination === "application"
-      ? "http://127.0.0.1:3110/"
+      ? "http://127.0.0.1:3110/activities"
       : new RegExp(`/onboarding/${destination}$`),
   );
 }
@@ -259,9 +259,9 @@ test("completed athletes reach the application and second athletes cannot read p
   });
   expect(completed.error).toBeNull();
   await page.goto("/onboarding/garmin");
-  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
   await page.reload();
-  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
 });
 test("real sync count continues across navigation, shell geometry and keyboard are accessible", async ({
   page,
@@ -1170,10 +1170,10 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("button", { name: "Entrer dans Stride" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
   expect((await read(user.id)).completed_at).not.toBeNull();
   await page.goto("/onboarding/about");
-  await expect(page).toHaveURL("http://127.0.0.1:3110/");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
 });
 
 test("unseeded six-screen journey survives refresh, another device, Back edits and real sign-out", async ({
@@ -1324,7 +1324,7 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
       device.getByRole("region", { name: "Import depuis Garmin" }),
     ).toContainText(/\d+ activités/);
     await device.getByRole("button", { name: "Entrer dans Stride" }).click();
-    await expect(device).toHaveURL("http://127.0.0.1:3110/");
+    await expect(device).toHaveURL("http://127.0.0.1:3110/activities");
     const final = await read(user.id);
     for (const step of [
       "welcome",
@@ -1341,7 +1341,8 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
         request.method() === "POST" &&
         Boolean(request.headers()["next-action"]),
     );
-    await device.getByRole("button", { name: "Se déconnecter" }).click();
+    await device.getByRole("button", { name: /^Edited Athlete/ }).click();
+    await device.getByRole("menuitem", { name: "Se déconnecter" }).click();
     await expect(
       device.getByRole("link", { name: "Se connecter", exact: true }),
     ).toBeVisible();
@@ -1359,7 +1360,8 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
       available_weekdays: [2, 4, 6],
     });
     expect((await races(user))[0].name).toBe("Journey Race");
-    await device.getByRole("button", { name: "Se déconnecter" }).click();
+    await device.getByRole("button", { name: /^Edited Athlete/ }).click();
+    await device.getByRole("menuitem", { name: "Se déconnecter" }).click();
     await expect(
       device.getByRole("link", { name: "Se connecter", exact: true }),
     ).toBeVisible();

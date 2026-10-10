@@ -15,6 +15,8 @@ Use a small set of athlete jobs as the primary navigation. Do not expose every d
 | Progress    | How is my training changing over time?       | Fitness and training trends, introduced only when the underlying measures are validated |
 | Coach       | What should I understand or discuss?         | Context-aware conversation and explainable proposals                                    |
 
+A destination appears in the application navigation only once it is backed by real data; there are no placeholder entries. Activities is the first implemented destination, so onboarded athletes land on `/activities` until Today exists. Activity list and detail show only stored Garmin values with their provenance; plan compliance, coach analysis, charts, laps, natural-language search and the race filter from the references arrive with the capabilities they depend on. Sync times and the athlete's current day use the Europe/Paris time zone.
+
 Account, data connections, permissions, and preferences belong in a secondary profile/settings area. Race planning should appear within Plan when a goal race exists; a dedicated Races destination should be added only if race tasks form a frequent, distinct journey.
 
 ## Primary navigation paths
