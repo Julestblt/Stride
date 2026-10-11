@@ -33,7 +33,7 @@ export function ActivityDetail({
   ].slice(0, 3);
   const effort = effortStats(activity).slice(0, 4);
   return (
-    <article className="flex w-full max-w-240 flex-col gap-8 px-5 pt-8 pb-12 lg:px-10">
+    <article className="flex w-full max-w-240 flex-col gap-8 px-5 pt-8 pb-12 lg:px-10 2xl:mx-auto 2xl:max-w-360">
       <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <Heading className="min-w-0 text-headline font-semibold text-balance break-words sm:text-[2.375rem] sm:leading-none sm:tracking-[-0.03em]">
           {activityTitle(activity)}
