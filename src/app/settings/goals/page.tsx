@@ -26,7 +26,7 @@ import {
 const focusLabels: Record<GoalFocus, string> = {
   general_fitness: "Forme générale",
   faster: "Courir plus vite",
-  short_distance: "5K or 10K",
+  short_distance: "5 km ou 10 km",
   half_marathon_marathon: "Semi-marathon ou marathon",
   trail: "Trail",
   ultra_trail: "Ultra-trail",
