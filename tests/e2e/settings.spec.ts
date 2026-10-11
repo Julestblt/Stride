@@ -22,6 +22,20 @@ test("keyboard help is searchable, platform-aware and available from the account
   const search = dialog.getByRole("textbox", {
     name: "Rechercher un raccourci",
   });
+  const searchLabel = search.locator("xpath=..");
+  const inputBounds = await search.boundingBox();
+  const iconBounds = await searchLabel.locator("svg").boundingBox();
+  expect(inputBounds).not.toBeNull();
+  expect(iconBounds).not.toBeNull();
+  expect(
+    Math.abs(
+      inputBounds!.y +
+        inputBounds!.height / 2 -
+        iconBounds!.y -
+        iconBounds!.height / 2,
+    ),
+  ).toBeLessThan(1);
+  await expect(searchLabel.locator("kbd")).toHaveCount(0);
   await search.focus();
   await page.keyboard.type("?");
   await expect(search).toHaveValue("?");

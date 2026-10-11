@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "radix-ui";
-import { KeyboardIcon, SearchIcon, ActivityIcon, XIcon } from "lucide-react";
+import { SearchIcon, ActivityIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AccountMenuKeyboardIcon } from "./account-menu-icons";
 
 const OPEN_SHORTCUT_HELP_EVENT = "stride:open-shortcut-help";
 
@@ -212,7 +213,6 @@ export function ShortcutHelp() {
                   className="pr-12 pl-9"
                   aria-label="Rechercher un raccourci"
                 />
-                <Shortcut>/</Shortcut>
               </label>
 
               <div className="grid gap-x-10 md:grid-cols-2">
@@ -394,7 +394,7 @@ export function ShortcutHelpMenuItem() {
     <DropdownMenuItem
       onSelect={() => window.dispatchEvent(new Event(OPEN_SHORTCUT_HELP_EVENT))}
     >
-      <KeyboardIcon />
+      <AccountMenuKeyboardIcon />
       <span className="md:hidden">Gestes et commandes</span>
       <span className="hidden md:inline">Raccourcis clavier</span>
     </DropdownMenuItem>
