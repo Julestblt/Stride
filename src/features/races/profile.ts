@@ -24,6 +24,10 @@ export type ProfileMarker = {
 export type ProfileData = {
   distanceM: number;
   elevation: [distanceM: number, ele: number][];
+  passageTimes: {
+    distanceM: number;
+    clockMinutes: number;
+  }[];
   walk: WalkPortion[];
   night: { fromM: number; toM: number; label: string | null }[];
   rain: { fromM: number; toM: number }[];
@@ -110,6 +114,10 @@ export function profileData({
   return {
     distanceM: course.distanceM,
     elevation,
+    passageTimes: (planned?.simulation.passages ?? []).map((passage) => ({
+      distanceM: passage.distanceM,
+      clockMinutes: passage.clockMinutes,
+    })),
     walk: portions,
     night,
     rain,

@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
-import { formatKm } from "../format";
+import { formatClock, formatKm, formatMeters } from "../format";
 import type { ProfileData, ProfileMarker } from "../profile";
 import { WeatherGlyph, glyphTone } from "./weather-icon";
 
@@ -232,6 +232,29 @@ export function ProfileChart({
         )
       : [];
   const interactive = variant === "editor" && onPick;
+  const inspectable = variant === "full" || variant === "mobile" || interactive;
+  const hoveredElevation = hover === null ? null : eleAt(hover);
+  const hoveredPassage = (() => {
+    if (hover === null || data.passageTimes.length < 2) return null;
+    const nextIndex = data.passageTimes.findIndex(
+      (passage) => passage.distanceM >= hover,
+    );
+    const endIndex =
+      nextIndex < 0 ? data.passageTimes.length - 1 : Math.max(1, nextIndex);
+    const end = data.passageTimes[endIndex];
+    const start = data.passageTimes[endIndex - 1];
+    const fraction = Math.max(
+      0,
+      Math.min(
+        1,
+        (hover - start.distanceM) /
+          Math.max(1, end.distanceM - start.distanceM),
+      ),
+    );
+    return formatClock(
+      start.clockMinutes + fraction * (end.clockMinutes - start.clockMinutes),
+    );
+  })();
   const fromPointer = (event: React.PointerEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const svgX = ((event.clientX - rect.left) / rect.width) * box.width;
@@ -243,15 +266,45 @@ export function ProfileChart({
       viewBox={`0 0 ${box.width} ${box.height}`}
       className={cn(
         "block w-full",
-        interactive && "cursor-crosshair",
+        inspectable && "cursor-crosshair",
         className,
       )}
       role="img"
-      aria-label={label}
-      onPointerMove={
-        interactive ? (event) => setHover(fromPointer(event)) : undefined
+      aria-label={
+        hover === null || interactive
+          ? label
+          : `${label}. Km ${formatKm(hover)}${hoveredElevation === null ? "" : `, altitude ${formatMeters(hoveredElevation)}`}${hoveredPassage ? `, passage estimé à ${hoveredPassage}` : ""}.`
       }
-      onPointerLeave={interactive ? () => setHover(null) : undefined}
+      tabIndex={interactive ? undefined : inspectable ? 0 : undefined}
+      onFocus={
+        inspectable && !interactive ? () => setHover(span / 2) : undefined
+      }
+      onBlur={inspectable && !interactive ? () => setHover(null) : undefined}
+      onKeyDown={
+        inspectable && !interactive
+          ? (event) => {
+              const step = span / 20;
+              const next =
+                event.key === "ArrowRight"
+                  ? Math.min(span, (hover ?? span / 2) + step)
+                  : event.key === "ArrowLeft"
+                    ? Math.max(0, (hover ?? span / 2) - step)
+                    : event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? span
+                        : null;
+              if (next !== null) {
+                event.preventDefault();
+                setHover(next);
+              }
+            }
+          : undefined
+      }
+      onPointerMove={
+        inspectable ? (event) => setHover(fromPointer(event)) : undefined
+      }
+      onPointerLeave={inspectable ? () => setHover(null) : undefined}
       onClick={
         interactive
           ? (event) => {
@@ -561,7 +614,7 @@ export function ProfileChart({
             </g>
           );
         })}
-      {interactive && hover !== null && (
+      {inspectable && hover !== null && (
         <g pointerEvents="none">
           <line
             x1={x(hover)}
@@ -571,22 +624,39 @@ export function ProfileChart({
             className="stroke-accent"
             strokeDasharray="2 3"
           />
+          <circle
+            cx={x(hover)}
+            cy={
+              hoveredElevation === null ? box.plotBottom : y(hoveredElevation)
+            }
+            r={4}
+            className="fill-accent stroke-background"
+            strokeWidth={2}
+          />
           <rect
-            x={Math.min(box.x1 - 132, Math.max(box.x0, x(hover) - 66))}
+            x={Math.min(
+              box.x1 - (interactive ? 132 : 190),
+              Math.max(box.x0, x(hover) - (interactive ? 66 : 95)),
+            )}
             y={box.markerY - 11}
-            width={132}
+            width={interactive ? 132 : 190}
             height={22}
             rx={5}
             className="fill-accent"
           />
           <text
-            x={Math.min(box.x1 - 66, Math.max(box.x0 + 66, x(hover)))}
+            x={Math.min(
+              box.x1 - (interactive ? 66 : 95),
+              Math.max(box.x0 + (interactive ? 66 : 95), x(hover)),
+            )}
             y={box.markerY + 4}
             textAnchor="middle"
             className="fill-accent-foreground font-semibold"
-            fontSize={11}
+            fontSize={interactive ? 11 : 10}
           >
-            + Ajouter ici · km {formatKm(hover)}
+            {interactive
+              ? `+ Ajouter ici · km ${formatKm(hover)}`
+              : `km ${formatKm(hover)}${hoveredElevation === null ? "" : ` · ${formatMeters(hoveredElevation)}`}${hoveredPassage ? ` · ${hoveredPassage}` : ""}`}
           </text>
         </g>
       )}
