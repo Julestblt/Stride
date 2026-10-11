@@ -587,7 +587,7 @@ export function RouteMap({
           </span>
         </div>
       )}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1.5">
+      <div className="pointer-events-none absolute bottom-8 left-3 flex flex-col gap-1.5 sm:bottom-3">
         {modes.length > 0 && (
           <div className="flex w-fit items-center gap-0.5 rounded-control border border-border bg-surface/90 px-1.5 py-1">
             <MonoLabel size="nano" className="mr-1">

@@ -10,6 +10,9 @@ import {
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
+import type { ActivityDetailData } from "../detail";
+import type { ActivityView } from "../activity-view";
+import { ActivitySearch } from "./activity-search";
 import { ActivityDetail } from "./activity-detail";
 import {
   ActivityFilters,
@@ -24,6 +27,8 @@ export function ActivitiesView({
   filter,
   limit,
   selected,
+  view,
+  search,
   current,
   sync,
   today,
@@ -32,7 +37,9 @@ export function ActivitiesView({
   total: number;
   filter: ActivityFilter;
   limit: number;
-  selected: Activity | null;
+  selected: ActivityDetailData | null;
+  view: ActivityView | null;
+  search: string;
   current: boolean;
   sync: string | null;
   today: string;
@@ -48,7 +55,10 @@ export function ActivitiesView({
       >
         <div className="flex shrink-0 flex-col gap-3 border-b border-border-subtle px-5 pt-5 pb-3 lg:px-3.5 lg:pt-3.5 lg:pb-2.5">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-2 lg:hidden" />
+            <SidebarTrigger
+              aria-label="Afficher ou masquer la barre latérale"
+              className="-ml-2 lg:hidden"
+            />
             <ListHeading className="flex-1 text-headline font-semibold lg:text-base">
               Activités
             </ListHeading>
@@ -63,10 +73,11 @@ export function ActivitiesView({
               </span>
             )}
           </div>
-          <ActivityFilters filter={filter} />
+          <ActivitySearch filter={filter} search={search} />
+          <ActivityFilters filter={filter} search={search} />
         </div>
         <ListScrollRegion
-          storageKey={`stride:activities:list:${filter}`}
+          storageKey={`stride:activities:list:${filter}:${search}`}
           label="Liste des activités"
           className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         >
@@ -74,6 +85,7 @@ export function ActivitiesView({
             groups={groupActivities(activities, today)}
             filter={filter}
             limit={limit}
+            search={search}
             selectedId={selected?.id ?? null}
             current={current}
             today={today}
@@ -83,6 +95,7 @@ export function ActivitiesView({
               <ActivityListFooter
                 filter={filter}
                 limit={limit}
+                search={search}
                 shown={activities.length}
                 total={total}
               />
@@ -101,7 +114,7 @@ export function ActivitiesView({
         )}
       >
         <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
-          <SidebarTrigger />
+          <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
           <Separator
             orientation="vertical"
             className="data-vertical:h-4 data-vertical:self-center"
@@ -111,7 +124,7 @@ export function ActivitiesView({
             className="flex min-w-0 items-center gap-2 text-sm"
           >
             <Link
-              href={`/activities${activitiesQuery(filter, limit)}`}
+              href={`/activities${activitiesQuery(filter, limit, search)}`}
               className="text-muted-foreground hover:text-foreground"
             >
               Activités
@@ -135,12 +148,15 @@ export function ActivitiesView({
           {selected ? (
             <ActivityDetail
               activity={selected}
+              view={view}
               current={current}
-              detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit)}`}
+              detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit, search)}`}
             />
           ) : (
             <p className="px-5 pt-8 text-body text-muted sm:px-10">
-              Les activités importées depuis Garmin apparaîtront ici.
+              {search
+                ? "Aucune activité ne correspond à ce nom."
+                : "Les activités importées depuis Garmin apparaîtront ici."}
             </p>
           )}
         </div>

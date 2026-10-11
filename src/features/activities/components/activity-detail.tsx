@@ -1,32 +1,45 @@
 import Link from "next/link";
 import { Metric } from "@/components/stride/metric";
 import { MonoLabel } from "@/components/stride/mono-label";
-import { ProvenanceLabel } from "@/components/stride/provenance";
+import { RouteCard } from "./route-card";
+import { ActivityCharts } from "./activity-charts";
+import type { ActivityView } from "../activity-view";
+import { effortStats, type ActivityDetailData } from "../detail";
 import {
-  activityTitle,
-  detailMetrics,
-  type Activity,
-} from "@/features/activities/activities";
+  ProvenanceLabel,
+  SignalList,
+  SignalRow,
+} from "@/components/stride/provenance";
+import { activityTitle, detailMetrics } from "@/features/activities/activities";
 
 export function ActivityDetail({
   activity,
+  view,
   current,
   detailHref,
 }: {
-  activity: Activity;
+  activity: ActivityDetailData;
+  view: ActivityView | null;
   current: boolean;
   detailHref: string;
 }) {
   const Heading = current ? "h1" : "h2";
-  const metrics = detailMetrics(activity);
+  const available = detailMetrics(activity);
+  const headlineKeys = ["distance", "duration", "heartRate"];
+  const metrics = [
+    ...available.filter((metric) => headlineKeys.includes(metric.key)),
+    ...available.filter((metric) => metric.key === "elevation"),
+    ...available.filter((metric) => metric.key === "pace"),
+  ].slice(0, 3);
+  const effort = effortStats(activity).slice(0, 4);
   return (
-    <article className="flex w-full max-w-240 flex-col gap-8 px-5 pt-8 pb-12 sm:px-10">
-      <header className="flex flex-wrap items-end justify-between gap-5">
-        <Heading className="text-headline font-semibold text-balance sm:text-[2.375rem] sm:leading-none sm:tracking-[-0.03em]">
+    <article className="flex w-full max-w-240 flex-col gap-8 px-5 pt-8 pb-12 lg:px-10">
+      <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+        <Heading className="min-w-0 text-headline font-semibold text-balance break-words sm:text-[2.375rem] sm:leading-none sm:tracking-[-0.03em]">
           {activityTitle(activity)}
         </Heading>
         {metrics.length > 0 && (
-          <dl className="flex flex-wrap gap-x-6.5 gap-y-4">
+          <dl className="flex flex-wrap gap-x-5 gap-y-4">
             {metrics.map((metric) => (
               <div key={metric.key} className="flex flex-col-reverse">
                 <MonoLabel size="micro" asChild>
@@ -44,6 +57,50 @@ export function ActivityDetail({
         <p className="text-body text-muted">
           Garmin n’a transmis aucune mesure pour cette activité.
         </p>
+      )}
+      {view?.route ? (
+        <RouteCard
+          key={`route:${activity.id}`}
+          view={view.route}
+          gain={activity.elevationGainMeters}
+          height="h-64 lg:h-90"
+        />
+      ) : (
+        <section
+          aria-label="Parcours"
+          className="rounded-card border border-border bg-surface px-4 py-5"
+        >
+          <MonoLabel>Parcours</MonoLabel>
+          <p className="mt-2 text-body text-muted">
+            Aucun tracé GPS n’est disponible pour cette activité.
+          </p>
+        </section>
+      )}
+      {effort.length > 0 && (
+        <section
+          aria-label="Effort enregistré"
+          className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5"
+        >
+          <MonoLabel>Effort enregistré</MonoLabel>
+          <SignalList className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
+            {effort.map((stat) => (
+              <SignalRow
+                key={stat.key}
+                label={stat.label}
+                value={stat.value}
+                unit={stat.unit}
+                source="provider"
+              />
+            ))}
+          </SignalList>
+        </section>
+      )}
+      {view?.charts && (
+        <ActivityCharts
+          key={`charts:${activity.id}`}
+          view={view.charts}
+          metrics={["pace", "heartRate"]}
+        />
       )}
       <div className="flex flex-col items-start gap-5">
         <Link
