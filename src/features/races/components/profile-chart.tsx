@@ -618,7 +618,7 @@ export function ProfileChart({
                   ? "Départ"
                   : marker.mark.tone === "finish"
                     ? "Arrivée"
-                    : "Ravito"
+                    : "Ravitaillement"
                 : marker.mark.shape === "square"
                   ? "Eau"
                   : "Point";
