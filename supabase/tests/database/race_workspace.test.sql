@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(25);
 
 insert into auth.users (id, aud, role, email) values
   ('c0000000-0000-4000-8000-00000000000c', 'authenticated', 'authenticated', 'race-c@example.com'),
@@ -27,6 +27,23 @@ reset role;
 select pg_temp.act_as('c0000000-0000-4000-8000-00000000000c');
 insert into public.athlete_races (id, user_id, name) values
   ('c1000000-0000-4000-8000-00000000000c', 'c0000000-0000-4000-8000-00000000000c', 'Course C');
+select lives_ok(
+  $$insert into public.athlete_races (id, user_id, name, race_kind)
+    values ('c2000000-0000-4000-8000-00000000000c',
+      'c0000000-0000-4000-8000-00000000000c', 'Trail 120 km', 'trail')$$,
+  'athlete can choose the race kind when creating a race'
+);
+select lives_ok(
+  $$update public.athlete_races
+    set target_duration_seconds = 50400, race_kind = 'trail'
+    where id = 'c2000000-0000-4000-8000-00000000000c'$$,
+  'athlete can save a 14-hour target with the race kind'
+);
+select is(
+  (select target_duration_seconds from public.athlete_races
+    where id = 'c2000000-0000-4000-8000-00000000000c'),
+  50400, '14-hour target is stored'
+);
 insert into public.race_plans (race_id, user_id) values
   ('c1000000-0000-4000-8000-00000000000c', 'c0000000-0000-4000-8000-00000000000c');
 insert into public.race_waypoints (race_id, user_id, kind, name, distance_m) values
