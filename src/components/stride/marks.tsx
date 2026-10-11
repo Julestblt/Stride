@@ -169,7 +169,14 @@ export function PulseDot({
   breathing = true,
   className,
 }: {
-  tone?: "accent" | "warning" | "success" | "provider" | "danger";
+  tone?:
+    | "accent"
+    | "warning"
+    | "success"
+    | "provider"
+    | "danger"
+    | "night"
+    | "foreground";
   breathing?: boolean;
   className?: string;
 }) {
@@ -184,6 +191,8 @@ export function PulseDot({
           success: "bg-success",
           provider: "bg-provider",
           danger: "bg-danger",
+          night: "bg-night",
+          foreground: "bg-foreground",
         }[tone],
         breathing && "motion-safe:animate-breathe",
         className,

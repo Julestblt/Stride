@@ -1,7 +1,9 @@
 import Link from "next/link";
 import {
   ActivityIcon,
+  FlagIcon,
   LinkIcon,
+  PlusIcon,
   SettingsIcon,
   ShieldIcon,
   UserRoundIcon,
@@ -21,23 +23,33 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
-import type { ShellAthlete, ShellGoal } from "@/features/app-shell/shell";
+import {
+  shellRaceDate,
+  type ShellAthlete,
+  type ShellGoal,
+  type ShellRaceLink,
+} from "@/features/app-shell/shell";
 import { ShellNavItem } from "./shell-nav-item";
+import { ShellRaceItem } from "./shell-race-item";
 import { SignOutMenuItem } from "./sign-out-menu-item";
 
 export function AppShell({
   athlete,
   goal,
+  races,
   sync,
   defaultOpen,
   children,
 }: {
   athlete: ShellAthlete;
   goal: ShellGoal | null;
+  races: ShellRaceLink[];
   sync: string | null;
   defaultOpen: boolean;
   children: React.ReactNode;
@@ -45,9 +57,9 @@ export function AppShell({
   return (
     <SidebarProvider
       defaultOpen={defaultOpen}
-      className="h-svh overflow-hidden"
+      className="h-svh overflow-hidden print:h-auto print:overflow-visible"
     >
-      <Sidebar variant="inset" collapsible="icon">
+      <Sidebar variant="inset" collapsible="icon" className="print:hidden">
         <SidebarHeader>
           <NavGoalSwitcher
             name={goal?.name ?? "Stride"}
@@ -70,6 +82,33 @@ export function AppShell({
                 icon={<ActivityIcon />}
                 label="Activités"
               />
+              <ShellNavItem href="/races" icon={<FlagIcon />} label="Courses" />
+            </SidebarMenu>
+          </SidebarGroup>
+          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+            <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
+            <SidebarMenu>
+              {races.map((race) => (
+                <ShellRaceItem
+                  key={race.id}
+                  id={race.id}
+                  name={race.name}
+                  priority={race.priority}
+                  date={shellRaceDate(race.date)}
+                />
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  size="sm"
+                  className="min-h-7.5 gap-2 text-meta text-muted-foreground"
+                >
+                  <Link href="/settings/goals">
+                    <PlusIcon className="size-3.5" />
+                    Ajouter une course
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -114,7 +153,7 @@ export function AppShell({
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <SidebarInset className="h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)]">
+      <SidebarInset className="h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
         {children}
       </SidebarInset>
     </SidebarProvider>

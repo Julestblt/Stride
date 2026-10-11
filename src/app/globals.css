@@ -26,6 +26,7 @@
   --danger-surface: #140e0b;
   --danger-border: #4a2c22;
   --provider: #5e8fb8;
+  --night: #8fa3d9;
   --zone-1: #3d4238;
   --zone-2: var(--provider);
   --zone-3: #a9c94a;
@@ -85,6 +86,7 @@
   --color-danger-surface: var(--danger-surface);
   --color-danger-border: var(--danger-border);
   --color-provider: var(--provider);
+  --color-night: var(--night);
   --color-zone-1: var(--zone-1);
   --color-zone-2: var(--zone-2);
   --color-zone-3: var(--zone-3);
@@ -250,5 +252,28 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #171915;
+    --surface: #ffffff;
+    --surface-raised: #f4f5f1;
+    --surface-inset: #ffffff;
+    --border: #d9ddd3;
+    --border-strong: #b8beb2;
+    --border-subtle: #e7e9e3;
+    --muted: #484d45;
+    --muted-foreground: #5c6258;
+    --accent: #355100;
+    --accent-foreground: #ffffff;
+    --success: #186034;
+    --warning: #805000;
+    --danger: #8f2d16;
+    --provider: #285a7c;
+    --night: #485785;
   }
 }

@@ -4,6 +4,7 @@ import {
   localToday,
   shellAthlete,
   shellGoal,
+  shellRaces,
   syncLabel,
 } from "@/features/app-shell/shell";
 import { getGarminClient } from "@/server/garmin/session";
@@ -45,6 +46,17 @@ export async function loadShell(context: OnboardingContext, now: Date) {
           localToday(now),
         )
       : null,
+    races: goals
+      ? shellRaces(
+          goals.races.map(({ id, values }) => ({
+            id,
+            name: values.name ?? "Course sans nom",
+            priority: values.priority,
+            date: values.race_date,
+          })),
+          localToday(now),
+        )
+      : [],
     sync: syncLabel(lastSyncAt, now),
   };
 }

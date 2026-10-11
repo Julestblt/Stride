@@ -335,6 +335,78 @@ createServer(async (request, response) => {
       access_token: accessToken(Math.floor(Date.now() / 1000) - 60),
       expires_at: Math.floor(Date.now() / 1000) - 60,
     });
+  if (url.pathname === "/__test__/race-course" && request.method === "POST") {
+    const race = tables.athlete_races[0];
+    race.target_duration_seconds = 21600;
+    race.race_date = new Date(Date.now() + 2 * day).toISOString().slice(0, 10);
+    tables.race_plans = [
+      {
+        race_id: race.id,
+        user_id: user.id,
+        start_time: "08:00:00",
+        start_time_confirmed: true,
+        ambitious_duration_seconds: 19800,
+        cautious_duration_seconds: 25200,
+        cutoff_duration_seconds: 28800,
+        labels: [],
+        walk_grade_percent: 10,
+        walk_pace_seconds_per_km: 690,
+        aid_stop_seconds: 300,
+        water_stop_seconds: 120,
+        carbs_per_hour_g: 60,
+        water_ml_per_hour: 450,
+        sodium_mg_per_hour: 500,
+        nutrition_alarm_minutes: 20,
+        night_caffeine: true,
+        roadbook_import: null,
+        revision: 1,
+      },
+    ];
+    tables.race_courses = [
+      {
+        race_id: race.id,
+        user_id: user.id,
+        source: "gpx",
+        file_name: "parcours-test.gpx",
+        source_activity_id: null,
+        time_zone: "Europe/Paris",
+        distance_m: 30000,
+        elevation_gain_m: 600,
+        elevation_loss_m: 580,
+        step_m: 1000,
+        points: Array.from({ length: 31 }, (_, index) => [
+          48.8 + index * 0.009,
+          2.3 + Math.sin(index / 4) * 0.01,
+          100 + index * 2 + Math.sin(index) * 20,
+        ]),
+        imported_at: new Date().toISOString(),
+      },
+    ];
+    tables.race_waypoints = [
+      ["start", "Départ", 0],
+      ["aid", "Ravito du Bois", 10000],
+      ["water", "Point d’eau", 20000],
+      ["finish", "Arrivée", 30000],
+    ].map(([kind, name, distance], index) => ({
+      id: `cccccccc-cccc-4ccc-8ccc-${String(index + 1).padStart(12, "0")}`,
+      race_id: race.id,
+      user_id: user.id,
+      kind,
+      name,
+      distance_m: distance,
+      cutoff_time: null,
+      services: kind === "aid" || kind === "water" ? ["water"] : [],
+      watch_label: null,
+      alert_distance_m: kind === "aid" || kind === "water" ? 500 : 0,
+      voice_note: null,
+      todo: null,
+      nutrition_note: null,
+      source: "course",
+      needs_review: false,
+      revision: 1,
+    }));
+    return send(200, { ready: true });
+  }
   if (url.pathname === "/") return send(200, { ready: true });
   events.push({
     method: request.method,
