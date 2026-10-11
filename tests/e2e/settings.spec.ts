@@ -20,8 +20,12 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto("/settings");
-  await expect(page.getByRole("button", { name: "Se déconnecter" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Profil.*35 ans/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Se déconnecter" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Profil.*35 ans/ }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { level: 1, name: "Réglages" }),
   ).toBeVisible();
@@ -77,7 +81,11 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await add.getByRole("button", { name: "Ajouter la course" }).click();
   await expect(page).toHaveURL(/\/settings\/goals\?status=saved$/);
   await page.goto("/settings");
-  await expect(page.getByRole("link", { name: /Objectifs et courses.*EcoTrail Paris 120K.*Training 10K/ })).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: /Objectifs et courses.*EcoTrail Paris 120K.*Training 10K/,
+    }),
+  ).toBeVisible();
   await page.goto("/settings/goals");
   await page.reload();
   await page.getByText("Training 10K", { exact: false }).first().click();
@@ -133,4 +141,39 @@ test("mobile settings keep a narrow viewport navigable", async ({ page }) => {
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+});
+
+test("desktop settings keep the account footer fixed and aligned with the app", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 1440, height: 650 });
+  await signIn(page);
+  await page.goto("/activities");
+  const appAvatar = await page
+    .getByRole("button", { name: "Jules athlete@example.com" })
+    .locator("span")
+    .first()
+    .boundingBox();
+  expect(appAvatar).not.toBeNull();
+
+  for (const section of ["training", "goals"]) {
+    await page.goto(`/settings/${section}`);
+    const footer = page.locator('[data-slot="settings-account"]');
+    const before = await footer.boundingBox();
+    const settingsAvatar = await footer.locator("span").first().boundingBox();
+    expect(before).not.toBeNull();
+    expect(settingsAvatar).not.toBeNull();
+    expect(Math.abs(settingsAvatar!.x - appAvatar!.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(settingsAvatar!.y - appAvatar!.y)).toBeLessThanOrEqual(1);
+
+    const scrollTop = await page.locator("main").evaluate((main) => {
+      main.scrollTop = main.scrollHeight;
+      return main.scrollTop;
+    });
+    expect(scrollTop).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    const after = await footer.boundingBox();
+    expect(after?.y).toBe(before?.y);
+  }
 });

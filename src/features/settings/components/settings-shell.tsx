@@ -18,8 +18,8 @@ export function SettingsShell({
     (section) => settingsHref(section.slug) === pathname,
   );
   return (
-    <div className="min-h-svh bg-background text-foreground md:grid md:grid-cols-[16.5rem_minmax(0,1fr)]">
-      <aside className="hidden min-h-svh flex-col border-r border-border bg-background px-2 pt-4 pb-2 md:flex">
+    <div className="min-h-svh bg-background text-foreground md:grid md:h-svh md:min-h-0 md:grid-cols-[16.5rem_minmax(0,1fr)] md:overflow-hidden">
+      <aside className="hidden h-svh min-h-0 flex-col border-r border-border bg-background px-2 pt-4 pb-2 md:flex">
         <Link
           href="/activities"
           className="mb-8 flex items-center gap-2 rounded-control px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring"
@@ -32,54 +32,60 @@ export function SettingsShell({
             <span className="text-xs text-muted">Retour à Stride</span>
           </span>
         </Link>
-        {(["You", "Data"] as const).map((group) => (
-          <div key={group} className="mb-4">
-            <p className="mb-1 px-2 font-mono text-label tracking-wider text-muted uppercase">
-              {group === "You" ? "Toi" : "Données"}
-            </p>
-            <nav
-              aria-label={
-                group === "You" ? "Réglages personnels" : "Réglages des données"
-              }
-              className="flex flex-col gap-0.5"
-            >
-              {settingsSections
-                .filter((section) => section.group === group)
-                .map((section) => {
-                  const href = settingsHref(section.slug);
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      aria-current={pathname === href ? "page" : undefined}
-                      className={cn(
-                        "rounded-control px-2 py-2 text-sm text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
-                        pathname === href &&
-                          "bg-surface-raised font-medium text-foreground",
-                      )}
-                    >
-                      {section.label}
-                    </Link>
-                  );
-                })}
-            </nav>
-          </div>
-        ))}
-        <div className="mt-auto flex min-h-12 items-center gap-2.5 px-1.5 text-sm">
-          <span className="grid size-7 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold">
-            {athlete.initials}
-          </span>
-          <span className="flex min-w-0 flex-col text-left">
-            <strong className="truncate text-meta leading-tight">
-              {athlete.name}
-            </strong>
-            <span className="block truncate text-xs text-muted">
-              {athlete.detail}
+        <div className="min-h-0 overflow-y-auto">
+          {(["You", "Data"] as const).map((group) => (
+            <div key={group} className="mb-4">
+              <p className="mb-1 px-2 font-mono text-label tracking-wider text-muted uppercase">
+                {group === "You" ? "Toi" : "Données"}
+              </p>
+              <nav
+                aria-label={
+                  group === "You"
+                    ? "Réglages personnels"
+                    : "Réglages des données"
+                }
+                className="flex flex-col gap-0.5"
+              >
+                {settingsSections
+                  .filter((section) => section.group === group)
+                  .map((section) => {
+                    const href = settingsHref(section.slug);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        aria-current={pathname === href ? "page" : undefined}
+                        className={cn(
+                          "rounded-control px-2 py-2 text-sm text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+                          pathname === href &&
+                            "bg-surface-raised font-medium text-foreground",
+                        )}
+                      >
+                        {section.label}
+                      </Link>
+                    );
+                  })}
+              </nav>
+            </div>
+          ))}
+        </div>
+        <div data-slot="settings-account" className="mt-auto p-2">
+          <div className="flex min-h-12 items-center gap-2.5 px-1.5 text-sm">
+            <span className="grid size-7 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold">
+              {athlete.initials}
             </span>
-          </span>
+            <span className="flex min-w-0 flex-col text-left">
+              <strong className="truncate text-meta leading-tight font-semibold">
+                {athlete.name}
+              </strong>
+              <span className="block truncate text-xs text-muted-foreground">
+                {athlete.detail}
+              </span>
+            </span>
+          </div>
         </div>
       </aside>
-      <main className="min-w-0 p-0 md:p-2">
+      <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-y-auto md:p-2">
         <div className="min-h-svh rounded-surface border-0 border-border bg-background md:min-h-[calc(100svh-1rem)] md:border">
           <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
             <Link
