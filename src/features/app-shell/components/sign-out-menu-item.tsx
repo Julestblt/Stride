@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { clearOnboardingCaches } from "@/features/onboarding/components/use-autosave";
 import { signOut } from "@/server/auth/actions";
+import { AccountMenuSignOutIcon } from "./account-menu-icons";
 
 export function SignOutMenuItem() {
   const [pending, startTransition] = useTransition();
@@ -21,6 +22,7 @@ export function SignOutMenuItem() {
         });
       }}
     >
+      <AccountMenuSignOutIcon />
       {failed ? "Déconnexion impossible. Réessaie." : "Se déconnecter"}
     </DropdownMenuItem>
   );

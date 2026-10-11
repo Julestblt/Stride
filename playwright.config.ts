@@ -18,6 +18,13 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: ["onboarding.spec.ts", "races-course.spec.ts"],
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium-race-course",
+      testMatch: "races-course.spec.ts",
+      dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] },
     },
   ],

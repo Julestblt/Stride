@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 96,
-    "html_exports": 96,
-    "matched": 96,
-    "exact": 96,
+    "screenshots": 98,
+    "html_exports": 98,
+    "matched": 98,
+    "exact": 98,
     "high": 0,
     "uncertain": 0
   },
@@ -1118,6 +1118,32 @@
       "original_export_name": "Settings · Account menu · Desktop-html.zip",
       "matched_confidence": "exact",
       "notes": "Desktop only; no mobile export."
+    },
+    {
+      "id": "settings/keyboard-shortcuts/desktop",
+      "area": "settings",
+      "screen": "keyboard-shortcuts",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/settings/keyboard-shortcuts/screenshots/desktop.png",
+      "html_reference_path": "design/references/settings/keyboard-shortcuts/source/desktop.zip",
+      "original_screenshot_name": "Settings · Keyboard shortcuts · Desktop@1x.png",
+      "original_export_name": "Settings · Keyboard shortcuts · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Desktop keyboard shortcuts help dialog."
+    },
+    {
+      "id": "settings/gestures-commands/mobile",
+      "area": "settings",
+      "screen": "gestures-commands",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/settings/gestures-commands/screenshots/mobile.png",
+      "html_reference_path": "design/references/settings/gestures-commands/source/mobile.zip",
+      "original_screenshot_name": "Settings · Gestures & commands · Mobile@1x.png",
+      "original_export_name": "Settings · Gestures & commands · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Mobile gestures and commands help sheet."
     },
     {
       "id": "auth/check-inbox/desktop",
