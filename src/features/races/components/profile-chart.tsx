@@ -271,7 +271,10 @@ export function ProfileChart({
     <div className={className}>
       <svg
         viewBox={`0 0 ${box.width} ${box.height}`}
-        className={cn("block w-full", inspectable && "cursor-crosshair")}
+        className={cn(
+          "block w-full focus:outline-none",
+          inspectable && "cursor-crosshair",
+        )}
         role="img"
         aria-label={
           hover === null || interactive
@@ -485,6 +488,7 @@ export function ProfileChart({
           return (
             <g
               key={marker.id}
+              className="focus:outline-none"
               tabIndex={inspectable && !interactive ? 0 : undefined}
               role={inspectable && !interactive ? "img" : undefined}
               aria-label={

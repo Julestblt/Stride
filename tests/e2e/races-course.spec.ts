@@ -37,6 +37,23 @@ test("a populated race opens every workspace section on desktop and mobile", asy
       page.getByText("Ravito du Bois", { exact: true }),
     ).toBeVisible();
     await expect(chart.getByText("Ravito du Bois")).toHaveCount(0);
+    await chart.focus();
+    await chart.press("End");
+    await expect(chart).toHaveAttribute("aria-label", /Km 30,0/);
+    await aid.focus();
+    await expect(
+      page.getByText("Ravito du Bois", { exact: true }),
+    ).toBeVisible();
+    await expect
+      .poll(() =>
+        aid.evaluate((element) => getComputedStyle(element).outlineStyle),
+      )
+      .toBe("none");
+    await expect
+      .poll(() =>
+        chart.evaluate((element) => getComputedStyle(element).outlineStyle),
+      )
+      .toBe("none");
     await page.screenshot({
       path: `test-results/race-course-${viewport.width}.png`,
       fullPage: true,
