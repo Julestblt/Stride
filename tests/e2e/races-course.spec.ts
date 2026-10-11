@@ -28,6 +28,15 @@ test("a populated race opens every workspace section on desktop and mobile", asy
     await expect(
       page.getByText("parcours-test.gpx").nth(viewport.width < 500 ? 1 : 0),
     ).toBeVisible();
+    const chart = page
+      .locator('svg[aria-label^="Profil altimétrique"]:visible')
+      .first();
+    const aid = chart.locator('g[aria-label^="Ravito du Bois"]');
+    await aid.locator("circle").first().hover();
+    await expect(
+      page.getByText("Ravito du Bois", { exact: true }),
+    ).toBeVisible();
+    await expect(chart.getByText("Ravito du Bois")).toHaveCount(0);
     await page.screenshot({
       path: `test-results/race-course-${viewport.width}.png`,
       fullPage: true,
