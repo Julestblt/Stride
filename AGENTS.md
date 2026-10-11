@@ -16,7 +16,8 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 ## Working rules
 
 - Inspect existing patterns before introducing another one.
-- Use English for code, identifiers, UI copy, tests, and documentation. Do not add source-code comments or commented-out code.
+- Use English for code, identifiers, tests, and developer documentation. Do not add source-code comments or commented-out code.
+- Stride V1 is French only. Write every user-facing string in French, including UI copy, validation and error messages, accessibility labels, notifications, and product emails. Format athlete-facing dates and numbers for `fr-FR`. Never introduce English fallback copy in the product.
 - Keep TypeScript strict, avoid `any`, and validate external input with Zod.
 - Use named exports by default, small focused modules, and React Server Components unless browser behavior requires a client component.
 - Do not add dependencies without a current architectural need. Do not create empty abstractions, placeholder TODOs, fake agents, or unrelated refactors.

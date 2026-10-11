@@ -10,18 +10,23 @@ import {
   readStoredCounts,
 } from "@/server/settings/data";
 
-export default async function ConnectionsSettingsPage() {
+export default async function ConnexionsSettingsPage() {
   const context = await requireAthlete();
   const [state, counts] = await Promise.all([
     readSettingsConnection(context),
     readStoredCounts(context),
   ]);
-  const status = state.connection?.status ?? "Unavailable";
+  const connected = state.connection?.status === "connected";
+  const status = connected
+    ? "Connecté"
+    : state.connection
+      ? "À vérifier"
+      : "Indisponible";
   return (
     <>
       <SettingsHeading
-        title="Connections"
-        description="Garmin provides recorded activity and health data for your training history."
+        title="Connexions"
+        description="Garmin fournit les activités et les données de santé de ton historique."
       />
       <div className="mb-9 overflow-hidden rounded-surface border border-border bg-surface">
         <div className="flex flex-wrap items-center gap-4 p-5">
@@ -31,18 +36,14 @@ export default async function ConnectionsSettingsPage() {
           <div className="flex-1">
             <h2 className="text-lg font-semibold">Garmin</h2>
             <p className="text-sm text-muted">
-              Connection status:{" "}
-              <span
-                className={
-                  status === "connected" ? "text-success" : "text-warning"
-                }
-              >
-                {status.replaceAll("_", " ")}
+              État de la connexion :{" "}
+              <span className={connected ? "text-success" : "text-warning"}>
+                {status}
               </span>
             </p>
           </div>
           <Button variant="secondary" asChild>
-            <Link href="/settings/connections/garmin">Manage</Link>
+            <Link href="/settings/connections/garmin">Gérer</Link>
           </Button>
         </div>
         <div className="grid grid-cols-2 border-t border-border md:grid-cols-3">
@@ -51,7 +52,7 @@ export default async function ConnectionsSettingsPage() {
               {counts.activities ?? "—"}
             </strong>
             <span className="font-mono text-label text-muted uppercase">
-              Stored activities
+              Activités enregistrées
             </span>
           </div>
           <div className="border-l border-border p-5">
@@ -59,35 +60,35 @@ export default async function ConnectionsSettingsPage() {
               {counts.observations ?? "—"}
             </strong>
             <span className="font-mono text-label text-muted uppercase">
-              Health observations
+              Mesures de santé
             </span>
           </div>
           <div className="col-span-2 border-t border-border p-5 md:col-span-1 md:border-t-0 md:border-l">
             <strong className="block text-sm">
               {state.connection?.lastSyncAt
                 ? new Date(state.connection.lastSyncAt).toLocaleString(
-                    "en-GB",
+                    "fr-FR",
                     { timeZone: "Europe/Paris" },
                   )
-                : "No sync recorded"}
+                : "Aucune synchro enregistrée"}
             </strong>
             <span className="font-mono text-label text-muted uppercase">
-              Last sync
+              Dernière synchro
             </span>
           </div>
         </div>
       </div>
-      <SettingsGroup title="Other sources">
+      <SettingsGroup title="Autres sources">
         <div className="border-b border-border p-4 md:px-0">
-          <strong className="text-sm">Other watches and apps</strong>
+          <strong className="text-sm">Autres montres et applications</strong>
           <p className="mt-1 text-sm text-muted">
-            Additional providers are not supported yet.
+            Les autres fournisseurs ne sont pas encore pris en charge.
           </p>
         </div>
         <div className="p-4 md:px-0">
-          <strong className="text-sm">Manual entries</strong>
+          <strong className="text-sm">Saisie manuelle</strong>
           <p className="mt-1 text-sm text-muted">
-            Adding sessions without a watch is not available yet.
+            L’ajout de séances sans montre n’est pas encore disponible.
           </p>
         </div>
       </SettingsGroup>

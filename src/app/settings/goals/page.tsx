@@ -23,13 +23,23 @@ import {
 } from "@/server/settings/actions";
 
 const focusLabels: Record<GoalFocus, string> = {
-  general_fitness: "General fitness",
-  faster: "Run faster",
+  general_fitness: "Forme générale",
+  faster: "Courir plus vite",
   short_distance: "5K or 10K",
-  half_marathon_marathon: "Half marathon or marathon",
-  trail: "Trail running",
-  ultra_trail: "Ultra trail",
+  half_marathon_marathon: "Semi-marathon ou marathon",
+  trail: "Trail",
+  ultra_trail: "Ultra-trail",
 };
+
+function formatRaceDate(value: string | null) {
+  if (!value) return "Date à définir";
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T00:00:00Z`));
+}
 
 function RaceInputs({
   race,
@@ -51,7 +61,7 @@ function RaceInputs({
         <SettingsField
           id={`${idPrefix}-name`}
           name="name"
-          label="Race name"
+          label="Nom de la course"
           value={race?.name ?? null}
         />
         <SettingsField
@@ -74,7 +84,7 @@ function RaceInputs({
         <SettingsField
           id={`${idPrefix}-elevation`}
           name="elevation_gain_m"
-          label="Elevation gain (m)"
+          label="Dénivelé positif (m)"
           type="number"
           min={0}
           max={30000}
@@ -84,13 +94,13 @@ function RaceInputs({
         <SettingsField
           id={`${idPrefix}-duration`}
           name="target_duration"
-          label="Target time (HH:MM, optional)"
+          label="Temps visé (HH:MM, facultatif)"
           value={race ? formatDuration(race.target_duration_seconds) : null}
         />
       </div>
       <ChoiceRow
         name="priority"
-        legend="Priority"
+        legend="Priorité"
         value={race?.priority ?? "A"}
         options={["A", "B", "C"].map((value) => ({ value, label: value }))}
       />
@@ -115,31 +125,33 @@ export default async function GoalsSettingsPage({
   return (
     <>
       <SettingsHeading
-        title="Goals and races"
-        description="Your priority race and running goal give Stride the context for future training plans."
+        title="Objectifs et courses"
+        description="Ta course prioritaire et ton objectif donnent du contexte à Stride pour tes futurs entraînements."
       />
       <SettingsNotice status={query.status} />
       {primary && (
         <div className="mb-9 rounded-surface border border-accent p-5">
           <span className="font-mono text-label tracking-wider text-accent uppercase">
-            Primary goal
+            Objectif principal
           </span>
           <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
             <strong className="text-xl">{primary.values.name}</strong>
-            <span className="text-muted">{primary.values.race_date}</span>
+            <span className="text-muted">
+              {formatRaceDate(primary.values.race_date)}
+            </span>
           </div>
           <p className="mt-1 text-sm text-muted">
             {primary.values.distance_km} km
             {primary.values.elevation_gain_m
-              ? ` · ${primary.values.elevation_gain_m} m ascent`
+              ? ` · ${primary.values.elevation_gain_m} m D+`
               : ""}
             {primary.values.target_duration_seconds
-              ? ` · target ${formatDuration(primary.values.target_duration_seconds)}`
+              ? ` · objectif ${formatDuration(primary.values.target_duration_seconds)}`
               : ""}
           </p>
         </div>
       )}
-      <SettingsGroup title="Running goal">
+      <SettingsGroup title="Objectif de course">
         <form action={saveSettingsGoal} className="p-4 md:px-0">
           <input
             type="hidden"
@@ -147,7 +159,7 @@ export default async function GoalsSettingsPage({
             value={goals.goal.revision ?? ""}
           />
           <label htmlFor="focus" className="mb-2 block text-sm font-medium">
-            What are you working toward?
+            Quel est ton objectif ?
           </label>
           <select
             id="focus"
@@ -162,13 +174,15 @@ export default async function GoalsSettingsPage({
             ))}
           </select>
           <Button type="submit" className="mt-4">
-            Save goal
+            Enregistrer l’objectif
           </Button>
         </form>
       </SettingsGroup>
-      <SettingsGroup title="Your races">
+      <SettingsGroup title="Tes courses">
         {races.length === 0 ? (
-          <p className="p-4 text-sm text-muted md:px-0">No races added yet.</p>
+          <p className="p-4 text-sm text-muted md:px-0">
+            Aucune course ajoutée.
+          </p>
         ) : (
           races.map((race) => (
             <details
@@ -176,15 +190,16 @@ export default async function GoalsSettingsPage({
               className="border-b border-border p-4 last:border-b-0 md:px-0"
             >
               <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-2 focus-visible:outline-ring">
-                {race.values.name ?? "Unnamed race"}
+                {race.values.name ?? "Course sans nom"}
                 <span className="ml-3 font-normal text-muted">
-                  {race.values.priority} · {race.values.race_date ?? "Set date"}{" "}
-                  · {race.values.distance_km ?? "—"} km
+                  {race.values.priority} ·{" "}
+                  {formatRaceDate(race.values.race_date)} ·{" "}
+                  {race.values.distance_km ?? "—"} km
                 </span>
               </summary>
               <form
                 action={saveSettingsRace}
-                aria-label={`Edit ${race.values.name ?? "race"}`}
+                aria-label={`Modifier ${race.values.name ?? "la course"}`}
                 className="mt-5"
               >
                 <input type="hidden" name="id" value={race.id} />
@@ -195,13 +210,13 @@ export default async function GoalsSettingsPage({
                 />
                 <RaceInputs race={race.values} idPrefix={race.id} />
                 <Button type="submit" className="mt-5">
-                  Save race
+                  Enregistrer la course
                 </Button>
               </form>
               <div className="mt-2">
                 <RemoveRaceButton
                   id={race.id}
-                  name={race.values.name ?? "this race"}
+                  name={race.values.name ?? "cette course"}
                 />
               </div>
             </details>
@@ -209,15 +224,15 @@ export default async function GoalsSettingsPage({
         )}
       </SettingsGroup>
       {races.length < 10 && (
-        <SettingsGroup title="Add a race">
+        <SettingsGroup title="Ajouter une course">
           <form
             action={addSettingsRace}
-            aria-label="Add race"
+            aria-label="Ajouter la course"
             className="p-4 md:px-0"
           >
             <RaceInputs idPrefix="new-race" />
             <Button type="submit" className="mt-5">
-              Add race
+              Ajouter la course
             </Button>
           </form>
         </SettingsGroup>

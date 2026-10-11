@@ -40,16 +40,16 @@ export function SettingsNotice({ status }: { status?: string }) {
   if (!status) return null;
   const message =
     status === "saved"
-      ? "Changes saved."
+      ? "Modifications enregistrées."
       : status === "deleted"
-        ? "Race removed."
+        ? "Course supprimée."
         : status === "conflict"
-          ? "This information changed elsewhere. Review the latest values and try again."
+          ? "Ces informations ont changé. Vérifie les dernières valeurs et réessaie."
           : status === "invalid"
-            ? "Check the entered values and try again."
+            ? "Vérifie les valeurs saisies et réessaie."
             : status === "session-expired"
-              ? "Your session expired. Sign in again."
-              : "Changes could not be saved. Try again.";
+              ? "Ta session a expiré. Connecte-toi à nouveau."
+              : "Impossible d’enregistrer les modifications. Réessaie.";
   return (
     <p
       role="status"

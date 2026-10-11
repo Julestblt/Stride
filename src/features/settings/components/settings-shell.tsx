@@ -19,7 +19,7 @@ export function SettingsShell({
   );
   return (
     <div className="min-h-svh bg-background text-foreground md:grid md:grid-cols-[16.5rem_minmax(0,1fr)]">
-      <aside className="hidden min-h-svh flex-col border-r border-border bg-background px-2.5 py-4 md:flex">
+      <aside className="hidden min-h-svh flex-col border-r border-border bg-background px-2 pt-4 pb-2 md:flex">
         <Link
           href="/activities"
           className="mb-8 flex items-center gap-2 rounded-control px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring"
@@ -28,17 +28,19 @@ export function SettingsShell({
             <ArrowLeftIcon className="size-4" />
           </span>
           <span>
-            <strong className="block">Settings</strong>
-            <span className="text-xs text-muted">Back to Stride</span>
+            <strong className="block">Réglages</strong>
+            <span className="text-xs text-muted">Retour à Stride</span>
           </span>
         </Link>
         {(["You", "Data"] as const).map((group) => (
           <div key={group} className="mb-4">
             <p className="mb-1 px-2 font-mono text-label tracking-wider text-muted uppercase">
-              {group}
+              {group === "You" ? "Toi" : "Données"}
             </p>
             <nav
-              aria-label={`${group} settings`}
+              aria-label={
+                group === "You" ? "Réglages personnels" : "Réglages des données"
+              }
               className="flex flex-col gap-0.5"
             >
               {settingsSections
@@ -63,12 +65,14 @@ export function SettingsShell({
             </nav>
           </div>
         ))}
-        <div className="mt-auto flex items-center gap-2 px-2 pt-8 text-sm">
-          <span className="grid size-8 place-items-center rounded-control bg-surface-raised font-semibold">
+        <div className="mt-auto flex min-h-12 items-center gap-2.5 px-1.5 text-sm">
+          <span className="grid size-7 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold">
             {athlete.initials}
           </span>
-          <span className="min-w-0">
-            <strong className="block truncate">{athlete.name}</strong>
+          <span className="flex min-w-0 flex-col text-left">
+            <strong className="truncate text-meta leading-tight">
+              {athlete.name}
+            </strong>
             <span className="block truncate text-xs text-muted">
               {athlete.detail}
             </span>
@@ -80,18 +84,20 @@ export function SettingsShell({
           <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
             <Link
               href={active?.slug ? "/settings" : "/activities"}
-              aria-label={active?.slug ? "Back to settings" : "Back to Stride"}
+              aria-label={
+                active?.slug ? "Retour aux réglages" : "Retour à Stride"
+              }
               className="rounded-control p-1 text-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring md:hidden"
             >
               <ArrowLeftIcon className="size-4" />
             </Link>
             {active?.slug ? (
               <span className="font-mono text-label tracking-wider text-muted uppercase md:font-sans md:text-sm md:tracking-normal md:normal-case">
-                Settings
+                Réglages
               </span>
             ) : (
               <h1 className="text-2xl font-semibold tracking-tight md:text-sm md:font-normal md:tracking-normal md:text-muted">
-                Settings
+                Réglages
               </h1>
             )}
             {active?.slug && (
@@ -165,7 +171,7 @@ export function SettingsLinkRow({
       className="flex min-h-17 items-center gap-4 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring md:px-0"
     >
       <strong className="min-w-0 flex-1 text-sm">{title}</strong>
-      <span className="max-w-[45%] truncate text-right text-sm text-muted">
+      <span className="max-w-[55%] text-right text-sm text-muted">
         {detail}
       </span>
       <ChevronRightIcon className="size-4 shrink-0 text-muted" />
@@ -187,7 +193,7 @@ export function UnavailableSettingRow({
       <strong className="text-sm font-medium">{title}</strong>
       <p className="text-sm text-muted">{detail}</p>
       <span className="font-mono text-label text-muted uppercase">
-        {value ?? "Unavailable"}
+        {value ?? "Indisponible"}
       </span>
     </div>
   );

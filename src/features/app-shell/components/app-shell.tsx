@@ -81,30 +81,30 @@ export function AppShell({
             sync={sync ? `Garmin ${sync.toLowerCase()}` : undefined}
           >
             <DropdownMenuContent className="w-56" side="top" align="start">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuLabel>Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings/profile">
                   <UserRoundIcon />
-                  Profile
+                  Profil
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <SettingsIcon />
-                  Settings
+                  Réglages
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/connections">
                   <LinkIcon />
-                  Connections
+                  Connexions
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/privacy">
                   <ShieldIcon />
-                  Data and privacy
+                  Données et confidentialité
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

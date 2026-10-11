@@ -13,41 +13,37 @@ export default async function PrivacySettingsPage() {
   return (
     <>
       <SettingsHeading
-        title="Data and privacy"
-        description="Review what Stride currently stores for your account and download a copy of your settings data."
+        title="Données et confidentialité"
+        description="Consulte les données enregistrées dans ton compte et télécharge une copie de tes réglages."
       />
-      <SettingsGroup title="Stored in Stride">
+      <SettingsGroup title="Enregistré dans Stride">
         <div className="border-b border-border p-4 md:px-0">
-          <strong className="text-sm">
-            Garmin activities and observations
-          </strong>
+          <strong className="text-sm">Activités et mesures Garmin</strong>
           <p className="mt-1 text-sm text-muted">
-            {counts.activities ?? "Unknown number of"} activities and{" "}
-            {counts.observations ?? "an unknown number of"} health observations
-            are stored in your account.
+            {counts.activities ?? "—"} activités et {counts.observations ?? "—"}{" "}
+            mesures de santé sont enregistrées dans ton compte.
           </p>
         </div>
         <div className="p-4 md:px-0">
           <strong className="text-sm">
-            Profile, training preferences, goals and races
+            Profil, entraînement, objectifs et courses
           </strong>
           <p className="mt-1 text-sm text-muted">
-            Your answers are stored in your account and remain available after
-            sign in.
+            Tes réponses restent disponibles dans ton compte après connexion.
           </p>
         </div>
       </SettingsGroup>
-      <SettingsGroup title="Your copy">
+      <SettingsGroup title="Ta copie">
         <div className="flex flex-wrap items-center gap-4 p-4 md:px-0">
           <div className="flex-1">
-            <strong className="text-sm">Download settings data</strong>
+            <strong className="text-sm">Télécharger les réglages</strong>
             <p className="mt-1 text-sm text-muted">
-              Profile, goal and race records as JSON. Garmin activity export is
-              not included.
+              Profil, objectifs et courses au format JSON. Les activités Garmin
+              ne sont pas incluses.
             </p>
           </div>
           <Button asChild variant="secondary">
-            <Link href="/settings/export">Download JSON</Link>
+            <Link href="/settings/export">Télécharger le JSON</Link>
           </Button>
         </div>
       </SettingsGroup>
@@ -59,30 +55,32 @@ export default async function PrivacySettingsPage() {
           id="deletion-heading"
           className="border-b border-danger-border px-4 py-4 font-mono text-label tracking-wider text-danger uppercase md:px-5"
         >
-          Deletion
+          Suppression
         </h2>
         <div className="flex flex-wrap items-center gap-4 border-b border-danger-border px-4 py-5 md:px-5">
           <div className="flex-1">
-            <strong className="text-sm">Delete imported Garmin data</strong>
+            <strong className="text-sm">
+              Supprimer les données Garmin importées
+            </strong>
             <p className="mt-1 text-sm text-muted">
-              This action is unavailable while the integration has no deletion
-              contract.
+              Cette action est indisponible tant que l’intégration ne permet pas
+              la suppression.
             </p>
           </div>
           <Button type="button" variant="destructive" disabled>
-            Unavailable
+            Indisponible
           </Button>
         </div>
         <div className="flex flex-wrap items-center gap-4 px-4 py-5 md:px-5">
           <div className="flex-1">
-            <strong className="text-sm">Delete account</strong>
+            <strong className="text-sm">Supprimer le compte</strong>
             <p className="mt-1 text-sm text-muted">
-              Account deletion is unavailable in Settings. Request help from the
-              Stride team through the existing support channel.
+              La suppression du compte est indisponible dans les réglages.
+              Contacte l’équipe Stride par le canal d’assistance habituel.
             </p>
           </div>
           <Button type="button" variant="destructive" disabled>
-            Unavailable
+            Indisponible
           </Button>
         </div>
       </section>

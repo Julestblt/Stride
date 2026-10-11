@@ -10,12 +10,12 @@ import { requireAthlete } from "@/server/app/session";
 import { readProfile } from "@/server/onboarding/profile";
 import { saveSettingsTraining } from "@/server/settings/actions";
 
-const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 const access = [
-  { value: "hills", label: "Hills" },
-  { value: "incline_treadmill", label: "Incline treadmill" },
-  { value: "gym", label: "Gym" },
-  { value: "track", label: "Track" },
+  { value: "hills", label: "Côtes" },
+  { value: "incline_treadmill", label: "Tapis incliné" },
+  { value: "gym", label: "Salle de sport" },
+  { value: "track", label: "Piste" },
 ];
 
 export default async function TrainingSettingsPage({
@@ -29,25 +29,27 @@ export default async function TrainingSettingsPage({
   return (
     <>
       <SettingsHeading
-        title="Training"
-        description="Your running availability and terrain help Stride understand your training context."
+        title="Entraînement et coach"
+        description="Tes disponibilités et ton terrain de course aident Stride à comprendre ton entraînement."
       />
       <SettingsNotice status={query.status} />
       <form action={saveSettingsTraining}>
         <input type="hidden" name="revision" value={profile.revision ?? ""} />
-        <SettingsGroup title="Training">
+        <SettingsGroup title="Entraînement et coach">
           <ChoiceRow
             name="primary_terrain"
-            legend="Primary terrain"
+            legend="Terrain principal"
             value={values.primary_terrain}
             options={[
-              { value: "road", label: "Road" },
+              { value: "road", label: "Route" },
               { value: "trail", label: "Trail" },
-              { value: "mixed", label: "Both" },
+              { value: "mixed", label: "Les deux" },
             ]}
           />
           <fieldset className="border-b border-border px-4 py-4 md:px-0">
-            <legend className="mb-3 text-sm font-medium">Running days</legend>
+            <legend className="mb-3 text-sm font-medium">
+              Jours de course
+            </legend>
             <div className="flex flex-wrap gap-2">
               {weekdays.map((day, index) => (
                 <label key={day} className="cursor-pointer">
@@ -69,17 +71,17 @@ export default async function TrainingSettingsPage({
           </fieldset>
           <ChoiceRow
             name="long_run_day"
-            legend="Long run day"
+            legend="Jour de sortie longue"
             value={values.long_run_day}
             options={[
-              { value: "saturday", label: "Saturday" },
-              { value: "sunday", label: "Sunday" },
+              { value: "saturday", label: "Samedi" },
+              { value: "sunday", label: "Dimanche" },
               { value: "flexible", label: "Flexible" },
             ]}
           />
           <ChoiceRow
             name="weekday_session_minutes"
-            legend="Weekday session length"
+            legend="Durée des séances en semaine"
             value={String(values.weekday_session_minutes ?? "")}
             options={[45, 60, 75, 90].map((minutes) => ({
               value: String(minutes),
@@ -88,7 +90,7 @@ export default async function TrainingSettingsPage({
           />
           <fieldset className="px-4 py-4 md:px-0">
             <legend className="mb-3 text-sm font-medium">
-              Training access
+              Équipements disponibles
             </legend>
             <div className="flex flex-wrap gap-2">
               {access.map((item) => (
@@ -110,41 +112,41 @@ export default async function TrainingSettingsPage({
             </div>
           </fieldset>
         </SettingsGroup>
-        <Button type="submit">Save training preferences</Button>
+        <Button type="submit">Enregistrer les préférences</Button>
       </form>
       <div className="mt-9">
-        <SettingsGroup title="Units">
+        <SettingsGroup title="Unités">
           <UnavailableSettingRow
-            title="Distance and ascent"
-            detail="Stride currently displays kilometres and metres."
+            title="Distance et dénivelé"
+            detail="Stride affiche les kilomètres et les mètres."
             value="km · m"
           />
           <UnavailableSettingRow
-            title="Pace"
-            detail="Recorded running pace is displayed per kilometre."
+            title="Allure"
+            detail="L’allure est affichée au kilomètre."
             value="min/km"
           />
         </SettingsGroup>
       </div>
       <SettingsGroup title="Coach">
         <UnavailableSettingRow
-          title="Tone and detail"
-          detail="Coach conversations are not available yet."
+          title="Ton et niveau de détail"
+          detail="Les conversations avec le coach ne sont pas encore disponibles."
         />
         <UnavailableSettingRow
-          title="Plan changes"
-          detail="Training plans and approval rules are not available yet."
+          title="Modifications du plan"
+          detail="Les plans d’entraînement ne sont pas encore disponibles."
         />
         <UnavailableSettingRow
-          title="Proactive advice"
-          detail="Stride does not send unsolicited coaching advice yet."
+          title="Conseils spontanés"
+          detail="Stride ne propose pas encore de conseils spontanés."
         />
       </SettingsGroup>
       <div id="notifications">
         <SettingsGroup title="Notifications">
           <UnavailableSettingRow
-            title="Reminders and alerts"
-            detail="Notifications are not delivered by Stride yet."
+            title="Rappels et alertes"
+            detail="Stride n’envoie pas encore de notifications."
           />
         </SettingsGroup>
       </div>

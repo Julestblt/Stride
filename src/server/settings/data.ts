@@ -35,6 +35,31 @@ export async function readStoredCounts(context: OnboardingContext) {
   };
 }
 
+export async function readGarminRecentData(context: OnboardingContext) {
+  const [activity, observation] = await Promise.all([
+    context.client
+      .from("provider_activities")
+      .select("activity_name,started_at,imported_at")
+      .eq("user_id", context.userId)
+      .eq("provider", "garmin")
+      .order("imported_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    context.client
+      .from("provider_observations")
+      .select("metric,observed_on,imported_at")
+      .eq("user_id", context.userId)
+      .eq("provider", "garmin")
+      .order("imported_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  return {
+    activity: activity.error ? null : activity.data,
+    observation: observation.error ? null : observation.data,
+  };
+}
+
 export async function readProfileMetrics(context: OnboardingContext) {
   const [maximum, vo2, resting, hrv] = await Promise.all([
     context.client
@@ -75,19 +100,19 @@ export async function readProfileMetrics(context: OnboardingContext) {
   ]);
   return [
     {
-      label: "Maximum heart rate",
+      label: "Fréquence cardiaque maximale",
       value: maximum.error ? null : maximum.data?.max_heart_rate,
       unit: "bpm",
       date: maximum.data?.started_at,
     },
     {
-      label: "Resting heart rate",
+      label: "Fréquence cardiaque au repos",
       value: resting.error ? null : resting.data?.value_numeric,
       unit: "bpm",
       date: resting.data?.observed_on,
     },
     {
-      label: "HRV",
+      label: "VFC",
       value: hrv.error ? null : hrv.data?.value_numeric,
       unit: "ms",
       date: hrv.data?.observed_on,

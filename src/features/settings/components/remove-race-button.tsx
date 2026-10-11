@@ -19,23 +19,25 @@ export function RemoveRaceButton({ id, name }: { id: string; name: string }) {
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button type="button" variant="destructive" size="md">
-          Remove race
+          Supprimer la course
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Remove {name}?</AlertDialogTitle>
+          <AlertDialogTitle>Supprimer {name} ?</AlertDialogTitle>
           <AlertDialogDescription>
-            This removes the race from your goals. Your imported Garmin
-            activities remain available.
+            Cette course sera retirée de tes objectifs. Tes activités Garmin
+            importées resteront disponibles.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <form action={removeSettingsRace}>
           <input type="hidden" name="id" value={id} />
           <AlertDialogFooter>
-            <AlertDialogCancel type="button">Keep race</AlertDialogCancel>
+            <AlertDialogCancel type="button">
+              Garder la course
+            </AlertDialogCancel>
             <AlertDialogAction type="submit" variant="destructive">
-              Remove race
+              Supprimer la course
             </AlertDialogAction>
           </AlertDialogFooter>
         </form>

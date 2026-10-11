@@ -36,8 +36,8 @@ function ProfileRow({
     source?.source === "garmin"
       ? `Garmin · ${source.observed_on}`
       : source?.source === "athlete"
-        ? "Your answer"
-        : "Entered in Stride";
+        ? "Ta réponse"
+        : "Saisi dans Stride";
   return (
     <div className="grid grid-cols-[minmax(7rem,1fr)_minmax(8rem,1.2fr)] items-center gap-x-4 gap-y-1 border-b border-border px-4 py-3.5 last:border-b-0 md:grid-cols-[12rem_20rem_minmax(0,1fr)] md:px-0">
       <label htmlFor={name} className="text-sm font-medium">
@@ -76,37 +76,37 @@ export default async function ProfileSettingsPage({
   return (
     <>
       <SettingsHeading
-        title="Profile"
-        description="Review your details. Values you edit become yours and are not replaced by later Garmin updates."
+        title="Profil"
+        description="Vérifie tes informations. Les valeurs que tu modifies ne seront pas remplacées par Garmin."
       />
       <SettingsNotice status={query.status} />
       <form action={saveSettingsProfile}>
         <input type="hidden" name="revision" value={profile.revision ?? ""} />
-        <SettingsGroup title="You">
+        <SettingsGroup title="Toi">
           <ProfileRow
             name="first_name"
-            label="First name"
+            label="Prénom"
             value={values.first_name}
             source={values.value_sources.first_name}
           />
           <ProfileRow
             name="birth_date"
-            label="Date of birth"
+            label="Date de naissance"
             value={values.birth_date}
             source={values.value_sources.birth_date}
             type="date"
-            note="Used for age-related estimates"
+            note="Utilisée pour les estimations liées à l’âge"
           />
           <div className="border-b border-border px-4 py-4 md:px-0">
             <fieldset className="grid gap-2 md:grid-cols-[12rem_20rem_minmax(0,1fr)] md:items-center">
               <legend className="mb-3 text-sm font-medium md:float-left md:mb-0">
-                Sex for estimates
+                Sexe pour les estimations
               </legend>
               <div className="flex gap-1">
                 {[
-                  { value: "female", label: "Female" },
-                  { value: "male", label: "Male" },
-                  { value: "unspecified", label: "Not specified" },
+                  { value: "female", label: "Femme" },
+                  { value: "male", label: "Homme" },
+                  { value: "unspecified", label: "Non précisé" },
                 ].map((option) => (
                   <label key={option.value} className="cursor-pointer">
                     <input
@@ -124,13 +124,14 @@ export default async function ProfileSettingsPage({
                 ))}
               </div>
               <span className="text-xs text-muted">
-                Used only for energy and heart rate estimates
+                Utilisé uniquement pour les estimations d’énergie et de
+                fréquence cardiaque
               </span>
             </fieldset>
           </div>
           <ProfileRow
             name="height_cm"
-            label="Height (cm)"
+            label="Taille (cm)"
             value={values.height_cm}
             source={values.value_sources.height_cm}
             type="number"
@@ -140,7 +141,7 @@ export default async function ProfileSettingsPage({
           />
           <ProfileRow
             name="weight_kg"
-            label="Weight (kg)"
+            label="Poids (kg)"
             value={values.weight_kg}
             source={values.value_sources.weight_kg}
             type="number"
@@ -149,10 +150,10 @@ export default async function ProfileSettingsPage({
             step="0.1"
           />
         </SettingsGroup>
-        <Button type="submit">Save profile</Button>
+        <Button type="submit">Enregistrer le profil</Button>
       </form>
       {metrics.length > 0 && (
-        <SettingsGroup title="From your training">
+        <SettingsGroup title="Issu de ton entraînement">
           {metrics.map((metric) => (
             <div
               key={metric.label}
