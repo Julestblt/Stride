@@ -207,7 +207,26 @@ const tables = {
     value_numeric: 50,
     availability: "available",
   })),
-  athlete_profiles: [{ first_name: "Jules" }],
+  athlete_profiles: [
+    {
+      user_id: user.id,
+      first_name: "Jules",
+      birth_date: "1991-06-14",
+      sex: "male",
+      height_cm: 178,
+      weight_kg: 68.2,
+      primary_terrain: "trail",
+      available_weekdays: [2, 3, 4, 6, 7],
+      long_run_day: "sunday",
+      weekday_session_minutes: 60,
+      training_access: ["hills", "gym"],
+      value_sources: {
+        weight_kg: { source: "garmin", observed_on: "2026-10-07" },
+      },
+      revision: 1,
+      updated_at: "2026-10-07T00:00:00Z",
+    },
+  ],
   athlete_goals: [
     {
       user_id: user.id,
@@ -296,8 +315,9 @@ const events = [];
 const links = new Map();
 const challenges = new Map();
 const requests = new Map();
+const port = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 createServer(async (request, response) => {
-  const url = new URL(request.url, "http://127.0.0.1:3200");
+  const url = new URL(request.url, `http://127.0.0.1:${port}`);
   let raw = "";
   for await (const chunk of request) raw += chunk;
   const body = raw ? JSON.parse(raw) : {};
@@ -389,6 +409,81 @@ createServer(async (request, response) => {
   if (url.pathname.startsWith("/rest/v1/")) {
     if (request.headers.authorization !== `Bearer ${token}`)
       return send(401, { message: "JWT required" });
+    if (
+      request.method === "PATCH" &&
+      url.pathname === "/rest/v1/athlete_profiles"
+    ) {
+      const profile = tables.athlete_profiles[0];
+      if (
+        url.searchParams.get("user_id") !== `eq.${user.id}` ||
+        url.searchParams.get("revision") !== `eq.${profile.revision}`
+      )
+        return send(200, []);
+      Object.assign(profile, body, {
+        revision: profile.revision + 1,
+        updated_at: new Date().toISOString(),
+      });
+      return send(200, [profile]);
+    }
+    if (
+      request.method === "PATCH" &&
+      url.pathname === "/rest/v1/athlete_goals"
+    ) {
+      const goal = tables.athlete_goals[0];
+      if (
+        url.searchParams.get("user_id") !== `eq.${user.id}` ||
+        url.searchParams.get("revision") !== `eq.${goal.revision}`
+      )
+        return send(200, []);
+      Object.assign(goal, body, {
+        revision: goal.revision + 1,
+        updated_at: new Date().toISOString(),
+      });
+      return send(200, [goal]);
+    }
+    if (url.pathname === "/rest/v1/athlete_races") {
+      if (request.method === "POST") {
+        const race = {
+          id: randomUUID(),
+          user_id: user.id,
+          name: null,
+          race_date: null,
+          distance_km: null,
+          elevation_gain_m: null,
+          priority: "A",
+          target_duration_seconds: null,
+          ...body,
+          revision: 1,
+          updated_at: new Date().toISOString(),
+        };
+        tables.athlete_races.push(race);
+        return send(201, [race]);
+      }
+      if (request.method === "PATCH") {
+        const race = tables.athlete_races.find(
+          (item) =>
+            url.searchParams.get("id") === `eq.${item.id}` &&
+            url.searchParams.get("revision") === `eq.${item.revision}`,
+        );
+        if (!race) return send(200, []);
+        Object.assign(race, body, {
+          revision: race.revision + 1,
+          updated_at: new Date().toISOString(),
+        });
+        return send(200, [race]);
+      }
+      if (request.method === "DELETE") {
+        const ids =
+          url.searchParams
+            .get("id")
+            ?.match(/^in\.\((.+)\)$/)?.[1]
+            .split(",") ?? [];
+        tables.athlete_races = tables.athlete_races.filter(
+          (item) => !ids.includes(item.id),
+        );
+        return send(204, undefined);
+      }
+    }
     const { rows, total } = selectRows(url.pathname.slice(9), url.searchParams);
     return send(200, rows, {
       "Content-Range": rows.length
@@ -397,4 +492,4 @@ createServer(async (request, response) => {
     });
   }
   return send(404, { msg: "Unknown fixture endpoint" });
-}).listen(3200, "127.0.0.1");
+}).listen(port, "127.0.0.1");
