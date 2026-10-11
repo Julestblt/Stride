@@ -66,6 +66,49 @@ test("activities are grouped, filtered through the URL and opened in place", asy
   ).toHaveAttribute("aria-current", "true");
 });
 
+test("the selected preview expands and stays centered on a wide desktop", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/activities");
+  const article = page.getByRole("article");
+  await expect(
+    article.getByRole("heading", { level: 2, name: "Course à pied" }),
+  ).toBeVisible();
+
+  const referenceWidth = await article.evaluate((element) => {
+    const parent = element.parentElement!;
+    return Math.min(parent.clientWidth, 960);
+  });
+  await expect(article).toHaveJSProperty("offsetWidth", referenceWidth);
+  await page.screenshot({
+    path: "test-results/activity-preview-reference-desktop.png",
+  });
+
+  await page.setViewportSize({ width: 2560, height: 1440 });
+
+  const geometry = await article.evaluate((element) => {
+    const article = element.getBoundingClientRect();
+    const pane = element.parentElement!.getBoundingClientRect();
+    return {
+      articleWidth: article.width,
+      articleLeft: article.left,
+      expectedLeft: pane.left + (pane.width - article.width) / 2,
+    };
+  });
+  expect(geometry.articleWidth).toBe(1440);
+  expect(Math.abs(geometry.articleLeft - geometry.expectedLeft)).toBeLessThan(
+    1,
+  );
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(2560);
+  await page.screenshot({
+    path: "test-results/activity-preview-wide-desktop.png",
+  });
+});
+
 test("the list and the detail scroll independently inside a fixed-height shell", async ({
   page,
 }) => {
