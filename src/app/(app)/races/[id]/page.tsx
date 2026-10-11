@@ -4,6 +4,8 @@ import {
   courseReading,
   dayBrief,
   raceStrategy,
+  roadBrief,
+  roadReading,
 } from "@/features/races/reading";
 import { MapCard } from "@/features/races/components/map-card";
 import {
@@ -63,6 +65,22 @@ export default async function RaceCoursePage({
   const { model, planned, scenarios } = views;
   const weather = await weatherFor(data, model, planned);
   const { profile, map } = chartViews(model, planned, weather);
+  const road = data.race.kind === "road";
+  const roadProfile = road
+    ? {
+        ...profile,
+        walk: [],
+        night: [],
+        rain: [],
+        weather: null,
+        segments: [],
+        markers: profile.markers.filter(
+          (marker) =>
+            marker.mark.shape === "circle" &&
+            (marker.mark.tone === "start" || marker.mark.tone === "finish"),
+        ),
+      }
+    : profile;
   const walk = model.walkByThreshold.find(
     (item) => item.threshold === data.plan.walkGradePercent,
   )!;
@@ -80,33 +98,43 @@ export default async function RaceCoursePage({
     <>
       {planned ? (
         <ReadingCard
-          reading={courseReading({
-            model,
-            planned,
-            weather,
-            walkGrade: data.plan.walkGradePercent,
-            date: data.race.date,
-          })}
-          brief={dayBrief({
-            model,
-            planned,
-            weather,
-            walkGrade: data.plan.walkGradePercent,
-          })}
+          reading={
+            road
+              ? roadReading({ model, planned, weather, date: data.race.date })
+              : courseReading({
+                  model,
+                  planned,
+                  weather,
+                  walkGrade: data.plan.walkGradePercent,
+                  date: data.race.date,
+                })
+          }
+          brief={
+            road
+              ? roadBrief({ model, planned, weather })
+              : dayBrief({
+                  model,
+                  planned,
+                  weather,
+                  walkGrade: data.plan.walkGradePercent,
+                })
+          }
           source={source}
         />
       ) : (
         <TargetMissing race={data.race} plan={data.plan} />
       )}
       <MapCard
+        key={data.race.kind}
         data={map}
         fileName={data.course.fileName ?? "parcours.gpx"}
         rainLabel={weather?.mode === "forecast" ? "Averses" : "Météo"}
         hasWeather={profile.rain.length > 0}
         walkThreshold={data.plan.walkGradePercent}
+        kind={data.race.kind}
       />
       <ProfileCard
-        profile={profile}
+        profile={roadProfile}
         planned={planned}
         weather={weather}
         walkThreshold={data.plan.walkGradePercent}
@@ -117,20 +145,22 @@ export default async function RaceCoursePage({
       {weather && planned && (
         <WeatherCard weather={weather} planned={planned} race={data.race} />
       )}
-      <div className="grid items-start gap-5 md:grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))]">
-        <WalkCard
-          raceId={data.race.id}
-          revision={data.plan.revision}
-          threshold={data.plan.walkGradePercent}
-          paceSecondsPerKm={data.plan.walkPaceSecondsPerKm}
-          rows={walkRows}
-          applied={planned !== null}
-        />
-        {planned?.night && planned.night.totalSeconds > 0 && (
-          <NightCard planned={planned} model={model} raceId={data.race.id} />
-        )}
-      </div>
-      {planned && (
+      {!road && (
+        <div className="grid items-start gap-5 md:grid-cols-[repeat(auto-fit,minmax(min(380px,100%),1fr))]">
+          <WalkCard
+            raceId={data.race.id}
+            revision={data.plan.revision}
+            threshold={data.plan.walkGradePercent}
+            paceSecondsPerKm={data.plan.walkPaceSecondsPerKm}
+            rows={walkRows}
+            applied={planned !== null}
+          />
+          {planned?.night && planned.night.totalSeconds > 0 && (
+            <NightCard planned={planned} model={model} raceId={data.race.id} />
+          )}
+        </div>
+      )}
+      {!road && planned && (
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
           <SimulationCard
             model={model}

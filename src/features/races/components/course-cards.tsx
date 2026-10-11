@@ -29,6 +29,7 @@ const briefTones: Record<
   night: "night",
   walk: "accent",
   finish: "success",
+  pace: "accent",
 };
 
 export function ReadingCard({
@@ -100,7 +101,10 @@ export function ProfileCard({
   walkDistanceM: number;
   race: RaceSummary;
 }) {
-  const label = `Profil altimétrique : ${formatKm(profile.distanceM)} km, ${walkCount} portions de marche au-dessus de ${walkThreshold} %`;
+  const road = race.kind === "road";
+  const label = road
+    ? `Profil altimétrique du parcours : ${formatKm(profile.distanceM)} km`
+    : `Profil altimétrique : ${formatKm(profile.distanceM)} km, ${walkCount} portions de marche au-dessus de ${walkThreshold} %`;
   const weatherNote = weather
     ? weather.mode === "forecast"
       ? "Prévisions Open-Meteo · mises à jour chaque matin"
@@ -111,19 +115,21 @@ export function ProfileCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <CardLabel>
           <span className="max-sm:hidden">
-            Profil, passages et météo
+            {road ? "Profil du parcours" : "Profil, passages et météo"}
             {planned
               ? ` · simulation ${formatDuration(planned.scenario.seconds)}`
               : ""}
           </span>
-          <span className="sm:hidden">Profil, passages et météo</span>
+          <span className="sm:hidden">
+            {road ? "Profil du parcours" : "Profil, passages et météo"}
+          </span>
         </CardLabel>
-        {weatherNote && (
+        {!road && weatherNote && (
           <MonoLabel size="micro" className="text-dim max-sm:hidden">
             {weatherNote}
           </MonoLabel>
         )}
-        {weather && (
+        {!road && weather && (
           <MonoLabel size="micro" className="text-dim sm:hidden">
             {weather.mode === "forecast" ? "Prévisions" : "Normales"}
           </MonoLabel>
@@ -141,61 +147,65 @@ export function ProfileCard({
         label={label}
         className="sm:hidden"
       />
-      <div className="flex flex-wrap gap-x-5.5 gap-y-2">
-        <LegendItem
-          mark={<span className="h-0.75 w-4.5 rounded-mark bg-accent" />}
-        >
-          <span className="max-sm:hidden">
-            Marche rapide ≥ {walkThreshold} % · {walkCount} portions ·{" "}
-            {formatDecimal(walkDistanceM / 1000)} km
-          </span>
-          <span className="sm:hidden">Marche ≥ {walkThreshold} %</span>
-        </LegendItem>
-        {profile.night.length > 0 && (
-          <LegendItem
-            mark={<span className="h-2.5 w-3.5 rounded-mark bg-night/35" />}
-          >
-            <span className="max-sm:hidden">De nuit</span>
-            <span className="sm:hidden">Nuit</span>
-          </LegendItem>
-        )}
-        {profile.rain.length > 0 && (
-          <LegendItem
-            mark={
-              <span className="h-2.5 w-3.5 rounded-mark bg-[repeating-linear-gradient(45deg,var(--provider)_0_1px,transparent_1px_4px)]" />
-            }
-          >
-            Averses prévues
-          </LegendItem>
-        )}
-        {planned && (
-          <span className="max-sm:hidden">
+      {!road && (
+        <div className="flex flex-wrap gap-x-5.5 gap-y-2">
+          {!road && (
+            <LegendItem
+              mark={<span className="h-0.75 w-4.5 rounded-mark bg-accent" />}
+            >
+              <span className="max-sm:hidden">
+                Marche rapide ≥ {walkThreshold} % · {walkCount} portions ·{" "}
+                {formatDecimal(walkDistanceM / 1000)} km
+              </span>
+              <span className="sm:hidden">Marche ≥ {walkThreshold} %</span>
+            </LegendItem>
+          )}
+          {!road && profile.night.length > 0 && (
+            <LegendItem
+              mark={<span className="h-2.5 w-3.5 rounded-mark bg-night/35" />}
+            >
+              <span className="max-sm:hidden">De nuit</span>
+              <span className="sm:hidden">Nuit</span>
+            </LegendItem>
+          )}
+          {!road && profile.rain.length > 0 && (
             <LegendItem
               mark={
-                <span className="font-metric text-sm font-semibold text-accent">
-                  {formatClock(planned.simulation.passages[0].clockMinutes)}
-                </span>
+                <span className="h-2.5 w-3.5 rounded-mark bg-[repeating-linear-gradient(45deg,var(--provider)_0_1px,transparent_1px_4px)]" />
               }
             >
-              Passage prévu
+              Averses prévues
             </LegendItem>
-          </span>
-        )}
-        {profile.markers.some((marker) => marker.cutoff) && (
-          <span className="max-sm:hidden">
-            <LegendItem
-              mark={
-                <MonoLabel size="nano" tone="warning">
-                  BH
-                </MonoLabel>
-              }
-            >
-              Barrière horaire
-            </LegendItem>
-          </span>
-        )}
-      </div>
-      {planned && (
+          )}
+          {!road && planned && (
+            <span className="max-sm:hidden">
+              <LegendItem
+                mark={
+                  <span className="font-metric text-sm font-semibold text-accent">
+                    {formatClock(planned.simulation.passages[0].clockMinutes)}
+                  </span>
+                }
+              >
+                Passage prévu
+              </LegendItem>
+            </span>
+          )}
+          {!road && profile.markers.some((marker) => marker.cutoff) && (
+            <span className="max-sm:hidden">
+              <LegendItem
+                mark={
+                  <MonoLabel size="nano" tone="warning">
+                    BH
+                  </MonoLabel>
+                }
+              >
+                Barrière horaire
+              </LegendItem>
+            </span>
+          )}
+        </div>
+      )}
+      {!road && planned && (
         <ul className="flex flex-col sm:hidden">
           {profile.markers
             .filter((marker) => marker.boundary)
@@ -295,6 +305,26 @@ export function WeatherCard({
     )[0].code,
     false,
   );
+  const road = race.kind === "road";
+  const temperature = weather.slots.map((slot) => slot.temperature);
+  const precipitation = weather.slots.map(
+    (slot) => slot.precipitationProbability,
+  );
+  const showSlots =
+    !road ||
+    (weather.mode === "forecast" &&
+      planned.simulation.finishSeconds >= 2 * 3600 &&
+      (Math.max(...temperature) - Math.min(...temperature) >= 2 ||
+        Math.max(...precipitation) - Math.min(...precipitation) >= 20));
+  const minTemperature = Math.round(Math.min(...temperature));
+  const maxTemperature = Math.round(Math.max(...temperature));
+  const weatherDetail =
+    road && minTemperature === maxTemperature
+      ? weather.detail.replace(
+          `${minTemperature} → ${maxTemperature} °C`,
+          `${minTemperature} °C`,
+        )
+      : weather.detail;
   return (
     <RaceCard>
       <div className="flex items-center justify-between gap-3">
@@ -322,7 +352,7 @@ export function WeatherCard({
               : `Normales du ${race.date ? formatShortDate(race.date) : "jour J"}`}
           </MonoLabel>
           <span className="text-lead font-semibold">{weather.title}</span>
-          <span className="text-meta text-muted">{weather.detail}</span>
+          <span className="text-meta text-muted">{weatherDetail}</span>
         </div>
         <div className="flex flex-col gap-0.5 text-right text-xs text-muted">
           {weather.mode === "forecast" ? (
@@ -335,43 +365,51 @@ export function WeatherCard({
           )}
         </div>
       </div>
-      <div className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
-        {weather.slots.map((slot) => {
-          const glyph = glyphFor(slot.code, slot.night);
-          const wet =
-            weather.mode === "forecast" && slot.precipitationProbability >= 50;
-          return (
-            <div
-              key={slot.elapsedSeconds}
-              className={cn(
-                "flex flex-[1_0_58px] flex-col items-center gap-0.75 rounded-surface border px-1 py-2",
-                wet
-                  ? "border-provider/40 bg-provider/15"
-                  : "border-border-subtle bg-surface-inset",
-              )}
-            >
-              <MonoLabel size="nano">
-                {String(
-                  Math.floor((((slot.clockMinutes % 1440) + 1440) % 1440) / 60),
-                ).padStart(2, "0")}
-                h
-              </MonoLabel>
-              <WeatherIcon glyph={glyph} />
-              <span className="font-metric text-lg leading-none font-semibold">
-                {Math.round(slot.temperature)}°
-              </span>
-              <span
-                className={cn("text-micro", wet ? "text-provider" : "text-dim")}
+      {showSlots && (
+        <div className="flex [scrollbar-width:none] gap-1.5 overflow-x-auto">
+          {weather.slots.map((slot) => {
+            const glyph = glyphFor(slot.code, slot.night);
+            const wet =
+              weather.mode === "forecast" &&
+              slot.precipitationProbability >= 50;
+            return (
+              <div
+                key={slot.elapsedSeconds}
+                className={cn(
+                  "flex flex-[1_0_58px] flex-col items-center gap-0.75 rounded-surface border px-1 py-2",
+                  wet
+                    ? "border-provider/40 bg-provider/15"
+                    : "border-border-subtle bg-surface-inset",
+                )}
               >
-                {Math.round(slot.precipitationProbability)} %
-              </span>
-              <MonoLabel size="nano" className="tracking-normal">
-                km {Math.round(slot.distanceM / 1000)}
-              </MonoLabel>
-            </div>
-          );
-        })}
-      </div>
+                <MonoLabel size="nano">
+                  {String(
+                    Math.floor(
+                      (((slot.clockMinutes % 1440) + 1440) % 1440) / 60,
+                    ),
+                  ).padStart(2, "0")}
+                  h
+                </MonoLabel>
+                <WeatherIcon glyph={glyph} />
+                <span className="font-metric text-lg leading-none font-semibold">
+                  {Math.round(slot.temperature)}°
+                </span>
+                <span
+                  className={cn(
+                    "text-micro",
+                    wet ? "text-provider" : "text-dim",
+                  )}
+                >
+                  {Math.round(slot.precipitationProbability)} %
+                </span>
+                <MonoLabel size="nano" className="tracking-normal">
+                  km {Math.round(slot.distanceM / 1000)}
+                </MonoLabel>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <MonoLabel size="nano" className="self-end text-dim">
         {weather.source}
       </MonoLabel>

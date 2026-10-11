@@ -12,6 +12,10 @@ export const raceSections = [
   { path: "/preparation", label: "Préparation", crumb: "Préparation" },
 ] as const;
 
+const roadSections = raceSections.filter(
+  (section) => section.path === "" || section.path === "/preparation",
+);
+
 const extraCrumbs: Record<string, { crumb: string; tab: string }> = {
   "/waypoints": { crumb: "Points de passage", tab: "" },
   "/course": { crumb: "Ajouter le GPX", tab: "" },
@@ -77,7 +81,13 @@ export function RaceBreadcrumb({
   );
 }
 
-export function RaceTabs({ raceId }: { raceId: string }) {
+export function RaceTabs({
+  raceId,
+  kind,
+}: {
+  raceId: string;
+  kind: "road" | "trail";
+}) {
   const pathname = usePathname();
   const base = `/races/${raceId}`;
   const { tab } = sectionOf(pathname, base);
@@ -86,7 +96,7 @@ export function RaceTabs({ raceId }: { raceId: string }) {
       aria-label="Sections de la course"
       className="-mx-5 flex [scrollbar-width:none] gap-6 overflow-x-auto border-b border-border px-5 sm:mx-0 sm:px-0 print:hidden"
     >
-      {raceSections.map((section) => {
+      {(kind === "road" ? roadSections : raceSections).map((section) => {
         const current = section.path === tab;
         return (
           <Link

@@ -22,6 +22,7 @@ export default async function RacePreparationPage({
 }) {
   const { id } = await params;
   const { data, today } = await loadRace(id);
+  const road = data.race.kind === "road";
   const days = data.race.date ? daysUntil(data.race.date, today) : null;
   const phaseIndex =
     days === null || days < 0
@@ -29,9 +30,13 @@ export default async function RacePreparationPage({
       : phases.findIndex((phase) => days > phase.threshold);
   return (
     <>
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div
+        className={`grid items-start gap-5 ${road ? "" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]"}`}
+      >
         <RaceCard>
-          <MonoLabel>Objectif et projection d’arrivée</MonoLabel>
+          <MonoLabel>
+            {road ? "Objectif de course" : "Objectif et projection d’arrivée"}
+          </MonoLabel>
           <div className="flex items-baseline gap-2">
             <span className="font-metric text-[4rem] leading-none font-semibold tabular-nums">
               {data.race.targetSeconds
@@ -42,50 +47,54 @@ export default async function RacePreparationPage({
               <span className="text-sm text-muted">objectif</span>
             )}
           </div>
-          <div className="h-2.5 rounded-full bg-surface-raised" />
+          {!road && <div className="h-2.5 rounded-full bg-surface-raised" />}
           <p className="text-sm leading-relaxed text-muted">
-            {data.race.targetSeconds
-              ? "Aucune projection calculée pour cette course. Ton objectif reste le repère actuel."
-              : "Aucune projection calculée pour cette course. Renseigne ton objectif de temps pour suivre ta préparation."}
+            {road
+              ? "Prépare ta course avec les séances clés et les vérifications du jour J."
+              : data.race.targetSeconds
+                ? "Aucune projection calculée pour cette course. Ton objectif reste le repère actuel."
+                : "Aucune projection calculée pour cette course. Renseigne ton objectif de temps pour suivre ta préparation."}
           </p>
         </RaceCard>
-        <RaceCard>
-          <MonoLabel>
-            {data.race.date
-              ? `Les 4 phases jusqu’au ${formatShortDate(data.race.date)}`
-              : "Les 4 phases de préparation"}
-          </MonoLabel>
-          <div className="flex gap-1.5">
-            {phases.map((phase, index) => (
-              <div
-                key={phase.label}
-                className={`flex min-w-0 flex-col gap-2 ${phase.width}`}
-              >
+        {!road && (
+          <RaceCard>
+            <MonoLabel>
+              {data.race.date
+                ? `Les 4 phases jusqu’au ${formatShortDate(data.race.date)}`
+                : "Les 4 phases de préparation"}
+            </MonoLabel>
+            <div className="flex gap-1.5">
+              {phases.map((phase, index) => (
                 <div
-                  className={`h-2 rounded-full ${index === phaseIndex ? "bg-accent" : "bg-surface-raised"}`}
-                />
-                <span
-                  className={`text-xs sm:text-sm ${index === phaseIndex ? "font-semibold" : "text-muted"}`}
+                  key={phase.label}
+                  className={`flex min-w-0 flex-col gap-2 ${phase.width}`}
                 >
-                  {phase.label}
-                </span>
-                {index === phaseIndex && (
-                  <span className="text-xs text-muted">tu es ici</span>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted">
-            Repères indicatifs à adapter à ton plan d’entraînement.
-          </p>
-          <Link
-            href="/plan"
-            className="inline-flex items-center gap-1 text-sm text-accent hover:text-foreground"
-          >
-            Voir le plan semaine par semaine{" "}
-            <ArrowRightIcon className="size-3.5" />
-          </Link>
-        </RaceCard>
+                  <div
+                    className={`h-2 rounded-full ${index === phaseIndex ? "bg-accent" : "bg-surface-raised"}`}
+                  />
+                  <span
+                    className={`text-xs sm:text-sm ${index === phaseIndex ? "font-semibold" : "text-muted"}`}
+                  >
+                    {phase.label}
+                  </span>
+                  {index === phaseIndex && (
+                    <span className="text-xs text-muted">tu es ici</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted">
+              Repères indicatifs à adapter à ton plan d’entraînement.
+            </p>
+            <Link
+              href="/plan"
+              className="inline-flex items-center gap-1 text-sm text-accent hover:text-foreground"
+            >
+              Voir le plan semaine par semaine{" "}
+              <ArrowRightIcon className="size-3.5" />
+            </Link>
+          </RaceCard>
+        )}
       </div>
       <ChecklistBoard
         raceId={id}

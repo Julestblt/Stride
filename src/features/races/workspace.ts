@@ -114,10 +114,18 @@ export function courseModel(
   stored: StoredCourse,
   waypoints: Waypoint[],
   plan: RacePlan,
+  kind: RaceSummary["kind"] = "trail",
 ): CourseModel {
   const course = courseFromStored(stored);
   const grades = gradesOf(course);
-  const complete = completeWaypoints(waypoints, course);
+  const complete = completeWaypoints(
+    kind === "road"
+      ? waypoints.filter(
+          (waypoint) => waypoint.kind === "start" || waypoint.kind === "finish",
+        )
+      : waypoints,
+    course,
+  );
   const thresholds = [
     ...new Set([...walkThresholds, plan.walkGradePercent]),
   ].sort((a, b) => a - b);
@@ -126,10 +134,15 @@ export function courseModel(
     waypoints: complete,
     marks: waypointMarks(complete),
     grades,
-    portions: walkPortions(course, plan.walkGradePercent, grades),
+    portions:
+      kind === "road"
+        ? []
+        : walkPortions(course, plan.walkGradePercent, grades),
     walkByThreshold: thresholds.map((threshold) => ({
       threshold,
-      ...walkSummary(walkPortions(course, threshold, grades)),
+      ...walkSummary(
+        kind === "road" ? [] : walkPortions(course, threshold, grades),
+      ),
     })),
   };
 }
@@ -167,8 +180,8 @@ export function planModel({
     {
       targetSeconds: scenario.seconds,
       walkPaceSecondsPerKm: plan.walkPaceSecondsPerKm,
-      aidStopSeconds: plan.aidStopSeconds,
-      waterStopSeconds: plan.waterStopSeconds,
+      aidStopSeconds: race.kind === "road" ? 0 : plan.aidStopSeconds,
+      waterStopSeconds: race.kind === "road" ? 0 : plan.waterStopSeconds,
       startMinutes,
     },
   );

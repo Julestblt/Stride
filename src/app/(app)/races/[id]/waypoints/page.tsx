@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState, RaceCard } from "@/features/races/components/race-ui";
 import { WaypointWorkspace } from "@/features/races/components/waypoint-workspace";
@@ -13,6 +14,7 @@ export default async function WaypointsPage({
 }) {
   const { id } = await params;
   const { data } = await loadRace(id);
+  if (data.race.kind === "road") redirect(`/races/${id}`);
   if (!data.course)
     return (
       <RaceCard>

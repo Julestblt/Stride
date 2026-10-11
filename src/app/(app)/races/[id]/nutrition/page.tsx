@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export default async function NutritionPage({
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const { data } = await loadRace(id);
+  if (data.race.kind === "road") redirect(`/races/${id}`);
   const views = planFor(data, scenarioSchema.parse(query.scenario));
 
   if (!views?.planned) {

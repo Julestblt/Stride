@@ -33,6 +33,13 @@ import {
   summarizeForecast,
   type WeatherSlot,
 } from "@/features/races/weather";
+import {
+  defaultPlan,
+  type RaceSummary,
+  type StoredCourse,
+} from "@/features/races/race";
+import { courseModel, planModel } from "@/features/races/workspace";
+import { roadBrief, roadReading } from "@/features/races/reading";
 
 const metersPerDegree = 111_195;
 
@@ -124,6 +131,62 @@ describe("race simulation", () => {
       targetSeconds: 1800,
     });
     expect(fast.feasible).toBe(false);
+  });
+});
+
+describe("road race simulation", () => {
+  it("uses the target time as running time without trail stops or walking", () => {
+    const course = buildCourse(rolling(10_000))!;
+    const stored: StoredCourse = {
+      ...course,
+      source: "gpx",
+      fileName: "10k.gpx",
+      sourceActivityId: null,
+      timeZone: "Europe/Paris",
+      importedAt: "2026-10-11T00:00:00Z",
+    };
+    const race: RaceSummary = {
+      id: "race",
+      name: "10 km",
+      kind: "road",
+      date: null,
+      distanceKm: 10,
+      elevationGainM: null,
+      priority: "B",
+      targetSeconds: 39 * 60,
+      revision: 1,
+    };
+    const model = courseModel(
+      stored,
+      [waypoint("aid", "aid", 5_000)],
+      defaultPlan,
+      race.kind,
+    );
+    const planned = planModel({
+      model,
+      race,
+      plan: defaultPlan,
+      scenario: { key: "target", label: "objectif", seconds: 39 * 60 },
+      timeZone: stored.timeZone,
+    });
+    expect(model.waypoints.map((point) => point.kind)).toEqual([
+      "start",
+      "finish",
+    ]);
+    expect(model.portions).toEqual([]);
+    expect(planned.simulation.stops).toEqual([]);
+    expect(planned.simulation.finishSeconds).toBe(39 * 60);
+    expect(planned.simulation.segments).toHaveLength(1);
+    expect(planned.simulation.segments[0].paceSecondsPerKm).toBeCloseTo(
+      (39 * 60) / 10,
+      0,
+    );
+    const reading = roadReading({ model, planned, weather: null, date: null });
+    expect(reading.body).toContain("3:54 /km");
+    expect(reading.body).not.toMatch(/frontale|marche|ravito/i);
+    expect(
+      roadBrief({ model, planned, weather: null }).map((item) => item.key),
+    ).toEqual(["pace", "finish"]);
   });
 });
 
@@ -242,6 +305,7 @@ describe("formatting", () => {
     expect(parseClock("24:00")).toBeNull();
     expect(parseHoursMinutes("18h30")).toBe(66_600);
     expect(parseHoursMinutes("20h")).toBe(72_000);
+    expect(parseHoursMinutes(formatDuration(39 * 60))).toBe(39 * 60);
   });
 });
 

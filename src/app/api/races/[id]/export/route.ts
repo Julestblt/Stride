@@ -30,7 +30,12 @@ export async function GET(
   if (!context) return json({ status: "session-expired" }, 401);
   const data = await readWorkspace(context, id.data).catch(() => null);
   if (!data?.course) return json({ status: "missing" }, 404);
-  const model = courseModel(data.course, data.waypoints, data.plan);
+  const model = courseModel(
+    data.course,
+    data.waypoints,
+    data.plan,
+    data.race.kind,
+  );
   const scenario = scenariosOf(data.race, data.plan).find(
     (item) => item.key === "target",
   );

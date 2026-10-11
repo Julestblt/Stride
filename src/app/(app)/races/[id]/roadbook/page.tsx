@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { ProfileChart } from "@/features/races/components/profile-chart";
@@ -28,6 +29,7 @@ export default async function RoadbookPage({
 }) {
   const { id } = await params;
   const { data } = await loadRace(id);
+  if (data.race.kind === "road") redirect(`/races/${id}`);
   const base = `/races/${id}`;
   if (!data.course)
     return (

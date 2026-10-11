@@ -43,22 +43,25 @@ export function MapCard({
   rainLabel,
   hasWeather,
   walkThreshold,
+  kind = "trail",
 }: {
   data: MapData;
   walkThreshold: number;
   fileName: string;
   rainLabel: "Météo" | "Averses";
   hasWeather: boolean;
+  kind?: "road" | "trail";
 }) {
+  const road = kind === "road";
   const [layers, setLayers] = useState<MapLayers>({
-    markers: true,
-    walk: true,
-    night: true,
-    rain: rainLabel === "Averses",
+    markers: !road,
+    walk: !road,
+    night: !road,
+    rain: !road && rainLabel === "Averses",
   });
   const toggle = (key: keyof MapLayers) => (pressed: boolean) =>
     setLayers((current) => ({ ...current, [key]: pressed }));
-  const chips = (
+  const chips = road ? null : (
     <>
       <LayerChip
         pressed={layers.markers}
@@ -106,12 +109,14 @@ export function MapCard({
       <RaceMap
         data={data}
         layers={layers}
-        label={`Carte du parcours, ${formatKm(data.distanceM)} km, ${data.markers.length} points de passage`}
+        label={`Carte du parcours, ${formatKm(data.distanceM)} km${road ? "" : `, ${data.markers.length} points de passage`}`}
         className="h-60 sm:h-105"
       />
-      <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-3 py-3 sm:hidden">
-        {chips}
-      </div>
+      {chips && (
+        <div className="flex [scrollbar-width:none] gap-2 overflow-x-auto px-3 py-3 sm:hidden">
+          {chips}
+        </div>
+      )}
     </section>
   );
 }

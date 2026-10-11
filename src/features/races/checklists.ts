@@ -161,6 +161,36 @@ export const checklistTemplates: Partial<Record<ChecklistList, Template[]>> = {
   ],
 };
 
+const roadPreparationTemplates: Partial<Record<ChecklistList, Template[]>> = {
+  prep_week: [
+    { label: "Vérifier le lieu et l’heure du départ" },
+    { label: "Prévoir le trajet et le stationnement" },
+    { label: "Tester la tenue et les chaussures de course" },
+    { label: "Vérifier les prévisions météo" },
+  ],
+  prep_eve: [
+    { label: "Retirer le dossard ou préparer la confirmation d’inscription" },
+    { label: "Préparer dossard, épingles, tenue et chaussures" },
+    { label: "Charger la montre et le téléphone" },
+    { label: "Confirmer le trajet vers le départ" },
+  ],
+  prep_race_day: [
+    { label: "Prendre un petit-déjeuner déjà testé" },
+    { label: "Prévoir le temps d’échauffement" },
+    { label: "Vérifier la météo et adapter la tenue" },
+    { label: "Rejoindre le sas de départ à temps" },
+  ],
+};
+
+export function checklistTemplateFor(
+  kind: "road" | "trail",
+  list: ChecklistList,
+) {
+  return kind === "road"
+    ? (roadPreparationTemplates[list] ?? checklistTemplates[list])
+    : checklistTemplates[list];
+}
+
 export function gearReadiness(items: ChecklistItem[]) {
   const counted = items.filter(
     (item) => item.list !== "gear_forbidden" && item.status !== "weather",

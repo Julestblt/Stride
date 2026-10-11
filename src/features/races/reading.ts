@@ -19,13 +19,80 @@ import { isStation } from "./waypoints";
 import type { CourseModel, RacePlanModel } from "./workspace";
 
 export type BriefItem = {
-  key: "weather" | "night" | "walk" | "finish";
+  key: "weather" | "night" | "walk" | "finish" | "pace";
   label: string;
   value: string;
 };
 
 export type Reading = { title: string; body: string };
 export type StrategyItem = { title: string; body: string };
+
+export function roadReading({
+  model,
+  planned,
+  weather,
+  date,
+}: {
+  model: CourseModel;
+  planned: RacePlanModel;
+  weather: RaceWeather | null;
+  date: string | null;
+}): Reading {
+  const distanceKm = model.course.distanceM / 1000;
+  const pace = planned.scenario.seconds / distanceKm;
+  const start = formatClock(planned.simulation.passages[0].clockMinutes);
+  const sentences = [
+    `Départ prévu à ${start}. Ton objectif de ${formatDuration(planned.scenario.seconds)} correspond à une allure moyenne de ${formatPace(pace)} /km.`,
+  ];
+  if (weather?.mode === "normals" && date)
+    sentences.push(
+      `Les normales de saison donnent un premier repère météo. Les prévisions seront disponibles dès le ${formatShortDate(weather.forecastFrom)}.`,
+    );
+  if (weather?.mode === "forecast")
+    sentences.push(
+      `Prévision au départ : ${formatTemperature(weather.slots[0].temperature)} °C.`,
+    );
+  return {
+    title: `${formatDecimal(distanceKm)} km sur route · ${formatPace(pace)} /km visés.`,
+    body: sentences.join(" "),
+  };
+}
+
+export function roadBrief({
+  model,
+  planned,
+  weather,
+}: {
+  model: CourseModel;
+  planned: RacePlanModel;
+  weather: RaceWeather | null;
+}): BriefItem[] {
+  const pace = planned.scenario.seconds / (model.course.distanceM / 1000);
+  const items: BriefItem[] = [
+    { key: "pace", label: "Allure visée", value: `${formatPace(pace)} /km` },
+  ];
+  if (weather) {
+    const { min, max } = temperatureRange(weather.slots);
+    items.push({
+      key: "weather",
+      label: "Météo",
+      value:
+        weather.mode === "normals"
+          ? `Normales · ${min === max ? `${min} °C` : `${min} → ${max} °C`}`
+          : min === max
+            ? `${min} °C`
+            : `${min} → ${max} °C`,
+    });
+  }
+  const finish = planned.simulation.passages.at(-1);
+  if (finish)
+    items.push({
+      key: "finish",
+      label: "Arrivée prévue",
+      value: formatClock(finish.clockMinutes),
+    });
+  return items;
+}
 
 function kmText(meters: number) {
   return `km ${Math.round(meters / 1000)}`;

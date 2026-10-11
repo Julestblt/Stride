@@ -31,7 +31,12 @@ export function planFor(
   scenarioKey: ScenarioKey | null = null,
 ) {
   if (!data.course) return null;
-  const model = courseModel(data.course, data.waypoints, data.plan);
+  const model = courseModel(
+    data.course,
+    data.waypoints,
+    data.plan,
+    data.race.kind,
+  );
   const scenarios = scenariosOf(data.race, data.plan);
   const scenario =
     scenarios.find((item) => item.key === scenarioKey) ??

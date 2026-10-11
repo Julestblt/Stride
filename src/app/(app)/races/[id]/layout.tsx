@@ -40,7 +40,7 @@ export default async function RaceLayout({
             waypointCount={data.waypoints.length}
             today={today}
           />
-          <RaceTabs raceId={data.race.id} />
+          <RaceTabs raceId={data.race.id} kind={data.race.kind} />
           {children}
         </main>
       </div>

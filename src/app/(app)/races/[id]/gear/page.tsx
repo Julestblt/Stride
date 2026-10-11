@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { StrideMark } from "@/components/stride/stride-mark";
@@ -18,6 +19,7 @@ export default async function RaceGearPage({
 }) {
   const { id } = await params;
   const { data } = await loadRace(id);
+  if (data.race.kind === "road") redirect(`/races/${id}`);
   const items = data.checklist.filter((item) =>
     gearLists.some((list) => list === item.list),
   );
