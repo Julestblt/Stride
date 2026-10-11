@@ -120,6 +120,7 @@ export default async function RaceCoursePage({
                 })
           }
           source={source}
+          road={road}
         />
       ) : (
         <TargetMissing race={data.race} plan={data.plan} />

@@ -36,16 +36,20 @@ export function ReadingCard({
   reading,
   brief,
   source,
+  road = false,
 }: {
   reading: Reading;
   brief: BriefItem[];
   source: string;
+  road?: boolean;
 }) {
   return (
     <RaceCard className="gap-8 px-5 py-6 sm:flex-row sm:flex-wrap sm:px-7 sm:py-6.5">
       <div className="flex min-w-0 flex-col gap-3 sm:flex-[1.5_1_460px]">
         <CardLabel coach>
-          <span className="max-sm:hidden">Lecture de Stride · {source}</span>
+          <span className="max-sm:hidden">
+            {road ? "Repères de course" : "Lecture de Stride"} · {source}
+          </span>
           <span className="sm:hidden">Le jour J en bref</span>
         </CardLabel>
         <p className="text-[1.375rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-headline">
