@@ -1,12 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const appPort = Number(process.env.PLAYWRIGHT_APP_PORT ?? 3100);
+const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   testIgnore: "onboarding.spec.ts",
   reporter: "list",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: `http://127.0.0.1:${appPort}`,
     trace: "retain-on-failure",
     launchOptions: {
       args: ["--host-resolver-rules=MAP stride.test 127.0.0.1"],
@@ -20,22 +23,22 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "node tests/fixtures/auth-provider.mjs",
-      url: "http://127.0.0.1:3200",
+      command: `PLAYWRIGHT_AUTH_PORT=${authPort} node tests/fixtures/auth-provider.mjs`,
+      url: `http://127.0.0.1:${authPort}`,
       reuseExistingServer: false,
     },
     {
-      command: "npm run dev -- --port 3100",
-      url: "http://127.0.0.1:3100",
+      command: `npm run dev -- --port ${appPort}`,
+      url: `http://127.0.0.1:${appPort}`,
       reuseExistingServer: false,
       timeout: 120_000,
       env: {
         PLAYWRIGHT_TEST: "1",
         ONBOARDING_ENABLED: "false",
         ALLOWED_DEV_ORIGINS: "stride.test",
-        NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:3200",
+        NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${authPort}`,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "isolated-test-publishable-key",
-        SITE_URL: "http://127.0.0.1:3100",
+        SITE_URL: `http://127.0.0.1:${appPort}`,
       },
     },
   ],

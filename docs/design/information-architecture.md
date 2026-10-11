@@ -23,6 +23,8 @@ On desktop the application shell is fixed to the viewport height and the page it
 
 Account, data connections, permissions, and preferences belong in a secondary profile/settings area. Race planning should appear within Plan when a goal race exists; a dedicated Races destination should be added only if race tasks form a frequent, distinct journey.
 
+The secondary `/settings` area now links from the account menu and contains the overview, profile, training availability, goals and races, Garmin connection status, and data/privacy pages. Profile and training edits reuse the onboarding records and preserve Garmin provenance on unchanged values. Goal and race edits use the same persisted records and revision checks. Connection pages show observed integration status and stored counts; they do not offer manual sync, reconnect or disconnect until the Garmin service exposes those operations. Data/privacy provides an authenticated JSON copy of profile, goal and race records. Coach preferences, notifications, athlete-model percentages, Garmin activity export and deletion controls await their underlying capabilities.
+
 ## Primary navigation paths
 
 1. First session: Today explains the next step and guides the athlete to complete only the context needed to get value.
