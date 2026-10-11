@@ -1,6 +1,8 @@
-import { ActivityIcon } from "lucide-react";
+import Link from "next/link";
+import { ActivityIcon, SettingsIcon } from "lucide-react";
 import {
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -75,6 +77,12 @@ export function AppShell({
             <DropdownMenuContent className="w-56" side="top" align="start">
               <DropdownMenuLabel>Compte</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <SettingsIcon />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
               <SignOutMenuItem />
             </DropdownMenuContent>
           </NavUser>
