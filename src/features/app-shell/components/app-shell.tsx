@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ActivityIcon,
-  LinkIcon,
-  SettingsIcon,
-  ShieldIcon,
-  UserRoundIcon,
-} from "lucide-react";
+import { ActivityIcon } from "lucide-react";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,6 +22,13 @@ import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
 import type { ShellAthlete, ShellGoal } from "@/features/app-shell/shell";
 import { ShellNavItem } from "./shell-nav-item";
 import { SignOutMenuItem } from "./sign-out-menu-item";
+import { ShortcutHelp, ShortcutHelpMenuItem } from "./shortcut-help";
+import {
+  AccountMenuConnectionsIcon,
+  AccountMenuPrivacyIcon,
+  AccountMenuProfileIcon,
+  AccountMenuSettingsIcon,
+} from "./account-menu-icons";
 
 export function AppShell({
   athlete,
@@ -47,6 +48,7 @@ export function AppShell({
       defaultOpen={defaultOpen}
       className="h-svh overflow-hidden"
     >
+      <ShortcutHelp />
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <NavGoalSwitcher
@@ -85,28 +87,29 @@ export function AppShell({
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/settings/profile">
-                  <UserRoundIcon />
+                  <AccountMenuProfileIcon />
                   Profil
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">
-                  <SettingsIcon />
+                  <AccountMenuSettingsIcon />
                   Réglages
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/connections">
-                  <LinkIcon />
+                  <AccountMenuConnectionsIcon />
                   Connexions
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings/privacy">
-                  <ShieldIcon />
+                  <AccountMenuPrivacyIcon />
                   Données et confidentialité
                 </Link>
               </DropdownMenuItem>
+              <ShortcutHelpMenuItem />
               <DropdownMenuSeparator />
               <SignOutMenuItem />
             </DropdownMenuContent>

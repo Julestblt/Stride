@@ -86,6 +86,16 @@ function SidebarProvider({
   }, [isMobile, setOpen, setOpenMobile]);
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest(
+            "input, textarea, select, [contenteditable='true']",
+          ) !== null)
+      ) {
+        return;
+      }
       if (
         event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
         (event.metaKey || event.ctrlKey)

@@ -8,6 +8,83 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL("/");
 }
 
+test("keyboard help is searchable, platform-aware and available from the account menu", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto("/activities");
+  await page.getByRole("button", { name: "Jules athlete@example.com" }).click();
+  await page.getByRole("menuitem", { name: "Raccourcis clavier" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Raccourcis clavier" });
+  await expect(dialog).toBeVisible();
+  const search = dialog.getByRole("textbox", {
+    name: "Rechercher un raccourci",
+  });
+  const searchLabel = search.locator("xpath=..");
+  const inputBounds = await search.boundingBox();
+  const iconBounds = await searchLabel.locator("svg").boundingBox();
+  expect(inputBounds).not.toBeNull();
+  expect(iconBounds).not.toBeNull();
+  expect(
+    Math.abs(
+      inputBounds!.y +
+        inputBounds!.height / 2 -
+        iconBounds!.y -
+        iconBounds!.height / 2,
+    ),
+  ).toBeLessThan(1);
+  await expect(searchLabel.locator("kbd")).toHaveCount(0);
+  await search.focus();
+  await page.keyboard.type("?");
+  await expect(search).toHaveValue("?");
+  await expect(dialog).toBeVisible();
+  await search.fill("réglages");
+  await expect(dialog.getByText("Ouvrir les réglages")).toBeVisible();
+  await expect(dialog.getByText("Ouvrir les activités")).toHaveCount(0);
+
+  await dialog.getByRole("button", { name: /Windows/ }).click();
+  await expect(dialog.getByText("Ctrl", { exact: true }).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  await page.keyboard.press("Shift+/");
+  await expect(dialog).toBeVisible();
+  await search.fill("terme introuvable");
+  await expect(dialog.getByRole("status")).toHaveText(
+    "Aucun raccourci trouvé.",
+  );
+});
+
+test("mobile account menu opens gesture help and a connected keyboard opens shortcut help", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/activities");
+  await page
+    .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Jules athlete@example.com" }).click();
+  await page.getByRole("menuitem", { name: "Gestes et commandes" }).click();
+
+  const gestures = page.getByRole("dialog", { name: "Gestes et commandes" });
+  await expect(gestures).toBeVisible();
+  await expect(gestures.getByText("Faire défiler une liste")).toBeVisible();
+
+  await page.keyboard.press("Shift+/");
+  await expect(
+    page.getByRole("dialog", { name: "Raccourcis clavier" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
 test("settings requires a signed-in athlete", async ({ page }) => {
   await page.goto("/settings/profile");
   await expect(page).toHaveURL(/\/sign-in$/);
@@ -166,7 +243,9 @@ test("settings pages use the available desktop width and center on wide screens"
     const bounds = await content.boundingBox();
     expect(bounds?.width).toBeGreaterThan(1000);
     if (route === "/settings") {
-      await page.screenshot({ path: "test-results/settings-laptop-layout.png" });
+      await page.screenshot({
+        path: "test-results/settings-laptop-layout.png",
+      });
     }
   }
 
