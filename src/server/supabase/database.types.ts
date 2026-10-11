@@ -98,6 +98,7 @@ export type Database = {
           name: string | null;
           priority: string;
           race_date: string | null;
+          race_kind: string;
           revision: number;
           target_duration_seconds: number | null;
           updated_at: string;
@@ -112,6 +113,7 @@ export type Database = {
           name?: string | null;
           priority?: string;
           race_date?: string | null;
+          race_kind?: string;
           revision?: number;
           target_duration_seconds?: number | null;
           updated_at?: string;
@@ -125,6 +127,7 @@ export type Database = {
           name?: string | null;
           priority?: string;
           race_date?: string | null;
+          race_kind?: string;
           revision?: number;
           target_duration_seconds?: number | null;
           updated_at?: string;
@@ -595,6 +598,282 @@ export type Database = {
           },
         ];
       };
+      race_checklist_items: {
+        Row: {
+          checked: boolean;
+          created_at: string;
+          detail: string | null;
+          end_date: string | null;
+          id: string;
+          label: string;
+          list: string;
+          position: number;
+          race_id: string;
+          revision: number;
+          start_date: string | null;
+          status: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          checked?: boolean;
+          created_at?: string;
+          detail?: string | null;
+          end_date?: string | null;
+          id?: string;
+          label: string;
+          list: string;
+          position?: number;
+          race_id: string;
+          revision?: number;
+          start_date?: string | null;
+          status?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          checked?: boolean;
+          created_at?: string;
+          detail?: string | null;
+          end_date?: string | null;
+          id?: string;
+          label?: string;
+          list?: string;
+          position?: number;
+          race_id?: string;
+          revision?: number;
+          start_date?: string | null;
+          status?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "race_checklist_items_race_id_fkey";
+            columns: ["race_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_races";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      race_courses: {
+        Row: {
+          created_at: string;
+          distance_m: number;
+          elevation_gain_m: number | null;
+          elevation_loss_m: number | null;
+          file_name: string | null;
+          imported_at: string;
+          points: NonNullable<Json>;
+          race_id: string;
+          revision: number;
+          source: string;
+          source_activity_id: string | null;
+          step_m: number;
+          time_zone: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          distance_m: number;
+          elevation_gain_m?: number | null;
+          elevation_loss_m?: number | null;
+          file_name?: string | null;
+          imported_at?: string;
+          points: NonNullable<Json>;
+          race_id: string;
+          revision?: number;
+          source: string;
+          source_activity_id?: string | null;
+          step_m: number;
+          time_zone?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          distance_m?: number;
+          elevation_gain_m?: number | null;
+          elevation_loss_m?: number | null;
+          file_name?: string | null;
+          imported_at?: string;
+          points?: NonNullable<Json>;
+          race_id?: string;
+          revision?: number;
+          source?: string;
+          source_activity_id?: string | null;
+          step_m?: number;
+          time_zone?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "race_courses_race_id_fkey";
+            columns: ["race_id"];
+            isOneToOne: true;
+            referencedRelation: "athlete_races";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      race_plans: {
+        Row: {
+          aid_stop_seconds: number;
+          ambitious_duration_seconds: number | null;
+          carbs_per_hour_g: number;
+          cautious_duration_seconds: number | null;
+          created_at: string;
+          cutoff_duration_seconds: number | null;
+          labels: string[];
+          night_caffeine: boolean;
+          nutrition_alarm_minutes: number;
+          race_id: string;
+          revision: number;
+          roadbook_import: Json | null;
+          sodium_mg_per_hour: number;
+          start_time: string | null;
+          start_time_confirmed: boolean;
+          updated_at: string;
+          user_id: string;
+          walk_grade_percent: number;
+          walk_pace_seconds_per_km: number;
+          water_ml_per_hour: number;
+          water_stop_seconds: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          aid_stop_seconds?: number;
+          ambitious_duration_seconds?: number | null;
+          carbs_per_hour_g?: number;
+          cautious_duration_seconds?: number | null;
+          created_at?: string;
+          cutoff_duration_seconds?: number | null;
+          labels?: string[];
+          night_caffeine?: boolean;
+          nutrition_alarm_minutes?: number;
+          race_id: string;
+          revision?: number;
+          roadbook_import?: Json | null;
+          sodium_mg_per_hour?: number;
+          start_time?: string | null;
+          start_time_confirmed?: boolean;
+          updated_at?: string;
+          user_id: string;
+          walk_grade_percent?: number;
+          walk_pace_seconds_per_km?: number;
+          water_ml_per_hour?: number;
+          water_stop_seconds?: number;
+        };
+        Update: {
+          aid_stop_seconds?: number;
+          ambitious_duration_seconds?: number | null;
+          carbs_per_hour_g?: number;
+          cautious_duration_seconds?: number | null;
+          created_at?: string;
+          cutoff_duration_seconds?: number | null;
+          labels?: string[];
+          night_caffeine?: boolean;
+          nutrition_alarm_minutes?: number;
+          race_id?: string;
+          revision?: number;
+          roadbook_import?: Json | null;
+          sodium_mg_per_hour?: number;
+          start_time?: string | null;
+          start_time_confirmed?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          walk_grade_percent?: number;
+          walk_pace_seconds_per_km?: number;
+          water_ml_per_hour?: number;
+          water_stop_seconds?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "race_plans_race_id_fkey";
+            columns: ["race_id"];
+            isOneToOne: true;
+            referencedRelation: "athlete_races";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      race_waypoints: {
+        Row: {
+          alert_distance_m: number;
+          created_at: string;
+          cutoff_time: string | null;
+          distance_m: number;
+          id: string;
+          kind: string;
+          name: string;
+          needs_review: boolean;
+          nutrition_note: string | null;
+          race_id: string;
+          revision: number;
+          services: string[];
+          source: string;
+          todo: string | null;
+          updated_at: string;
+          user_id: string;
+          voice_note: string | null;
+          watch_label: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          alert_distance_m?: number;
+          created_at?: string;
+          cutoff_time?: string | null;
+          distance_m: number;
+          id?: string;
+          kind: string;
+          name: string;
+          needs_review?: boolean;
+          nutrition_note?: string | null;
+          race_id: string;
+          revision?: number;
+          services?: string[];
+          source?: string;
+          todo?: string | null;
+          updated_at?: string;
+          user_id: string;
+          voice_note?: string | null;
+          watch_label?: string | null;
+        };
+        Update: {
+          alert_distance_m?: number;
+          created_at?: string;
+          cutoff_time?: string | null;
+          distance_m?: number;
+          id?: string;
+          kind?: string;
+          name?: string;
+          needs_review?: boolean;
+          nutrition_note?: string | null;
+          race_id?: string;
+          revision?: number;
+          services?: string[];
+          source?: string;
+          todo?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          voice_note?: string | null;
+          watch_label?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "race_waypoints_race_id_fkey";
+            columns: ["race_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_races";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sync_jobs: {
         Row: {
           activity_count: number;
@@ -816,6 +1095,7 @@ export type Database = {
         };
         Returns: number;
       };
+      race_owned: { Args: { p_race_id: string }; Returns: boolean };
       release_provider_lease: {
         Args: { p_connection_id: string; p_owner: string };
         Returns: undefined;
@@ -823,6 +1103,26 @@ export type Database = {
       renew_provider_lease: {
         Args: { p_connection_id: string; p_owner: string };
         Returns: boolean;
+      };
+      replace_race_course: {
+        Args: {
+          p_distance_m: number;
+          p_elevation_gain_m?: number;
+          p_elevation_loss_m?: number;
+          p_file_name: string;
+          p_points: Json;
+          p_race_id: string;
+          p_source: string;
+          p_source_activity_id?: string;
+          p_step_m: number;
+          p_time_zone: string;
+          p_waypoints: Json;
+        };
+        Returns: number;
+      };
+      replace_race_roadbook: {
+        Args: { p_points: Json; p_race_id: string; p_summary: Json };
+        Returns: undefined;
       };
       schedule_incremental_sync: {
         Args: Record<PropertyKey, never>;

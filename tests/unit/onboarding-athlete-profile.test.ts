@@ -24,6 +24,7 @@ function inputs(
     goal: { focus: "ultra_trail" },
     races: [
       {
+        race_kind: "trail",
         name: "EcoTrail Paris 120K",
         race_date: "2027-03-20",
         distance_km: 120,
@@ -32,6 +33,7 @@ function inputs(
         target_duration_seconds: null,
       },
       {
+        race_kind: "road",
         name: null,
         race_date: null,
         distance_km: null,

@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       .map((origin) => origin.trim())
       .filter(Boolean),
   ],
+  experimental: {
+    proxyClientMaxBodySize: "21mb",
+  },
   turbopack: {
     rules: {
       "*.css": {

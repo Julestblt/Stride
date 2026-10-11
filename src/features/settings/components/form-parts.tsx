@@ -10,6 +10,7 @@ export function SettingsField({
   min,
   max,
   step,
+  list,
 }: {
   label: string;
   name: string;
@@ -19,6 +20,7 @@ export function SettingsField({
   min?: string | number;
   max?: string | number;
   step?: string;
+  list?: string;
 }) {
   return (
     <Field>
@@ -30,6 +32,7 @@ export function SettingsField({
         min={min}
         max={max}
         step={step}
+        list={list}
         defaultValue={value ?? ""}
       />
     </Field>

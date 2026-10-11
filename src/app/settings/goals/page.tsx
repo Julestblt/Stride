@@ -12,6 +12,7 @@ import { RemoveRaceButton } from "@/features/settings/components/remove-race-but
 import {
   goalFocuses,
   formatDuration,
+  roadDistancePresets,
   type GoalFocus,
 } from "@/features/onboarding/goals";
 import { requireAthlete } from "@/server/app/session";
@@ -25,7 +26,7 @@ import {
 const focusLabels: Record<GoalFocus, string> = {
   general_fitness: "Forme générale",
   faster: "Courir plus vite",
-  short_distance: "5K or 10K",
+  short_distance: "5 km ou 10 km",
   half_marathon_marathon: "Semi-marathon ou marathon",
   trail: "Trail",
   ultra_trail: "Ultra-trail",
@@ -47,6 +48,7 @@ function RaceInputs({
 }: {
   idPrefix: string;
   race?: {
+    race_kind: "road" | "trail";
     name: string | null;
     race_date: string | null;
     distance_km: number | null;
@@ -57,6 +59,15 @@ function RaceInputs({
 }) {
   return (
     <div className="flex flex-col gap-5">
+      <ChoiceRow
+        name="race_kind"
+        legend="Type de course"
+        value={race?.race_kind ?? "road"}
+        options={[
+          { value: "road", label: "Route" },
+          { value: "trail", label: "Trail" },
+        ]}
+      />
       <div className="grid gap-5 md:grid-cols-2">
         <SettingsField
           id={`${idPrefix}-name`}
@@ -79,8 +90,14 @@ function RaceInputs({
           min={0.01}
           max={1000}
           step="0.01"
+          list={`${idPrefix}-road-distances`}
           value={race?.distance_km ?? null}
         />
+        <datalist id={`${idPrefix}-road-distances`}>
+          {roadDistancePresets.map((distance) => (
+            <option key={distance} value={distance} />
+          ))}
+        </datalist>
         <SettingsField
           id={`${idPrefix}-elevation`}
           name="elevation_gain_m"

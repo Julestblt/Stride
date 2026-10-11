@@ -23,7 +23,7 @@ test("activities are grouped, filtered through the URL and opened in place", asy
     page.getByRole("heading", { level: 1, name: "Activités" }),
   ).toBeVisible();
   const sidebar = page.locator('[data-sidebar="sidebar"]').first();
-  await expect(sidebar.getByText("EcoTrail Paris 120K")).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: /A EcoTrail Paris 120K/ })).toBeVisible();
   await expect(sidebar.getByText(/Course A · J-\d+/)).toBeVisible();
   await expect(
     sidebar.getByRole("link", { name: "Activités" }),

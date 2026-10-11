@@ -9,6 +9,7 @@ import {
   formatDuration,
   missingRaceFields,
   parseDuration,
+  roadDistancePresets,
   type RaceSnapshot,
   type RaceValues,
 } from "@/features/onboarding/goals";
@@ -27,6 +28,7 @@ export type RaceHandle = {
   values: () => RaceValues;
 };
 const raceFields: (keyof RaceValues)[] = [
+  "race_kind",
   "name",
   "race_date",
   "distance_km",
@@ -84,6 +86,7 @@ export function RaceForm({
   }, [flush, local, race.id, register]);
   const missing = showErrors ? missingRaceFields(local) : [];
   const [resetKey, setResetKey] = useState(0);
+  const [distanceKey, setDistanceKey] = useState(0);
   const [durationText, setDurationText] = useState(
     formatDuration(race.values.target_duration_seconds),
   );
@@ -108,6 +111,15 @@ export function RaceForm({
         </Button>
       </div>
       <div key={resetKey} className="contents">
+        <ChoiceField
+          label="Type de course"
+          value={local.race_kind}
+          options={[
+            { value: "road", label: "Route" },
+            { value: "trail", label: "Trail" },
+          ]}
+          onChange={(value) => value && change("race_kind", value, "now")}
+        />
         <TextField
           id={`race-${race.id}-name`}
           label="Course"
@@ -127,16 +139,44 @@ export function RaceForm({
             onCommit={(value) => change("race_date", value)}
           />
           <div className="grid grid-cols-2 gap-5 lg:col-span-2">
-            <NumberField
-              id={`race-${race.id}-distance`}
-              label="Distance"
-              unit="km"
-              min={0.1}
-              max={1000}
-              value={local.distance_km}
-              error={missing.includes("distance_km") ? required : undefined}
-              onCommit={(value) => change("distance_km", value)}
-            />
+            <div className="flex flex-col gap-2">
+              <NumberField
+                key={distanceKey}
+                id={`race-${race.id}-distance`}
+                label="Distance"
+                unit="km"
+                min={0.1}
+                max={1000}
+                value={local.distance_km}
+                error={missing.includes("distance_km") ? required : undefined}
+                onCommit={(value) => change("distance_km", value)}
+              />
+              {local.race_kind === "road" && (
+                <div
+                  className="flex flex-wrap gap-1.5"
+                  aria-label="Distances classiques sur route"
+                >
+                  {roadDistancePresets.map((distance) => (
+                    <Button
+                      key={distance}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        change("distance_km", distance);
+                        setDistanceKey((key) => key + 1);
+                      }}
+                    >
+                      {distance === 21.1
+                        ? "Semi-marathon"
+                        : distance === 42.2
+                          ? "Marathon"
+                          : `${distance} km`}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
             <NumberField
               id={`race-${race.id}-elevation`}
               label="D+"
