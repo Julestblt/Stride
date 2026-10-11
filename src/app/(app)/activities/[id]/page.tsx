@@ -4,9 +4,15 @@ import { ActivitiesView } from "@/features/activities/components/activities-view
 import {
   parseActivityFilter,
   parseActivityLimit,
+  parseActivitySearch,
 } from "@/features/activities/activities";
 import { localToday } from "@/features/app-shell/shell";
-import { listActivities, readActivity } from "@/server/activities/activities";
+import { buildActivityView } from "@/features/activities/activity-view";
+import {
+  listActivities,
+  readActivityDetail,
+  loadHeartRateZones,
+} from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
 import { getShell } from "@/server/app/shell";
 
@@ -22,22 +28,29 @@ export default async function ActivityPage({
   const filter = parseActivityFilter(query.filter);
   const limit = parseActivityLimit(query.limit);
   const context = await requireAthlete();
-  const [selected, { activities, total }, shell] = await Promise.all([
-    readActivity(context, id),
-    listActivities(context, filter, limit),
-    getShell(),
-  ]);
-  if (!selected) notFound();
+  const now = new Date();
+  const search = parseActivitySearch(query.q);
+  const [detail, { activities, total }, shell, calibration] = await Promise.all(
+    [
+      readActivityDetail(context, id),
+      listActivities(context, filter, limit, search),
+      getShell(),
+      loadHeartRateZones(context, now),
+    ],
+  );
+  if (!detail) notFound();
   return (
     <ActivitiesView
       activities={activities}
       total={total}
       filter={filter}
       limit={limit}
-      selected={selected}
+      selected={detail.activity}
+      view={buildActivityView({ ...detail, zones: calibration?.zones ?? null })}
+      search={search}
       current
       sync={shell.sync}
-      today={localToday(new Date())}
+      today={localToday(now)}
     />
   );
 }

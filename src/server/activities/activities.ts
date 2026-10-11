@@ -1,6 +1,8 @@
 import "server-only";
 import {
   activityColumns,
+  activityNamePattern,
+  activityNameRegex,
   activityRowSchema,
   activityTypesByFilter,
   type Activity,
@@ -23,6 +25,7 @@ export async function listActivities(
   context: OnboardingContext,
   filter: ActivityFilter,
   limit: number,
+  search = "",
 ): Promise<{ activities: Activity[]; total: number }> {
   let query = context.client
     .from("provider_activities")
@@ -31,6 +34,10 @@ export async function listActivities(
     .not("started_at", "is", null);
   if (filter !== "all")
     query = query.in("activity_type", [...activityTypesByFilter[filter]]);
+  if (search)
+    query = search.includes("*")
+      ? query.filter("activity_name", "imatch", activityNameRegex(search))
+      : query.ilike("activity_name", activityNamePattern(search));
   const { data, error, count } = await query
     .order("started_at", { ascending: false })
     .order("id", { ascending: false })

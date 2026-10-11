@@ -24,7 +24,7 @@ test("activities are grouped, filtered through the URL and opened in place", asy
   ).toBeVisible();
   const sidebar = page.locator('[data-sidebar="sidebar"]').first();
   await expect(sidebar.getByText("EcoTrail Paris 120K")).toBeVisible();
-  await expect(sidebar.getByText("Course A · J-164")).toBeVisible();
+  await expect(sidebar.getByText(/Course A · J-\d+/)).toBeVisible();
   await expect(
     sidebar.getByRole("link", { name: "Activités" }),
   ).toHaveAttribute("aria-current", "page");
@@ -247,7 +247,10 @@ test("mobile shows the list, then the activity alone, without overflow", async (
     .getByRole("link", { name: "Activités" })
     .click();
   await expect(page).toHaveURL(/\/activities$/);
-  await page.getByRole("button", { name: "Toggle sidebar" }).first().click();
+  await page
+    .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+    .first()
+    .click();
   await expect(
     page.getByRole("dialog").getByRole("link", { name: "Activités" }),
   ).toBeVisible();
@@ -485,4 +488,208 @@ test.describe("touch chart inspection", () => {
       path: "test-results/activity-chart-inspection-mobile.png",
     });
   });
+});
+
+test("selected preview reuses the map, factual effort and two recorded charts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.abort(),
+  );
+  await signIn(page);
+  await page.goto("/activities");
+  await expect(
+    page.getByRole("article").getByRole("heading", { name: "Course à pied" }),
+  ).toBeVisible();
+  await expect(page.getByRole("article")).toContainText("Aucun tracé GPS");
+  await page
+    .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+    .last()
+    .click();
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004");
+  const article = page.getByRole("article");
+  await expect(
+    article
+      .getByRole("region", { name: "Parcours", exact: true })
+      .getByRole("img", { name: /Tracé GPS/ }),
+  ).toBeVisible();
+  await expect(
+    article.getByRole("region", { name: "Effort enregistré" }),
+  ).toContainText("720");
+  await expect(
+    article.getByRole("region", { name: "Cadence", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    article.getByRole("region", { name: "Altitude", exact: true }),
+  ).toHaveCount(0);
+  await page.screenshot({
+    path: "test-results/activities-preview-desktop.png",
+  });
+  const heartRate = article.getByRole("region", {
+    name: "Fréquence cardiaque",
+    exact: true,
+  });
+  await heartRate.getByRole("group").focus();
+  await expect(heartRate.getByRole("status")).toContainText("125 bpm");
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000003");
+  await expect(article).toContainText("Aucun tracé GPS");
+  await expect(
+    article.getByRole("region", { name: "Fréquence cardiaque", exact: true }),
+  ).toBeVisible();
+  await expect(
+    article.getByRole("region", { name: "Allure", exact: true }),
+  ).toHaveCount(0);
+});
+
+test("name search filters before pagination and keeps context through drill-down", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/activities?limit=100&filter=road");
+  await page
+    .getByRole("searchbox", { name: "Rechercher par nom" })
+    .fill("THRESHOLD");
+  await Promise.all([
+    page.waitForURL(/q=THRESHOLD/),
+    page.getByRole("button", { name: "Rechercher", exact: true }).click(),
+  ]);
+  expect(new URL(page.url()).searchParams.has("limit")).toBe(false);
+  await expect(
+    page.getByRole("region", { name: "Liste des activités" }),
+  ).toContainText("1 sur 1 activités");
+  await page
+    .getByRole("region", { name: "Liste des activités" })
+    .getByRole("link", { name: /Threshold/ })
+    .click();
+  await expect(page).toHaveURL(/000000000004\?filter=road&q=THRESHOLD$/);
+  await Promise.all([
+    page.waitForURL(/\/details\?filter=road&q=THRESHOLD$/),
+    page.getByRole("link", { name: /Détail complet/ }).click(),
+  ]);
+  const breadcrumb = page.getByRole("navigation", { name: "Fil d’Ariane" });
+  await expect(
+    breadcrumb.getByRole("link", { name: "Activités", exact: true }),
+  ).toHaveAttribute("href", "/activities?filter=road&q=THRESHOLD");
+  await breadcrumb
+    .getByRole("link", { name: "Activités", exact: true })
+    .click();
+  await page
+    .getByRole("navigation", { name: "Filtrer les activités" })
+    .getByRole("link", { name: "Trail", exact: true })
+    .click();
+  await expect(page).toHaveURL(/filter=trail&q=THRESHOLD$/);
+  await expect(
+    page
+      .getByRole("region", { name: "Liste des activités" })
+      .getByText("Aucune activité ne correspond à ce nom."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("searchbox", { name: "Rechercher par nom" }),
+  ).toHaveValue("THRESHOLD");
+});
+
+test("name search treats wildcard and punctuation literally before pagination", async ({
+  page,
+}) => {
+  await signIn(page);
+  for (const search of [
+    "été",
+    "%",
+    "_",
+    "\\",
+    "*",
+    "(soir), lac",
+    "100%_effort",
+    "absent",
+    "%,activity_type.eq.running",
+    "Fontainebleau",
+    "**",
+  ]) {
+    await page.goto(`/activities?q=${encodeURIComponent(search)}`);
+    const list = page.getByRole("region", { name: "Liste des activités" });
+    if (
+      ["absent", "%,activity_type.eq.running", "Fontainebleau", "**"].includes(
+        search,
+      )
+    ) {
+      await expect(list).toContainText(
+        "Aucune activité ne correspond à ce nom.",
+      );
+    } else {
+      await expect(list).toContainText("1 sur 1 activités");
+      await expect(
+        list.getByRole("link", { name: /Été 100%_effort/ }),
+      ).toBeVisible();
+    }
+  }
+  await page.goto("/activities?limit=100&q=%C3%89t%C3%A9");
+  await expect(
+    page
+      .getByRole("region", { name: "Liste des activités" })
+      .getByRole("link", { name: /Été/ }),
+  ).toHaveAttribute("href", /limit=100&q=%C3%89t%C3%A9$/);
+});
+
+test("name search preserves query through load-more and selection", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/activities?filter=road&q=Course");
+  const searchedList = page.getByRole("region", {
+    name: "Liste des activités",
+  });
+  await expect(searchedList).toContainText("50 sur 69 activités");
+  await searchedList
+    .getByRole("link", { name: "Charger les suivantes" })
+    .click();
+  await expect(page).toHaveURL(/filter=road&limit=100&q=Course$/);
+  await expect(searchedList).toContainText("69 sur 69 activités");
+  await searchedList
+    .getByRole("link", { name: /Course à pied/ })
+    .last()
+    .click();
+  await expect(page).toHaveURL(/000000000169\?filter=road&limit=100&q=Course$/);
+});
+
+test("mobile list and GPS preview fit 390 and 320 pixels", async ({ page }) => {
+  await page.route("https://basemaps.cartocdn.com/**", (route) =>
+    route.abort(),
+  );
+  await signIn(page);
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/activities");
+    await expect(page.getByRole("article")).toBeHidden();
+    await expect(
+      page.getByRole("searchbox", { name: "Rechercher par nom" }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/activities-list-${width}.png`,
+    });
+    await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004");
+    const article = page.getByRole("article");
+    await expect(article).toBeVisible();
+    await expect(
+      article.getByRole("region", { name: "Parcours", exact: true }),
+    ).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    expect(
+      await article.evaluate(
+        (element) => element.scrollWidth <= element.clientWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/activities-preview-${width}.png`,
+    });
+  }
 });

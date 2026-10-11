@@ -282,10 +282,34 @@ export function parseActivityLimit(value: unknown) {
   return Math.min(pages * activityPageSize, maxActivityWindow);
 }
 
-export function activitiesQuery(filter: ActivityFilter, limit: number) {
+export const activitySearchMaxLength = 160;
+
+export function parseActivitySearch(value: unknown) {
+  const result = z
+    .string()
+    .trim()
+    .max(activitySearchMaxLength)
+    .safeParse(value);
+  return result.success ? result.data : "";
+}
+
+export function activityNamePattern(search: string) {
+  return `%${search.replace(/[\\%_]/g, "\\$&")}%`;
+}
+
+export function activityNameRegex(search: string) {
+  return search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function activitiesQuery(
+  filter: ActivityFilter,
+  limit: number,
+  search = "",
+) {
   const params = new URLSearchParams();
   if (filter !== "all") params.set("filter", filter);
   if (limit > activityPageSize) params.set("limit", String(limit));
+  if (search) params.set("q", search);
   const query = params.toString();
   return query ? `?${query}` : "";
 }

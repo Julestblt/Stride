@@ -36,6 +36,7 @@ export function ActivityFullDetail({
   zoneMethod,
   filter,
   limit,
+  search = "",
   sync,
   today,
 }: {
@@ -45,10 +46,11 @@ export function ActivityFullDetail({
   zoneMethod: "karvonen" | "percentage_maximum" | null;
   filter: ActivityFilter;
   limit: number;
+  search?: string;
   sync: string | null;
   today: string;
 }) {
-  const query = activitiesQuery(filter, limit);
+  const query = activitiesQuery(filter, limit, search);
   const date = formatActivityDate(activity.date, today);
   const metrics = detailMetrics(activity);
   const laps = lapTable(activity, segments);

@@ -15,13 +15,19 @@ import {
   type ActivityGroup,
 } from "@/features/activities/activities";
 
-export function ActivityFilters({ filter }: { filter: ActivityFilter }) {
+export function ActivityFilters({
+  filter,
+  search,
+}: {
+  filter: ActivityFilter;
+  search: string;
+}) {
   return (
     <nav aria-label="Filtrer les activités" className="flex gap-1">
       {activityFilters.map((item) => (
         <Link
           key={item}
-          href={`/activities${activitiesQuery(item, activityPageSize)}`}
+          href={`/activities${activitiesQuery(item, activityPageSize, search)}`}
           aria-current={item === filter ? "page" : undefined}
           className={cn(
             "inline-flex min-h-11 items-center rounded-surface border px-3.5 text-sm transition-colors duration-150 ease-stride lg:min-h-7 lg:rounded-control lg:px-2.5 lg:text-xs",
@@ -41,6 +47,7 @@ export function ActivityList({
   groups,
   filter,
   limit,
+  search,
   selectedId,
   current,
   today,
@@ -48,6 +55,7 @@ export function ActivityList({
   groups: ActivityGroup[];
   filter: ActivityFilter;
   limit: number;
+  search: string;
   selectedId: string | null;
   current: boolean;
   today: string;
@@ -55,9 +63,11 @@ export function ActivityList({
   if (groups.length === 0)
     return (
       <p className="px-5 py-6 text-meta text-muted lg:px-3.5">
-        {filter === "all"
-          ? "Aucune activité importée pour l’instant."
-          : `Aucune sortie ${activityFilterLabels[filter].toLowerCase()} importée pour l’instant.`}
+        {search
+          ? "Aucune activité ne correspond à ce nom."
+          : filter === "all"
+            ? "Aucune activité importée pour l’instant."
+            : `Aucune sortie ${activityFilterLabels[filter].toLowerCase()} importée pour l’instant.`}
       </p>
     );
   return (
@@ -77,7 +87,7 @@ export function ActivityList({
               return (
                 <li key={activity.id}>
                   <Link
-                    href={`/activities/${activity.id}${activitiesQuery(filter, limit)}`}
+                    href={`/activities/${activity.id}${activitiesQuery(filter, limit, search)}`}
                     aria-current={selected && current ? "true" : undefined}
                     className={cn(
                       "flex flex-col gap-1.5 border-b border-border-subtle px-5 py-3 transition-colors duration-150 ease-stride hover:bg-surface lg:px-3.5",
@@ -90,7 +100,7 @@ export function ActivityList({
                     <span className="flex items-baseline justify-between gap-3">
                       <span
                         className={cn(
-                          "min-w-0 truncate text-sm text-foreground",
+                          "min-w-0 truncate text-base text-foreground lg:text-sm",
                           selected ? "font-semibold" : "font-medium",
                         )}
                       >
@@ -133,11 +143,13 @@ export function ActivityList({
 export function ActivityListFooter({
   filter,
   limit,
+  search,
   shown,
   total,
 }: {
   filter: ActivityFilter;
   limit: number;
+  search: string;
   shown: number;
   total: number;
 }) {
@@ -147,7 +159,7 @@ export function ActivityListFooter({
     <div className="flex flex-col items-center gap-2 px-5 py-4 lg:px-3.5">
       {more && (
         <Link
-          href={`/activities${activitiesQuery(filter, next)}`}
+          href={`/activities${activitiesQuery(filter, next, search)}`}
           scroll={false}
           className="inline-flex min-h-11 items-center rounded-control border border-border-strong px-3.5 text-sm text-foreground transition-colors duration-150 ease-stride hover:bg-surface-raised lg:min-h-8 lg:text-xs"
         >

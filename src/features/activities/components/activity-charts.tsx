@@ -85,9 +85,14 @@ function ChartFrame({
   );
 }
 
-export function ActivityCharts({ view }: { view: ChartsView }) {
-  if (!view.pace && !view.heartRate && !view.cadence && !view.elevation)
-    return null;
+export function ActivityCharts({
+  view,
+  metrics = ["pace", "heartRate", "cadence", "elevation"],
+}: {
+  view: ChartsView;
+  metrics?: readonly ("pace" | "heartRate" | "cadence" | "elevation")[];
+}) {
+  if (!metrics.some((metric) => view[metric])) return null;
   return (
     <section
       aria-label="Graphiques de l’activité"
@@ -124,7 +129,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
       )}
       <div className="flex min-w-0 flex-col gap-4">
         <div className="flex min-w-0 flex-col gap-4">
-          {view.pace && (
+          {metrics.includes("pace") && view.pace && (
             <ChartFrame
               inverted
               title="Allure"
@@ -134,7 +139,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
               tone="stroke-provider"
             />
           )}
-          {view.heartRate && (
+          {metrics.includes("heartRate") && view.heartRate && (
             <ChartFrame
               title="Fréquence cardiaque"
               unit="bpm"
@@ -176,7 +181,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          {view.cadence && (
+          {metrics.includes("cadence") && view.cadence && (
             <ChartFrame
               title="Cadence"
               unit="pas/min"
@@ -185,7 +190,7 @@ export function ActivityCharts({ view }: { view: ChartsView }) {
               tone="stroke-muted"
             />
           )}
-          {view.elevation && (
+          {metrics.includes("elevation") && view.elevation && (
             <ChartFrame
               title="Altitude"
               unit="m"

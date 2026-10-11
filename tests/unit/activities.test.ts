@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   activitiesQuery,
+  activityNamePattern,
+  activityNameRegex,
+  parseActivitySearch,
   activityKind,
   activityPeriod,
   activityRowSchema,
@@ -258,5 +261,40 @@ describe("application shell", () => {
     expect(syncLabel(null, now)).toBeNull();
     expect(syncLabel("not a date", now)).toBeNull();
     expect(localToday(new Date("2026-10-09T22:30:00Z"))).toBe("2026-10-10");
+  });
+});
+
+describe("literal activity name search", () => {
+  it("bounds and trims a single search value", () => {
+    expect(parseActivitySearch("  Été (soir), lac  ")).toBe("Été (soir), lac");
+    expect(parseActivitySearch(["trail"])).toBe("");
+    expect(parseActivitySearch(undefined)).toBe("");
+    expect(parseActivitySearch("x".repeat(161))).toBe("");
+    expect(parseActivitySearch("x".repeat(160))).toHaveLength(160);
+  });
+
+  it("escapes SQL wildcard and escape characters without interpolating punctuation", () => {
+    expect(activityNamePattern(String.raw`100%_effort \ (soir), lac`)).toBe(
+      String.raw`%100\%\_effort \\ (soir), lac%`,
+    );
+    expect(activityNamePattern("Été")).toBe("%Été%");
+  });
+
+  it("escapes regex syntax for literal PostgREST star searches", () => {
+    const search = String.raw`sentier * (soir), [lac] \ .+?^$|{}`;
+    const matcher = new RegExp(activityNameRegex(search), "i");
+    expect(matcher.test(`Été ${search} fin`)).toBe(true);
+    expect(matcher.test("sentier long soir lac")).toBe(false);
+    expect(activityNameRegex("*")).toBe(String.raw`\*`);
+  });
+
+  it("preserves encoded search together with the type filter and window", () => {
+    const search = String.raw`Été 100%_effort \ * (soir), lac`;
+    const query = new URLSearchParams(activitiesQuery("trail", 100, search));
+    expect(Object.fromEntries(query)).toEqual({
+      filter: "trail",
+      limit: "100",
+      q: search,
+    });
   });
 });

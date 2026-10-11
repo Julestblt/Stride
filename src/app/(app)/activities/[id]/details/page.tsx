@@ -4,6 +4,7 @@ import { ActivityFullDetail } from "@/features/activities/components/activity-fu
 import {
   parseActivityFilter,
   parseActivityLimit,
+  parseActivitySearch,
 } from "@/features/activities/activities";
 import { localToday } from "@/features/app-shell/shell";
 import { buildActivityView } from "@/features/activities/activity-view";
@@ -39,8 +40,9 @@ export default async function ActivityDetailPage({
       zoneMethod={calibration?.method ?? null}
       filter={parseActivityFilter(query.filter)}
       limit={parseActivityLimit(query.limit)}
+      search={parseActivitySearch(query.q)}
       sync={shell.sync}
-      today={localToday(new Date())}
+      today={localToday(now)}
     />
   );
 }

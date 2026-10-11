@@ -101,6 +101,10 @@ const tables = {
     }),
     ...Array.from({ length: 70 }, (_, index) =>
       activity(100 + index, 40 + index, {
+        activity_name:
+          index === 60
+            ? "Été 100%_effort \\ sentier * (soir), lac"
+            : "Course à pied",
         distance_meters: 8000 + index * 10,
         duration_seconds: 3000 + index,
       }),
@@ -227,6 +231,21 @@ const tables = {
     },
   ],
 };
+function nameMatcher(filter) {
+  if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
+  const pattern = filter.slice(6).replaceAll("*", "%");
+  let expression = "^";
+  for (let index = 0; index < pattern.length; index++) {
+    const character = pattern[index];
+    if (character === "\\" && index + 1 < pattern.length) {
+      expression += pattern[++index].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    } else if (character === "%") expression += ".*";
+    else if (character === "_") expression += ".";
+    else expression += character.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp(`${expression}$`, "isu");
+}
+
 function selectRows(table, params) {
   let rows = tables[table] ?? [];
   const ownerId = params.get("user_id");
@@ -241,6 +260,15 @@ function selectRows(table, params) {
       rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
     if (["metric", "availability"].includes(key) && filter.startsWith("eq."))
       rows = rows.filter((row) => row[key] === filter.slice(3));
+  }
+  const nameFilter = params.get("activity_name");
+  if (nameFilter && /^(ilike|imatch)\./.test(nameFilter)) {
+    const matcher = nameMatcher(nameFilter);
+    rows = rows.filter(
+      (row) =>
+        typeof row.activity_name === "string" &&
+        matcher.test(row.activity_name),
+    );
   }
   const id = params.get("id");
   if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
