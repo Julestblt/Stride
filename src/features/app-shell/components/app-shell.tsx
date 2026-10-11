@@ -28,6 +28,7 @@ import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
 import type { ShellAthlete, ShellGoal } from "@/features/app-shell/shell";
 import { ShellNavItem } from "./shell-nav-item";
 import { SignOutMenuItem } from "./sign-out-menu-item";
+import { ShortcutHelp, ShortcutHelpMenuItem } from "./shortcut-help";
 
 export function AppShell({
   athlete,
@@ -47,6 +48,7 @@ export function AppShell({
       defaultOpen={defaultOpen}
       className="h-svh overflow-hidden"
     >
+      <ShortcutHelp />
       <Sidebar variant="inset" collapsible="icon">
         <SidebarHeader>
           <NavGoalSwitcher
@@ -107,6 +109,7 @@ export function AppShell({
                   Données et confidentialité
                 </Link>
               </DropdownMenuItem>
+              <ShortcutHelpMenuItem />
               <DropdownMenuSeparator />
               <SignOutMenuItem />
             </DropdownMenuContent>
