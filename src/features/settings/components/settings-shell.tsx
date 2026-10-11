@@ -113,7 +113,10 @@ export function SettingsShell({
               </>
             )}
           </header>
-          <div className="max-w-[1000px] px-4 pt-4 pb-16 md:px-12 md:pt-10">
+          <div
+            data-slot="settings-content"
+            className="mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto"
+          >
             {children}
           </div>
         </div>

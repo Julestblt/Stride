@@ -143,6 +143,49 @@ test("mobile settings keep a narrow viewport navigable", async ({ page }) => {
   ).toBe(true);
 });
 
+test("settings pages use the available desktop width and center on wide screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+
+  const routes = [
+    "/settings",
+    "/settings/profile",
+    "/settings/training",
+    "/settings/goals",
+    "/settings/connections",
+    "/settings/connections/garmin",
+    "/settings/privacy",
+  ];
+
+  for (const route of routes) {
+    await page.goto(route);
+    const content = page.locator('[data-slot="settings-content"]');
+    await expect(content).toBeVisible();
+    const bounds = await content.boundingBox();
+    expect(bounds?.width).toBeGreaterThan(1000);
+    if (route === "/settings") {
+      await page.screenshot({ path: "test-results/settings-laptop-layout.png" });
+    }
+  }
+
+  await page.setViewportSize({ width: 2560, height: 1440 });
+  await page.goto("/settings/connections/garmin");
+  const content = page.locator('[data-slot="settings-content"]');
+  const bounds = await content.boundingBox();
+  const panel = await content.locator("..").boundingBox();
+  expect(bounds?.width).toBe(1440);
+  expect(bounds?.x).toBeCloseTo(
+    (panel?.x ?? 0) + ((panel?.width ?? 0) - 1440) / 2,
+    0,
+  );
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(2560);
+  await page.screenshot({ path: "test-results/settings-wide-layout.png" });
+});
+
 test("desktop settings keep the account footer fixed and aligned with the app", async ({
   page,
 }) => {
