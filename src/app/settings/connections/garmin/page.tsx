@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   SettingsGroup,
   SettingsHeading,
+  UnavailableSettingRow,
 } from "@/features/settings/components/settings-shell";
 import { garminSyncCategories } from "@/features/garmin/sync";
 import { requireAthlete } from "@/server/app/session";
@@ -80,7 +81,21 @@ export default async function GarminSettingsPage() {
           </p>
         )}
       </SettingsGroup>
-      <p className="text-sm text-muted">
+      <SettingsGroup title="Data use">
+        <div className="border-b border-border p-4 md:px-0">
+          <strong className="text-sm">
+            Read imported activities and observations
+          </strong>
+          <p className="mt-1 text-sm text-muted">
+            Stride uses the normalized data already stored for your account.
+          </p>
+        </div>
+        <UnavailableSettingRow
+          title="Send workouts to Garmin"
+          detail="Workout publishing is not supported by the current integration."
+        />
+      </SettingsGroup>
+      <p className="rounded-surface border border-border p-4 text-sm text-muted">
         Manual sync, reconnect and disconnect are unavailable until the Garmin
         integration exposes those operations. Your stored data remains visible
         in Stride.

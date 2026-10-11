@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   SettingsHeading,
   SettingsGroup,
+  UnavailableSettingRow,
 } from "@/features/settings/components/settings-shell";
 import { ChoiceRow } from "@/features/settings/components/choices";
 import { SettingsNotice } from "@/features/settings/components/form-parts";
@@ -111,10 +112,42 @@ export default async function TrainingSettingsPage({
         </SettingsGroup>
         <Button type="submit">Save training preferences</Button>
       </form>
-      <p className="mt-5 text-xs text-muted">
-        Coach tone, plan changes, units and notifications will be available when
-        those capabilities are introduced.
-      </p>
+      <div className="mt-9">
+        <SettingsGroup title="Units">
+          <UnavailableSettingRow
+            title="Distance and ascent"
+            detail="Stride currently displays kilometres and metres."
+            value="km · m"
+          />
+          <UnavailableSettingRow
+            title="Pace"
+            detail="Recorded running pace is displayed per kilometre."
+            value="min/km"
+          />
+        </SettingsGroup>
+      </div>
+      <SettingsGroup title="Coach">
+        <UnavailableSettingRow
+          title="Tone and detail"
+          detail="Coach conversations are not available yet."
+        />
+        <UnavailableSettingRow
+          title="Plan changes"
+          detail="Training plans and approval rules are not available yet."
+        />
+        <UnavailableSettingRow
+          title="Proactive advice"
+          detail="Stride does not send unsolicited coaching advice yet."
+        />
+      </SettingsGroup>
+      <div id="notifications">
+        <SettingsGroup title="Notifications">
+          <UnavailableSettingRow
+            title="Reminders and alerts"
+            detail="Notifications are not delivered by Stride yet."
+          />
+        </SettingsGroup>
+      </div>
     </>
   );
 }

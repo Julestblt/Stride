@@ -84,6 +84,11 @@ export default async function SettingsOverviewPage() {
           title="Goals and races"
           detail={race ?? `${goals.races.length} races`}
         />
+        <SettingsLinkRow
+          href="/settings/training#notifications"
+          title="Notifications"
+          detail="Unavailable yet"
+        />
       </SettingsGroup>
       <SettingsGroup title="Data">
         <SettingsLinkRow
@@ -102,7 +107,7 @@ export default async function SettingsOverviewPage() {
           "use server";
           await signOut();
         }}
-        className="md:hidden"
+        className="fixed right-4 bottom-4 left-4 md:hidden"
       >
         <Button type="submit" variant="outline" className="w-full">
           Sign out

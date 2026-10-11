@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ActivityIcon, SettingsIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  LinkIcon,
+  SettingsIcon,
+  ShieldIcon,
+  UserRoundIcon,
+} from "lucide-react";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -75,14 +81,33 @@ export function AppShell({
             sync={sync ? `Garmin ${sync.toLowerCase()}` : undefined}
           >
             <DropdownMenuContent className="w-56" side="top" align="start">
-              <DropdownMenuLabel>Compte</DropdownMenuLabel>
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings/profile">
+                  <UserRoundIcon />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <SettingsIcon />
                   Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/connections">
+                  <LinkIcon />
+                  Connections
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/privacy">
+                  <ShieldIcon />
+                  Data and privacy
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <SignOutMenuItem />
             </DropdownMenuContent>
           </NavUser>

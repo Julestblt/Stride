@@ -105,6 +105,7 @@ test("mobile settings keep a narrow viewport navigable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
   await page.goto("/settings");
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeInViewport();
   await expect(
     page.getByRole("link", { name: /Goals and races/ }).last(),
   ).toBeVisible();

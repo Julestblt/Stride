@@ -78,9 +78,18 @@ export default async function ConnectionsSettingsPage() {
         </div>
       </div>
       <SettingsGroup title="Other sources">
-        <p className="p-4 text-sm text-muted md:px-0">
-          Other watches, apps and manual entries are not connected yet.
-        </p>
+        <div className="border-b border-border p-4 md:px-0">
+          <strong className="text-sm">Other watches and apps</strong>
+          <p className="mt-1 text-sm text-muted">
+            Additional providers are not supported yet.
+          </p>
+        </div>
+        <div className="p-4 md:px-0">
+          <strong className="text-sm">Manual entries</strong>
+          <p className="mt-1 text-sm text-muted">
+            Adding sessions without a watch is not available yet.
+          </p>
+        </div>
       </SettingsGroup>
     </>
   );

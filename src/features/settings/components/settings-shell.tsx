@@ -172,3 +172,23 @@ export function SettingsLinkRow({
     </Link>
   );
 }
+
+export function UnavailableSettingRow({
+  title,
+  detail,
+  value,
+}: {
+  title: string;
+  detail: string;
+  value?: string;
+}) {
+  return (
+    <div className="grid gap-2 border-b border-border px-4 py-4 last:border-b-0 md:grid-cols-[12rem_minmax(0,1fr)_auto] md:items-center md:px-0">
+      <strong className="text-sm font-medium">{title}</strong>
+      <p className="text-sm text-muted">{detail}</p>
+      <span className="font-mono text-label text-muted uppercase">
+        {value ?? "Unavailable"}
+      </span>
+    </div>
+  );
+}
