@@ -98,6 +98,7 @@ export type Database = {
           name: string | null;
           priority: string;
           race_date: string | null;
+          race_kind: string;
           revision: number;
           target_duration_seconds: number | null;
           updated_at: string;
@@ -112,6 +113,7 @@ export type Database = {
           name?: string | null;
           priority?: string;
           race_date?: string | null;
+          race_kind?: string;
           revision?: number;
           target_duration_seconds?: number | null;
           updated_at?: string;
@@ -125,6 +127,7 @@ export type Database = {
           name?: string | null;
           priority?: string;
           race_date?: string | null;
+          race_kind?: string;
           revision?: number;
           target_duration_seconds?: number | null;
           updated_at?: string;

@@ -61,6 +61,8 @@ export function parseClock(value: string) {
 }
 
 export function parseHoursMinutes(value: string) {
+  const minuteMatch = /^(\d{1,3})\s*min$/i.exec(value.trim());
+  if (minuteMatch) return Number(minuteMatch[1]) * 60;
   const match = /^(\d{1,3})\s*[:hH]\s*(\d{0,2})$/.exec(value.trim());
   if (!match) return null;
   const minutes = match[2] ? Number(match[2]) : 0;

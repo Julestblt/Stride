@@ -177,7 +177,7 @@ export async function createRace(
     if ((count ?? 0) >= maxRaces) return { status: "invalid" };
     const response = await context.client
       .from("athlete_races")
-      .insert({ user_id: context.userId })
+      .insert({ user_id: context.userId, race_kind: "road" })
       .select("*")
       .single();
     if (response.error) return failure(response.error.code);

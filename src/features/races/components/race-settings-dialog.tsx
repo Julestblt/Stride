@@ -23,6 +23,7 @@ import {
 } from "../format";
 import { actionMessage } from "../messages";
 import type { RacePlan } from "../race";
+import type { RaceKind } from "@/features/onboarding/goals";
 import { saveRacePlan, saveRaceTarget } from "@/server/races/actions";
 
 function durationText(seconds: number | null) {
@@ -33,12 +34,14 @@ export function RaceSettingsDialog({
   raceId,
   raceRevision,
   targetSeconds,
+  kind,
   plan,
   children,
 }: {
   raceId: string;
   raceRevision: number;
   targetSeconds: number | null;
+  kind: RaceKind;
   plan: RacePlan;
   children: React.ReactNode;
 }) {
@@ -53,6 +56,7 @@ export function RaceSettingsDialog({
       text(name) ? parseHoursMinutes(text(name)) : null;
     const start = text("start") ? parseClock(text("start")) : null;
     const target = optionalDuration("target");
+    const raceKind = text("race-kind") as RaceKind;
     const ambitious = optionalDuration("ambitious");
     const cautious = optionalDuration("cautious");
     const cutoff = optionalDuration("cutoff");
@@ -85,8 +89,13 @@ export function RaceSettingsDialog({
       });
       if (saved.status !== "saved")
         return setError(actionMessage(saved.status));
-      if (target !== targetSeconds) {
-        const result = await saveRaceTarget(raceId, raceRevision, target);
+      if (target !== targetSeconds || raceKind !== kind) {
+        const result = await saveRaceTarget(
+          raceId,
+          raceRevision,
+          target,
+          raceKind,
+        );
         if (result.status !== "saved")
           return setError(actionMessage(result.status));
       }
@@ -103,10 +112,22 @@ export function RaceSettingsDialog({
         <DialogHeader>
           <DialogTitle>Modifier la course</DialogTitle>
           <DialogDescription>
-            Ces réglages recalculent la simulation, la nuit et la nutrition.
+            Ces réglages adaptent la préparation de ta course.
           </DialogDescription>
         </DialogHeader>
         <form action={submit} className="flex flex-col gap-4">
+          <Field>
+            <FieldLabel htmlFor="race-kind">Type de course</FieldLabel>
+            <select
+              id="race-kind"
+              name="race-kind"
+              defaultValue={kind}
+              className="h-10 w-full rounded-control border border-border-strong bg-surface px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <option value="road">Route</option>
+              <option value="trail">Trail</option>
+            </select>
+          </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field>
               <FieldLabel htmlFor="race-start">Heure de départ</FieldLabel>
@@ -142,7 +163,13 @@ export function RaceSettingsDialog({
               <Input
                 id="race-ambitious"
                 name="ambitious"
-                placeholder="17h"
+                placeholder={
+                  targetSeconds
+                    ? formatDuration(
+                        Math.round((targetSeconds * 0.9) / 60) * 60,
+                      )
+                    : "Facultatif"
+                }
                 defaultValue={durationText(plan.ambitiousSeconds)}
               />
             </Field>
@@ -151,7 +178,7 @@ export function RaceSettingsDialog({
               <Input
                 id="race-target"
                 name="target"
-                placeholder="18h30"
+                placeholder="Temps visé"
                 defaultValue={durationText(targetSeconds)}
               />
             </Field>
@@ -160,7 +187,13 @@ export function RaceSettingsDialog({
               <Input
                 id="race-cautious"
                 name="cautious"
-                placeholder="20h"
+                placeholder={
+                  targetSeconds
+                    ? formatDuration(
+                        Math.round((targetSeconds * 1.1) / 60) * 60,
+                      )
+                    : "Facultatif"
+                }
                 defaultValue={durationText(plan.cautiousSeconds)}
               />
             </Field>

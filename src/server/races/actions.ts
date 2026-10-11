@@ -9,6 +9,7 @@ import {
 } from "@/features/races/checklists";
 import { clockToSql } from "@/features/races/format";
 import { planInputSchema } from "@/features/races/race";
+import type { RaceKind } from "@/features/onboarding/goals";
 import { waypointInputSchema } from "@/features/races/waypoints";
 import { saveRace } from "@/server/onboarding/goals";
 import { getOnboardingContext } from "@/server/onboarding/context";
@@ -125,13 +126,14 @@ export async function saveRaceTarget(
   raceId: string,
   revision: number,
   targetSeconds: number | null,
+  kind: RaceKind,
 ): Promise<ActionResult> {
   const result = await saveRace(
     { context },
     {
       id: raceId,
       revision,
-      values: { target_duration_seconds: targetSeconds },
+      values: { target_duration_seconds: targetSeconds, race_kind: kind },
     },
   );
   if (result.status === "saved") {

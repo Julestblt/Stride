@@ -240,6 +240,7 @@ const tables = {
       id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
       user_id: user.id,
       name: "EcoTrail Paris 120K",
+      race_kind: "trail",
       race_date: new Date(Date.now() + 164 * day).toISOString().slice(0, 10),
       distance_km: 120,
       elevation_gain_m: 1800,
@@ -335,9 +336,17 @@ createServer(async (request, response) => {
       access_token: accessToken(Math.floor(Date.now() / 1000) - 60),
       expires_at: Math.floor(Date.now() / 1000) - 60,
     });
-  if (url.pathname === "/__test__/race-course" && request.method === "POST") {
+  if (
+    ["/__test__/race-course", "/__test__/race-road"].includes(url.pathname) &&
+    request.method === "POST"
+  ) {
+    const road = url.pathname === "/__test__/race-road";
     const race = tables.athlete_races[0];
-    race.target_duration_seconds = 21600;
+    race.name = road ? "10 km de Paris" : "EcoTrail Paris 120K";
+    race.race_kind = road ? "road" : "trail";
+    race.distance_km = road ? 10 : 120;
+    race.elevation_gain_m = road ? 25 : 1800;
+    race.target_duration_seconds = road ? 39 * 60 : 21600;
     race.race_date = new Date(Date.now() + 2 * day).toISOString().slice(0, 10);
     tables.race_plans = [
       {
@@ -345,9 +354,9 @@ createServer(async (request, response) => {
         user_id: user.id,
         start_time: "08:00:00",
         start_time_confirmed: true,
-        ambitious_duration_seconds: 19800,
-        cautious_duration_seconds: 25200,
-        cutoff_duration_seconds: 28800,
+        ambitious_duration_seconds: road ? null : 19800,
+        cautious_duration_seconds: road ? null : 25200,
+        cutoff_duration_seconds: road ? null : 28800,
         labels: [],
         walk_grade_percent: 10,
         walk_pace_seconds_per_km: 690,
@@ -370,24 +379,33 @@ createServer(async (request, response) => {
         file_name: "parcours-test.gpx",
         source_activity_id: null,
         time_zone: "Europe/Paris",
-        distance_m: 30000,
-        elevation_gain_m: 600,
-        elevation_loss_m: 580,
+        distance_m: road ? 10000 : 30000,
+        elevation_gain_m: road ? 25 : 600,
+        elevation_loss_m: road ? 20 : 580,
         step_m: 1000,
-        points: Array.from({ length: 31 }, (_, index) => [
+        points: Array.from({ length: road ? 11 : 31 }, (_, index) => [
           48.8 + index * 0.009,
           2.3 + Math.sin(index / 4) * 0.01,
-          100 + index * 2 + Math.sin(index) * 20,
+          road
+            ? 100 + index * 0.5 + Math.sin(index) * 2
+            : 100 + index * 2 + Math.sin(index) * 20,
         ]),
         imported_at: new Date().toISOString(),
       },
     ];
-    tables.race_waypoints = [
-      ["start", "Départ", 0],
-      ["aid", "Ravito du Bois", 10000],
-      ["water", "Point d’eau", 20000],
-      ["finish", "Arrivée", 30000],
-    ].map(([kind, name, distance], index) => ({
+    tables.race_waypoints = (
+      road
+        ? [
+            ["start", "Départ", 0],
+            ["finish", "Arrivée", 10000],
+          ]
+        : [
+            ["start", "Départ", 0],
+            ["aid", "Ravito du Bois", 10000],
+            ["water", "Point d’eau", 20000],
+            ["finish", "Arrivée", 30000],
+          ]
+    ).map(([kind, name, distance], index) => ({
       id: `cccccccc-cccc-4ccc-8ccc-${String(index + 1).padStart(12, "0")}`,
       race_id: race.id,
       user_id: user.id,
@@ -519,6 +537,7 @@ createServer(async (request, response) => {
           id: randomUUID(),
           user_id: user.id,
           name: null,
+          race_kind: "road",
           race_date: null,
           distance_km: null,
           elevation_gain_m: null,

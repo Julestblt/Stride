@@ -114,6 +114,7 @@ export async function saveSettingsRace(data: FormData) {
     id: data.get("id"),
     revision: Number(data.get("revision")),
     values: {
+      race_kind: data.get("race_kind"),
       name: nullableText(data.get("name")),
       race_date: nullableText(data.get("race_date")),
       distance_km: nullableNumber(data.get("distance_km")),
@@ -139,6 +140,7 @@ export async function saveSettingsRace(data: FormData) {
 
 export async function addSettingsRace(data: FormData) {
   const values = {
+    race_kind: data.get("race_kind"),
     name: nullableText(data.get("name")),
     race_date: nullableText(data.get("race_date")),
     distance_km: nullableNumber(data.get("distance_km")),

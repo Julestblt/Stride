@@ -218,6 +218,7 @@ export function RaceHeader({
   const base = `/races/${race.id}`;
   const meta = [
     `Course ${race.priority}`,
+    race.kind === "road" ? "Route" : "Trail",
     race.date ? formatRaceDate(race.date) : null,
     ...plan.labels,
   ].filter(Boolean);
@@ -226,6 +227,7 @@ export function RaceHeader({
       raceId={race.id}
       raceRevision={race.revision}
       targetSeconds={race.targetSeconds}
+      kind={race.kind}
       plan={plan}
     >
       {children}
@@ -258,28 +260,32 @@ export function RaceHeader({
                   Remplacer le GPX
                 </Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="md"
-                className="rounded-surface text-meta"
-              >
-                <Link href={`${base}/waypoints`}>
-                  <MapPinIcon className="size-3.5" />
-                  Points de passage · {waypointCount}
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="md"
-                className="rounded-surface text-meta"
-              >
-                <Link href={`${base}/waypoints#montre`}>
-                  <DownloadIcon className="size-3.5" />
-                  Exporter pour la montre
-                </Link>
-              </Button>
+              {race.kind === "trail" && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="md"
+                  className="rounded-surface text-meta"
+                >
+                  <Link href={`${base}/waypoints`}>
+                    <MapPinIcon className="size-3.5" />
+                    Points de passage · {waypointCount}
+                  </Link>
+                </Button>
+              )}
+              {race.kind === "trail" && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="md"
+                  className="rounded-surface text-meta"
+                >
+                  <Link href={`${base}/waypoints#montre`}>
+                    <DownloadIcon className="size-3.5" />
+                    Exporter pour la montre
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         ) : (
@@ -343,28 +349,32 @@ export function RaceHeader({
                 Remplacer
               </Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="md"
-              className="rounded-surface"
-            >
-              <Link href={`${base}/waypoints`}>
-                <MapPinIcon className="size-3.5" />
-                Points · {waypointCount}
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="md"
-              className="rounded-surface"
-            >
-              <Link href={`${base}/waypoints#montre`}>
-                <DownloadIcon className="size-3.5" />
-                Montre
-              </Link>
-            </Button>
+            {race.kind === "trail" && (
+              <Button
+                asChild
+                variant="outline"
+                size="md"
+                className="rounded-surface"
+              >
+                <Link href={`${base}/waypoints`}>
+                  <MapPinIcon className="size-3.5" />
+                  Points · {waypointCount}
+                </Link>
+              </Button>
+            )}
+            {race.kind === "trail" && (
+              <Button
+                asChild
+                variant="outline"
+                size="md"
+                className="rounded-surface"
+              >
+                <Link href={`${base}/waypoints#montre`}>
+                  <DownloadIcon className="size-3.5" />
+                  Montre
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       ) : (

@@ -11,11 +11,15 @@ export const goalFocuses = [
 export type GoalFocus = (typeof goalFocuses)[number];
 export const racePriorities = ["A", "B", "C"] as const;
 export type RacePriority = (typeof racePriorities)[number];
+export const raceKinds = ["road", "trail"] as const;
+export type RaceKind = (typeof raceKinds)[number];
+export const roadDistancePresets = [5, 10, 21.1, 42.2] as const;
 export const maxRaces = 10;
 export const maxTargetSeconds = 1_209_599;
 
 export type GoalValues = { focus: GoalFocus | null };
 export type RaceValues = {
+  race_kind: RaceKind;
   name: string | null;
   race_date: string | null;
   distance_km: number | null;
@@ -46,6 +50,7 @@ export const goalSaveSchema = z.strictObject({
 });
 
 export const raceValueSchemas = {
+  race_kind: z.enum(raceKinds),
   name: z.string().trim().min(1).max(120),
   race_date: z.iso.date(),
   distance_km: z.number().gt(0).max(1000).multipleOf(0.01),
@@ -57,6 +62,7 @@ export const raceValueSchemas = {
 export const raceSaveSchema = z.strictObject({
   id: z.uuid(),
   values: z.strictObject({
+    race_kind: raceValueSchemas.race_kind.optional(),
     name: raceValueSchemas.name.nullable().optional(),
     race_date: raceValueSchemas.race_date.nullable().optional(),
     distance_km: raceValueSchemas.distance_km.nullable().optional(),
@@ -86,6 +92,7 @@ export const raceRowSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),
   name: z.string().nullable(),
+  race_kind: z.enum(raceKinds),
   race_date: z.string().nullable(),
   distance_km: numeric,
   elevation_gain_m: z.number().nullable(),
@@ -103,6 +110,7 @@ export function raceSnapshot(
     revision: row.revision,
     updatedAt: row.updated_at,
     values: {
+      race_kind: row.race_kind,
       name: row.name,
       race_date: row.race_date,
       distance_km: row.distance_km,

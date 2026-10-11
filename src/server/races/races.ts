@@ -37,6 +37,7 @@ function summary(row: unknown): RaceSummary {
   return {
     id: race.id,
     name: race.name ?? "Course sans nom",
+    kind: race.race_kind,
     date: race.race_date,
     distanceKm: race.distance_km,
     elevationGainM: race.elevation_gain_m,

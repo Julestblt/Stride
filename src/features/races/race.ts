@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { clockFromSql } from "./format";
+import type { RaceKind } from "@/features/onboarding/goals";
 import type { CoursePoint } from "./course";
 
 export type RacePlan = {
@@ -163,6 +164,7 @@ export const courseRowSchema = z
 export type RaceSummary = {
   id: string;
   name: string;
+  kind: RaceKind;
   date: string | null;
   distanceKm: number | null;
   elevationGainM: number | null;

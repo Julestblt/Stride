@@ -21,6 +21,7 @@ export function TargetMissing({
         raceId={race.id}
         raceRevision={race.revision}
         targetSeconds={race.targetSeconds}
+        kind={race.kind}
         plan={plan}
       >
         <Button className="self-start" size="sm">

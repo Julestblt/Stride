@@ -23,6 +23,7 @@ const raceRow = (overrides: Record<string, unknown> = {}) => ({
   id: raceId,
   user_id: userId,
   name: "EcoTrail Paris",
+  race_kind: "trail",
   race_date: "2027-03-20",
   distance_km: "120.00",
   elevation_gain_m: 2000,
@@ -50,6 +51,7 @@ describe("goal and race validation", () => {
   it("requires name, date and distance for a race to count", () => {
     expect(
       missingRaceFields({
+        race_kind: "road",
         name: null,
         race_date: "2027-03-20",
         distance_km: null,
@@ -66,6 +68,7 @@ describe("goal and race validation", () => {
     [{ elevation_gain_m: -1 }],
     [{ elevation_gain_m: 12.5 }],
     [{ priority: "D" }],
+    [{ race_kind: "track" }],
     [{ target_duration_seconds: 0 }],
     [{ name: "x".repeat(121) }],
     [{ unknown: 1 }],
@@ -73,6 +76,15 @@ describe("goal and race validation", () => {
     expect(
       raceSaveSchema.safeParse({ id: raceId, values, revision: 1 }).success,
     ).toBe(false);
+  });
+  it("stores an explicit route or trail choice independently of distance", () => {
+    expect(
+      raceSaveSchema.safeParse({
+        id: raceId,
+        revision: 3,
+        values: { race_kind: "road", distance_km: 60 },
+      }).success,
+    ).toBe(true);
   });
   it("accepts goal focuses only from the approved list", () => {
     expect(
