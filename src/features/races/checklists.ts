@@ -187,7 +187,7 @@ export function checklistTemplateFor(
   list: ChecklistList,
 ) {
   return kind === "road"
-    ? (roadPreparationTemplates[list] ?? checklistTemplates[list])
+    ? roadPreparationTemplates[list]
     : checklistTemplates[list];
 }
 

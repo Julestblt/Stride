@@ -40,6 +40,7 @@ import {
 } from "@/features/races/race";
 import { courseModel, planModel } from "@/features/races/workspace";
 import { roadBrief, roadReading } from "@/features/races/reading";
+import { checklistTemplateFor } from "@/features/races/checklists";
 
 const metersPerDegree = 111_195;
 
@@ -187,6 +188,16 @@ describe("road race simulation", () => {
     expect(
       roadBrief({ model, planned, weather: null }).map((item) => item.key),
     ).toEqual(["pace", "finish"]);
+  });
+
+  it("uses road preparation tasks without trail equipment templates", () => {
+    expect(
+      checklistTemplateFor("road", "prep_eve")?.map((item) => item.label),
+    ).toContain("Préparer dossard, épingles, tenue et chaussures");
+    expect(checklistTemplateFor("road", "gear_night")).toBeUndefined();
+    expect(checklistTemplateFor("trail", "gear_night")?.length).toBeGreaterThan(
+      0,
+    );
   });
 });
 

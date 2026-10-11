@@ -187,7 +187,11 @@ function stats(
       key: "target",
       value: race.targetSeconds ? formatDuration(race.targetSeconds) : "—",
       label: "Objectif",
-      detail: scenarios.length ? scenarios.join(" · ") : "à définir",
+      detail: scenarios.length
+        ? scenarios.join(" · ")
+        : race.targetSeconds
+          ? "temps visé"
+          : "à définir",
       edit: true,
     },
     {
@@ -325,6 +329,7 @@ export function RaceHeader({
                 editTrigger(
                   <button
                     type="button"
+                    aria-label="Modifier les réglages de la course"
                     className="ml-1 rounded-tag text-muted-foreground underline-offset-2 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                   >
                     · modifier

@@ -5,11 +5,11 @@ import { z } from "zod";
 import {
   checklistInputSchema,
   checklistLists,
-  checklistTemplates,
+  checklistTemplateFor,
 } from "@/features/races/checklists";
 import { clockToSql } from "@/features/races/format";
 import { planInputSchema } from "@/features/races/race";
-import type { RaceKind } from "@/features/onboarding/goals";
+import { raceValueSchemas, type RaceKind } from "@/features/onboarding/goals";
 import { waypointInputSchema } from "@/features/races/waypoints";
 import { saveRace } from "@/server/onboarding/goals";
 import { getOnboardingContext } from "@/server/onboarding/context";
@@ -367,10 +367,20 @@ export async function applyChecklistTemplate(
   const race = idSchema.safeParse(raceId);
   const parsedList = listSchema.safeParse(list);
   if (!race.success || !parsedList.success) return { status: "invalid" };
-  const template = checklistTemplates[parsedList.data];
-  if (!template) return { status: "invalid" };
   const current = await context();
   if (!current) return { status: "session-expired" };
+  const owner = await current.client
+    .from("athlete_races")
+    .select("race_kind")
+    .eq("id", race.data)
+    .eq("user_id", current.userId)
+    .maybeSingle();
+  if (owner.error) return { status: "error" };
+  if (!owner.data) return { status: "missing" };
+  const kind = raceValueSchemas.race_kind.safeParse(owner.data.race_kind);
+  if (!kind.success) return { status: "error" };
+  const template = checklistTemplateFor(kind.data, parsedList.data);
+  if (!template) return { status: "invalid" };
   const existing = await current.client
     .from("race_checklist_items")
     .select("id", { count: "exact", head: true })

@@ -531,6 +531,17 @@ createServer(async (request, response) => {
       });
       return send(200, [goal]);
     }
+    if (request.method === "PATCH" && url.pathname === "/rest/v1/race_plans") {
+      const plan = tables.race_plans.find(
+        (item) =>
+          url.searchParams.get("race_id") === `eq.${item.race_id}` &&
+          url.searchParams.get("user_id") === `eq.${item.user_id}` &&
+          url.searchParams.get("revision") === `eq.${item.revision}`,
+      );
+      if (!plan) return send(200, []);
+      Object.assign(plan, body, { revision: plan.revision + 1 });
+      return send(200, [plan]);
+    }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {
         const race = {
