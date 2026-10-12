@@ -21,7 +21,7 @@ const fitnessMetrics = [
   "vo2_max",
 ];
 
-async function readAll<T>(
+export async function readAll<T>(
   page: (
     from: number,
     to: number,
@@ -36,7 +36,9 @@ async function readAll<T>(
   }
 }
 
-async function readRaces(context: OnboardingContext): Promise<ProgressRace[]> {
+export async function readRaces(
+  context: OnboardingContext,
+): Promise<ProgressRace[]> {
   const goals = await readGoals(context).catch(() => null);
   return (goals?.races ?? []).flatMap(({ id, values }) =>
     values.race_date
