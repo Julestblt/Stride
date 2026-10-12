@@ -57,7 +57,99 @@ const activity = (id, days, values) => ({
   ...daysAgo(days),
   ...values,
 });
+const lap = (activityId, index, values) => ({
+  activity_id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(activityId).padStart(12, "0")}`,
+  user_id: user.id,
+  segment_type: "lap",
+  segment_index: index,
+  started_at: null,
+  average_cadence: null,
+  average_power_watts: null,
+  ...values,
+});
+const progressLaps = [
+  ...Array.from({ length: 70 }, (_, run) =>
+    Array.from({ length: 8 }, (_, index) =>
+      lap(100 + run, index, {
+        distance_meters: 1000,
+        duration_seconds: 330 + Math.round(run * 0.25) + (index % 3),
+        average_heart_rate: index === 6 ? 157 : 134 + (index % 3),
+        elevation_gain_meters: 4,
+        elevation_loss_meters: 4,
+      }),
+    ),
+  ).flat(),
+  ...Array.from({ length: 21 }, (_, index) =>
+    lap(2, index, {
+      distance_meters: 1000,
+      duration_seconds: index % 5 === 2 ? 540 : 350,
+      average_heart_rate: index < 10 ? 140 : 152,
+      elevation_gain_meters: index % 5 === 2 ? 100 : 6,
+      elevation_loss_meters: index % 5 === 3 ? 100 : 6,
+    }),
+  ),
+];
+const progressObservations = Array.from({ length: 200 }, (_, index) => {
+  const age = 199 - index;
+  const observed_on = new Date(Date.now() - age * day)
+    .toISOString()
+    .slice(0, 10);
+  const chronic = Math.round(
+    260 + index * 0.9 - Math.max(0, 38 - age) * 1.5 + Math.sin(index / 9) * 12,
+  );
+  const acute = Math.round(chronic + Math.sin(index / 3.2) * 70);
+  return [
+    ["training_load_chronic", chronic],
+    ["training_load_acute", acute],
+    ["vo2_max", index < 120 ? 54 : 55],
+  ].map(([metric, value_numeric]) => ({
+    user_id: user.id,
+    metric,
+    observed_on,
+    value_numeric,
+    availability: "available",
+  }));
+}).flat();
+const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
+  const age = 59 - index;
+  const observed_on = new Date(Date.now() - age * day)
+    .toISOString()
+    .slice(0, 10);
+  const wave = Math.sin(index / 2.3);
+  const values = [
+    ["training_readiness", age === 0 ? 58 : Math.round(70 + wave * 6), null],
+    [
+      "sleep_duration_seconds",
+      age === 0 ? 21_120 : Math.round(26_400 + wave * 1200),
+      null,
+    ],
+    ["sleep_score", age === 0 ? 61 : Math.round(82 + wave * 5), null],
+    ["hrv_last_night_ms", age === 0 ? 46 : Math.round(58 + wave * 4), null],
+    ["hrv_status", null, "BALANCED"],
+    ["sleep_deep_seconds", age === 0 ? 3480 : 4800, null],
+    ["sleep_light_seconds", age === 0 ? 12_360 : 14_400, null],
+    ["sleep_rem_seconds", age === 0 ? 5280 : 5700, null],
+    ["sleep_awake_seconds", age === 0 ? 840 : 600, null],
+    ["average_stress", Math.round(30 + wave * 6), null],
+    ["body_battery_wake", age === 0 ? 61 : Math.round(80 + wave * 8), null],
+    ["body_battery_charged", age === 0 ? 38 : Math.round(55 + wave * 6), null],
+    ["body_battery_drained", Math.round(-50 - wave * 8), null],
+    ["recovery_time_minutes", age === 0 ? 840 : 600, null],
+    ["load_focus_low_aerobic", 310, null],
+    ["load_focus_high_aerobic", 280, null],
+    ["load_focus_anaerobic", 70, null],
+  ];
+  return values.map(([metric, value_numeric, value_text]) => ({
+    user_id: user.id,
+    metric,
+    observed_on,
+    value_numeric,
+    value_text,
+    availability: "available",
+  }));
+}).flat();
 const tables = {
+  athlete_wellness_checkins: [],
   provider_activities: [
     activity(1, 1, {
       distance_meters: 8320,
@@ -118,20 +210,22 @@ const tables = {
     [120, 320, 6.18, 146, 163, 0],
     [440, 1600, 4.36, 171, 180, 2],
     [740, 1990, 6.12, 136, 158, 1],
-  ].map(([duration, distance, , heartRate, cadence, gain], index) => ({
-    activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
-    user_id: user.id,
-    segment_type: "lap",
-    segment_index: index,
-    started_at: null,
-    distance_meters: distance,
-    duration_seconds: duration,
-    average_heart_rate: heartRate,
-    average_cadence: cadence,
-    average_power_watts: null,
-    elevation_gain_meters: gain,
-    elevation_loss_meters: null,
-  })),
+  ]
+    .map(([duration, distance, , heartRate, cadence, gain], index) => ({
+      activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
+      user_id: user.id,
+      segment_type: "lap",
+      segment_index: index,
+      started_at: null,
+      distance_meters: distance,
+      duration_seconds: duration,
+      average_heart_rate: heartRate,
+      average_cadence: cadence,
+      average_power_watts: null,
+      elevation_gain_meters: gain,
+      elevation_loss_meters: null,
+    }))
+    .concat(progressLaps),
   provider_activity_tracks: [
     {
       activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
@@ -206,7 +300,9 @@ const tables = {
     observed_on: new Date(Date.now() - index * day).toISOString().slice(0, 10),
     value_numeric: 50,
     availability: "available",
-  })),
+  }))
+    .concat(progressObservations)
+    .concat(recoveryObservations),
   athlete_profiles: [
     {
       user_id: user.id,
@@ -280,6 +376,13 @@ function selectRows(table, params) {
       rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
     if (["metric", "availability"].includes(key) && filter.startsWith("eq."))
       rows = rows.filter((row) => row[key] === filter.slice(3));
+    if (["metric", "availability"].includes(key) && filter.startsWith("in.(")) {
+      const allowed = filter
+        .slice(4, -1)
+        .split(",")
+        .map((item) => item.replace(/"/g, ""));
+      rows = rows.filter((row) => allowed.includes(row[key]));
+    }
   }
   const nameFilter = params.get("activity_name");
   if (nameFilter && /^(ilike|imatch)\./.test(nameFilter)) {
@@ -308,8 +411,10 @@ function selectRows(table, params) {
   if (table === "provider_activity_segments")
     rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
   const total = rows.length;
+  const offset = Number(params.get("offset")) || 0;
   const limit = Number(params.get("limit"));
-  if (limit > 0) rows = rows.slice(0, limit);
+  if (offset > 0 || limit > 0)
+    rows = rows.slice(offset, limit > 0 ? offset + limit : undefined);
   return { rows, total };
 }
 const events = [];
@@ -541,6 +646,26 @@ createServer(async (request, response) => {
       if (!plan) return send(200, []);
       Object.assign(plan, body, { revision: plan.revision + 1 });
       return send(200, [plan]);
+    }
+    if (
+      request.method === "POST" &&
+      url.pathname === "/rest/v1/athlete_wellness_checkins"
+    ) {
+      const existing = tables.athlete_wellness_checkins.find(
+        (item) => item.checkin_date === body.checkin_date,
+      );
+      const checkin = {
+        legs: null,
+        soreness: null,
+        stress: null,
+        ...existing,
+        ...body,
+        updated_at: new Date().toISOString(),
+      };
+      tables.athlete_wellness_checkins = tables.athlete_wellness_checkins
+        .filter((item) => item !== existing)
+        .concat(checkin);
+      return send(201, checkin);
     }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {

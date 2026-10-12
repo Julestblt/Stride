@@ -11,7 +11,9 @@ import {
   connectionSchema,
   parseFailure,
   syncSchema,
+  wellnessDaySchema,
 } from "./contract";
+import type { WellnessDay } from "@/features/garmin/wellness";
 
 export type GarminRequestContext = { accessToken: string };
 
@@ -20,6 +22,7 @@ type GarminClientOptions = {
   fetch?: typeof fetch;
   readTimeoutMs?: number;
   authTimeoutMs?: number;
+  wellnessTimeoutMs?: number;
 };
 
 export type GarminClient = ReturnType<typeof createGarminClient>;
@@ -29,6 +32,7 @@ export function createGarminClient({
   fetch: send = fetch,
   readTimeoutMs = 10_000,
   authTimeoutMs = 60_000,
+  wellnessTimeoutMs = 25_000,
 }: GarminClientOptions) {
   async function request<Schema extends z.ZodType>(
     context: GarminRequestContext,
@@ -126,6 +130,17 @@ export function createGarminClient({
         "/v1/connections/garmin/sync",
         syncSchema,
         readTimeoutMs,
+      );
+    },
+    getWellnessDay(
+      context: GarminRequestContext,
+      date: string,
+    ): Promise<GarminResult<WellnessDay>> {
+      return request(
+        context,
+        `/v1/wellness/days/${encodeURIComponent(date)}`,
+        wellnessDaySchema,
+        wellnessTimeoutMs,
       );
     },
   };

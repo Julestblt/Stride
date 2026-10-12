@@ -135,6 +135,43 @@ export type Database = {
         };
         Relationships: [];
       };
+      athlete_wellness_checkins: {
+        Row: {
+          checkin_date: string;
+          created_at: string;
+          id: string;
+          legs: string | null;
+          revision: number;
+          soreness: string | null;
+          stress: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          checkin_date: string;
+          created_at?: string;
+          id?: string;
+          legs?: string | null;
+          revision?: number;
+          soreness?: string | null;
+          stress?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          checkin_date?: string;
+          created_at?: string;
+          id?: string;
+          legs?: string | null;
+          revision?: number;
+          soreness?: string | null;
+          stress?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       auth_attempts: {
         Row: {
           attempts: number;

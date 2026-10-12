@@ -27,6 +27,7 @@ MCP is an interface for AI tools, never the source of truth.
 | Sync status          | `GET /v1/connections/garmin/sync`    | Import step and shell status                          |
 | Disconnect           | `DELETE /v1/connections/garmin`      | Settings, outside onboarding                          |
 | Delete imported data | `DELETE /v1/connections/garmin/data` | Settings, outside onboarding                          |
+| Wellness day         | `GET /v1/wellness/days/{date}`       | Santé day view; intraday curves fetched on demand     |
 
 Start and MFA return `{ "status": "connected" }` or `{ "status": "mfa_required", "challenge_id": "<uuid>" }`. Errors return `{ "error": { "code": "<code>" } }`. Stride maps codes, never HTTP status alone, because both its own expired session and Garmin credential errors can be `401`.
 

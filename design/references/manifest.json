@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 98,
-    "html_exports": 98,
-    "matched": 98,
-    "exact": 98,
+    "screenshots": 100,
+    "html_exports": 101,
+    "matched": 101,
+    "exact": 101,
     "high": 0,
     "uncertain": 0
   },
@@ -1287,6 +1287,45 @@
       "original_export_name": "System · Page not found (404) · Mobile-html.zip",
       "matched_confidence": "exact",
       "notes": "French v1 page-not-found screen."
+    },
+    {
+      "id": "app/progress/health-week-desktop",
+      "area": "app",
+      "screen": "progress",
+      "state": "health-week",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/progress/screenshots/health-week-desktop.png",
+      "html_reference_path": "design/references/app/progress/source/health-week-desktop.zip",
+      "original_screenshot_name": "App · Health · Desktop@2x.png",
+      "original_export_name": "App · Health · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Santé tab, Semaine filter. The owner confirmed Mois uses the same layout over a month."
+    },
+    {
+      "id": "app/progress/health-week-mobile",
+      "area": "app",
+      "screen": "progress",
+      "state": "health-week",
+      "device": "mobile",
+      "screenshot_path": null,
+      "html_reference_path": "design/references/app/progress/source/health-week-mobile.zip",
+      "original_screenshot_name": null,
+      "original_export_name": "App · Health · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Santé tab, Semaine filter on mobile. No screenshot was exported; the HTML export is the only reference."
+    },
+    {
+      "id": "app/progress/health-day-desktop",
+      "area": "app",
+      "screen": "progress",
+      "state": "health-day",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/progress/screenshots/health-day-desktop.png",
+      "html_reference_path": "design/references/app/progress/source/health-day-desktop.zip",
+      "original_screenshot_name": "App · Progress · Health · Day · Desktop@2x.png",
+      "original_export_name": "App · Progress · Health · Day · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Santé tab, Jour filter with the hour-by-hour timeline."
     }
   ],
   "unresolved": []
