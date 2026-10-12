@@ -159,3 +159,57 @@ test("progress tabs switch between fitness and recovery", async ({ page }) => {
       .getByText("Récupération"),
   ).toBeVisible();
 });
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`health week view renders Garmin signals at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await signIn(page);
+    await page.goto("/progress/health");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Santé" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        name: "Tu récupères bien de la charge, mais ton sommeil ne suit plus.",
+      }),
+    ).toBeVisible();
+    const sleep = page.getByRole("region", { name: "Sommeil" });
+    await expect(sleep.getByText("5h52", { exact: true })).toBeVisible();
+    await expect(sleep.getByText("58 min")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Charge et forme" })
+        .getByText("Aérobie faible", { exact: true }),
+    ).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(overflow).toBe(false);
+  });
+}
+
+test("health switches to the month and explains values on hover", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/progress/health");
+  await page
+    .getByRole("navigation", { name: "Période" })
+    .getByRole("link", { name: "Mois" })
+    .click();
+  await expect(page).toHaveURL("/progress/health?view=month");
+  await expect(page.getByText("Garmin · sommeil · 30 nuits")).toBeVisible();
+  const chart = page
+    .getByRole("region", { name: "Sommeil" })
+    .getByRole("group", { name: /Durée de sommeil/ });
+  await chart.scrollIntoViewIfNeeded();
+  const box = (await chart.boundingBox())!;
+  await chart.hover({ position: { x: box.width - 4, y: box.height / 2 } });
+  await expect(chart.getByRole("status")).toContainText("5h52");
+  await expect(chart.getByRole("status")).toContainText("Ta moyenne");
+});

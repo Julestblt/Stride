@@ -126,6 +126,18 @@ const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
     ["sleep_score", age === 0 ? 61 : Math.round(82 + wave * 5), null],
     ["hrv_last_night_ms", age === 0 ? 46 : Math.round(58 + wave * 4), null],
     ["hrv_status", null, "BALANCED"],
+    ["sleep_deep_seconds", age === 0 ? 3480 : 4800, null],
+    ["sleep_light_seconds", age === 0 ? 12_360 : 14_400, null],
+    ["sleep_rem_seconds", age === 0 ? 5280 : 5700, null],
+    ["sleep_awake_seconds", age === 0 ? 840 : 600, null],
+    ["average_stress", Math.round(30 + wave * 6), null],
+    ["body_battery_wake", age === 0 ? 61 : Math.round(80 + wave * 8), null],
+    ["body_battery_charged", age === 0 ? 38 : Math.round(55 + wave * 6), null],
+    ["body_battery_drained", Math.round(-50 - wave * 8), null],
+    ["recovery_time_minutes", age === 0 ? 840 : 600, null],
+    ["load_focus_low_aerobic", 310, null],
+    ["load_focus_high_aerobic", 280, null],
+    ["load_focus_anaerobic", 70, null],
   ];
   return values.map(([metric, value_numeric, value_text]) => ({
     user_id: user.id,
@@ -364,6 +376,13 @@ function selectRows(table, params) {
       rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
     if (["metric", "availability"].includes(key) && filter.startsWith("eq."))
       rows = rows.filter((row) => row[key] === filter.slice(3));
+    if (["metric", "availability"].includes(key) && filter.startsWith("in.(")) {
+      const allowed = filter
+        .slice(4, -1)
+        .split(",")
+        .map((item) => item.replace(/"/g, ""));
+      rows = rows.filter((row) => allowed.includes(row[key]));
+    }
   }
   const nameFilter = params.get("activity_name");
   if (nameFilter && /^(ilike|imatch)\./.test(nameFilter)) {
@@ -392,8 +411,10 @@ function selectRows(table, params) {
   if (table === "provider_activity_segments")
     rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
   const total = rows.length;
+  const offset = Number(params.get("offset")) || 0;
   const limit = Number(params.get("limit"));
-  if (limit > 0) rows = rows.slice(0, limit);
+  if (offset > 0 || limit > 0)
+    rows = rows.slice(offset, limit > 0 ? offset + limit : undefined);
   return { rows, total };
 }
 const events = [];

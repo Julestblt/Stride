@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 export const progressSections = [
   { href: "/progress", label: "Forme" },
   { href: "/progress/recovery", label: "Récupération" },
+  { href: "/progress/health", label: "Santé" },
 ] as const;
 
 function useSection() {
