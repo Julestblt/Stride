@@ -55,3 +55,14 @@ The check-in stores one row per athlete and local day in `athlete_wellness_check
 | Charge et forme    | Acute ÷ chronic Garmin load: < 0.8 low, 0.8–1.5 productive, > 1.5 high; VO₂max, Garmin recovery time and 4-week load focus                  | `training_load_*`, `vo2_max`, `recovery_time_minutes`, `load_focus_*`                                                                |
 
 Every chart can be inspected with a pointer, by touch or with the arrow keys; each value shows its date, unit and reference.
+
+### Jour
+
+`/progress/health?view=day&date=YYYY-MM-DD` (today by default, up to two years back) reads the day and the previous day from garmin_mcp's `GET /v1/wellness/days/{date}`, fetched on demand and never stored, plus the day's activities and the stored daily observations for reference ranges. The window runs from 22:00 the previous evening to 22:00, Europe/Paris time; the future part of today is hatched and never drawn.
+
+- Indicators: sleep (phases sum, bedtime, wake time, awakenings), the night's HRV against the usual range, resting HR against its median, latest Body Battery against wake-up, average stress with its longest high episode, and steps against the Garmin goal.
+- Timeline: sleep phases, heart rate (2-minute averages) with resting HR, stress (3-minute bars coloured by Garmin category), Body Battery and hourly steps. Ten-minute slots feed the inspector.
+- Moments: bedtime, night awakenings of 5 minutes or more, wake-up with Body Battery and overnight recharge, recorded activities, high-stress episodes (above 50 for at least 30 minutes while awake) and the longest calm pause (25 or less for at least 20 minutes after waking) with its Body Battery change.
+- Reading: a deterministic headline from sleep against the 14-night mean and the presence of a high-stress episode.
+
+When garmin_mcp cannot provide the day, the page says why (unavailable, reconnection required, rate limit) and the week view stays available. The reference's Body Battery projection and plan actions are not shown.
