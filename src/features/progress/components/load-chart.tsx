@@ -1,3 +1,7 @@
+import {
+  ChartInspector,
+  type InspectorPoint,
+} from "@/components/stride/chart-inspector";
 import { StrideMark } from "@/components/stride/stride-mark";
 import type { LoadChart as LoadChartModel } from "../load";
 import { addDays, daysBetween } from "../period";
@@ -230,18 +234,52 @@ export function LoadChart({
 }: {
   chart: LoadChartModel & { note: string };
 }) {
+  const span = Math.max(1, daysBetween(chart.start, chart.end));
+  const markers = new Map(chart.markers.map((marker) => [marker.day, marker]));
+  const points: InspectorPoint[] = chart.points.map((point) => ({
+    x: daysBetween(chart.start, point.day) / span,
+    title: markers.has(point.day)
+      ? `${formatDayMonth(point.day)} · ${markers.get(point.day)!.name}`
+      : formatDayMonth(point.day),
+    rows: [
+      {
+        label: "Condition",
+        value: formatInteger(point.condition),
+        tone: "foreground",
+      },
+      { label: "Fatigue", value: formatInteger(point.fatigue), tone: "danger" },
+      {
+        label: "Fraîcheur",
+        value: `${point.condition - point.fatigue > 0 ? "+" : ""}${formatInteger(point.condition - point.fatigue)}`,
+        tone: "provider",
+      },
+    ],
+  }));
   return (
     <figure className="flex flex-col gap-3">
-      <Plot
-        chart={chart}
-        frame={desktop}
-        className="h-auto w-full max-sm:hidden"
-      />
-      <Plot chart={chart} frame={mobile} className="h-auto w-full sm:hidden" />
+      <ChartInspector
+        label="Condition, fatigue et fraîcheur"
+        points={points}
+        className="max-sm:hidden"
+      >
+        <Plot chart={chart} frame={desktop} className="h-auto w-full" />
+      </ChartInspector>
+      <ChartInspector
+        label="Condition, fatigue et fraîcheur"
+        points={points}
+        className="sm:hidden"
+      >
+        <Plot chart={chart} frame={mobile} className="h-auto w-full" />
+      </ChartInspector>
       <figcaption className="flex items-start gap-2.5 text-sm text-muted sm:text-meta">
         <StrideMark className="mt-0.5 size-3.5 shrink-0" />
         <span className="text-pretty">{chart.note}</span>
       </figcaption>
+      <p className="text-xs text-muted-foreground">
+        Condition : charge chronique Garmin (moyenne sur 28 jours). Fatigue :
+        charge aiguë Garmin (7 derniers jours). Fraîcheur : condition moins
+        fatigue, moyenne par semaine ; au-dessus de la ligne, tu es reposé.
+      </p>
     </figure>
   );
 }

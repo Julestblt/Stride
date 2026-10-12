@@ -60,10 +60,7 @@ export function VerdictRow({
         className="justify-self-end sm:justify-self-start"
       />
       {children && (
-        <span
-          aria-hidden="true"
-          className="col-start-2 row-start-2 justify-self-end sm:hidden lg:col-start-auto lg:row-start-auto lg:block lg:justify-self-stretch"
-        >
+        <span className="col-start-2 row-start-2 justify-self-end sm:hidden lg:col-start-auto lg:row-start-auto lg:block lg:justify-self-stretch">
           {children}
         </span>
       )}

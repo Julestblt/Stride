@@ -2,7 +2,7 @@ import type { Trend } from "@/components/stride/marks";
 import type { HeartRateZones } from "@/features/onboarding/heart-rate-zones";
 import type { ProgressHistory } from "./history";
 import { buildLoadChart, type LoadChart } from "./load";
-import { fitnessMeasures, type Measure } from "./measures";
+import { fitnessMeasures, sparklineWindows, type Measure } from "./measures";
 import { periodPhrases, periodStart, type ProgressPeriod } from "./period";
 import { racePredictions, type RacePredictions } from "./predictions";
 import { fitnessRecords } from "./records";
@@ -17,6 +17,7 @@ import {
   formatMonth,
   formatMonthYear,
   formatPace,
+  formatDayMonthShort,
 } from "./format";
 
 export type MeasureRow = {
@@ -27,6 +28,7 @@ export type MeasureRow = {
   trend?: Trend;
   verdict: string;
   sparkline: (number | null)[] | null;
+  samples?: { title: string; value: string }[];
   tone: "success" | "muted" | "warning" | "danger";
 };
 
@@ -224,6 +226,22 @@ export function fitnessView({
       tone: "muted",
     },
   ];
+  const windows = sparklineWindows(start, today);
+  const formatters: Record<string, (value: number) => string> = {
+    efficiency: (value) => `${formatPace(value)} /km`,
+    climbing: (value) => `${formatInteger(value)} m/h`,
+    threshold: (value) => `${formatPace(value)} /km`,
+    vo2: (value) => formatInteger(value),
+    drift: (value) => `${formatDecimal(value)} %`,
+  };
+  for (const item of rows) {
+    const format = formatters[item.key];
+    if (!format || !item.sparkline) continue;
+    item.samples = item.sparkline.map((value, index) => ({
+      title: `${formatDayMonthShort(windows[index].from)} – ${formatDayMonthShort(windows[index].to)}`,
+      value: value === null ? "Pas de mesure" : format(value),
+    }));
+  }
   const predictions = racePredictions(history.vo2, history.races, today);
   const records = fitnessRecords(history.activities, history.laps);
   return {

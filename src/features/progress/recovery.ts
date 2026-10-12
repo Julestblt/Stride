@@ -176,7 +176,7 @@ export type SleepSignal = {
   lastDay: string;
   average: number | null;
   score: number | null;
-  nights: { day: string; seconds: number | null }[];
+  nights: { day: string; seconds: number | null; score: number | null }[];
 } & SignalStatus;
 
 export type RangeSignal = {
@@ -315,6 +315,7 @@ function sleepSignal(
   const window = windowNights(last.day, trendDays).map((day) => ({
     day,
     seconds: byDay.get(day)?.sleepSeconds ?? null,
+    score: byDay.get(day)?.sleepScore ?? null,
   }));
   const short =
     average === null

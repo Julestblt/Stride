@@ -3,6 +3,7 @@ import {
   ConfidenceMeter,
   type Confidence,
 } from "@/components/stride/confidence-meter";
+import { ChartInspector } from "@/components/stride/chart-inspector";
 import { CoachNote } from "@/components/stride/coach-note";
 import { SourceMark } from "@/components/stride/marks";
 import { Metric } from "@/components/stride/metric";
@@ -76,11 +77,29 @@ export function MeasureSection({
             verdict={row.verdict}
             className="py-3.5 sm:py-3.75 [&_[data-slot=trend-label]]:text-meta"
           >
-            <Sparkline
-              values={row.sparkline ?? []}
-              tone={row.tone}
-              className="max-lg:h-6 max-lg:w-15"
-            />
+            {row.samples ? (
+              <ChartInspector
+                label={`Évolution · ${row.label}`}
+                points={row.samples.map((sample, index, all) => ({
+                  x: all.length > 1 ? index / (all.length - 1) : 0.5,
+                  title: sample.title,
+                  rows: [{ label: row.label, value: sample.value }],
+                }))}
+                className="w-fit"
+              >
+                <Sparkline
+                  values={row.sparkline ?? []}
+                  tone={row.tone}
+                  className="max-lg:h-6 max-lg:w-15"
+                />
+              </ChartInspector>
+            ) : (
+              <Sparkline
+                values={row.sparkline ?? []}
+                tone={row.tone}
+                className="max-lg:h-6 max-lg:w-15"
+              />
+            )}
           </VerdictRow>
         ))}
       </VerdictList>
@@ -171,30 +190,55 @@ export function WeeklyHoursSection({ weeks }: { weeks: WeekVolume[] }) {
       <SectionTitle id="progress-hours">
         Heures par semaine · {weeks.length} sem.
       </SectionTitle>
-      <ol className="flex h-27.5 items-end gap-1 border-b border-border-strong">
-        {weeks.map((week) => (
-          <li
-            key={week.start}
-            className={cn(
-              "flex-1 rounded-t-mark",
-              week.current
-                ? "border-[1.5px] border-b-0 border-accent"
-                : week.race
-                  ? "bg-zone-3"
-                  : "bg-provider",
-            )}
-            style={{
-              height: `${Math.max(week.seconds > 0 ? 2 : 0, (week.seconds / max) * 100)}%`,
-            }}
-          >
-            <span className="sr-only">
-              {`Semaine du ${formatDayMonth(week.start)} : ${formatHours(week.seconds)}${week.race ? ", semaine de course" : ""}${week.current ? ", en cours" : ""}`}
-            </span>
-          </li>
-        ))}
-      </ol>
+      <ChartInspector
+        label="Heures d’entraînement par semaine"
+        points={weeks.map((week, index) => ({
+          x: (index + 0.5) / weeks.length,
+          title: `Semaine du ${formatDayMonth(week.start)}`,
+          rows: [
+            {
+              label: week.current ? "En cours" : "Entraînement",
+              value: formatHours(week.seconds),
+              tone: week.race ? "zone-3" : "provider",
+            },
+            ...(week.race
+              ? [{ label: "Semaine de course", value: "Oui" }]
+              : []),
+          ],
+        }))}
+      >
+        <ol className="flex h-27.5 items-end gap-1 border-b border-border-strong">
+          {weeks.map((week) => (
+            <li
+              key={week.start}
+              className={cn(
+                "flex-1 rounded-t-mark",
+                week.current
+                  ? "border-[1.5px] border-b-0 border-accent"
+                  : week.race
+                    ? "bg-zone-3"
+                    : "bg-provider",
+              )}
+              style={{
+                height: `${Math.max(week.seconds > 0 ? 2 : 0, (week.seconds / max) * 100)}%`,
+              }}
+            >
+              <span className="sr-only">
+                {`Semaine du ${formatDayMonth(week.start)} : ${formatHours(week.seconds)}${week.race ? ", semaine de course" : ""}${week.current ? ", en cours" : ""}`}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </ChartInspector>
       <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>{formatDayMonth(weeks[0].start)}</span>
+        <span className="flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className="size-2.5 rounded-mark bg-provider"
+          />
+          Toutes activités
+        </span>
         {hasRace && (
           <span className="flex items-center gap-1.5">
             <span

@@ -15,6 +15,7 @@ export type Deviation = {
   value: string;
   caption: string;
   score: number | null;
+  reference?: string;
 };
 
 export type SignalCard = {
@@ -37,7 +38,12 @@ export type RecoveryView = {
   deviations: Deviation[];
   sleep:
     | (SignalCard & {
-        nights: { day: string; seconds: number | null; today: boolean }[];
+        nights: {
+          day: string;
+          seconds: number | null;
+          score: number | null;
+          today: boolean;
+        }[];
       })
     | null;
   hrv: (SignalCard & Pick<RangeSignal, "points" | "range">) | null;
@@ -111,6 +117,7 @@ function deviations(model: RecoveryModel): Deviation[] {
           value: signedSleep(sleep.last - sleep.average),
           caption: `Sommeil ${formatSleep(sleep.last)}`,
           score: clamp((sleep.last - sleep.average) / 3600),
+          reference: `${formatSleep(sleep.average)} en moyenne sur 14 nuits`,
         }
       : {
           key: "sleep",
@@ -123,6 +130,7 @@ function deviations(model: RecoveryModel): Deviation[] {
           key: "hrv",
           value: signedInteger(hrv.last - hrv.median, " ms"),
           caption: `VFC ${formatInteger(hrv.last)} ms`,
+          reference: `${formatInteger(hrv.median)} ms, médiane sur 28 nuits`,
           score: clamp(
             (hrv.last - hrv.median) /
               Math.max(5, hrv.range.high - hrv.range.low),
@@ -140,6 +148,7 @@ function deviations(model: RecoveryModel): Deviation[] {
           value: signedInteger(restingHeartRate.last - restingHeartRate.median),
           caption: `FC repos ${formatInteger(restingHeartRate.last)}`,
           score: clamp(-(restingHeartRate.last - restingHeartRate.median) / 5),
+          reference: `${formatInteger(restingHeartRate.median)} bpm, médiane sur 28 jours`,
         }
       : {
           key: "resting",
@@ -157,6 +166,10 @@ function deviations(model: RecoveryModel): Deviation[] {
               ? "—"
               : `${sign(Math.round((load.ratio - load.average) * 100))}${hundredths.format(Math.abs(load.ratio - load.average))}`,
           caption: `Charge ${hundredths.format(load.ratio)}`,
+          reference:
+            load.average === null
+              ? undefined
+              : `Ratio aigu/chronique ${hundredths.format(load.average)} en moyenne sur 14 jours`,
           score:
             load.average === null
               ? null
@@ -169,6 +182,7 @@ function deviations(model: RecoveryModel): Deviation[] {
           value: legsLabels[checkin.legs],
           caption: "Jambes",
           score: legsScore[checkin.legs],
+          reference: "Ton ressenti de ce matin",
         }
       : { key: "legs", value: "—", caption: "Jambes à saisir", score: null },
   ];

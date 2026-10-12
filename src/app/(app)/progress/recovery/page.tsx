@@ -56,7 +56,8 @@ export default async function ProgressRecoveryPage() {
             id="recovery-hrv"
             title="VFC nocturne"
             card={view.hrv}
-            showBandLabel
+            unit="ms"
+            measure="VFC nocturne"
             label={`VFC nocturne des 14 dernières nuits, ${view.hrv.value} la dernière nuit${view.hrv.range ? `, plage habituelle ${view.hrv.range.low} à ${view.hrv.range.high} ms` : ""}.`}
           />
         ) : (
@@ -71,6 +72,8 @@ export default async function ProgressRecoveryPage() {
             id="recovery-resting"
             title="FC au repos"
             card={view.resting}
+            unit="bpm"
+            measure="FC au repos"
             label={`FC au repos sur 14 jours, ${view.resting.value} aujourd’hui${view.resting.range ? `, habituelle ${view.resting.range.low} à ${view.resting.range.high} bpm` : ""}.`}
           />
         ) : (

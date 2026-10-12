@@ -1,3 +1,7 @@
+import {
+  ChartInspector,
+  type InspectorTone,
+} from "@/components/stride/chart-inspector";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot, TrendMark, type Trend } from "@/components/stride/marks";
 import { cn } from "@/lib/utils";
@@ -50,46 +54,91 @@ export function ReadinessSection({
         <MonoLabel size="micro" className="sm:text-label">
           Ce qui bouge entre ta moyenne sur 14 j et aujourd’hui
         </MonoLabel>
-        <div
-          aria-hidden="true"
-          className="grid h-25 grid-cols-7 items-end gap-1.5 border-b border-border-strong sm:h-45"
+        <ChartInspector
+          label="Écarts entre ta moyenne sur 14 jours et aujourd’hui"
+          points={[
+            {
+              x: 1 / 14,
+              title: "Moyenne sur 14 jours",
+              rows: [
+                {
+                  label: "Forme du jour Garmin",
+                  value: average === null ? "—" : String(Math.round(average)),
+                  tone: "muted",
+                },
+              ],
+            },
+            ...deviations.map((item, index) => ({
+              x: (2 * index + 3) / 14,
+              title: item.caption,
+              rows: [
+                {
+                  label: "Écart",
+                  value: item.value,
+                  tone: (item.score === null
+                    ? "muted"
+                    : item.score > 0.05
+                      ? "success"
+                      : item.score < -0.05
+                        ? "warning"
+                        : "muted") as InspectorTone,
+                },
+              ],
+              note: item.reference
+                ? `Référence : ${item.reference}`
+                : "Pas assez de mesures pour comparer.",
+            })),
+            {
+              x: 13 / 14,
+              title: "Aujourd’hui",
+              rows: [
+                {
+                  label: "Forme du jour Garmin",
+                  value: String(readiness.today),
+                  tone: "foreground",
+                },
+              ],
+            },
+          ]}
         >
-          <span className="relative h-full">
-            {average !== null && (
-              <span
-                className="absolute inset-x-0 bottom-0 rounded-t-[3px] bg-border-strong"
-                style={{ height: `${average}%` }}
-              />
-            )}
-          </span>
-          {deviations.map((item) => {
-            const size = item.score === null ? 0 : Math.abs(item.score) * 12;
-            return (
-              <span key={item.key} className="relative h-full">
-                {item.score !== null && (
-                  <span
-                    className={cn(
-                      "absolute inset-x-0 min-h-0.5 rounded-mark",
-                      item.score > 0.05
-                        ? "bg-success"
-                        : item.score < -0.05
-                          ? "bg-warning"
-                          : "bg-dim",
-                    )}
-                    style={{
-                      bottom: `${item.score >= 0 ? anchor : anchor - size}%`,
-                      height: `${size}%`,
-                    }}
-                  />
-                )}
-              </span>
-            );
-          })}
-          <span
-            className="rounded-t-[3px] bg-foreground"
-            style={{ height: `${readiness.today}%` }}
-          />
-        </div>
+          <div className="grid h-25 grid-cols-7 items-end gap-1.5 border-b border-border-strong sm:h-45">
+            <span className="relative h-full">
+              {average !== null && (
+                <span
+                  className="absolute inset-x-0 bottom-0 rounded-t-[3px] bg-border-strong"
+                  style={{ height: `${average}%` }}
+                />
+              )}
+            </span>
+            {deviations.map((item) => {
+              const size = item.score === null ? 0 : Math.abs(item.score) * 12;
+              return (
+                <span key={item.key} className="relative h-full">
+                  {item.score !== null && (
+                    <span
+                      className={cn(
+                        "absolute inset-x-0 min-h-0.5 rounded-mark",
+                        item.score > 0.05
+                          ? "bg-success"
+                          : item.score < -0.05
+                            ? "bg-warning"
+                            : "bg-dim",
+                      )}
+                      style={{
+                        bottom: `${item.score >= 0 ? anchor : anchor - size}%`,
+                        height: `${size}%`,
+                      }}
+                    />
+                  )}
+                </span>
+              );
+            })}
+            <span
+              className="rounded-t-[3px] bg-foreground"
+              style={{ height: `${readiness.today}%` }}
+            />
+          </div>
+        </ChartInspector>
         <dl className="grid grid-cols-7 gap-1.5 text-[10px] leading-tight sm:text-xs">
           {[
             {
@@ -112,6 +161,36 @@ export function ReadinessSection({
             </div>
           ))}
         </dl>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-mark bg-border-strong"
+            />
+            Moyenne 14 j
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-mark bg-warning"
+            />
+            Écart défavorable
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-mark bg-success"
+            />
+            Écart favorable
+          </li>
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-mark bg-foreground"
+            />
+            Aujourd’hui
+          </li>
+        </ul>
       </div>
     </section>
   );
@@ -151,6 +230,30 @@ function CardHeader({
   );
 }
 
+const nightDate = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+function nightTitle(day: string) {
+  return `Nuit du ${nightDate.format(new Date(`${day}T00:00:00Z`))}`;
+}
+
+function Legend({ items }: { items: { label: string; swatch: string }[] }) {
+  return (
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      {items.map((item) => (
+        <li key={item.label} className="flex items-center gap-1.5">
+          <span aria-hidden="true" className={item.swatch} />
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function SleepCard({
   sleep,
 }: {
@@ -160,25 +263,62 @@ export function SleepCard({
   return (
     <section aria-labelledby="recovery-sleep" className="flex flex-col gap-2.5">
       <CardHeader id="recovery-sleep" title="Sommeil" card={sleep} />
-      <ol className="flex h-22.5 items-end gap-1 border-b border-border-strong">
-        {sleep.nights.map((night) => (
-          <li
-            key={night.day}
-            className={cn(
-              "flex-1 rounded-t-mark",
-              night.today ? "bg-warning" : "bg-provider",
-            )}
-            style={{ height: `${((night.seconds ?? 0) / max) * 100}%` }}
-          >
-            <span className="sr-only">
-              {night.seconds === null
-                ? "Nuit non mesurée"
-                : `Nuit de ${formatSleep(night.seconds)}`}
-            </span>
-          </li>
-        ))}
-      </ol>
-      <p className="text-xs text-muted-foreground">{sleep.note}</p>
+      <ChartInspector
+        label="Durée de sommeil des 14 dernières nuits"
+        points={sleep.nights.map((night, index, all) => ({
+          x: (index + 0.5) / all.length,
+          title: nightTitle(night.day),
+          rows:
+            night.seconds === null
+              ? [{ label: "Sommeil", value: "Non mesuré", tone: "muted" }]
+              : [
+                  {
+                    label: "Durée",
+                    value: formatSleep(night.seconds),
+                    tone: night.today ? "warning" : "provider",
+                  },
+                  ...(night.score === null
+                    ? []
+                    : [
+                        {
+                          label: "Score Garmin",
+                          value: `${Math.round(night.score)} /100`,
+                        },
+                      ]),
+                ],
+        }))}
+      >
+        <ol className="flex h-22.5 items-end gap-1 border-b border-border-strong">
+          {sleep.nights.map((night) => (
+            <li
+              key={night.day}
+              className={cn(
+                "flex-1 rounded-t-mark",
+                night.today ? "bg-warning" : "bg-provider",
+              )}
+              style={{ height: `${((night.seconds ?? 0) / max) * 100}%` }}
+            >
+              <span className="sr-only">
+                {night.seconds === null
+                  ? "Nuit non mesurée"
+                  : `Nuit de ${formatSleep(night.seconds)}`}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </ChartInspector>
+      <Legend
+        items={[
+          {
+            label: "Nuits précédentes",
+            swatch: "size-2.5 rounded-mark bg-provider",
+          },
+          {
+            label: "Dernière nuit",
+            swatch: "size-2.5 rounded-mark bg-warning",
+          },
+        ]}
+      />
     </section>
   );
 }
@@ -189,12 +329,10 @@ const height = 90;
 function RangeChart({
   card,
   label,
-  showBandLabel,
   unfavorable,
 }: {
   card: NonNullable<RecoveryView["hrv"]>;
   label: string;
-  showBandLabel: boolean;
   unfavorable: boolean;
 }) {
   const values = card.points.flatMap((point) =>
@@ -207,8 +345,8 @@ function RangeChart({
   const min = Math.min(...bounds);
   const max = Math.max(...bounds);
   const pad = Math.max(1, (max - min) * 0.25);
-  const top = 22;
-  const bottom = height - 6;
+  const top = 8;
+  const bottom = height - 8;
   const y = (value: number) =>
     bottom - ((value - (min - pad)) / (max - min + pad * 2)) * (bottom - top);
   const step = width / Math.max(1, card.points.length - 1);
@@ -239,17 +377,6 @@ function RangeChart({
           className="fill-surface-raised"
         />
       )}
-      {showBandLabel && card.range && (
-        <text
-          x="2"
-          y={Math.max(9, y(card.range.high) - 5)}
-          fontSize="9"
-          letterSpacing="0.08em"
-          className="fill-muted-foreground font-mono"
-        >
-          PLAGE HABITUELLE
-        </text>
-      )}
       {segments.map((segment, index) =>
         segment.length > 1 ? (
           <polyline
@@ -279,23 +406,62 @@ export function RangeCard({
   title,
   card,
   label,
-  showBandLabel = false,
+  unit,
+  measure,
 }: {
   id: string;
   title: string;
   card: NonNullable<RecoveryView["hrv"]>;
   label: string;
-  showBandLabel?: boolean;
+  unit: string;
+  measure: string;
 }) {
   const unfavorable: Trend[] = ["watch", "investigate"];
+  const range = card.range
+    ? card.range.low === card.range.high
+      ? `${card.range.low} ${unit}`
+      : `${card.range.low}–${card.range.high} ${unit}`
+    : null;
   return (
     <section aria-labelledby={id} className="flex flex-col gap-2.5">
       <CardHeader id={id} title={title} card={card} />
-      <RangeChart
-        card={card}
+      <ChartInspector
         label={label}
-        showBandLabel={showBandLabel}
-        unfavorable={unfavorable.includes(card.trend)}
+        points={card.points.map((point, index, all) => ({
+          x: all.length > 1 ? index / (all.length - 1) : 0.5,
+          title: nightTitle(point.day),
+          rows: [
+            {
+              label: measure,
+              value:
+                point.value === null
+                  ? "Non mesuré"
+                  : `${Math.round(point.value)} ${unit}`,
+              tone: point.value === null ? "muted" : "foreground",
+            },
+          ],
+          note: range ? `Plage habituelle : ${range}` : undefined,
+        }))}
+      >
+        <RangeChart
+          card={card}
+          label={label}
+          unfavorable={unfavorable.includes(card.trend)}
+        />
+      </ChartInspector>
+      <Legend
+        items={[
+          { label: measure, swatch: "h-0.5 w-3.5 bg-foreground" },
+          ...(range
+            ? [
+                {
+                  label: `Plage habituelle ${range}`,
+                  swatch:
+                    "h-2.5 w-3.5 rounded-mark bg-surface-raised ring-1 ring-border-strong",
+                },
+              ]
+            : []),
+        ]}
       />
       <p className="text-xs text-muted-foreground">{card.note}</p>
     </section>

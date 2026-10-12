@@ -72,16 +72,21 @@ function windowMedian(
   return values.length >= minimum ? median(values) : null;
 }
 
-export function sparkline(samples: Sample[], start: string, today: string) {
+export function sparklineWindows(start: string, today: string) {
   const days = daysBetween(start, today) + 1;
-  return Array.from({ length: sparklineBuckets }, (_, bucket) => {
-    const from = addDays(start, Math.floor((bucket * days) / sparklineBuckets));
-    const to = addDays(
+  return Array.from({ length: sparklineBuckets }, (_, bucket) => ({
+    from: addDays(start, Math.floor((bucket * days) / sparklineBuckets)),
+    to: addDays(
       start,
       Math.floor(((bucket + 1) * days) / sparklineBuckets) - 1,
-    );
-    return windowMedian(samples, from, to, 1);
-  });
+    ),
+  }));
+}
+
+export function sparkline(samples: Sample[], start: string, today: string) {
+  return sparklineWindows(start, today).map(({ from, to }) =>
+    windowMedian(samples, from, to, 1),
+  );
 }
 
 function classify(
