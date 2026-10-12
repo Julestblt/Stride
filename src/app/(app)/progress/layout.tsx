@@ -27,7 +27,7 @@ export default async function ProgressLayout({
         </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <main className="flex w-full max-w-360 flex-col px-5 pt-4 pb-18 sm:px-[clamp(20px,4vw,56px)] sm:pt-10">
+        <main className="mx-auto flex w-full max-w-360 flex-col px-5 pt-4 pb-18 sm:px-[clamp(20px,4vw,56px)] sm:pt-10">
           <div className="mb-6.5 flex flex-col gap-3.5 sm:mb-3">
             <div className="flex min-h-11 items-center gap-2 sm:hidden">
               <p className="text-[28px] font-semibold tracking-[-0.025em]">
