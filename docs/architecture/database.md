@@ -8,7 +8,7 @@ Stride and garmin_mcp share one Supabase project. Each repository owns its table
 
 | Owner      | Tables                                                                                                                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stride     | `onboarding_progress`, `athlete_profiles`, `athlete_goals`, `athlete_races`                                                                                                                          |
+| Stride     | `onboarding_progress`, `athlete_profiles`, `athlete_goals`, `athlete_races`, race workspace tables, `athlete_wellness_checkins`                                                                      |
 | garmin_mcp | `provider_connections`, `provider_secrets`, `auth_challenges`, `auth_attempts`, `sync_jobs`, `provider_activities`, `provider_activity_segments`, `provider_observations`, `provider_training_weeks` |
 
 Stride may read garmin_mcp's normalized tables through their owner-only policies. It never writes them, references their internals in migrations, or reads secrets and challenges.
