@@ -22,16 +22,18 @@ export function VerdictRow({
   unit,
   trend,
   verdict,
+  metricSize = "md",
   className,
   children,
   ...props
-}: Omit<React.ComponentProps<"li">, "children"> & {
+}: Omit<React.ComponentProps<"li">, "children" | "value"> & {
   label: React.ReactNode;
   detail?: React.ReactNode;
   value: React.ReactNode;
   unit?: React.ReactNode;
-  trend: Trend;
+  trend?: Trend;
   verdict?: React.ReactNode;
+  metricSize?: "md" | "lg";
   children?: React.ReactNode;
 }) {
   return (
@@ -54,19 +56,41 @@ export function VerdictRow({
       <Metric
         value={value}
         unit={unit}
+        size={metricSize}
         className="justify-self-end sm:justify-self-start"
       />
       {children && (
-        <span aria-hidden="true" className="hidden lg:block">
+        <span
+          aria-hidden="true"
+          className="col-start-2 row-start-2 justify-self-end sm:hidden lg:col-start-auto lg:row-start-auto lg:block lg:justify-self-stretch"
+        >
           {children}
         </span>
       )}
-      <TrendLabel
-        trend={trend}
-        className="col-span-2 sm:col-span-1 [&>span:last-child]:text-pretty"
-      >
-        {verdict}
-      </TrendLabel>
+      {trend ? (
+        <TrendLabel
+          trend={trend}
+          className={cn(
+            "[&>span:last-child]:text-pretty",
+            children
+              ? "col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto"
+              : "col-span-2 sm:col-span-1",
+          )}
+        >
+          {verdict}
+        </TrendLabel>
+      ) : (
+        <span
+          className={cn(
+            "text-xs text-pretty text-muted-foreground",
+            children
+              ? "col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto"
+              : "col-span-2 sm:col-span-1",
+          )}
+        >
+          {verdict}
+        </span>
+      )}
     </li>
   );
 }

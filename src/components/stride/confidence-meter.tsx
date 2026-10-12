@@ -12,9 +12,15 @@ const labels: Record<Confidence, string> = {
 
 export function ConfidenceMeter({
   level,
+  label,
+  hideLabel = false,
   className,
   ...props
-}: Omit<React.ComponentProps<"span">, "children"> & { level: Confidence }) {
+}: Omit<React.ComponentProps<"span">, "children"> & {
+  level: Confidence;
+  label?: string;
+  hideLabel?: boolean;
+}) {
   return (
     <span
       data-slot="confidence-meter"
@@ -33,9 +39,13 @@ export function ConfidenceMeter({
           />
         ))}
       </span>
-      <span className="text-xs text-muted">
-        <span className="sr-only">Confidence: </span>
-        {labels[level]}
+      <span className={hideLabel ? "sr-only" : "text-xs text-muted"}>
+        {label ?? (
+          <>
+            <span className="sr-only">Confidence: </span>
+            {labels[level]}
+          </>
+        )}
       </span>
     </span>
   );
