@@ -51,8 +51,23 @@ function SectionLink({
   );
 }
 
+const crumbDate = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
 export function ProgressBreadcrumb() {
   const section = useSection();
+  const params = useSearchParams();
+  const date = params.get("date");
+  const dayCrumb =
+    section.href === "/progress/health" && params.get("view") === "day"
+      ? date && /^\d{4}-\d{2}-\d{2}$/.test(date)
+        ? crumbDate.format(new Date(`${date}T00:00:00Z`))
+        : "Aujourd’hui"
+      : null;
   return (
     <nav
       aria-label="Fil d’Ariane"
@@ -62,9 +77,22 @@ export function ProgressBreadcrumb() {
       <span aria-hidden="true" className="text-muted-foreground">
         /
       </span>
-      <span aria-current="page" className="truncate">
+      <span
+        aria-current={dayCrumb ? undefined : "page"}
+        className={cn("truncate", dayCrumb && "text-muted-foreground")}
+      >
         {section.label}
       </span>
+      {dayCrumb && (
+        <>
+          <span aria-hidden="true" className="text-muted-foreground">
+            /
+          </span>
+          <span aria-current="page" className="truncate">
+            {dayCrumb}
+          </span>
+        </>
+      )}
     </nav>
   );
 }

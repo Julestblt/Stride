@@ -213,3 +213,54 @@ test("health switches to the month and explains values on hover", async ({
   await expect(chart.getByRole("status")).toContainText("5h52");
   await expect(chart.getByRole("status")).toContainText("Ta moyenne");
 });
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`health day view explains the day at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await signIn(page);
+    await page.goto("/progress/health?view=day&date=2026-10-10");
+    await expect(
+      page
+        .getByRole("region", { name: "Choisir une journée" })
+        .getByText("sam. 10 oct.", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        name: "Nuit courte, journée chargée.",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Nuit du 9 au 10" }),
+    ).toBeVisible();
+    const moments = page.getByRole("region", { name: "Moments de la journée" });
+    await expect(moments.getByText("Stress élevé · 1h15")).toBeVisible();
+    const timeline = page.getByRole("group", {
+      name: /Ta journée heure par heure/,
+    });
+    await timeline.scrollIntoViewIfNeeded();
+    const box = (await timeline.boundingBox())!;
+    await timeline.hover({
+      position: { x: box.width * 0.54, y: box.height / 2 },
+    });
+    await expect(timeline.getByRole("status")).toContainText("Body Battery");
+    await expect(timeline.getByRole("status")).toContainText("Stress");
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(overflow).toBe(false);
+  });
+}
+
+test("health day navigation moves between days", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/progress/health?view=day&date=2026-10-10");
+  await page.getByRole("link", { name: "Jour suivant" }).click();
+  await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-11");
+  await page.getByRole("link", { name: "Jour précédent" }).click();
+  await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-10");
+});
