@@ -16,7 +16,7 @@ const today = "2026-10-12";
 
 function observations(
   count: number,
-  values: (age: number) => Record<string, number | null>,
+  values: (age: number) => Partial<Record<string, number | null>>,
 ) {
   return Array.from({ length: count }, (_, index) => {
     const age = count - 1 - index;
@@ -35,7 +35,9 @@ function observations(
       training_load_chronic: 400,
       vo2_max: 55,
       ...values(age),
-    }).map(([metric, value]) => ({ metric, day, value }));
+    }).flatMap(([metric, value]) =>
+      value === undefined ? [] : [{ metric, day, value }],
+    );
   }).flat();
 }
 
