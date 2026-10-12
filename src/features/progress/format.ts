@@ -94,3 +94,12 @@ export function ofMonth(day: string) {
   const month = formatMonth(day);
   return /^[aeiouy]/.test(month) ? `d’${month}` : `de ${month}`;
 }
+
+export function formatRecordDate(day: string) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date(day));
+}

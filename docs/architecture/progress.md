@@ -66,3 +66,15 @@ Every chart can be inspected with a pointer, by touch or with the arrow keys; ea
 - Reading: a deterministic headline from sleep against the 14-night mean and the presence of a high-stress episode.
 
 When garmin_mcp cannot provide the day, the page says why (unavailable, reconnection required, rate limit) and the week view stays available. The reference's Body Battery projection and plan actions are not shown.
+
+## Records
+
+`/progress/records` reads the complete owner activity and lap history, 400 days of observations, upcoming goals, and only elapsed time, cumulative distance and elevation arrays from normalized Garmin tracks. Read errors produce an explicit failure state. Track arrays are validated with Zod and capped at 240 samples; unusable tracks leave VAM unavailable.
+
+Road estimates cover 1 km, mile, 5 km, 10 km, half marathon and marathon. Only outdoor road and track runs participate. Whole activities or adjacent lap indexes must cover the exact distance with at most 5% overshoot; duration scales to the target distance. Invalid laps break continuity. Record histories retain strict improvements in chronological order, with day then activity identifier resolving ties deterministically. These are Stride estimates from Garmin data, not official Garmin records.
+
+Endurance histories cover longest outdoor run distance and duration, highest single outdoor run gain, highest Monday-based weekly running gain and distance, and best sustained climbing VAM. Weekly totals include treadmill runs. Missing measurements remain unavailable; measured zero elevation is valid. Activities dated after today (using their local day) and observations dated after today are excluded. Weekly gain and distance totals are eligible separately only when every running activity that week has a valid measurement for that metric.
+
+VAM uses aligned finite elapsed/distance/elevation samples with strictly increasing time and distance. Eligible windows span exactly 1,200 seconds with interpolated endpoints, contain no descent or sample gap above 300 seconds, and average 12–16% grade. Gain multiplied by three yields estimated m/h. Whole-run gain never substitutes for a climbing window.
+
+`?filter=all|road|trail` controls visible record sections and chronology. Road disclosures show the strict history, inspectable chart, dates, provenance and activity links. Current road predictions reuse the Stride model with VO₂ max observed no more than 30 days ago; signed gaps are prediction minus record. Upcoming goals supply factual distance comparisons and current estimates only. Completed races remain unavailable until normalized results and verified activity linkage exist; past goals and target times are never race results. Coach questions, plan actions and future improvements are unavailable capabilities.

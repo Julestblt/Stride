@@ -14,8 +14,8 @@ const user = {
 };
 const encode = (value) =>
   Buffer.from(JSON.stringify(value)).toString("base64url");
-function accessToken(expires) {
-  const payload = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: user.id, aud: user.aud, role: user.role, email: user.email, exp: expires })}`;
+function accessToken(expires, identity = user) {
+  const payload = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: identity.id, aud: identity.aud, role: identity.role, email: identity.email, exp: expires })}`;
   return `${payload}.${createHmac("sha256", "isolated-test-secret").update(payload).digest("base64url")}`;
 }
 const token = accessToken(Math.floor(Date.now() / 1000) + 3600);
@@ -26,6 +26,30 @@ const session = {
   token_type: "bearer",
   user,
 };
+const recordsEmptyUser = {
+  ...user,
+  id: "22222222-2222-4222-8222-222222222222",
+  email: "records-empty@example.com",
+};
+const recordsFailureUser = {
+  ...user,
+  id: "33333333-3333-4333-8333-333333333333",
+  email: "records-failure@example.com",
+};
+const recordsGoalFailureUser = {
+  ...user,
+  id: "44444444-4444-4444-8444-444444444444",
+  email: "records-goal-failure@example.com",
+};
+const recordsSessions = [
+  recordsEmptyUser,
+  recordsFailureUser,
+  recordsGoalFailureUser,
+].map((identity) => ({
+  ...session,
+  user: identity,
+  access_token: accessToken(Math.floor(Date.now() / 1000) + 3600, identity),
+}));
 const day = 86_400_000;
 const daysAgo = (days, time = "07:12:00") => {
   const date = new Date(Date.now() - days * day).toISOString().slice(0, 10);
@@ -228,6 +252,20 @@ const tables = {
     .concat(progressLaps),
   provider_activity_tracks: [
     {
+      activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000005",
+      user_id: user.id,
+      status: "available",
+      route: null,
+      bounds: null,
+      series: {
+        elapsed_s: [0, 240, 480, 720, 960, 1200],
+        distance_m: [0, 400, 800, 1200, 1600, 2000],
+        elevation_m: [100, 156, 212, 268, 324, 380],
+      },
+      heart_rate_histogram: null,
+      source_point_count: 6,
+    },
+    {
       activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
       user_id: user.id,
       status: "available",
@@ -364,6 +402,11 @@ function nameMatcher(filter) {
 
 function selectRows(table, params) {
   let rows = tables[table] ?? [];
+  if (
+    params.get("user_id") === `eq.${recordsEmptyUser.id}` &&
+    table.startsWith("provider_")
+  )
+    return { rows: [], total: 0 };
   const ownerId = params.get("user_id");
   if (ownerId)
     rows = rows.filter(
@@ -410,6 +453,16 @@ function selectRows(table, params) {
     );
   if (table === "provider_activity_segments")
     rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
+  if (
+    table === "provider_activity_tracks" &&
+    params.get("select")?.includes("elapsed_s:series")
+  )
+    rows = rows.map((row) => ({
+      ...row,
+      elapsed_s: row.series?.elapsed_s ?? null,
+      distance_m: row.series?.distance_m ?? null,
+      elevation_m: row.series?.elevation_m ?? null,
+    }));
   const total = rows.length;
   const offset = Number(params.get("offset")) || 0;
   const limit = Number(params.get("limit"));
@@ -540,6 +593,15 @@ createServer(async (request, response) => {
   });
   if (url.pathname === "/auth/v1/token") {
     const grant = url.searchParams.get("grant_type");
+    const recordsSession = recordsSessions.find(
+      (item) => item.user.email === body.email,
+    );
+    if (
+      grant === "password" &&
+      recordsSession &&
+      body.password === "TrailMiles2026!"
+    )
+      return send(200, recordsSession);
     if (
       grant === "password" &&
       body.email === "confirmation@example.com" &&
@@ -596,14 +658,29 @@ createServer(async (request, response) => {
     return body.token_hash === "valid-token"
       ? send(200, session)
       : send(403, { code: "otp_expired", msg: "Expired" });
+  const recordsSession = recordsSessions.find(
+    (item) => request.headers.authorization === `Bearer ${item.access_token}`,
+  );
+  if (url.pathname === "/auth/v1/user" && recordsSession)
+    return send(200, recordsSession.user);
   if (url.pathname === "/auth/v1/user")
     return request.headers.authorization === `Bearer ${token}`
       ? send(200, user)
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
   if (url.pathname.startsWith("/rest/v1/")) {
-    if (request.headers.authorization !== `Bearer ${token}`)
+    if (request.headers.authorization !== `Bearer ${token}` && !recordsSession)
       return send(401, { message: "JWT required" });
+    if (
+      recordsSession?.user.id === recordsGoalFailureUser.id &&
+      url.pathname === "/rest/v1/athlete_races"
+    )
+      return send(503, { message: "Records fixture goal read failure" });
+    if (
+      recordsSession?.user.id === recordsFailureUser.id &&
+      url.pathname === "/rest/v1/provider_activity_tracks"
+    )
+      return send(503, { message: "Records fixture read failure" });
     if (
       request.method === "PATCH" &&
       url.pathname === "/rest/v1/athlete_profiles"

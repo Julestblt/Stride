@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 100,
-    "html_exports": 101,
-    "matched": 101,
-    "exact": 101,
+    "screenshots": 102,
+    "html_exports": 103,
+    "matched": 103,
+    "exact": 103,
     "high": 0,
     "uncertain": 0
   },
@@ -1326,6 +1326,32 @@
       "original_export_name": "App · Progress · Health · Day · Desktop-html.zip",
       "matched_confidence": "exact",
       "notes": "Santé tab, Jour filter with the hour-by-hour timeline."
+    },
+    {
+      "id": "app/progress/records-desktop",
+      "area": "app",
+      "screen": "progress",
+      "state": "records",
+      "device": "desktop",
+      "screenshot_path": "design/references/App · Progress · Records · Desktop@2x.png",
+      "html_reference_path": "design/references/App · Progress · Records · Desktop-html.zip",
+      "original_screenshot_name": "App · Progress · Records · Desktop@2x.png",
+      "original_export_name": "App · Progress · Records · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Approved Records reference; PNG is interpreted visually only; original paths are preserved."
+    },
+    {
+      "id": "app/progress/records-mobile",
+      "area": "app",
+      "screen": "progress",
+      "state": "records",
+      "device": "mobile",
+      "screenshot_path": "design/references/App · Progress · Records · Mobile@2x.png",
+      "html_reference_path": "design/references/App · Progress · Records · Mobile-html.zip",
+      "original_screenshot_name": "App · Progress · Records · Mobile@2x.png",
+      "original_export_name": "App · Progress · Records · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Approved Records reference; PNG is interpreted visually only; original paths are preserved."
     }
   ],
   "unresolved": []
