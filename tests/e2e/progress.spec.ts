@@ -264,3 +264,168 @@ test("health day navigation moves between days", async ({ page }) => {
   await page.getByRole("link", { name: "Jour précédent" }).click();
   await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-10");
 });
+
+test("signed-out visitors cannot open Records", async ({ page }) => {
+  await page.goto("/progress/records");
+  await expect(page).toHaveURL(/\/sign-in$/);
+});
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`Records filters, disclosures and charts at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize(viewport);
+    await signIn(page);
+    await page.goto("/progress/records");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Records" }),
+    ).toBeVisible();
+    const road = page.getByRole("region", { name: "Route", exact: true });
+    await expect(road).toBeVisible();
+    await expect(
+      road
+        .locator('[data-slot="confidence-meter"][data-level="moderate"]')
+        .first(),
+    ).toContainText("Confiance modérée");
+    await expect(
+      road.locator('[data-slot="confidence-meter"][data-level="low"]'),
+    ).toContainText("Confiance faible");
+    const disclosure = road.locator("details").first();
+    if (viewport.width === 390)
+      await expect(
+        disclosure.getByText("· 5:30/km", { exact: true }),
+      ).toBeVisible();
+    await disclosure.locator(":scope > summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(disclosure).toHaveAttribute("open", "");
+    const chart = disclosure.getByRole("group", {
+      name: /^Historique du record/,
+    });
+    await chart.focus();
+    await chart.press("Home");
+    await expect(chart.getByRole("status")).toContainText("Garmin");
+    await chart.press("ArrowRight");
+    await chart.press("Escape");
+    const chartBounds = await chart.boundingBox();
+    await chart.dispatchEvent("pointerdown", {
+      pointerType: "touch",
+      clientX: chartBounds!.x + chartBounds!.width / 2,
+      clientY: chartBounds!.y + chartBounds!.height / 2,
+    });
+    await expect(chart.getByRole("status")).toContainText("Garmin");
+    const source = disclosure.getByRole("link", {
+      name: "Ouvrir l’activité du record →",
+    });
+    await expect(source).toHaveAttribute("href", /\/activities\//);
+    const href = await source.getAttribute("href");
+    await source.click();
+    await expect(page).toHaveURL(href!, { timeout: 15_000 });
+    await page.goBack();
+    const filters = page.getByRole("navigation", { name: "Type de records" });
+    await filters.getByRole("link", { name: "Trail et ultra" }).click();
+    await expect(page).toHaveURL(/filter=trail/);
+    await expect(
+      page.getByRole("region", { name: "Route", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "Trail et ultra", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("article")
+        .filter({ has: page.getByRole("heading", { name: "VAM sur 20 min" }) })
+        .locator("[data-slot=metric]"),
+    ).toContainText("840");
+    await page.reload();
+    await expect(
+      filters.getByRole("link", { name: "Trail et ultra" }),
+    ).toHaveAttribute("aria-current", "page");
+    await filters.getByRole("link", { name: "Route", exact: true }).click();
+    await expect(
+      page.getByRole("region", { name: "Trail et ultra", exact: true }),
+    ).toHaveCount(0);
+    await page.goBack();
+    await expect(page).toHaveURL(/filter=trail/);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+    ).toBe(false);
+    await filters.getByRole("link", { name: "Tous", exact: true }).click();
+    await expect(
+      page.getByRole("region", { name: "Courses terminées" }),
+    ).toContainText("ne sont pas encore disponibles");
+    await expect(
+      filters.getByRole("link", { name: "Tous", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await expect(
+      page.getByRole("region", { name: "Route", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "Prochains records à portée" })
+        .getByRole("link", { name: "EcoTrail Paris 120K →" }),
+    ).toHaveAttribute("href", "/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+    await page.evaluate(() => document.fonts.ready);
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.width === 390 ? 4080 : 2942,
+    });
+    await page.screenshot({
+      path: `test-results/records-${viewport.width}.png`,
+    });
+    await page.setViewportSize(viewport);
+    const finalRoad = page.getByRole("region", { name: "Route", exact: true });
+    const finalDisclosure = finalRoad.locator("details").first();
+    await finalDisclosure.locator(":scope > summary").click();
+    await finalDisclosure.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `test-results/records-road-${viewport.width}.png`,
+    });
+    const endurance = page.getByRole("region", {
+      name: "Trail et ultra",
+      exact: true,
+    });
+    await endurance.scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `test-results/records-endurance-${viewport.width}.png`,
+    });
+  });
+}
+for (const mode of ["empty", "failure", "goal-failure"] as const) {
+  test(`Records displays explicit ${mode} state`, async ({ page }) => {
+    await page.goto("/sign-in");
+    await page
+      .getByLabel("Email", { exact: true })
+      .fill(`records-${mode}@example.com`);
+    await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL("/");
+    await page.goto("/progress/records");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Records" }),
+    ).toBeVisible();
+    if (mode === "empty") {
+      await expect(
+        page.getByRole("heading", {
+          name: "Tes records attendent ton historique.",
+        }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Aucun record documenté pour ce filtre."),
+      ).toBeVisible();
+    } else
+      await expect(page.getByRole("alert")).toContainText(
+        "Impossible de lire ton historique",
+      );
+    await page
+      .getByRole("navigation", { name: "Sections de la progression" })
+      .first()
+      .getByRole("link", { name: "Forme", exact: true })
+      .click();
+    await expect(page).toHaveURL("/progress", { timeout: 15_000 });
+  });
+}

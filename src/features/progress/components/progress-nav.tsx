@@ -15,6 +15,7 @@ export const progressSections = [
   { href: "/progress", label: "Forme" },
   { href: "/progress/recovery", label: "Récupération" },
   { href: "/progress/health", label: "Santé" },
+  { href: "/progress/records", label: "Records" },
 ] as const;
 
 function useSection() {
@@ -111,7 +112,7 @@ export function ProgressTabs() {
             href={item.href}
             current={item.href === section.href}
             className={cn(
-              "flex min-h-10 flex-1 items-center justify-center rounded-surface text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+              "flex min-h-10 flex-1 items-center justify-center rounded-surface text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
               item.href === section.href &&
                 "bg-border font-semibold text-foreground",
             )}

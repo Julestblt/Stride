@@ -117,9 +117,9 @@ export function ChartInspector({
             <p className="font-mono text-micro text-foreground uppercase">
               {point.title}
             </p>
-            {point.rows.map((row) => (
+            {point.rows.map((row, index) => (
               <p
-                key={row.label}
+                key={`${row.label}-${index}`}
                 className="flex items-baseline justify-between gap-4 text-xs"
               >
                 <span className="flex items-center gap-1.5 text-muted">

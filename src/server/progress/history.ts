@@ -38,8 +38,11 @@ export async function readAll<T>(
 
 export async function readRaces(
   context: OnboardingContext,
+  strict = false,
 ): Promise<ProgressRace[]> {
-  const goals = await readGoals(context).catch(() => null);
+  const goals = strict
+    ? await readGoals(context)
+    : await readGoals(context).catch(() => null);
   return (goals?.races ?? []).flatMap(({ id, values }) =>
     values.race_date
       ? [
@@ -59,6 +62,7 @@ export async function readRaces(
 export async function loadProgressHistory(
   context: OnboardingContext,
   today: string,
+  strictGoals = false,
 ): Promise<ProgressHistory> {
   const since = addDays(today, -400);
   const [activityRows, lapRows, observationRows, races] = await Promise.all([
@@ -94,7 +98,7 @@ export async function loadProgressHistory(
         .order("metric", { ascending: true })
         .range(from, to),
     ),
-    readRaces(context),
+    readRaces(context, strictGoals),
   ]);
   const observations = observationRows.flatMap((row) => {
     const parsed = observationSchema.safeParse(row);

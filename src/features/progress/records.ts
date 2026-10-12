@@ -40,8 +40,12 @@ export function bestEffortSeconds(
 ) {
   const candidates: number[] = [];
   if (
-    activityDistance &&
-    activityDuration &&
+    Number.isFinite(activityDistance) &&
+    Number.isFinite(activityDuration) &&
+    activityDistance !== null &&
+    activityDistance > 0 &&
+    activityDuration !== null &&
+    activityDuration > 0 &&
     activityDistance >= meters &&
     activityDistance <= meters * effortOvershoot
   )
@@ -51,6 +55,19 @@ export function bestEffortSeconds(
     let distance = 0;
     let duration = 0;
     for (let last = first; last < ordered.length; last++) {
+      const lap = ordered[last];
+      if (
+        !Number.isFinite(lap.distance) ||
+        lap.distance <= 0 ||
+        !Number.isFinite(lap.duration) ||
+        lap.duration <= 0 ||
+        !Number.isInteger(lap.index) ||
+        lap.index < 0 ||
+        (last > first &&
+          (lap.index !== ordered[last - 1].index + 1 ||
+            lap.activityId !== ordered[last - 1].activityId))
+      )
+        break;
       distance += ordered[last].distance;
       duration += ordered[last].duration;
       if (distance >= meters) {
