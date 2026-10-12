@@ -110,7 +110,34 @@ const progressObservations = Array.from({ length: 200 }, (_, index) => {
     availability: "available",
   }));
 }).flat();
+const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
+  const age = 59 - index;
+  const observed_on = new Date(Date.now() - age * day)
+    .toISOString()
+    .slice(0, 10);
+  const wave = Math.sin(index / 2.3);
+  const values = [
+    ["training_readiness", age === 0 ? 58 : Math.round(70 + wave * 6), null],
+    [
+      "sleep_duration_seconds",
+      age === 0 ? 21_120 : Math.round(26_400 + wave * 1200),
+      null,
+    ],
+    ["sleep_score", age === 0 ? 61 : Math.round(82 + wave * 5), null],
+    ["hrv_last_night_ms", age === 0 ? 46 : Math.round(58 + wave * 4), null],
+    ["hrv_status", null, "BALANCED"],
+  ];
+  return values.map(([metric, value_numeric, value_text]) => ({
+    user_id: user.id,
+    metric,
+    observed_on,
+    value_numeric,
+    value_text,
+    availability: "available",
+  }));
+}).flat();
 const tables = {
+  athlete_wellness_checkins: [],
   provider_activities: [
     activity(1, 1, {
       distance_meters: 8320,
@@ -261,7 +288,9 @@ const tables = {
     observed_on: new Date(Date.now() - index * day).toISOString().slice(0, 10),
     value_numeric: 50,
     availability: "available",
-  })).concat(progressObservations),
+  }))
+    .concat(progressObservations)
+    .concat(recoveryObservations),
   athlete_profiles: [
     {
       user_id: user.id,
@@ -596,6 +625,26 @@ createServer(async (request, response) => {
       if (!plan) return send(200, []);
       Object.assign(plan, body, { revision: plan.revision + 1 });
       return send(200, [plan]);
+    }
+    if (
+      request.method === "POST" &&
+      url.pathname === "/rest/v1/athlete_wellness_checkins"
+    ) {
+      const existing = tables.athlete_wellness_checkins.find(
+        (item) => item.checkin_date === body.checkin_date,
+      );
+      const checkin = {
+        legs: null,
+        soreness: null,
+        stress: null,
+        ...existing,
+        ...body,
+        updated_at: new Date().toISOString(),
+      };
+      tables.athlete_wellness_checkins = tables.athlete_wellness_checkins
+        .filter((item) => item !== existing)
+        .concat(checkin);
+      return send(201, checkin);
     }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {

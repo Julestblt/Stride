@@ -87,3 +87,75 @@ test("sidebar links to progress", async ({ page }) => {
     page.getByRole("link", { name: "Progression", exact: true }),
   ).toHaveAttribute("aria-current", "page");
 });
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`recovery tab renders Garmin signals at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await signIn(page);
+    await page.goto("/progress/recovery");
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Une courte nuit pèse sur ta forme du jour.",
+      }),
+    ).toBeVisible();
+    await expect(page.getByText("Forme du jour · Garmin")).toBeVisible();
+    const sleep = page.getByRole("region", { name: /Sommeil/ });
+    await expect(sleep.getByText("5h52", { exact: true })).toBeVisible();
+    await expect(sleep.getByText("À surveiller · 1 nuit")).toBeVisible();
+    const hrv = page.getByRole("region", { name: /VFC nocturne/ });
+    await expect(hrv.getByText("46 ms")).toBeVisible();
+    await expect(hrv.getByText("Sous la plage · 1 jour")).toBeVisible();
+    await expect(
+      page.getByText("Aucune course passée avec des mesures de VFC."),
+    ).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    expect(overflow).toBe(false);
+  });
+}
+
+test("athlete records how they feel today", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/progress/recovery");
+  const checkin = page.getByRole("region", { name: /Ton ressenti/ });
+  await expect(checkin.getByText("À saisir")).toBeVisible();
+  const legs = checkin.getByRole("radiogroup", { name: "Jambes" });
+  await legs.getByRole("radio", { name: "Fraîches" }).click();
+  await expect(legs.getByRole("radio", { name: "Fraîches" })).toBeChecked();
+  await expect(checkin.getByText(/^Saisi à \d{2}:\d{2}$/)).toBeVisible();
+  await checkin
+    .getByRole("radiogroup", { name: "Stress" })
+    .getByRole("radio", { name: "Élevé" })
+    .click();
+  await page.reload();
+  await expect(
+    page
+      .getByRole("region", { name: /Ton ressenti/ })
+      .getByRole("radiogroup", { name: "Jambes" })
+      .getByRole("radio", { name: "Fraîches" }),
+  ).toBeChecked();
+  await expect(page.getByText("Tu as noté des jambes fraîches.")).toBeVisible();
+});
+
+test("progress tabs switch between fitness and recovery", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/progress");
+  await page
+    .getByRole("navigation", { name: "Sections de la progression" })
+    .last()
+    .getByRole("link", { name: "Récupération" })
+    .click();
+  await expect(page).toHaveURL("/progress/recovery");
+  await expect(
+    page
+      .getByRole("navigation", { name: "Fil d’Ariane" })
+      .getByText("Récupération"),
+  ).toBeVisible();
+});
