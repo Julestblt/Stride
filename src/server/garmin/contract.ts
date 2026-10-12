@@ -6,6 +6,7 @@ import {
   type GarminConnection,
   type GarminFailure,
 } from "@/features/garmin/connection";
+import { sleepStages, type WellnessDay } from "@/features/garmin/wellness";
 import {
   garminSyncStates,
   type GarminSyncCategoryStatus,
@@ -96,6 +97,96 @@ function codeForStatus(status: number): GarminFailure["code"] {
   if (status >= 500) return "service_unavailable";
   return "unknown";
 }
+
+const measure = z.number().finite().nullable().catch(null);
+const series = z
+  .array(z.tuple([z.number().int(), measure]))
+  .max(2000)
+  .catch([]);
+
+export const wellnessDaySchema = z
+  .object({
+    date: z.iso.date(),
+    sleep: z
+      .object({
+        start: z.number().int(),
+        end: z.number().int(),
+        stages: z
+          .array(
+            z.object({
+              start: z.number().int(),
+              end: z.number().int(),
+              stage: z.enum(sleepStages),
+            }),
+          )
+          .max(500)
+          .catch([]),
+        deep_seconds: measure,
+        light_seconds: measure,
+        rem_seconds: measure,
+        awake_seconds: measure,
+        awake_count: measure,
+        score: measure,
+        respiration_average: measure,
+        spo2_average: measure,
+        spo2_lowest: measure,
+        hrv_average: measure,
+      })
+      .nullable()
+      .catch(null),
+    heart_rate: series,
+    stress: series,
+    body_battery: series,
+    steps: series,
+    summary: z.object({
+      resting_heart_rate: measure,
+      steps_total: measure,
+      steps_goal: measure,
+      stress_average: measure,
+      stress_max: measure,
+      body_battery_wake: measure,
+      body_battery_charged: measure,
+      body_battery_drained: measure,
+      body_battery_highest: measure,
+      body_battery_lowest: measure,
+      body_battery_latest: measure,
+    }),
+  })
+  .transform((day): WellnessDay => ({
+    date: day.date,
+    sleep: day.sleep && {
+      start: day.sleep.start,
+      end: day.sleep.end,
+      stages: day.sleep.stages,
+      deepSeconds: day.sleep.deep_seconds,
+      lightSeconds: day.sleep.light_seconds,
+      remSeconds: day.sleep.rem_seconds,
+      awakeSeconds: day.sleep.awake_seconds,
+      awakeCount: day.sleep.awake_count,
+      score: day.sleep.score,
+      respirationAverage: day.sleep.respiration_average,
+      spo2Average: day.sleep.spo2_average,
+      spo2Lowest: day.sleep.spo2_lowest,
+      hrvAverage: day.sleep.hrv_average,
+    },
+    heartRate: day.heart_rate,
+    stress: day.stress,
+    bodyBattery: day.body_battery,
+    steps: day.steps,
+    summary: {
+      restingHeartRate: day.summary.resting_heart_rate,
+      stepsTotal: day.summary.steps_total,
+      stepsGoal: day.summary.steps_goal,
+      stressAverage: day.summary.stress_average,
+      stressMax: day.summary.stress_max,
+      bodyBatteryWake: day.summary.body_battery_wake,
+      bodyBatteryCharged: day.summary.body_battery_charged,
+      bodyBatteryDrained: day.summary.body_battery_drained,
+      bodyBatteryHighest: day.summary.body_battery_highest,
+      bodyBatteryLowest: day.summary.body_battery_lowest,
+      bodyBatteryLatest: day.summary.body_battery_latest,
+    },
+  }));
 
 export function parseFailure(
   body: unknown,
