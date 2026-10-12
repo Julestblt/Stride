@@ -34,6 +34,137 @@ function category(state, extra = {}) {
   };
 }
 
+const minute = 60_000;
+
+function parisMidnight(day) {
+  const naive = Date.parse(`${day}T00:00:00Z`);
+  const offset = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Paris",
+    timeZoneName: "longOffset",
+  })
+    .formatToParts(new Date(naive))
+    .find((part) => part.type === "timeZoneName")
+    .value.match(/GMT([+-])(\d{2}):(\d{2})/);
+  const minutes = offset
+    ? (offset[1] === "-" ? -1 : 1) *
+      (Number(offset[2]) * 60 + Number(offset[3]))
+    : 0;
+  return naive - minutes * minute;
+}
+
+export function wellnessDay(day) {
+  const midnight = parisMidnight(day);
+  const at = (hours) => midnight + hours * 60 * minute;
+  const sleepStart = at(-0.33);
+  const sleepEnd = at(5.77);
+  const stages = [];
+  const pattern = [
+    "light",
+    "deep",
+    "light",
+    "rem",
+    "light",
+    "deep",
+    "rem",
+    "awake",
+    "light",
+    "rem",
+  ];
+  const step = (sleepEnd - sleepStart) / pattern.length;
+  pattern.forEach((stage, index) =>
+    stages.push({
+      start: Math.round(sleepStart + index * step),
+      end: Math.round(sleepStart + (index + 1) * step),
+      stage,
+    }),
+  );
+  const heart = [];
+  const stress = [];
+  const battery = [];
+  const steps = [];
+  for (let time = at(-2); time < at(24); time += 2 * minute) {
+    const hours = (time - midnight) / (60 * minute);
+    const sleeping = time >= sleepStart && time < sleepEnd;
+    const meeting = hours >= 10.5 && hours < 11.75;
+    heart.push([
+      time,
+      Math.round(
+        sleeping
+          ? 48 + Math.sin(hours) * 3
+          : meeting
+            ? 76
+            : 62 + Math.sin(hours * 2) * 6,
+      ),
+    ]);
+  }
+  for (let time = at(-2); time < at(24); time += 3 * minute) {
+    const hours = (time - midnight) / (60 * minute);
+    const sleeping = time >= sleepStart && time < sleepEnd;
+    const meeting = hours >= 10.5 && hours < 11.75;
+    const pause = hours >= 12.67 && hours < 13.1;
+    stress.push([
+      time,
+      sleeping
+        ? 12
+        : meeting
+          ? 66
+          : pause
+            ? 12
+            : 32 + Math.round(Math.sin(hours) * 8),
+    ]);
+  }
+  for (let time = at(-2); time < at(24); time += 15 * minute) {
+    const hours = (time - midnight) / (60 * minute);
+    const level =
+      hours < 0
+        ? 26 - hours * 2
+        : hours < 5.77
+          ? 23 + hours * 6.6
+          : 61 - (hours - 5.77) * 1.7;
+    battery.push([time, Math.max(5, Math.round(level))]);
+  }
+  for (let hour = 0; hour < 24; hour++)
+    steps.push([
+      at(hour),
+      hour < 6 ? 0 : hour === 8 ? 2120 : hour === 12 ? 900 : 260,
+    ]);
+  return {
+    date: day,
+    sleep: {
+      start: sleepStart,
+      end: sleepEnd,
+      stages,
+      deep_seconds: 3480,
+      light_seconds: 12360,
+      rem_seconds: 5280,
+      awake_seconds: 840,
+      awake_count: 1,
+      score: 61,
+      respiration_average: 14.2,
+      spo2_average: 95,
+      spo2_lowest: 89,
+      hrv_average: 46,
+    },
+    heart_rate: heart,
+    stress,
+    body_battery: battery,
+    steps,
+    summary: {
+      resting_heart_rate: 47,
+      steps_total: 6050,
+      steps_goal: 8000,
+      stress_average: 34,
+      stress_max: 88,
+      body_battery_wake: 61,
+      body_battery_charged: 38,
+      body_battery_drained: 17,
+      body_battery_highest: 61,
+      body_battery_lowest: 23,
+      body_battery_latest: 44,
+    },
+  };
+}
+
 function syncFor(connection) {
   const reads = ++connection.syncReads;
   const limit = connection.syncLimit ?? 4;
@@ -177,6 +308,12 @@ export function createGarminService() {
               },
             },
       );
+
+    const wellness = /^\/v1\/wellness\/days\/(\d{4}-\d{2}-\d{2})$/.exec(
+      url.pathname,
+    );
+    if (wellness && request.method === "GET")
+      return json(response, 200, wellnessDay(wellness[1]));
 
     return failure(response, 404, "invalid_request");
   });

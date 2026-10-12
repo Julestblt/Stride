@@ -16,10 +16,9 @@ const observationSchema = z.object({
   value_numeric: z.union([z.number(), z.string()]).nullable(),
 });
 
-export async function loadHealth(
+export async function loadHealthDays(
   context: OnboardingContext,
   today: string,
-  view: Exclude<HealthView, "day">,
 ) {
   const rows = await readAll((from, to) =>
     context.client
@@ -29,6 +28,7 @@ export async function loadHealth(
       .in("metric", [...healthMetrics])
       .in("availability", ["available", "partial"])
       .gte("observed_on", addDays(today, -75))
+      .lte("observed_on", today)
       .order("observed_on", { ascending: true })
       .order("metric", { ascending: true })
       .range(from, to),
@@ -48,5 +48,17 @@ export async function loadHealth(
       },
     ];
   });
-  return healthModel({ days: healthDays(observations), view, today });
+  return healthDays(observations);
+}
+
+export async function loadHealth(
+  context: OnboardingContext,
+  today: string,
+  view: Exclude<HealthView, "day">,
+) {
+  return healthModel({
+    days: await loadHealthDays(context, today),
+    view,
+    today,
+  });
 }
