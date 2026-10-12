@@ -57,6 +57,59 @@ const activity = (id, days, values) => ({
   ...daysAgo(days),
   ...values,
 });
+const lap = (activityId, index, values) => ({
+  activity_id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(activityId).padStart(12, "0")}`,
+  user_id: user.id,
+  segment_type: "lap",
+  segment_index: index,
+  started_at: null,
+  average_cadence: null,
+  average_power_watts: null,
+  ...values,
+});
+const progressLaps = [
+  ...Array.from({ length: 70 }, (_, run) =>
+    Array.from({ length: 8 }, (_, index) =>
+      lap(100 + run, index, {
+        distance_meters: 1000,
+        duration_seconds: 330 + Math.round(run * 0.25) + (index % 3),
+        average_heart_rate: index === 6 ? 157 : 134 + (index % 3),
+        elevation_gain_meters: 4,
+        elevation_loss_meters: 4,
+      }),
+    ),
+  ).flat(),
+  ...Array.from({ length: 21 }, (_, index) =>
+    lap(2, index, {
+      distance_meters: 1000,
+      duration_seconds: index % 5 === 2 ? 540 : 350,
+      average_heart_rate: index < 10 ? 140 : 152,
+      elevation_gain_meters: index % 5 === 2 ? 100 : 6,
+      elevation_loss_meters: index % 5 === 3 ? 100 : 6,
+    }),
+  ),
+];
+const progressObservations = Array.from({ length: 200 }, (_, index) => {
+  const age = 199 - index;
+  const observed_on = new Date(Date.now() - age * day)
+    .toISOString()
+    .slice(0, 10);
+  const chronic = Math.round(
+    260 + index * 0.9 - Math.max(0, 38 - age) * 1.5 + Math.sin(index / 9) * 12,
+  );
+  const acute = Math.round(chronic + Math.sin(index / 3.2) * 70);
+  return [
+    ["training_load_chronic", chronic],
+    ["training_load_acute", acute],
+    ["vo2_max", index < 120 ? 54 : 55],
+  ].map(([metric, value_numeric]) => ({
+    user_id: user.id,
+    metric,
+    observed_on,
+    value_numeric,
+    availability: "available",
+  }));
+}).flat();
 const tables = {
   provider_activities: [
     activity(1, 1, {
@@ -118,20 +171,22 @@ const tables = {
     [120, 320, 6.18, 146, 163, 0],
     [440, 1600, 4.36, 171, 180, 2],
     [740, 1990, 6.12, 136, 158, 1],
-  ].map(([duration, distance, , heartRate, cadence, gain], index) => ({
-    activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
-    user_id: user.id,
-    segment_type: "lap",
-    segment_index: index,
-    started_at: null,
-    distance_meters: distance,
-    duration_seconds: duration,
-    average_heart_rate: heartRate,
-    average_cadence: cadence,
-    average_power_watts: null,
-    elevation_gain_meters: gain,
-    elevation_loss_meters: null,
-  })),
+  ]
+    .map(([duration, distance, , heartRate, cadence, gain], index) => ({
+      activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
+      user_id: user.id,
+      segment_type: "lap",
+      segment_index: index,
+      started_at: null,
+      distance_meters: distance,
+      duration_seconds: duration,
+      average_heart_rate: heartRate,
+      average_cadence: cadence,
+      average_power_watts: null,
+      elevation_gain_meters: gain,
+      elevation_loss_meters: null,
+    }))
+    .concat(progressLaps),
   provider_activity_tracks: [
     {
       activity_id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000004",
@@ -206,7 +261,7 @@ const tables = {
     observed_on: new Date(Date.now() - index * day).toISOString().slice(0, 10),
     value_numeric: 50,
     availability: "available",
-  })),
+  })).concat(progressObservations),
   athlete_profiles: [
     {
       user_id: user.id,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ActivityIcon, FlagIcon, PlusIcon } from "lucide-react";
+import { ActivityIcon, FlagIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,6 +27,7 @@ import {
   type ShellGoal,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
+import { ProgressSidebarGroup } from "@/features/progress/components/progress-nav";
 import { ShellNavItem } from "./shell-nav-item";
 import { ShellRaceItem } from "./shell-race-item";
 import { SignOutMenuItem } from "./sign-out-menu-item";
@@ -82,9 +83,15 @@ export function AppShell({
                 icon={<ActivityIcon />}
                 label="Activités"
               />
+              <ShellNavItem
+                href="/progress"
+                icon={<TrendingUpIcon />}
+                label="Progression"
+              />
               <ShellNavItem href="/races" icon={<FlagIcon />} label="Courses" />
             </SidebarMenu>
           </SidebarGroup>
+          <ProgressSidebarGroup />
           <SidebarGroup className="group-data-[collapsible=icon]:hidden">
             <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
             <SidebarMenu>
