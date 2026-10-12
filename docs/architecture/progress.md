@@ -40,3 +40,18 @@ Weekly hours sum the duration of all activities over the last 16 weeks; weeks co
 | Race recovery | Days after a past Objectifs race until nightly HRV is back above the pre-race range low                                                                                                 | Pre-race range from the 28 nights before; capped at 30 days; ongoing recoveries are marked                                                                      |
 
 The check-in stores one row per athlete and local day in `athlete_wellness_checkins` (legs, soreness, stress) under owner-only RLS. Each answer is saved on selection. Stride does not diagnose; the card says so. Plan changes stay empty until training plans exist.
+
+## Santé
+
+`/progress/health` shows the Semaine view by default and Mois with `?view=month`. Both use stored daily Garmin observations: the reading covers the last 7 or 30 days and the charts cover the last 14 or 30 nights.
+
+| Block              | Definition                                                                                                                                  | Source                                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Lecture de Stride  | Deterministic headline, paragraph and three takeaways (sleep, HRV, load) built from the measures below                                      | Stride                                                                                                                               |
+| Sommeil            | Last night, gap to the 14-night mean, Garmin sleep phases, and the restorative share (deep + REM ÷ sleep) compared with its 28-night median | `sleep_*_seconds`, `sleep_score`                                                                                                     |
+| VFC et FC au repos | Same usual ranges as Récupération (mean ± 1 SD for HRV, interquartile range for resting HR, 28 days)                                        | `hrv_last_night_ms`, `resting_heart_rate_bpm`                                                                                        |
+| Énergie            | Body Battery at wake-up, overnight recharge compared with its 28-day median, the previous day's drain and average stress                    | `body_battery_wake`, `body_battery_charged`, `body_battery_drained`, `average_stress` (empty until garmin_mcp provides Body Battery) |
+| Stress             | Previous full day's Garmin average: ≤ 25 calm, ≤ 50 low, ≤ 75 moderate, above high                                                          | `average_stress`                                                                                                                     |
+| Charge et forme    | Acute ÷ chronic Garmin load: < 0.8 low, 0.8–1.5 productive, > 1.5 high; VO₂max, Garmin recovery time and 4-week load focus                  | `training_load_*`, `vo2_max`, `recovery_time_minutes`, `load_focus_*`                                                                |
+
+Every chart can be inspected with a pointer, by touch or with the arrow keys; each value shows its date, unit and reference.
