@@ -1,14 +1,9 @@
-import {
-  DataActivityStatus,
-  DataCategoryScope,
-} from "@/features/data-activity/components/status";
+import { DataCategoryScope } from "@/features/data-activity/components/status";
 import type { ActivityView } from "../activity-view";
 import { formatClock } from "../charts";
 import { RouteCard } from "./route-card";
 import { ActivityCharts, ActivityScatter } from "./activity-charts";
-import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Metric } from "@/components/stride/metric";
 import { MonoLabel } from "@/components/stride/mono-label";
 import {
@@ -30,6 +25,7 @@ import {
   type ActivitySegment,
 } from "@/features/activities/detail";
 import { formatLocalDate } from "@/features/app-shell/shell";
+import { ActivityToolbar } from "./activity-frame";
 import { LapTableSection } from "./lap-table";
 
 export function ActivityFullDetail({
@@ -67,40 +63,23 @@ export function ActivityFullDetail({
   ].filter(Boolean);
   return (
     <>
-      <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
-        <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
-        <Separator
-          orientation="vertical"
-          className="data-vertical:h-4 data-vertical:self-center"
-        />
-        <nav
-          aria-label="Fil d’Ariane"
-          className="flex min-w-0 flex-1 items-center gap-2 text-sm"
+      <ActivityToolbar href={`/activities${query}`}>
+        <span aria-hidden="true" className="text-dim">
+          /
+        </span>
+        <Link
+          href={`/activities/${activity.id}${query}`}
+          className="truncate text-muted-foreground hover:text-foreground"
         >
-          <Link
-            href={`/activities${query}`}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Activités
-          </Link>
-          <span aria-hidden="true" className="text-dim">
-            /
-          </span>
-          <Link
-            href={`/activities/${activity.id}${query}`}
-            className="truncate text-muted-foreground hover:text-foreground"
-          >
-            {date}
-          </Link>
-          <span aria-hidden="true" className="text-dim">
-            /
-          </span>
-          <span aria-current="page" className="truncate">
-            Détail
-          </span>
-        </nav>
-        <DataActivityStatus className="ml-auto md:hidden" />
-      </header>
+          {date}
+        </Link>
+        <span aria-hidden="true" className="text-dim">
+          /
+        </span>
+        <span aria-current="page" className="truncate">
+          Détail
+        </span>
+      </ActivityToolbar>
       <DataCategoryScope
         categories={["activities"]}
         className="flex min-h-0 flex-1 flex-col"

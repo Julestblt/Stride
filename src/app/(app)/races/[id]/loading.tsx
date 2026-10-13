@@ -1,5 +1,5 @@
-import { DataActivityLoading } from "@/features/data-activity/components/loading";
+import { RaceLoading } from "@/features/data-activity/components/loading";
 
 export default function Loading() {
-  return <DataActivityLoading label="Chargement des courses" />;
+  return <RaceLoading />;
 }

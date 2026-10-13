@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 

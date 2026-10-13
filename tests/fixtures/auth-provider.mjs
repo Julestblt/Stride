@@ -669,6 +669,11 @@ createServer(async (request, response) => {
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
   if (url.pathname.startsWith("/rest/v1/")) {
+    if (
+      url.pathname === "/rest/v1/provider_activities" &&
+      url.searchParams.get("activity_name")?.includes("loading-fixture")
+    )
+      await new Promise((resolve) => setTimeout(resolve, 6000));
     if (request.headers.authorization !== `Bearer ${token}` && !recordsSession)
       return send(401, { message: "JWT required" });
     if (

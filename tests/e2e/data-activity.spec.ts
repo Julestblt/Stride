@@ -196,7 +196,9 @@ test("the thread delays fast work and holds visible loading for 600ms", async ({
   await expect(status).toContainText("synchronisé");
   await page.waitForLoadState("networkidle");
   await page.clock.pauseAt(new Date("2026-10-13T10:02:00Z"));
-  const thread = page.getByTestId("data-activity-thread");
+  const thread = page
+    .getByTestId("data-activity-thread")
+    .filter({ visible: true });
   value = observation("running");
   await pollNow(page);
   await expect(status).toContainText("synchro…");
@@ -330,4 +332,225 @@ test("mobile activity values keep their content and signal a running import", as
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
+});
+
+async function holdNavigation(page: Page, path: string) {
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let arrived = () => {};
+  const requested = new Promise<void>((resolve) => {
+    arrived = resolve;
+  });
+  await page.route(`**${path}?*`, async (route) => {
+    if (route.request().headers().rsc !== "1") return route.continue();
+    arrived();
+    await gate;
+    await route.continue();
+  });
+  return { requested, release };
+}
+
+async function expectHeaderThread(page: Page) {
+  const thread = page
+    .getByTestId("data-activity-thread")
+    .filter({ visible: true });
+  await expect(thread).toHaveCount(1);
+  const geometry = await thread.evaluate((element) => {
+    const line = element.getBoundingClientRect();
+    const header = element.parentElement!.getBoundingClientRect();
+    return {
+      height: line.height,
+      bottom: line.bottom,
+      headerBottom: header.bottom,
+      width: line.width,
+      headerWidth: header.width,
+    };
+  });
+  expect(geometry.height).toBe(2);
+  expect(Math.abs(geometry.bottom - geometry.headerBottom)).toBeLessThanOrEqual(
+    1,
+  );
+  expect(Math.abs(geometry.width - geometry.headerWidth)).toBeLessThanOrEqual(
+    2,
+  );
+  return thread;
+}
+
+for (const width of [1440, 390]) {
+  test(`server loading keeps the activity layout at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await page.goto("/activities?q=loading-fixture", { waitUntil: "commit" });
+    const loading = page.getByRole("status", {
+      name: "Chargement des activités",
+      exact: true,
+    });
+    await expect(loading).toBeVisible();
+    const heading = loading.getByRole("heading", {
+      name: "Activités",
+      level: 1,
+    });
+    await expect(heading).toBeVisible();
+    expect(await heading.locator('[data-slot="skeleton"]').count()).toBe(0);
+    await expectHeaderThread(page);
+    const list = loading.locator(":scope > div > div").first();
+    if (width === 1440) {
+      expect(
+        await list.evaluate((element) => element.getBoundingClientRect().width),
+      ).toBe(320);
+      await expect(
+        loading.getByRole("navigation", { name: "Fil d’Ariane" }),
+      ).toBeVisible();
+    } else {
+      expect(
+        await list.evaluate((element) => element.getBoundingClientRect().width),
+      ).toBe(width);
+      await expect(
+        loading.getByRole("navigation", { name: "Fil d’Ariane" }),
+      ).toBeHidden();
+    }
+    await page.screenshot({
+      path: `test-results/activity-loading-${width}.png`,
+    });
+    await page.waitForLoadState("load");
+    await expect(loading).not.toBeVisible();
+    await expect(
+      page.getByTestId("data-activity-thread").filter({ visible: true }),
+    ).toHaveCount(0);
+  });
+}
+
+test("a blocked server navigation starts the header thread before its response", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto("/activities");
+  await expect(page.getByRole("article")).toBeVisible();
+  const before = await page.getByRole("article").boundingBox();
+  const gate = await holdNavigation(page, "/progress");
+  try {
+    await page.getByRole("link", { name: "Progression", exact: true }).click();
+    await gate.requested;
+    await expectHeaderThread(page);
+    expect(new URL(page.url()).pathname).toBe("/activities");
+    expect(await page.getByRole("article").boundingBox()).toEqual(before);
+    await expect(
+      page
+        .getByRole("button", { name: /État des données/ })
+        .filter({ visible: true })
+        .first(),
+    ).toContainText("reconnecter");
+    await page.screenshot({
+      path: "test-results/activity-pending-navigation.png",
+    });
+  } finally {
+    gate.release();
+  }
+  await expect(page).toHaveURL("/progress");
+  await expect(
+    page.getByTestId("data-activity-thread").filter({ visible: true }),
+  ).toHaveCount(0);
+});
+
+test("a superseding navigation cleans up its pending header thread", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/activities");
+  await expect(page.getByRole("article")).toBeVisible();
+  const gate = await holdNavigation(page, "/progress");
+  try {
+    await page.getByRole("link", { name: "Progression", exact: true }).click();
+    await gate.requested;
+    await expectHeaderThread(page);
+    await page
+      .getByRole("navigation", { name: "Filtrer les activités" })
+      .getByRole("link", { name: "Route", exact: true })
+      .click();
+    await expect(page).toHaveURL(/activities\?filter=road$/);
+  } finally {
+    gate.release();
+  }
+  await expect(
+    page.getByTestId("data-activity-thread").filter({ visible: true }),
+  ).toHaveCount(0);
+  await expect(page).toHaveURL(/activities\?filter=road$/);
+});
+
+test("opening a navigation link in another tab leaves the current thread idle", async ({
+  page,
+  context,
+}) => {
+  await signIn(page);
+  await page.goto("/activities");
+  await expect(page.getByRole("article")).toBeVisible();
+  const [popup] = await Promise.all([
+    context.waitForEvent("page"),
+    page
+      .getByRole("link", { name: "Progression", exact: true })
+      .click({ modifiers: ["Control"] }),
+  ]);
+  await expect(page).toHaveURL("/activities");
+  await expect(
+    page.getByTestId("data-activity-thread").filter({ visible: true }),
+  ).toHaveCount(0);
+  await popup.close();
+});
+
+test("activity search shares pending server navigation feedback", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/activities");
+  await expect(page.getByRole("article")).toBeVisible();
+  const gate = await holdNavigation(page, "/activities");
+  try {
+    await page
+      .getByRole("searchbox", { name: "Rechercher par nom" })
+      .fill("THRESHOLD");
+    await page.getByRole("button", { name: "Rechercher", exact: true }).click();
+    await gate.requested;
+    await expectHeaderThread(page);
+    await expect(page.getByRole("article")).toBeVisible();
+  } finally {
+    gate.release();
+  }
+  await expect(page).toHaveURL(/activities\?q=THRESHOLD$/);
+  await expect(
+    page.getByRole("region", { name: "Liste des activités" }),
+  ).toContainText("1 sur 1 activités");
+  await expect(
+    page.getByTestId("data-activity-thread").filter({ visible: true }),
+  ).toHaveCount(0);
+});
+
+test("fitness period changes show loading before the server response", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/progress");
+  const heading = page.getByRole("heading", { level: 1 });
+  await expect(heading).toBeVisible();
+  const before = await heading.textContent();
+  const gate = await holdNavigation(page, "/progress");
+  try {
+    await page
+      .getByRole("navigation", { name: "Période" })
+      .getByRole("link", { name: "12 sem.", exact: true })
+      .click();
+    await gate.requested;
+    await expectHeaderThread(page);
+    expect(await heading.textContent()).toBe(before);
+  } finally {
+    gate.release();
+  }
+  await expect(page).toHaveURL("/progress?period=12w");
+  await expect(
+    page.getByTestId("data-activity-thread").filter({ visible: true }),
+  ).toHaveCount(0);
 });

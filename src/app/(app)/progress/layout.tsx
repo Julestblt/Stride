@@ -1,4 +1,7 @@
-import { DataActivityStatus } from "@/features/data-activity/components/status";
+import {
+  DataActivityStatus,
+  DataActivityThread,
+} from "@/features/data-activity/components/status";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -13,7 +16,7 @@ export default async function ProgressLayout({
 }) {
   return (
     <>
-      <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4 sm:px-5">
+      <header className="relative flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4 sm:px-5">
         <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
         <Separator
           orientation="vertical"
@@ -23,6 +26,7 @@ export default async function ProgressLayout({
           <ProgressBreadcrumb />
         </div>
         <DataActivityStatus className="hidden sm:flex md:hidden" />
+        <DataActivityThread />
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <main className="mx-auto flex w-full max-w-360 flex-col px-5 pt-4 pb-18 sm:px-[clamp(20px,4vw,56px)] sm:pt-10">

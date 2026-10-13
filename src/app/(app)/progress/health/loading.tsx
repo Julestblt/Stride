@@ -1,5 +1,5 @@
-import { DataActivityLoading } from "@/features/data-activity/components/loading";
+import { HealthLoading } from "@/features/data-activity/components/loading";
 
 export default function Loading() {
-  return <DataActivityLoading label="Chargement de la santé" />;
+  return <HealthLoading />;
 }

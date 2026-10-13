@@ -267,21 +267,29 @@ export function DataActivityStatus({
   );
 }
 
+export function DataActivityThread({ className }: { className?: string }) {
+  const activity = useDataActivity();
+  if (!activity?.thread) return null;
+  return (
+    <div
+      data-testid="data-activity-thread"
+      role="status"
+      aria-label="Chargement des données en cours"
+      className={cn(
+        "pointer-events-none absolute inset-x-0 -bottom-px z-10 h-0.5 overflow-hidden bg-border-subtle",
+        className,
+      )}
+    >
+      <div className="h-full w-full bg-provider/60 motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent" />
+    </div>
+  );
+}
+
 export function DataActivityFeedback() {
   const activity = useDataActivity();
   if (!activity) return null;
   return (
     <>
-      {activity.thread && (
-        <div
-          data-testid="data-activity-thread"
-          role="status"
-          aria-label="Chargement des données en cours"
-          className="pointer-events-none absolute inset-x-0 top-14 z-10 h-0.5 overflow-hidden bg-border-subtle"
-        >
-          <div className="h-full w-full bg-provider/60 motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent" />
-        </div>
-      )}
       {activity.fresh.length > 0 && (
         <div
           role="status"

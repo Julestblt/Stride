@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { ChartInspector } from "@/components/stride/chart-inspector";
 import { TrendMark } from "@/components/stride/marks";
 import { MonoLabel } from "@/components/stride/mono-label";

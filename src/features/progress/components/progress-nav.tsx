@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   SidebarGroup,

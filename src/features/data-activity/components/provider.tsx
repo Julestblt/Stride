@@ -142,13 +142,10 @@ export function DataActivityProvider({
     };
   }, []);
 
-  const active =
-    !offline &&
-    state !== "reconnect" &&
-    (state === "syncing" || loads > 0 || applying);
+  const active = !offline && (state === "syncing" || loads > 0 || applying);
   const visibleSince = useRef(0);
   useEffect(() => {
-    if (offline || state === "reconnect") {
+    if (offline) {
       const timer = setTimeout(() => {
         setThread(false);
         visibleSince.current = 0;
@@ -168,7 +165,7 @@ export function DataActivityProvider({
       threadDelay(active, visibleSince.current, Date.now()),
     );
     return () => clearTimeout(timer);
-  }, [active, offline, state]);
+  }, [active, offline]);
   return (
     <Context.Provider
       value={{ observation, state, fresh, apply, markLoading, thread }}
