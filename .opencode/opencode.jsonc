@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Register the vendor-managed BMAD, shadcn, Supabase and Ponytail skills
+  // natively instead of relying on the compatibility scan of `.agents/skills`.
+  "skills": ["./.agents/skills"],
+  "permissions": [
+    // Advertise and load skills by default.
+    { "action": "skill", "resource": "*", "effect": "allow" },
+    // bmod-* are BMAD module metadata skills; they must never be invoked.
+    { "action": "skill", "resource": "bmod-*", "effect": "deny" },
+  ],
+}
