@@ -43,6 +43,8 @@ When a BMAD workflow creates a working draft or memlog in _bmad-output, use it t
 
 ## Skill loading policy
 
+OpenCode registers the vendor-managed skills in `.agents/skills` through the project configuration in `.opencode/opencode.jsonc`, which also denies the `bmod-*` module-metadata skills. `AGENTS.md` remains the only always-on context source because OpenCode V2 accepts but does not load the `instructions` configuration array.
+
 Installed skills are not universal context. Start with `AGENTS.md`; load only skills that the current task needs. Use BMAD for planning, specification, architecture, and implementation workflow. Load shadcn for UI component work. Load Ponytail for a targeted simplicity check before abstractions, dependencies, refactors, or architecture reviews. Load future specialist skills only when an active issue directly requires them. Avoid overlapping skill stacks and do not copy full skill instructions into `AGENTS.md`.
 
 | Layer                                                                         | Use                                                                       |
