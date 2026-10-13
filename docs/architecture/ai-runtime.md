@@ -32,3 +32,7 @@ The application route `GET /api/onboarding/insights` exposes the result to the U
 ## Profile habits reuse (#38)
 
 The athlete profile consumes only `volume` and `mix` from the existing history-insights endpoint. It preserves the facts' all-sport, twelve-month meaning and shows source and optional AI attribution. No additional agent or provider call path is introduced: facts hash caching, cooldown, import-completion gating and structured validation still apply. A failed or timed-out client request uses the deterministic volume/mix facts already computed for the profile; an empty result is honestly unavailable. Heart-rate zones are calculated entirely in the domain module and are never derived or phrased by the language model.
+
+## Proposed coaching engine (#86)
+
+The [coaching engine RFC](coaching-engine/README.md) proposes how plan generation, adaptation and the conversational coach extend this boundary: workflows in code with one Coach agent, a dedicated coach worker for multi-step runs, internal typed tools, a model gateway, and a proposal ledger that keeps every plan change subject to athlete approval ([ADR 0007](../adr/0007-coaching-engine-paradigm-and-agent-topology.md) to [ADR 0012](../adr/0012-evidence-graded-guardrails-and-health-boundary.md)). The single-shot skills above stay in the web process; their provider is product-owner decision D7. Nothing in the RFC is implemented yet.

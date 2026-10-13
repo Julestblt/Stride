@@ -17,6 +17,8 @@ Offer an athlete a conversational way to understand training and review proposal
 
 E-01 provides permission-scoped context. E-03 provides deterministic measures. Plan changes depend on E-04. Specialist agents are added only when their responsibilities and evaluations are explicit.
 
+The proposed [coaching engine architecture](../architecture/coaching-engine/README.md) (#86) defines the runtime, agent roles, tools, model routing, security model and evaluation strategy for this epic.
+
 ## Expected user value
 
 Athletes can ask questions about their own training and receive grounded, understandable answers with clear limits.
