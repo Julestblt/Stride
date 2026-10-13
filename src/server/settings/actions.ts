@@ -43,17 +43,24 @@ async function savePlanValues(
   raceId: string,
   plan: ReturnType<typeof planValues>,
 ) {
-  const { error } = await current.client.from("race_plans").upsert(
-    {
-      race_id: raceId,
-      user_id: current.userId,
-      start_time: plan.start,
-      start_time_confirmed: plan.start !== null,
-      cutoff_duration_seconds: plan.cutoff,
-    },
-    { onConflict: "race_id" },
-  );
-  return !error;
+  const values = {
+    start_time: plan.start,
+    start_time_confirmed: plan.start !== null,
+    cutoff_duration_seconds: plan.cutoff,
+  };
+  const { data, error } = await current.client
+    .from("race_plans")
+    .update(values)
+    .eq("race_id", raceId)
+    .eq("user_id", current.userId)
+    .select("race_id");
+  if (error) return false;
+  if (data && data.length > 0) return true;
+  if (plan.start === null && plan.cutoff === null) return true;
+  const { error: insertError } = await current.client
+    .from("race_plans")
+    .insert({ race_id: raceId, user_id: current.userId, ...values });
+  return !insertError;
 }
 
 async function context() {
