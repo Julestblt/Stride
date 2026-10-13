@@ -68,7 +68,8 @@ export async function saveSettingsTraining(data: FormData) {
     !values.primary_terrain ||
     !values.long_run_day ||
     !values.weekday_session_minutes ||
-    !values.available_weekdays?.length
+    !values.available_weekdays?.length ||
+    values.available_weekdays.length > 5
   )
     redirect(resultPath("/settings/training", "invalid"));
   await commitProfile(data, values, "/settings/training");
