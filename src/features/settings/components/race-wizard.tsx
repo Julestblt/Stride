@@ -319,8 +319,9 @@ export function RaceWizard({
       >
         <form
           onSubmit={(event) => {
+            if (event.target !== event.currentTarget) return;
             event.preventDefault();
-            if (event.target === event.currentTarget && step < 3) next();
+            if (step < 3) next();
           }}
           className="flex min-h-full flex-col"
         >
