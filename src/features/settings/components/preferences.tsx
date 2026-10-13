@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 const segment =
   "inline-flex min-h-11 items-center rounded-control border border-border-strong bg-surface-raised px-3 text-sm text-muted md:min-h-9.5 md:bg-surface";
 const segmentSelected =
-  "border-foreground bg-foreground font-semibold text-background";
+  "border-foreground bg-foreground font-semibold text-background md:bg-foreground";
 
 export function PreferenceSection({
   title,

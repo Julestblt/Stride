@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ProvenanceLabel } from "@/components/stride/provenance";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { settingsHref, settingsSections } from "../navigation";
@@ -15,6 +16,12 @@ export function SettingsShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const scroller = useRef<HTMLDivElement>(null);
+  const innerScroll = pathname === "/settings/training";
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+  }, [pathname, search]);
   const profile = pathname === "/settings/profile";
   const active = settingsSections.find(
     (section) => settingsHref(section.slug) === pathname,
@@ -87,9 +94,25 @@ export function SettingsShell({
           </div>
         </div>
       </aside>
-      <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-y-auto md:p-2">
-        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border">
-          <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
+      <main
+        className={cn(
+          "min-w-0 p-0 md:h-svh md:min-h-0 md:p-2",
+          innerScroll ? "md:overflow-hidden" : "md:overflow-y-auto",
+        )}
+      >
+        <div
+          className={cn(
+            "border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border",
+            innerScroll && "md:flex md:h-full md:min-h-0 md:flex-col",
+          )}
+        >
+          <header
+            className={cn(
+              "flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6",
+              innerScroll &&
+                "max-md:sticky max-md:top-0 max-md:z-10 max-md:bg-surface-inset md:shrink-0",
+            )}
+          >
             <Link
               href={active?.slug ? "/settings" : "/activities"}
               aria-label={
@@ -126,13 +149,21 @@ export function SettingsShell({
             )}
           </header>
           <div
-            data-slot="settings-content"
+            ref={scroller}
             className={cn(
-              "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
-              profile && "md:pt-9",
+              innerScroll &&
+                "md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain",
             )}
           >
-            {children}
+            <div
+              data-slot="settings-content"
+              className={cn(
+                "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
+                profile && "md:pt-9",
+              )}
+            >
+              {children}
+            </div>
           </div>
         </div>
       </main>
