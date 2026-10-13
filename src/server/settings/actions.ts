@@ -140,48 +140,14 @@ export async function saveSettingsGoal(data: FormData) {
   redirect(resultPath("/settings/goals", result.status));
 }
 
-export async function saveSettingsRace(data: FormData) {
-  const raw = {
-    id: data.get("id"),
-    revision: Number(data.get("revision")),
-    values: {
-      race_kind: data.get("race_kind"),
-      name: nullableText(data.get("name")),
-      race_date: nullableText(data.get("race_date")),
-      distance_km: nullableNumber(data.get("distance_km")),
-      elevation_gain_m: nullableNumber(data.get("elevation_gain_m")),
-      priority: data.get("priority"),
-      target_duration_seconds: parseDuration(
-        nullableText(data.get("target_duration")) ?? "",
-      ),
-    },
-  };
-  const parsed = raceSaveSchema.safeParse(raw);
-  if (
-    !parsed.success ||
-    !raw.values.name ||
-    !raw.values.race_date ||
-    !raw.values.distance_km
-  )
-    redirect(resultPath("/settings/goals", "invalid"));
-  const result = await saveRace({ context }, parsed.data);
-  if (result.status === "saved") {
-    const current = await context();
-    const plan = planValues(data);
-    if (
-      current &&
-      (plan.start !== null ||
-        plan.cutoff !== null ||
-        data.get("start_time") !== null)
-    )
-      await savePlanValues(current, parsed.data.id, plan);
-    revalidatePath("/settings/goals");
-  }
-  redirect(resultPath("/settings/goals", result.status));
-}
+export type RaceSubmitResult =
+  | { status: "saved"; id: string }
+  | {
+      status: "invalid" | "conflict" | "missing" | "error" | "session-expired";
+    };
 
-export async function addSettingsRace(data: FormData) {
-  const values = {
+function raceFormValues(data: FormData) {
+  return {
     race_kind: data.get("race_kind"),
     name: nullableText(data.get("name")),
     race_date: nullableText(data.get("race_date")),
@@ -192,9 +158,16 @@ export async function addSettingsRace(data: FormData) {
       nullableText(data.get("target_duration")) ?? "",
     ),
   };
+}
+
+export async function submitSettingsRace(
+  data: FormData,
+): Promise<RaceSubmitResult> {
+  const values = raceFormValues(data);
+  const id = nullableText(data.get("id"));
   const check = raceSaveSchema.safeParse({
-    id: "00000000-0000-4000-8000-000000000000",
-    revision: 1,
+    id: id ?? "00000000-0000-4000-8000-000000000000",
+    revision: id ? Number(data.get("revision")) : 1,
     values,
   });
   if (
@@ -203,27 +176,36 @@ export async function addSettingsRace(data: FormData) {
     !values.race_date ||
     !values.distance_km
   )
-    redirect(resultPath("/settings/goals", "invalid"));
+    return { status: "invalid" };
   const current = await context();
-  if (!current) redirect(resultPath("/settings/goals", "session-expired"));
+  if (!current) return { status: "session-expired" };
+  const plan = planValues(data);
+  if (id) {
+    const result = await saveRace({ context }, check.data);
+    if (result.status !== "saved") return { status: result.status };
+    if (!(await savePlanValues(current, id, plan))) return { status: "error" };
+    revalidatePath("/settings/goals");
+    return { status: "saved", id };
+  }
   const { count, error: countError } = await current.client
     .from("athlete_races")
     .select("id", { count: "exact", head: true })
     .eq("user_id", current.userId);
-  if (countError) redirect(resultPath("/settings/goals", "error"));
-  if ((count ?? 0) >= maxRaces)
-    redirect(resultPath("/settings/goals", "invalid"));
+  if (countError) return { status: "error" };
+  if ((count ?? 0) >= maxRaces) return { status: "invalid" };
   const { data: created, error } = await current.client
     .from("athlete_races")
     .insert({ user_id: current.userId, ...check.data.values })
     .select("id")
     .single();
-  if (error) redirect(resultPath("/settings/goals", "error"));
-  const plan = planValues(data);
-  if (plan.start !== null || plan.cutoff !== null)
-    await savePlanValues(current, created.id, plan);
+  if (error) return { status: "error" };
+  if (
+    (plan.start !== null || plan.cutoff !== null) &&
+    !(await savePlanValues(current, created.id, plan))
+  )
+    return { status: "error" };
   revalidatePath("/settings/goals");
-  redirect(resultPath("/settings/goals", "saved"));
+  return { status: "saved", id: created.id };
 }
 
 export async function removeSettingsRace(data: FormData) {

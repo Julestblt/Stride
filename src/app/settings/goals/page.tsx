@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SettingsNotice } from "@/features/settings/components/form-parts";
+import { SettingsNotice } from "@/features/settings/components/settings-notice";
 import { RaceWizard } from "@/features/settings/components/race-wizard";
 import { localToday } from "@/features/app-shell/shell";
 import {
@@ -120,7 +120,10 @@ export default async function GoalsSettingsPage({
           plan que tu peux relire avant.
         </p>
       </div>
-      <SettingsNotice status={query.status} />
+      <SettingsNotice
+        status={query.status}
+        savedMessage="Objectif enregistré."
+      />
       {wizardOpen && (
         <RaceWizard
           key={editing?.id ?? "nouvelle"}

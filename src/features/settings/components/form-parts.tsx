@@ -38,31 +38,3 @@ export function SettingsField({
     </Field>
   );
 }
-
-export function SettingsNotice({ status }: { status?: string }) {
-  if (!status) return null;
-  const message =
-    status === "saved"
-      ? "Modifications enregistrées."
-      : status === "deleted"
-        ? "Course supprimée."
-        : status === "conflict"
-          ? "Ces informations ont changé. Vérifie les dernières valeurs et réessaie."
-          : status === "invalid"
-            ? "Vérifie les valeurs saisies et réessaie."
-            : status === "session-expired"
-              ? "Ta session a expiré. Connecte-toi à nouveau."
-              : "Impossible d’enregistrer les modifications. Réessaie.";
-  return (
-    <p
-      role="status"
-      className={
-        status === "saved" || status === "deleted"
-          ? "mb-6 text-sm text-success"
-          : "mb-6 text-sm text-warning"
-      }
-    >
-      {message}
-    </p>
-  );
-}

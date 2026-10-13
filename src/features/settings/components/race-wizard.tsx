@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, XIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +30,7 @@ import {
   formatTarget,
 } from "../goals-view";
 import { RemoveRaceButton } from "./remove-race-button";
-import { addSettingsRace, saveSettingsRace } from "@/server/settings/actions";
+import { submitSettingsRace } from "@/server/settings/actions";
 
 export type WizardRace = {
   id: string;
@@ -166,6 +167,7 @@ export function RaceWizard({
   const close = () => router.push("/settings/goals");
   const values = race?.values;
   const [step, setStep] = useState(1);
+  const [saving, startSaving] = useTransition();
   const [attempted, setAttempted] = useState(false);
   const [name, setName] = useState(values?.name ?? "");
   const [dateText, setDateText] = useState(
@@ -236,13 +238,69 @@ export function RaceWizard({
   );
   const show = (error: string | null) => (attempted ? error : null);
 
+  function save() {
+    const data = new FormData();
+    if (race) {
+      data.set("id", race.id);
+      data.set("revision", String(race.revision));
+    }
+    data.set("race_kind", kind);
+    data.set("name", name);
+    data.set("race_date", isoDate ?? "");
+    data.set("distance_km", String(distanceKm));
+    data.set("elevation_gain_m", elevation);
+    data.set("priority", priority);
+    data.set(
+      "target_duration",
+      targetSeconds ? formatTarget(targetSeconds) : "",
+    );
+    data.set(
+      "start_time",
+      startMinutes === null
+        ? ""
+        : `${String(Math.floor(startMinutes / 60)).padStart(2, "0")}:${String(startMinutes % 60).padStart(2, "0")}`,
+    );
+    data.set(
+      "cutoff_duration",
+      cutoffSeconds ? formatTarget(cutoffSeconds) : "",
+    );
+    startSaving(async () => {
+      const result = await submitSettingsRace(data);
+      if (result.status === "saved") {
+        toast.success(
+          mode === "edit"
+            ? "Course mise à jour."
+            : "Course ajoutée à tes objectifs.",
+          { duration: 5000 },
+        );
+        router.refresh();
+        setStep(3);
+        return;
+      }
+      toast.error(
+        result.status === "conflict"
+          ? "Cette course a changé entre-temps. Rouvre-la et réessaie."
+          : result.status === "session-expired"
+            ? "Ta session a expiré. Connecte-toi à nouveau."
+            : result.status === "invalid"
+              ? "Vérifie les valeurs saisies et réessaie."
+              : "Impossible d’enregistrer la course. Réessaie.",
+        { duration: 8000 },
+      );
+    });
+  }
+
   function next() {
     if (step === 1 && !stepOneValid) {
       setAttempted(true);
       return;
     }
-    if (step === 2 && errors.target) {
-      setAttempted(true);
+    if (step === 2) {
+      if (errors.target) {
+        setAttempted(true);
+        return;
+      }
+      save();
       return;
     }
     setStep((current) => Math.min(3, current + 1));
@@ -252,8 +310,6 @@ export function RaceWizard({
     priority === "A" && primaryName
       ? `Tu as déjà une course A : ${primaryName}. L’objectif principal reste la plus proche.`
       : null;
-  const submitLabel =
-    mode === "edit" ? "Enregistrer la course" : "Ajouter la course";
 
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
@@ -262,52 +318,12 @@ export function RaceWizard({
         className="top-0 left-0 block h-svh max-h-none w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-surface-inset p-0 ring-0 md:top-1/2 md:left-1/2 md:h-auto md:max-h-[calc(100svh-4rem)] md:w-215 md:max-w-215 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-card md:border md:border-border-strong md:bg-popover md:shadow-2xl"
       >
         <form
-          action={mode === "edit" ? saveSettingsRace : addSettingsRace}
           onSubmit={(event) => {
-            if (event.target !== event.currentTarget) return;
-            if (step < 3) {
-              event.preventDefault();
-              next();
-            }
+            event.preventDefault();
+            if (event.target === event.currentTarget && step < 3) next();
           }}
           className="flex min-h-full flex-col"
         >
-          {race && (
-            <>
-              <input type="hidden" name="id" value={race.id} />
-              <input type="hidden" name="revision" value={race.revision} />
-            </>
-          )}
-          <input type="hidden" name="race_kind" value={kind} />
-          <input type="hidden" name="name" value={name} />
-          <input type="hidden" name="race_date" value={isoDate ?? ""} />
-          <input
-            type="hidden"
-            name="distance_km"
-            value={Number.isFinite(distanceKm) ? distanceKm : ""}
-          />
-          <input type="hidden" name="elevation_gain_m" value={elevation} />
-          <input type="hidden" name="priority" value={priority} />
-          <input
-            type="hidden"
-            name="target_duration"
-            value={targetSeconds ? formatTarget(targetSeconds) : ""}
-          />
-          <input
-            type="hidden"
-            name="start_time"
-            value={
-              startMinutes === null
-                ? ""
-                : `${String(Math.floor(startMinutes / 60)).padStart(2, "0")}:${String(startMinutes % 60).padStart(2, "0")}`
-            }
-          />
-          <input
-            type="hidden"
-            name="cutoff_duration"
-            value={cutoffSeconds ? formatTarget(cutoffSeconds) : ""}
-          />
-
           <header className="flex flex-col gap-4 border-b border-border px-5 pt-3.5 pb-3.5 md:px-7 md:pt-5.5 md:pb-4.5">
             <div className="flex items-center gap-3">
               <Button
@@ -582,6 +598,12 @@ export function RaceWizard({
 
             {step === 3 && (
               <>
+                <p className="flex items-center gap-2 text-sm font-semibold text-success">
+                  <CheckIcon className="size-4" />
+                  {mode === "edit"
+                    ? "Course mise à jour."
+                    : "Course ajoutée à tes objectifs."}
+                </p>
                 <div className="flex items-start gap-2.5 rounded-surface border border-border bg-surface px-4 py-3.5">
                   <StrideMark className="mt-0.5 size-3.5 shrink-0" />
                   <div className="flex flex-col gap-1.5">
@@ -589,10 +611,10 @@ export function RaceWizard({
                       Aucun plan n’est défini pour l’instant.
                     </p>
                     <p className="text-sm leading-relaxed text-muted">
-                      Cette course est ajoutée à tes objectifs sans modifier
-                      aucune semaine. Quand tu auras un plan, Stride s’appuiera
-                      sur elle pour le construire et te proposera les
-                      ajustements à relire avant de les appliquer.
+                      Cette course est enregistrée sans modifier aucune semaine.
+                      Quand tu auras un plan, Stride s’appuiera sur elle pour le
+                      construire et te proposera les ajustements à relire avant
+                      de les appliquer.
                     </p>
                   </div>
                 </div>
@@ -635,7 +657,7 @@ export function RaceWizard({
           </div>
 
           <footer className="sticky bottom-0 flex items-center gap-2.5 border-t border-border bg-surface-inset px-5 py-4 md:bg-popover md:px-7">
-            {step === 1 ? (
+            {step === 1 && (
               <Button
                 type="button"
                 variant="ghost"
@@ -644,11 +666,13 @@ export function RaceWizard({
               >
                 Annuler
               </Button>
-            ) : (
+            )}
+            {step === 2 && (
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => setStep(step - 1)}
+                disabled={saving}
+                onClick={() => setStep(1)}
                 className="text-muted"
               >
                 Retour
@@ -662,11 +686,13 @@ export function RaceWizard({
             )}
             <span className="ml-auto" />
             {step < 3 ? (
-              <Button type="button" onClick={next}>
+              <Button type="button" onClick={next} disabled={saving}>
                 {step === 2 ? "Voir l’effet sur le plan" : "Continuer"}
               </Button>
             ) : (
-              <Button type="submit">{submitLabel}</Button>
+              <Button type="button" onClick={close}>
+                Terminer
+              </Button>
             )}
           </footer>
         </form>

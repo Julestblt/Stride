@@ -8,7 +8,7 @@ import {
   SegmentedField,
   WeekdayField,
 } from "@/features/settings/components/preferences";
-import { SettingsNotice } from "@/features/settings/components/form-parts";
+import { SettingsNotice } from "@/features/settings/components/settings-notice";
 import { requireAthlete } from "@/server/app/session";
 import { readProfile } from "@/server/onboarding/profile";
 import { saveSettingsTraining } from "@/server/settings/actions";
