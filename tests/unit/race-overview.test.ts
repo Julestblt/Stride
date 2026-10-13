@@ -96,31 +96,52 @@ describe("races overview", () => {
     expect(rows.map((row) => row.key)).toEqual(["course", "target", "start"]);
   });
 
-  it("lays out phases toward the focused race and clamps to today", () => {
-    const focus = race({ date: "2027-03-20" });
+  it("cycles indicative phases toward each A race", () => {
     const timeline = seasonTimeline(
-      [focus, race({ id: "c", priority: "C", date: "2026-11-22" })],
+      [
+        race({ id: "a1", date: "2027-03-20" }),
+        race({ id: "c", priority: "C", date: "2026-11-22" }),
+        race({ id: "a2", date: "2027-07-08" }),
+      ],
       today,
-      focus,
     )!;
-    expect(timeline.phases.map((phase) => phase.label)).toEqual([
-      "Reprise",
-      "Volume",
-      "Spécifique",
-      "Affûtage",
+    expect(timeline.phases.map((phase) => phase.key)).toEqual([
+      "a1-0",
+      "a1-1",
+      "a1-2",
+      "a1-3",
+      "a2-1",
+      "a2-2",
+      "a2-3",
     ]);
-    const first = timeline.phases[0];
-    expect(first.left).toBe(0);
-    const last = timeline.phases[timeline.phases.length - 1];
-    expect(last.left + last.width).toBeCloseTo(
-      timeline.markers.find((marker) => marker.id === focus.id)!.left,
-      5,
-    );
+    expect(timeline.phases[0].left).toBe(0);
+    const a1 = timeline.markers.find((marker) => marker.id === "a1")!;
+    const taper = timeline.phases[3];
+    expect(taper.left + taper.width).toBeCloseTo(a1.left, 5);
+    expect(timeline.phases[4].left).toBeCloseTo(a1.left, 5);
     expect(timeline.months[0].key).toBe("2026-11");
   });
 
+  it("stacks close race labels on separate lanes", () => {
+    const timeline = seasonTimeline(
+      [
+        race({ id: "one", name: "Ecotrail Paris Automne", date: "2026-10-17" }),
+        race({ id: "two", name: "10km Tour Eiffel", date: "2026-12-06" }),
+        race({ id: "three", name: "UTMB PDA", date: "2027-07-08" }),
+      ],
+      today,
+    )!;
+    const lanes = Object.fromEntries(
+      timeline.markers.map((marker) => [marker.id, marker]),
+    );
+    expect(lanes.one.align).toBe("start");
+    expect(lanes.three.align).toBe("end");
+    expect(lanes.two.lane).not.toBe(lanes.one.lane);
+    expect(timeline.lanes).toBe(2);
+  });
+
   it("returns no timeline without a dated upcoming race", () => {
-    expect(seasonTimeline([race({ date: null })], today, null)).toBeNull();
-    expect(seasonTimeline([], today, null)).toBeNull();
+    expect(seasonTimeline([race({ date: null })], today)).toBeNull();
+    expect(seasonTimeline([], today)).toBeNull();
   });
 });

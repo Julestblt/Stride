@@ -29,7 +29,7 @@ export default async function RacesPage({
   const counts = { upcoming: upcoming.length, past: past.length };
   const showUpcoming = view !== "past";
   const showPast = view !== "upcoming";
-  const timeline = seasonTimeline(upcoming, today, featured);
+  const timeline = seasonTimeline(upcoming, today);
   const showSlot =
     featured?.priority === "A" &&
     !calendar.some((race) => race.priority === "B");
@@ -51,9 +51,7 @@ export default async function RacesPage({
           Ajoute ta prochaine course pour préparer le parcours et le calendrier.
         </EmptyState>
       )}
-      {showUpcoming && timeline && (
-        <SeasonCard timeline={timeline} today={today} />
-      )}
+      {showUpcoming && timeline && <SeasonCard timeline={timeline} />}
       {showUpcoming && featured && workspace && (
         <FeaturedRace
           race={featured}

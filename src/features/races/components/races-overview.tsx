@@ -29,15 +29,20 @@ import { EmptyState, Figure, RaceCard } from "./race-ui";
 export function PriorityBadge({
   priority,
   planned = true,
+  small = false,
 }: {
   priority: RaceSummary["priority"];
   planned?: boolean;
+  small?: boolean;
 }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-8 shrink-0 items-center justify-center rounded-control font-metric text-base font-bold",
+        "flex shrink-0 items-center justify-center font-metric font-bold",
+        small
+          ? "size-6 rounded-tag text-sm"
+          : "size-8 rounded-control text-base",
         priority === "A"
           ? "bg-accent text-accent-foreground"
           : cn(
@@ -51,18 +56,24 @@ export function PriorityBadge({
   );
 }
 
-export function SeasonCard({
-  timeline,
-  today,
-}: {
-  timeline: SeasonTimeline;
-  today: string;
-}) {
+const phaseTones = [
+  "bg-surface-raised",
+  "bg-accent/12",
+  "bg-accent/22",
+  "bg-surface-raised",
+];
+
+const laneHeight = 28;
+const labelsTop = 20;
+
+export function SeasonCard({ timeline }: { timeline: SeasonTimeline }) {
+  const phaseTop = labelsTop + timeline.lanes * laneHeight + 18;
+  const monthTop = phaseTop + 16 + 10;
   const label = `Saison : ${timeline.markers
     .map((marker) => `${marker.name} le ${formatShortDate(marker.date)}`)
     .join(", ")}`;
   return (
-    <RaceCard className="gap-2 pb-3">
+    <RaceCard className="gap-3 pb-3">
       <div className="flex items-baseline gap-3">
         <MonoLabel>Ta saison</MonoLabel>
         <span className="text-xs text-muted-foreground max-sm:hidden">
@@ -75,16 +86,25 @@ export function SeasonCard({
           Voir le plan →
         </Link>
       </div>
-      <div className="overflow-x-auto">
+      <div className="-mx-1 overflow-x-auto px-1">
         <div
           role="img"
           aria-label={label}
-          className="relative h-30 min-w-160"
-          data-today={today}
+          className="relative min-w-224"
+          style={{ height: monthTop + 14 }}
         >
+          {timeline.months.map((month) => (
+            <span
+              key={month.key}
+              aria-hidden="true"
+              className="absolute top-0 border-l border-border-subtle"
+              style={{ left: `${month.left}%`, height: phaseTop + 16 }}
+            />
+          ))}
           <span
             aria-hidden="true"
-            className="absolute top-0 bottom-6 left-0 border-l border-foreground"
+            className="absolute top-0 left-0 border-l border-foreground"
+            style={{ height: phaseTop + 16 }}
           />
           <MonoLabel
             size="nano"
@@ -93,40 +113,64 @@ export function SeasonCard({
           >
             Auj.
           </MonoLabel>
-          {timeline.markers.map((marker) => (
-            <div
-              key={marker.id}
-              className="absolute top-3 flex w-max max-w-56 -translate-x-1/2 flex-col items-center gap-1.5"
+          {timeline.markers.map((marker) => {
+            const top = labelsTop + marker.lane * laneHeight;
+            return (
+              <div key={marker.id}>
+                <span
+                  className={cn(
+                    "absolute flex w-max items-center gap-1.5 text-meta leading-5.5 whitespace-nowrap",
+                    marker.align === "center" && "-translate-x-1/2",
+                    marker.align === "end" && "-translate-x-full",
+                    marker.priority === "A" ? "text-foreground" : "text-muted",
+                  )}
+                  style={{ left: `${marker.left}%`, top }}
+                >
+                  <PriorityBadge priority={marker.priority} small />
+                  {marker.label}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute border-l border-dashed border-border-strong"
+                  style={{
+                    left: `${marker.left}%`,
+                    top: top + 24,
+                    height: phaseTop - top - 32,
+                  }}
+                />
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute z-10 size-2 -translate-x-1/2 rounded-full ring-2 ring-surface",
+                    marker.priority === "A" ? "bg-accent" : "bg-muted",
+                  )}
+                  style={{ left: `${marker.left}%`, top: phaseTop - 10 }}
+                />
+              </div>
+            );
+          })}
+          {timeline.phases.map((phase) => (
+            <span
+              key={phase.key}
+              className={cn(
+                "absolute flex h-4 items-center overflow-hidden rounded-tag border-r-2 border-surface px-1.5 text-micro whitespace-nowrap text-muted",
+                phaseTones[phase.stage],
+              )}
               style={{
-                left: `clamp(8%, ${marker.left}%, 92%)`,
+                left: `${phase.left}%`,
+                width: `${phase.width}%`,
+                top: phaseTop,
               }}
             >
-              <span className="max-w-full truncate text-meta">
-                {marker.name} · {formatShortDate(marker.date)}
-              </span>
-              <PriorityBadge priority={marker.priority} />
-            </div>
+              {phase.labelled && phase.label}
+            </span>
           ))}
-          <div className="absolute inset-x-0 bottom-6 h-4">
-            {timeline.phases.map((phase, index) => (
-              <span
-                key={phase.label}
-                className={cn(
-                  "absolute flex h-4 items-center overflow-hidden rounded-tag px-1.5 text-micro text-muted",
-                  index === 0 ? "bg-surface-raised" : "bg-success-surface",
-                )}
-                style={{ left: `${phase.left}%`, width: `${phase.width}%` }}
-              >
-                {phase.label}
-              </span>
-            ))}
-          </div>
           {timeline.months.map((month) => (
             <MonoLabel
               key={month.key}
               size="micro"
-              className="absolute bottom-0 -translate-x-1/2"
-              style={{ left: `${month.left}%` }}
+              className="absolute pl-1.5"
+              style={{ left: `${month.left}%`, top: monthTop }}
             >
               {month.label}
             </MonoLabel>

@@ -4,6 +4,7 @@ import { gearReadiness, type ChecklistItem } from "./checklists";
 import { formatDuration } from "./format";
 import {
   daysUntil,
+  formatShortDate,
   type RacePlan,
   type RaceSummary,
   type StoredCourse,
@@ -74,31 +75,70 @@ const monthLabel = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "UTC",
 });
 
+export const timelineWidthPx = 896;
+
+const lanePaddingPx = 16;
+
+function textWidthPx(text: string, charPx: number) {
+  return text.length * charPx;
+}
+
+export type TimelineMarker = {
+  id: string;
+  name: string;
+  priority: RaceSummary["priority"];
+  date: string;
+  label: string;
+  left: number;
+  lane: number;
+  align: "start" | "center" | "end";
+};
+
 export type SeasonTimeline = {
   months: { key: string; label: string; left: number }[];
-  phases: { label: string; left: number; width: number }[];
-  markers: {
-    id: string;
-    name: string;
-    priority: RaceSummary["priority"];
-    date: string;
+  phases: {
+    key: string;
+    label: string;
+    stage: number;
     left: number;
+    width: number;
+    labelled: boolean;
   }[];
+  markers: TimelineMarker[];
+  lanes: number;
 };
+
+function markerLanes(
+  markers: Omit<TimelineMarker, "lane" | "align">[],
+): TimelineMarker[] {
+  const laneEnds: number[] = [];
+  return markers.map((marker) => {
+    const x = (marker.left / 100) * timelineWidthPx;
+    const width = textWidthPx(marker.label, 7) + 36;
+    const align =
+      marker.left < 12 ? "start" : marker.left > 88 ? "end" : "center";
+    const from =
+      align === "start" ? x : align === "end" ? x - width : x - width / 2;
+    const lane = laneEnds.findIndex((end) => end + lanePaddingPx <= from);
+    const chosen = lane === -1 ? laneEnds.length : lane;
+    laneEnds[chosen] = from + width;
+    return { ...marker, lane: chosen, align };
+  });
+}
 
 export function seasonTimeline(
   races: RaceSummary[],
   today: string,
-  focus: RaceSummary | null,
 ): SeasonTimeline | null {
-  const dated = races.filter(
-    (race): race is RaceSummary & { date: string } =>
-      race.date !== null && race.date >= today,
-  );
+  const dated = races
+    .filter(
+      (race): race is RaceSummary & { date: string } =>
+        race.date !== null && race.date >= today,
+    )
+    .sort((a, b) => a.date.localeCompare(b.date));
   if (dated.length === 0) return null;
   const start = epoch(today);
-  const last = Math.max(...dated.map((race) => epoch(race.date)));
-  const lastDay = new Date(last);
+  const lastDay = new Date(epoch(dated[dated.length - 1].date));
   const end = Math.max(
     Date.UTC(lastDay.getUTCFullYear(), lastDay.getUTCMonth() + 1, 1),
     start + 60 * dayMs,
@@ -118,31 +158,49 @@ export function seasonTimeline(
     const next = new Date(month);
     month = Date.UTC(next.getUTCFullYear(), next.getUTCMonth() + 1, 1);
   }
+  const goals = dated.some((race) => race.priority === "A")
+    ? dated.filter((race) => race.priority === "A")
+    : [dated.find((race) => race.priority === "B") ?? dated[0]];
   const phases: SeasonTimeline["phases"] = [];
-  if (focus?.date && focus.date >= today) {
-    const goal = epoch(focus.date);
-    trainingPhases.forEach((phase, index) => {
-      const from = index === 0 ? start : goal - phase.threshold * dayMs;
-      const next = trainingPhases[index + 1];
-      const to = next ? goal - next.threshold * dayMs : goal;
-      if (to <= start) return;
+  let cycleStart = start;
+  for (const goalRace of goals) {
+    const goal = epoch(goalRace.date);
+    trainingPhases.forEach((phase, stage) => {
+      const previous = trainingPhases[stage - 1];
+      const from = Math.max(
+        cycleStart,
+        previous ? goal - previous.threshold * dayMs : cycleStart,
+      );
+      const to = goal - phase.threshold * dayMs;
+      if (to <= from) return;
+      const width = at(to) - at(from);
       phases.push({
+        key: `${goalRace.id}-${stage}`,
         label: phase.label,
-        left: at(Math.max(from, start)),
-        width: at(to) - at(Math.max(from, start)),
+        stage,
+        left: at(from),
+        width,
+        labelled:
+          (width / 100) * timelineWidthPx >= textWidthPx(phase.label, 6) + 14,
       });
     });
+    cycleStart = goal;
   }
-  return {
-    months,
-    phases,
-    markers: dated.map((race) => ({
+  const markers = markerLanes(
+    dated.map((race) => ({
       id: race.id,
       name: race.name,
       priority: race.priority,
       date: race.date,
+      label: `${race.name} · ${formatShortDate(race.date)}`,
       left: at(epoch(race.date)),
     })),
+  );
+  return {
+    months,
+    phases,
+    markers,
+    lanes: Math.max(1, ...markers.map((marker) => marker.lane + 1)),
   };
 }
 
