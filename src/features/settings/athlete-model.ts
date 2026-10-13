@@ -4,6 +4,7 @@ import {
   type ProfileValues,
 } from "@/features/onboarding/profile";
 import { displayTimeZone } from "@/features/app-shell/shell";
+import type { AthleteProfileView } from "@/features/onboarding/athlete-profile";
 
 export type AthleteModelShares = {
   garmin: number;
@@ -12,22 +13,32 @@ export type AthleteModelShares = {
   openQuestions: number;
 };
 
-export function athleteModelShares(values: ProfileValues): AthleteModelShares {
-  let garmin = 0;
-  let athlete = 0;
-  for (const field of profileFields) {
-    if (!isAnswered(values, field)) continue;
-    if (values.value_sources[field]?.source === "garmin") garmin += 1;
-    else athlete += 1;
-  }
-  const total = profileFields.length;
-  const garminShare = Math.round((garmin / total) * 100);
-  const athleteShare = Math.round((athlete / total) * 100);
+export function athleteModelShares(
+  view: AthleteProfileView,
+  values: ProfileValues,
+): AthleteModelShares {
+  const facts = view.sections.flatMap((section) => section.facts);
+  const observed = facts.filter((fact) => fact.value !== null);
+  const garmin = observed.filter((fact) => fact.source === "garmin").length;
+  const athlete = observed.filter((fact) => fact.source === "athlete").length;
+  const estimate =
+    facts.length -
+    observed.length +
+    (view.heartRateZones ? 1 : 0) +
+    view.habits.items.length;
+  const total = garmin + athlete + estimate;
+  const garminShare = total === 0 ? 0 : Math.round((garmin / total) * 100);
+  const athleteShare = total === 0 ? 0 : Math.round((athlete / total) * 100);
+  const missingFocus = facts.some(
+    (fact) => fact.key === "focus" && fact.value === null,
+  );
   return {
     garmin: garminShare,
     athlete: athleteShare,
     estimate: 100 - garminShare - athleteShare,
-    openQuestions: total - garmin - athlete,
+    openQuestions:
+      profileFields.filter((field) => !isAnswered(values, field)).length +
+      (missingFocus ? 1 : 0),
   };
 }
 

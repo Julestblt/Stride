@@ -1,32 +1,63 @@
 import { describe, expect, it } from "vitest";
+import type {
+  AthleteProfileView,
+  ProfileFact,
+} from "@/features/onboarding/athlete-profile";
 import { emptyProfile } from "@/features/onboarding/profile";
-import { athleteModelShares, formatMemberSince } from "@/features/settings/athlete-model";
+import {
+  athleteModelShares,
+  formatMemberSince,
+} from "@/features/settings/athlete-model";
+
+const fact = (
+  key: string,
+  source: ProfileFact["source"],
+  value: string | null,
+): ProfileFact => ({ key, label: key, value, source, detail: "" });
+
+const view = (
+  facts: ProfileFact[],
+  extras: Partial<AthleteProfileView> = {},
+): AthleteProfileView => ({
+  firstName: null,
+  activityCount: 0,
+  history: null,
+  sleepNights: 0,
+  heartRateZones: null,
+  habits: { final: true, items: [] },
+  weeks: [],
+  sections: [{ key: "training", title: "", facts }],
+  ...extras,
+});
 
 describe("athleteModelShares", () => {
-  it("treats unanswered fields as Stride estimates", () => {
-    expect(athleteModelShares(emptyProfile)).toEqual({
-      garmin: 0,
-      athlete: 0,
-      estimate: 100,
-      openQuestions: 10,
-    });
+  it("falls back to Stride estimates when nothing is observed", () => {
+    const shares = athleteModelShares(view([]), emptyProfile);
+    expect(shares).toMatchObject({ garmin: 0, athlete: 0, estimate: 100 });
   });
 
-  it("splits answered fields between Garmin and the athlete", () => {
-    const shares = athleteModelShares({
-      ...emptyProfile,
-      first_name: "Jules",
-      height_cm: 178,
-      weight_kg: 68,
-      value_sources: {
-        weight_kg: { source: "garmin", observed_on: "2026-10-01" },
-      },
-    });
+  it("counts Garmin, athlete and Stride-derived signals", () => {
+    const shares = athleteModelShares(
+      view(
+        [
+          fact("vo2_max", "garmin", "52"),
+          fact("hrv", "garmin", "60 ms"),
+          fact("sleep", "garmin", "7 h"),
+          fact("terrain", "garmin", "Trail"),
+          fact("availability", "athlete", "5 jours"),
+          fact("focus", "athlete", null),
+        ],
+        {
+          heartRateZones: {} as AthleteProfileView["heartRateZones"],
+        },
+      ),
+      emptyProfile,
+    );
     expect(shares).toEqual({
-      garmin: 10,
-      athlete: 20,
-      estimate: 70,
-      openQuestions: 7,
+      garmin: 57,
+      athlete: 14,
+      estimate: 29,
+      openQuestions: 11,
     });
   });
 });

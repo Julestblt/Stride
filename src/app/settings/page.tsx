@@ -12,6 +12,7 @@ import {
   SettingsGroup,
   SettingsLinkRow,
 } from "@/features/settings/components/settings-shell";
+import { loadAthleteProfile } from "@/server/onboarding/athlete-profile";
 import { readProfile } from "@/server/onboarding/profile";
 import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "@/server/app/session";
@@ -20,10 +21,11 @@ import { signOut } from "@/server/auth/actions";
 
 export default async function SettingsOverviewPage() {
   const context = await requireAthlete();
-  const [profile, goals, shell] = await Promise.all([
+  const [profile, goals, shell, athleteProfile] = await Promise.all([
     readProfile(context),
     readGoals(context),
     getShell(),
+    loadAthleteProfile(context, new Date()),
   ]);
   const races = goals.races
     .filter((item) => item.values.name)
@@ -35,7 +37,7 @@ export default async function SettingsOverviewPage() {
     .map((item) => `${item.values.name} (${item.values.priority})`);
   const age = ageOn(profile.values.birth_date, localToday(new Date()));
   const days = profile.values.available_weekdays?.length;
-  const shares = athleteModelShares(profile.values);
+  const shares = athleteModelShares(athleteProfile, profile.values);
   const updated = formatLocalDate(profile.updatedAt);
   const memberSince = formatMemberSince(context.createdAt ?? null);
   const segments = [
