@@ -192,10 +192,12 @@ export function SettingsLinkRow({
   return (
     <Link
       href={href}
-      className="flex min-h-17 items-center gap-4 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring md:px-0"
+      className="flex min-h-17 items-center gap-4 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring md:grid md:grid-cols-[9.5rem_minmax(0,1fr)_1rem] md:gap-5 md:px-0 md:py-4.5"
     >
-      <strong className="min-w-0 flex-1 text-sm">{title}</strong>
-      <span className="max-w-[55%] text-right text-sm text-muted">
+      <strong className="min-w-0 flex-1 text-sm md:flex-none md:text-base">
+        {title}
+      </strong>
+      <span className="max-w-[55%] text-right text-sm text-muted md:max-w-none md:text-left">
         {detail}
       </span>
       <ChevronRightIcon className="size-4 shrink-0 text-muted" />
