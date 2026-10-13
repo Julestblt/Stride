@@ -22,6 +22,7 @@ test("a populated race opens every workspace section on desktop and mobile", asy
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/races");
+    await page.getByRole("link", { name: "Ouvrir la course" }).click();
     await expect(
       page.getByRole("heading", { level: 1, name: "EcoTrail Paris 120K" }),
     ).toBeVisible();
@@ -93,9 +94,10 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL("/");
   await page.goto("/races");
+  await page.getByRole("link", { name: "Ouvrir la course" }).click();
 
   await expect(
-    page.getByRole("heading", { name: "10 km de Paris" }),
+    page.getByRole("heading", { level: 1, name: "10 km de Paris" }),
   ).toBeVisible();
   const sections = page.getByRole("navigation", {
     name: "Sections de la course",
