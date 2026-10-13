@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { localToday } from "@/features/app-shell/shell";
 import { parseHealthView } from "@/features/progress/health";
 import { HealthViewSwitch } from "@/features/progress/components/health-sections";
@@ -12,6 +12,14 @@ import {
   ActivitySplitFrame,
   ActivityToolbar,
 } from "@/features/activities/components/activity-frame";
+import {
+  activitiesQuery,
+  parseActivityFilter,
+  parseActivityLimit,
+  parseActivitySearch,
+} from "@/features/activities/activities";
+import { ActivityListPane } from "@/features/activities/components/activity-list-pane";
+import { useActivityListSnapshot } from "@/features/activities/components/activity-list-snapshot";
 import { useDataActivity } from "./provider";
 
 function LoadingScope({
@@ -137,6 +145,18 @@ function ActivityContentLoading({ full = false }: { full?: boolean }) {
 }
 
 export function ActivitiesLoading({ current = false }: { current?: boolean }) {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const queryValue = (key: string) => {
+    const values = params.getAll(key);
+    return values.length === 1 ? values[0] : undefined;
+  };
+  const filter = parseActivityFilter(queryValue("filter"));
+  const limit = parseActivityLimit(queryValue("limit"));
+  const search = parseActivitySearch(queryValue("q"));
+  const snapshot = useActivityListSnapshot({ filter, limit, search });
+  const selectedId = pathname.split("/")[2] ?? null;
+
   return (
     <LoadingScope
       label={current ? "Chargement de l’activité" : "Chargement des activités"}
@@ -145,13 +165,24 @@ export function ActivitiesLoading({ current = false }: { current?: boolean }) {
       <ActivitySplitFrame
         current={current}
         list={
-          <>
-            <ActivityListHeader current={current} loading />
-            <ActivityRowsLoading />
-          </>
+          current && snapshot ? (
+            <ActivityListPane
+              {...snapshot}
+              selectedId={selectedId}
+              current
+              registerSnapshot={false}
+            />
+          ) : (
+            <>
+              <ActivityListHeader current={current} loading />
+              <ActivityRowsLoading />
+            </>
+          )
         }
       >
-        <ActivityToolbar />
+        <ActivityToolbar
+          href={`/activities${activitiesQuery(filter, limit, search)}`}
+        />
         <ActivityContentLoading />
       </ActivitySplitFrame>
     </LoadingScope>

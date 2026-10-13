@@ -1,22 +1,15 @@
 import { DataCategoryScope } from "@/features/data-activity/components/status";
-import { SourceMark } from "@/components/stride/marks";
 import {
   activitiesQuery,
   formatActivityDate,
-  groupActivities,
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
 import type { ActivityDetailData } from "../detail";
 import type { ActivityView } from "../activity-view";
 import { ActivityDetail } from "./activity-detail";
-import { ActivityList, ActivityListFooter } from "./activity-list";
-import {
-  ActivitySplitFrame,
-  ActivityListHeader,
-  ActivityToolbar,
-} from "./activity-frame";
-import { ListScrollRegion } from "./list-scroll-region";
+import { ActivityListPane } from "./activity-list-pane";
+import { ActivitySplitFrame, ActivityToolbar } from "./activity-frame";
 
 export function ActivitiesView({
   activities,
@@ -44,48 +37,16 @@ export function ActivitiesView({
     <ActivitySplitFrame
       current={current}
       list={
-        <>
-          <ActivityListHeader
-            current={current}
-            filter={filter}
-            search={search}
-          />
-          <DataCategoryScope
-            categories={["activities"]}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <ListScrollRegion
-              storageKey={`stride:activities:list:${filter}:${search}`}
-              label="Liste des activités"
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-            >
-              <ActivityList
-                groups={groupActivities(activities, today)}
-                filter={filter}
-                limit={limit}
-                search={search}
-                selectedId={selected?.id ?? null}
-                current={current}
-                today={today}
-              />
-              {activities.length > 0 && (
-                <>
-                  <ActivityListFooter
-                    filter={filter}
-                    limit={limit}
-                    search={search}
-                    shown={activities.length}
-                    total={total}
-                  />
-                  <p className="flex items-center gap-1.75 px-5 pb-4 text-xs text-muted-foreground lg:px-3.5">
-                    <SourceMark source="provider" />
-                    Tout vient de Garmin
-                  </p>
-                </>
-              )}
-            </ListScrollRegion>
-          </DataCategoryScope>
-        </>
+        <ActivityListPane
+          activities={activities}
+          total={total}
+          filter={filter}
+          limit={limit}
+          search={search}
+          today={today}
+          selectedId={selected?.id ?? null}
+          current={current}
+        />
       }
     >
       <ActivityToolbar

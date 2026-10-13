@@ -424,6 +424,96 @@ for (const width of [1440, 390]) {
   });
 }
 
+for (const width of [1440, 390]) {
+  test(`activity selection retains the loaded list during preview loading at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await page.goto("/activities?filter=road&limit=100&q=Course");
+    const list = page.getByRole("region", { name: "Liste des activités" });
+    await expect(list).toContainText("69 sur 69 activités");
+    await page.waitForLoadState("networkidle");
+    const target = list.locator('a[href*="000000000168"]');
+    await target.scrollIntoViewIfNeeded();
+    const before = await list.evaluate((element) => element.scrollTop);
+    const rows = await list.getByRole("link").count();
+    await target.click();
+    const loading = page.getByRole("status", {
+      name: "Chargement de l’activité",
+      exact: true,
+    });
+    await expect(loading).toBeVisible();
+    await expectHeaderThread(page);
+    const retainedList = loading.getByRole("region", {
+      name: "Liste des activités",
+      includeHidden: true,
+    });
+    await expect(retainedList).toContainText("69 sur 69 activités");
+    expect(await retainedList.locator("a").count()).toBe(rows);
+    expect(await retainedList.locator('[data-slot="skeleton"]').count()).toBe(
+      0,
+    );
+    await expect(
+      loading.getByRole("searchbox", {
+        name: "Rechercher par nom",
+        includeHidden: true,
+      }),
+    ).toHaveValue("Course");
+    await expect(retainedList.locator('[aria-current="true"]')).toHaveAttribute(
+      "href",
+      /000000000168\?filter=road&limit=100&q=Course$/,
+    );
+    if (width === 1440) {
+      await expect(retainedList).toBeVisible();
+      expect(await retainedList.evaluate((element) => element.scrollTop)).toBe(
+        before,
+      );
+    } else {
+      await expect(retainedList).toBeHidden();
+    }
+    await expect(
+      loading.locator('[data-slot="skeleton"]').first(),
+    ).toBeVisible();
+    await page.screenshot({
+      path: `test-results/activity-retained-list-${width}.png`,
+    });
+    await expect(loading).not.toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("article")).toBeVisible();
+    await expect(page).toHaveURL(
+      /000000000168\?filter=road&limit=100&q=Course$/,
+    );
+    if (width === 1440) {
+      const resolvedList = page
+        .getByRole("region", { name: "Liste des activités" })
+        .filter({ visible: true });
+      expect(await resolvedList.evaluate((element) => element.scrollTop)).toBe(
+        before,
+      );
+    }
+  });
+}
+
+test("direct activity loading still shows list placeholders without a snapshot", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000168", {
+    waitUntil: "commit",
+  });
+  const loading = page.getByRole("status", {
+    name: "Chargement de l’activité",
+    exact: true,
+  });
+  await expect(loading).toBeVisible();
+  await expect(loading.getByRole("searchbox")).toHaveCount(0);
+  await expect(loading.locator('[data-slot="skeleton"]').first()).toBeVisible();
+  await page.waitForLoadState("load");
+  await expect(loading).not.toBeVisible();
+  await expect(page.getByRole("article")).toBeVisible();
+});
+
 test("a blocked server navigation starts the header thread before its response", async ({
   page,
 }) => {
