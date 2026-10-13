@@ -62,7 +62,7 @@ Stride's UI has three layers:
 
 Installed primitives: Alert, AlertDialog, Badge, Button, Checkbox, Collapsible, DropdownMenu, Field, Input, InputGroup, Kbd, Label, Progress, Separator, Sheet, Sidebar, Skeleton, Tabs, Textarea, Toggle, ToggleGroup, and Tooltip. Night Track specifics:
 
-- `Button` variants are `default` (Volt), `outline`, `secondary`, `ghost`, `destructive`, and `link`; size `default`/`lg` is the full-size form action, `md` the compact 38px action used in cards, and `sm`/`xs` the inline actions.
+- `Button` variants are `default` (Volt), `outline`, `secondary`, `neutral` (chalk fill for draft application), `ghost`, `destructive`, and `link`; size `default`/`lg` is the full-size form action, `md` the compact 38px action used in cards, and `sm`/`xs` the inline actions.
 - `Badge` is the mono status tag (`outline`, `accent`, `success`, `warning`, `danger`). Counts and readiness values in navigation use `NavBadge`.
 - `ToggleGroup` variants are `choice` (chalk fill when selected), `day` (round, Volt ring), and `segment` (connected range control). `Tabs` are underline tabs with a Volt indicator.
 - `Sidebar` is configured for 264px expanded, a 56px icon rail with tooltips, and an off-canvas sheet below 768px. Use `variant="inset"` and `collapsible="icon"`.
@@ -114,3 +114,7 @@ Preserve information hierarchy from desktop to mobile. The references show a des
 Before styling a screen, inspect its matching PNG at the target viewport and the system references. Compare implementation screenshots at the same viewport, iterate on material differences, and retain accessible focus, contrast, and reduced-motion behavior. System patterns include the contextual sidebar, recommendation anatomy, decision ledger, provenance rows, sync-state banners, onboarding stepper, verdict rows, and restrained coach activity indicator; reuse these where the screen needs them rather than creating new visual idioms.
 
 Reference images are read-only inputs, never application assets. Do not modify, recreate, transform, or derive production assets from them without explicit instruction. Keep temporary comparison screenshots untracked in `test-results/` or outside the repository; do not commit visual validation evidence by default.
+
+## Profile settings editing
+
+Profile settings use a 1000px content container, 180px labels and 320px controls on desktop; mobile groups use inset surfaces and stacked provenance. Other settings screens retain their full-width composition. Heart-rate editing expands within the desktop metric row and uses the existing focus-trapping Sheet primitive on mobile. Applying an editor stages the value; the dirty save bar persists the full draft, and cancel restores the saved snapshot. Maximum editing contains only a bpm input. Threshold editing records an explicit lab, field-test or known-value source, without claiming unsupported threshold estimates, confidence, changed zones or adjusted sessions. The VFC row identifies the latest recorded night rather than an unimplemented 28-day baseline.

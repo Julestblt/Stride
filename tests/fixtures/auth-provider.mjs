@@ -60,6 +60,7 @@ const daysAgo = (days, time = "07:12:00") => {
 };
 const activity = (id, days, values) => ({
   id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(id).padStart(12, "0")}`,
+  provider: "garmin",
   activity_type: "running",
   activity_name: null,
   route_name: null,
@@ -354,6 +355,10 @@ const tables = {
       long_run_day: "sunday",
       weekday_session_minutes: 60,
       training_access: ["hills", "gym"],
+      running_max_heart_rate_override: null,
+      threshold_heart_rate_override: null,
+      threshold_heart_rate_source: null,
+      profile_photo_path: null,
       value_sources: {
         weight_kg: { source: "garmin", observed_on: "2026-10-07" },
       },
@@ -402,6 +407,8 @@ function nameMatcher(filter) {
 
 function selectRows(table, params) {
   let rows = tables[table] ?? [];
+  if (table.startsWith("provider_"))
+    rows = rows.map((row) => ({ provider: "garmin", ...row }));
   if (
     params.get("user_id") === `eq.${recordsEmptyUser.id}` &&
     table.startsWith("provider_")
@@ -415,11 +422,19 @@ function selectRows(table, params) {
   for (const [key, filter] of params) {
     if (filter.startsWith("gte."))
       rows = rows.filter((row) => row[key] >= filter.slice(4));
+    if (filter.startsWith("lte."))
+      rows = rows.filter((row) => row[key] <= filter.slice(4));
     if (filter === "not.is.null")
       rows = rows.filter((row) => row[key] !== null && row[key] !== undefined);
-    if (["metric", "availability"].includes(key) && filter.startsWith("eq."))
+    if (
+      ["metric", "availability", "provider"].includes(key) &&
+      filter.startsWith("eq.")
+    )
       rows = rows.filter((row) => row[key] === filter.slice(3));
-    if (["metric", "availability"].includes(key) && filter.startsWith("in.(")) {
+    if (
+      ["metric", "availability", "provider"].includes(key) &&
+      filter.startsWith("in.(")
+    ) {
       const allowed = filter
         .slice(4, -1)
         .split(",")
@@ -470,6 +485,7 @@ function selectRows(table, params) {
     rows = rows.slice(offset, limit > 0 ? offset + limit : undefined);
   return { rows, total };
 }
+const profileImages = new Map();
 const events = [];
 const links = new Map();
 const challenges = new Map();
@@ -477,14 +493,47 @@ const requests = new Map();
 const port = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://127.0.0.1:${port}`);
-  let raw = "";
-  for await (const chunk of request) raw += chunk;
-  const body = raw ? JSON.parse(raw) : {};
+  const chunks = [];
+  for await (const chunk of request) chunks.push(chunk);
+  const rawBytes = Buffer.concat(chunks);
+  const raw = rawBytes.toString();
+  const body =
+    raw && !url.pathname.startsWith("/storage/v1/object/")
+      ? JSON.parse(raw)
+      : {};
   response.setHeader("Content-Type", "application/json");
   const send = (status, value, headers = {}) => {
     response.writeHead(status, headers);
     response.end(JSON.stringify(value));
   };
+  if (url.pathname.startsWith("/storage/v1/")) {
+    if (
+      request.headers.authorization !== `Bearer ${token}` &&
+      !url.pathname.startsWith("/storage/v1/object/sign/")
+    )
+      return send(401, {});
+    if (
+      url.pathname.startsWith("/storage/v1/object/sign/") &&
+      request.method === "POST"
+    )
+      return send(200, { signedURL: url.pathname + "?token=fixture" });
+    if (
+      url.pathname.startsWith("/storage/v1/object/sign/") &&
+      request.method === "GET"
+    ) {
+      const path = url.pathname.replace(
+        "/storage/v1/object/sign/",
+        "/storage/v1/object/",
+      );
+      response.writeHead(200, { "Content-Type": "image/png" });
+      return response.end(profileImages.get(path));
+    }
+    if (request.method === "POST") {
+      profileImages.set(url.pathname, rawBytes);
+      return send(200, { Key: url.pathname });
+    }
+    if (request.method === "DELETE") return send(200, []);
+  }
   if (url.pathname === "/__test__/events") return send(200, events);
   if (url.pathname === "/__test__/link")
     return send(200, { url: links.get(url.searchParams.get("email")) });

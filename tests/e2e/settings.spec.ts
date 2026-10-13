@@ -1,8 +1,11 @@
+import sharp from "sharp";
 import { expect, test, type Page } from "@playwright/test";
 
-async function signIn(page: Page) {
+test.describe.configure({ mode: "serial" });
+
+async function signIn(page: Page, email = "athlete@example.com") {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
+  await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL("/");
@@ -116,10 +119,10 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await expect(page.getByRole("textbox", { name: "Prénom" })).toHaveValue(
     "Jules",
   );
-  await expect(page.getByLabel("Poids (kg)")).toHaveValue("68.2");
+  await expect(page.getByLabel("Poids (kg)")).toHaveValue("68,2");
   await page.getByLabel("Poids (kg)").fill("69");
-  await page.getByRole("button", { name: "Enregistrer le profil" }).click();
-  await expect(page).toHaveURL(/\/settings\/profile\?status=saved$/);
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
   await page.reload();
   await expect(page.getByLabel("Poids (kg)")).toHaveValue("69");
   await page
@@ -241,7 +244,8 @@ test("settings pages use the available desktop width and center on wide screens"
     const content = page.locator('[data-slot="settings-content"]');
     await expect(content).toBeVisible();
     const bounds = await content.boundingBox();
-    expect(bounds?.width).toBeGreaterThan(1000);
+    if (route === "/settings/profile") expect(bounds?.width).toBe(1000);
+    else expect(bounds?.width).toBeGreaterThan(1000);
     if (route === "/settings") {
       await page.screenshot({
         path: "test-results/settings-laptop-layout.png",
@@ -297,5 +301,268 @@ test("desktop settings keep the account footer fixed and aligned with the app", 
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
     const after = await footer.boundingBox();
     expect(after?.y).toBe(before?.y);
+  }
+});
+
+test("profile desktop stages threshold and maximum edits, saves and cancels", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1100 });
+  await signIn(page);
+  await page.goto("/settings/profile");
+  await expect(
+    page.getByRole("button", { name: "Enregistrer", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Modifier FC au seuil", exact: true })
+    .click();
+  await page.getByLabel("FC au seuil en bpm").fill("172");
+  await page
+    .getByRole("radio", { name: "Test terrain 30 min", exact: true })
+    .click();
+  await page.screenshot({
+    animations: "disabled",
+    path: "test-results/profile-desktop-1100.png",
+  });
+  await page.setViewportSize({ width: 1440, height: 1500 });
+  await page.screenshot({
+    animations: "disabled",
+    path: "test-results/profile-desktop-1500.png",
+  });
+  await page.getByRole("button", { name: "Appliquer", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Modifier FC max", exact: true })
+    .click();
+  await expect(
+    page.getByRole("radiogroup", { name: "Source du seuil" }),
+  ).toHaveCount(0);
+  await page.getByLabel("FC max en bpm").fill("185");
+  await page.getByRole("button", { name: "Appliquer", exact: true }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Modifier FC au seuil", exact: true })
+    .click();
+  await expect(page.getByLabel("FC au seuil en bpm")).toHaveValue("172");
+  await expect(
+    page.getByRole("radio", { name: "Test terrain 30 min", exact: true }),
+  ).toHaveAttribute("data-state", "on");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  const name = await page.getByLabel("Prénom", { exact: true }).inputValue();
+  await page.getByLabel("Prénom", { exact: true }).fill("Autre prénom");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(page.getByLabel("Prénom", { exact: true })).toHaveValue(name);
+  await page
+    .getByRole("button", { name: "Modifier FC max", exact: true })
+    .click();
+  await page.getByLabel("FC max en bpm").fill("99");
+  await expect(
+    page.getByRole("button", { name: "Appliquer", exact: true }),
+  ).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("FC max en bpm")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Modifier FC max", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Revenir aux données de course" })
+    .click();
+  await page
+    .getByRole("button", { name: "Modifier FC au seuil", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Revenir aux données Garmin" })
+    .click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Modifier FC max", exact: true })
+    .click();
+  await expect(page.getByLabel("FC max en bpm")).toHaveValue("176");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Modifier FC au seuil", exact: true })
+    .click();
+  await expect(page.getByLabel("FC au seuil en bpm")).toHaveValue("");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+});
+
+test("profile mobile sheet traps focus, Escape discards and restores focus", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/settings/profile");
+  const trigger = page.getByRole("button", {
+    name: "Modifier FC au seuil",
+    exact: true,
+  });
+  await trigger.click();
+  const sheet = page.getByRole("dialog", { name: "FC au seuil", exact: true });
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel("FC au seuil en bpm").fill("173");
+  await page.screenshot({
+    animations: "disabled",
+    path: "test-results/profile-mobile-844.png",
+  });
+  await sheet
+    .getByRole("button", { name: "Revenir aux données Garmin" })
+    .focus();
+  await page.keyboard.press("Tab");
+  expect(
+    await sheet.evaluate((node) => node.contains(document.activeElement)),
+  ).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+  await expect(trigger).toBeFocused();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("profile stale save preserves the draft and photo uploads persist", async ({
+  page,
+  context,
+}) => {
+  await signIn(page);
+  await page.goto("/settings/profile");
+  const other = await context.newPage();
+  await other.goto("/settings/profile");
+  await other.getByLabel("Prénom", { exact: true }).fill("Jules concurrent");
+  await other.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(other.getByRole("status")).toHaveText("Profil enregistré.");
+  await page.getByLabel("Prénom", { exact: true }).fill("Brouillon conservé");
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("autre onglet");
+  await expect(page.getByLabel("Prénom", { exact: true })).toHaveValue(
+    "Brouillon conservé",
+  );
+  await other.close();
+  await page.reload();
+  await page.getByLabel("Importer une photo de profil").setInputFiles({
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: await sharp({
+      create: { width: 2, height: 2, channels: 4, background: "#ffffff" },
+    })
+      .png()
+      .toBuffer(),
+  });
+  await expect(
+    page.getByRole("img", { name: "Ta photo de profil" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await page.reload();
+  await expect(
+    page.getByRole("img", { name: "Ta photo de profil" }),
+  ).toBeVisible();
+});
+
+test("profile keeps all metric containers when athlete data is absent", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page, "records-empty@example.com");
+  await page.goto("/settings/profile");
+  await expect(page.getByLabel("Prénom", { exact: true })).toHaveValue("");
+  await expect(
+    page.getByText("Donnée indisponible", { exact: true }),
+  ).toHaveCount(5);
+  await expect(
+    page.getByRole("button", { name: "Modifier FC max", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Enregistrer", exact: true }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("profile preserves partial French dates and decimal input and rejects invalid photos", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/settings/profile");
+  const date = page.getByLabel("Date de naissance", { exact: true });
+  await date.fill("");
+  await date.pressSequentially("20 / 01 / 1990");
+  await expect(date).toHaveValue("20 / 01 / 1990");
+  const weight = page.getByLabel("Poids (kg)");
+  await weight.fill("");
+  await weight.pressSequentially("68,7");
+  await expect(weight).toHaveValue("68,7");
+  await page.getByLabel("Importer une photo de profil").setInputFiles({
+    name: "invalid.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("invalid image"),
+  });
+  await expect(page.getByRole("status")).toContainText("image valide");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await page.getByLabel("Importer une photo de profil").setInputFiles({
+    name: "huge.png",
+    mimeType: "image/png",
+    buffer: Buffer.alloc(2 * 1024 * 1024 + 1),
+  });
+  await expect(page.getByRole("status")).toContainText("moins de 2 Mo");
+});
+
+test("profile tablet layouts fit without clipping and edit in a sheet", async ({
+  page,
+}) => {
+  await signIn(page);
+  for (const width of [768, 1024]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/settings/profile");
+    const content = page.locator('[data-slot="settings-content"]');
+    expect(
+      await content.evaluate((node) => node.scrollWidth <= node.clientWidth),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    const metricRows = content
+      .locator("section")
+      .last()
+      .locator(":scope > div")
+      .last()
+      .locator(":scope > div > div");
+    await expect(metricRows).toHaveCount(5);
+    for (const row of await content.locator('[data-slot="field"]').all())
+      expect(
+        await row.evaluate((node) => node.scrollWidth <= node.clientWidth),
+      ).toBe(true);
+    for (const row of await metricRows.all())
+      expect(
+        await row.evaluate((node) => node.scrollWidth <= node.clientWidth),
+      ).toBe(true);
+
+    for (let index = 0; index < 5; index++)
+      await expect(metricRows.nth(index)).toHaveCSS(
+        "border-bottom-width",
+        index === 4 ? "0px" : "1px",
+      );
+    await page
+      .getByRole("button", { name: "Modifier FC au seuil", exact: true })
+      .click();
+    const sheet = page.getByRole("dialog", {
+      name: "FC au seuil",
+      exact: true,
+    });
+    await expect(sheet).toBeVisible();
+    expect(
+      await sheet.evaluate((node) => node.scrollWidth <= node.clientWidth),
+    ).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
   }
 });
