@@ -259,7 +259,7 @@ export function RaceWizard({
     <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent
         showCloseButton={false}
-        className="top-0 left-0 block h-svh max-h-none w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-surface-inset p-0 ring-0 md:top-1/2 md:-translate-y-1/2 md:left-1/2 md:h-auto md:max-h-[calc(100svh-4rem)] md:w-215 md:max-w-215 md:-translate-x-1/2 md:rounded-card md:border md:border-border-strong md:bg-popover md:shadow-2xl"
+        className="top-0 left-0 block h-svh max-h-none w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none border-0 bg-surface-inset p-0 ring-0 md:top-1/2 md:left-1/2 md:h-auto md:max-h-[calc(100svh-4rem)] md:w-215 md:max-w-215 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-card md:border md:border-border-strong md:bg-popover md:shadow-2xl"
       >
         <form
           action={mode === "edit" ? saveSettingsRace : addSettingsRace}
