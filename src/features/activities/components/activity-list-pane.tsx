@@ -47,7 +47,7 @@ export function ActivityListPane({
         <ListScrollRegion
           storageKey={`stride:activities:list:${filter}:${search}`}
           label="Liste des activités"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain"
         >
           <ActivityList
             groups={groupActivities(activities, today)}

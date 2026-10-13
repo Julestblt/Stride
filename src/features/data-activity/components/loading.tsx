@@ -47,7 +47,7 @@ function ActivityRowsLoading() {
   return (
     <div
       aria-hidden="true"
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain"
     >
       <div className="border-b border-border-subtle px-5 pt-2.5 pb-1 lg:px-3.5">
         <Skeleton className="h-3 w-20" />
@@ -76,7 +76,7 @@ function ActivityContentLoading({ full = false }: { full?: boolean }) {
   return (
     <div
       aria-hidden="true"
-      className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+      className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain"
     >
       <article
         className={

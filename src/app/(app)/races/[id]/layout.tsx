@@ -37,7 +37,7 @@ export default async function RaceLayout({
         <DataActivityStatus className="ml-auto md:hidden" />
         <DataActivityThread />
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain print:overflow-visible">
+      <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain print:overflow-visible">
         <main className="mx-auto flex w-full max-w-360 flex-col gap-6 px-5 pt-6 pb-18 sm:gap-7 sm:px-[clamp(20px,4vw,56px)] sm:pt-9 print:max-w-none print:gap-3 print:p-0">
           <RaceHeader
             race={data.race}

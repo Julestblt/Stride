@@ -40,9 +40,9 @@ export function RacesTitle({
             )}
           >
             {racesViewLabels[item]}
-            {item !== "all" && counts && (
-              <span className="font-normal text-muted-foreground">
-                {counts[item]}
+            {item !== "all" && (
+              <span className="min-w-[2ch] font-normal text-muted-foreground tabular-nums">
+                {counts?.[item]}
               </span>
             )}
           </Link>

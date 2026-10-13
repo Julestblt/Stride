@@ -32,7 +32,7 @@ export default function RacesListLayout({
         </Button>
         <DataActivityThread />
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
         <main className="mx-auto flex w-full max-w-360 flex-col gap-7 px-5 pt-6 pb-18 sm:gap-9 sm:px-[clamp(20px,4vw,56px)] sm:pt-10">
           {children}
         </main>
