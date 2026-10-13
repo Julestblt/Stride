@@ -18,6 +18,8 @@ The authentication feature uses server actions, HTTP-only Supabase session cooki
 
 The browser talks to the Stride application. Server code owns privileged integrations and access control. Supabase provides PostgreSQL, Auth, and future Storage. Garmin connection, MFA and synchronization are owned by the garmin_mcp service; the Stride server calls its REST API with the athlete's access token and reads normalized data. See [Garmin integration](garmin.md), [data platform](database.md) and [onboarding](onboarding.md).
 
+Training plans, plan adaptation and the conversational coach are not implemented. Their proposed architecture — a coach worker beside the web application, a proposal ledger and versioned plans — is described in the [coaching engine RFC](coaching-engine/README.md) (#86).
+
 ## Native client path
 
 The web application is the first client. Keep business rules and API contracts independent of page components so a native client can be added later without duplicating the domain.

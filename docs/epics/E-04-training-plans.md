@@ -16,6 +16,8 @@ Provide a practical weekly training proposal tied to an athlete's goal, availabi
 
 E-01 provides goals and availability. E-03 provides trusted training context. The first supported event types and coaching guardrails must be chosen during discovery.
 
+The proposed [coaching engine architecture](../architecture/coaching-engine/README.md) (#86) defines plan versioning, the proposal lifecycle, deterministic validation and the planning workflows this epic would build on.
+
 ## Expected user value
 
 An athlete has a coherent next week of training that can be understood and adjusted with their coach.

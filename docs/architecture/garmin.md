@@ -7,7 +7,7 @@ Browser -> Stride Next.js server -> garmin_mcp REST API -> Garmin Connect
                                     garmin_mcp worker   -> normalized rows in Supabase
 ```
 
-MCP is an interface for AI tools, never the source of truth.
+MCP is an interface for AI tools, never the source of truth. The proposed coaching engine reads normalized rows under the athlete's RLS scope and does not call the garmin_mcp MCP endpoint in production ([ADR 0010](../adr/0010-internal-tools-and-garmin-normalized-data.md), proposed in #86).
 
 ## Trust boundary
 

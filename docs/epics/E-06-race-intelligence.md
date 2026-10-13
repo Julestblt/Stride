@@ -15,6 +15,8 @@ Help athletes prepare for a selected road or trail event using relevant athlete,
 
 E-01 provides athlete goals. E-03 provides trustworthy training history. Course parsing, plan integration, and conversational strategy depend on product discovery and relevant parts of E-04/E-05.
 
+The proposed [coaching engine architecture](../architecture/coaching-engine/README.md) (#86) covers this epic's plan integration: race roles in multi-race plans and race demands feeding specific training phases. Race-day strategy stays in the race workspace.
+
 ## Expected user value
 
 An athlete can turn a course and training context into a preparation approach that accounts for terrain and uncertainty.
