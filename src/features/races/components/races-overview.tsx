@@ -86,12 +86,12 @@ export function SeasonCard({ timeline }: { timeline: SeasonTimeline }) {
           Voir le plan →
         </Link>
       </div>
-      <div className="-mx-1 overflow-x-auto px-1">
+      <div className="-mx-1 overflow-x-auto overflow-y-hidden px-1">
         <div
           role="img"
           aria-label={label}
           className="relative min-w-224"
-          style={{ height: monthTop + 14 }}
+          style={{ height: monthTop + 18 }}
         >
           {timeline.months.map((month) => (
             <span
