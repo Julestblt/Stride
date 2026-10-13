@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { ConfidenceMeter } from "@/components/stride/confidence-meter";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { MonoLabel } from "@/components/stride/mono-label";

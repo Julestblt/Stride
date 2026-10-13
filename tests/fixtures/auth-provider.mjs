@@ -669,6 +669,17 @@ createServer(async (request, response) => {
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
   if (url.pathname.startsWith("/rest/v1/")) {
+    if (
+      url.pathname === "/rest/v1/provider_activities" &&
+      url.searchParams.get("activity_name")?.includes("loading-fixture")
+    )
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+    if (
+      url.pathname === "/rest/v1/provider_activity_tracks" &&
+      url.searchParams.get("activity_id") ===
+        "eq.aaaaaaaa-aaaa-4aaa-8aaa-000000000168"
+    )
+      await new Promise((resolve) => setTimeout(resolve, 6000));
     if (request.headers.authorization !== `Bearer ${token}` && !recordsSession)
       return send(401, { message: "JWT required" });
     if (

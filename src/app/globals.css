@@ -158,6 +158,7 @@
   --animate-trace: trace 1.6s var(--stride-ease) infinite;
   --animate-sheen: sheen 1.8s linear infinite;
   --animate-breathe: breathe 2.4s ease-in-out infinite;
+  --animate-data-sheen: data-sheen 1.6s linear infinite;
 
   @keyframes rise {
     from {
@@ -181,6 +182,15 @@
     }
     to {
       transform: translateX(100%);
+    }
+  }
+
+  @keyframes data-sheen {
+    from {
+      background-position: 100% 0;
+    }
+    to {
+      background-position: -100% 0;
     }
   }
 

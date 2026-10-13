@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { redirect } from "next/navigation";
 import { ArrowRightIcon } from "lucide-react";
 import { MonoLabel } from "@/components/stride/mono-label";

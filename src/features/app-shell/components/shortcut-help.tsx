@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
+import { useDataActivityNavigation } from "@/features/data-activity/components/navigation";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { SearchIcon, ActivityIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,7 @@ function matchesShortcutSearch(label: string, terms: string, query: string) {
 
 export function ShortcutHelp() {
   const isMobile = useIsMobile();
-  const router = useRouter();
+  const navigate = useDataActivityNavigation();
   const [surface, setSurface] = React.useState<"desktop" | "mobile" | null>(
     null,
   );
@@ -110,11 +110,11 @@ export function ShortcutHelp() {
         window.clearTimeout(goTimeout.current);
         goTimeout.current = null;
         if (event.key.toLowerCase() === "a") {
-          router.push("/activities");
+          navigate("/activities");
           return;
         }
         if (event.key.toLowerCase() === "r") {
-          router.push("/settings");
+          navigate("/settings");
           return;
         }
       }
@@ -132,7 +132,7 @@ export function ShortcutHelp() {
       }
       if ((event.metaKey || event.ctrlKey) && event.key === ",") {
         event.preventDefault();
-        router.push("/settings");
+        navigate("/settings");
         return;
       }
       if (event.key === "/" && surface === "desktop") {
@@ -153,7 +153,7 @@ export function ShortcutHelp() {
       window.removeEventListener("keydown", onKeyDown);
       if (goTimeout.current !== null) window.clearTimeout(goTimeout.current);
     };
-  }, [isMobile, router, surface, syncPlatform]);
+  }, [isMobile, navigate, surface, syncPlatform]);
 
   return (
     <>

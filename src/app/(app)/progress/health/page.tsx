@@ -1,3 +1,4 @@
+import { DataCategoryScope } from "@/features/data-activity/components/status";
 import type { Metadata } from "next";
 import { localToday } from "@/features/app-shell/shell";
 import {
@@ -68,58 +69,62 @@ export default async function ProgressHealthPage({
       ? healthDayView(loaded.model, loaded.reference, nightTitle)
       : null;
     return (
-      <div className="flex flex-col gap-6 sm:gap-8">
-        {header}
-        <DayNavigator
-          day={day}
-          today={today}
-          sync={shell.sync}
-          strip={loaded.strip}
-        />
-        {loaded.model && dayView ? (
-          <>
-            <KpiStrip kpis={dayView.kpis} />
-            <DayTimeline model={loaded.model} />
-            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8">
-              <div className="flex flex-col gap-5">
-                <DayReading
-                  view={dayView}
-                  sync={day === today ? shell.sync : null}
-                />
-                {dayView.night && <NightCard night={dayView.night} />}
+      <DataCategoryScope categories={["recovery"]}>
+        <div className="flex flex-col gap-6 sm:gap-8">
+          {header}
+          <DayNavigator
+            day={day}
+            today={today}
+            sync={shell.sync}
+            strip={loaded.strip}
+          />
+          {loaded.model && dayView ? (
+            <>
+              <KpiStrip kpis={dayView.kpis} />
+              <DayTimeline model={loaded.model} />
+              <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8">
+                <div className="flex flex-col gap-5">
+                  <DayReading
+                    view={dayView}
+                    sync={day === today ? shell.sync : null}
+                  />
+                  {dayView.night && <NightCard night={dayView.night} />}
+                </div>
+                <DayMoments model={loaded.model} />
               </div>
-              <DayMoments model={loaded.model} />
-            </div>
-          </>
-        ) : (
-          <DayUnavailable failure={loaded.failure} />
-        )}
-        <p className="text-xs leading-normal text-muted-foreground">
-          Vue jour : courbes détaillées chargées depuis Garmin quand tu ouvres
-          une journée (FC toutes les 2 min, stress toutes les 3 min, Body
-          Battery, phases de sommeil, pas par heure). Les vues semaine et mois
-          utilisent les moyennes quotidiennes. Les moments et la lecture sont
-          des repères de Stride, pas un diagnostic.
-        </p>
-      </div>
+            </>
+          ) : (
+            <DayUnavailable failure={loaded.failure} />
+          )}
+          <p className="text-xs leading-normal text-muted-foreground">
+            Vue jour : courbes détaillées chargées depuis Garmin quand tu ouvres
+            une journée (FC toutes les 2 min, stress toutes les 3 min, Body
+            Battery, phases de sommeil, pas par heure). Les vues semaine et mois
+            utilisent les moyennes quotidiennes. Les moments et la lecture sont
+            des repères de Stride, pas un diagnostic.
+          </p>
+        </div>
+      </DataCategoryScope>
     );
   }
   const model = await loadHealth(context, today, view);
   const page = healthPageView(model, shell.sync);
   return (
-    <div className="flex flex-col gap-6 sm:gap-8">
-      {header}
-      <ReadingCard view={page} />
-      <KpiStrip kpis={page.kpis} />
-      <div className="grid gap-5 lg:grid-cols-2">
-        <SleepPanel model={model} view={page} />
-        <HeartPanel model={model} view={page} />
-        <EnergyPanel model={model} view={page} />
-        <LoadPanel model={model} view={page} />
+    <DataCategoryScope categories={["recovery"]}>
+      <div className="flex flex-col gap-6 sm:gap-8">
+        {header}
+        <ReadingCard view={page} />
+        <KpiStrip kpis={page.kpis} />
+        <div className="grid gap-5 lg:grid-cols-2">
+          <SleepPanel model={model} view={page} />
+          <HeartPanel model={model} view={page} />
+          <EnergyPanel model={model} view={page} />
+          <LoadPanel model={model} view={page} />
+        </div>
+        <p className="text-xs leading-normal text-muted-foreground">
+          {page.footnote}
+        </p>
       </div>
-      <p className="text-xs leading-normal text-muted-foreground">
-        {page.footnote}
-      </p>
-    </div>
+    </DataCategoryScope>
   );
 }

@@ -1,3 +1,9 @@
+import { DataActivityProvider } from "@/features/data-activity/components/provider";
+import {
+  DataActivityStatus,
+  DataActivityFeedback,
+} from "@/features/data-activity/components/status";
+import type { DataActivityObservation } from "@/features/data-activity/model";
 import Link from "next/link";
 import { ActivityIcon, FlagIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
 import {
@@ -45,125 +51,145 @@ export function AppShell({
   races,
   sync,
   defaultOpen,
+  initialActivity,
   children,
 }: {
   athlete: ShellAthlete;
   goal: ShellGoal | null;
   races: ShellRaceLink[];
   sync: string | null;
+  initialActivity?: DataActivityObservation | null;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider
-      defaultOpen={defaultOpen}
-      className="h-svh overflow-hidden print:h-auto print:overflow-visible"
-    >
-      <ShortcutHelp />
-      <Sidebar variant="inset" collapsible="icon" className="print:hidden">
-        <SidebarHeader>
-          <NavGoalSwitcher
-            name={goal?.name ?? "Stride"}
-            detail={goal?.detail ?? "Aucun objectif"}
-          >
-            <DropdownMenuContent className="w-60" align="start">
-              <DropdownMenuLabel>Objectif</DropdownMenuLabel>
-              <p className="px-2 pb-2 text-sm text-foreground">
-                {goal ? `${goal.name} · ${goal.detail}` : "Aucun objectif"}
-              </p>
-            </DropdownMenuContent>
-          </NavGoalSwitcher>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Entraînement</SidebarGroupLabel>
-            <SidebarMenu>
-              <ShellNavItem
-                href="/activities"
-                icon={<ActivityIcon />}
-                label="Activités"
-              />
-              <ShellNavItem
-                href="/progress"
-                icon={<TrendingUpIcon />}
-                label="Progression"
-              />
-              <ShellNavItem href="/races" icon={<FlagIcon />} label="Courses" />
-            </SidebarMenu>
-          </SidebarGroup>
-          <ProgressSidebarGroup />
-          <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-            <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
-            <SidebarMenu>
-              {races.map((race) => (
-                <ShellRaceItem
-                  key={race.id}
-                  id={race.id}
-                  name={race.name}
-                  priority={race.priority}
-                  date={shellRaceDate(race.date)}
+    <DataActivityProvider initial={initialActivity}>
+      <SidebarProvider
+        defaultOpen={defaultOpen}
+        className="h-svh overflow-hidden print:h-auto print:overflow-visible"
+      >
+        <ShortcutHelp />
+        <Sidebar variant="inset" collapsible="icon" className="print:hidden">
+          <SidebarHeader>
+            <NavGoalSwitcher
+              name={goal?.name ?? "Stride"}
+              detail={goal?.detail ?? "Aucun objectif"}
+            >
+              <DropdownMenuContent className="w-60" align="start">
+                <DropdownMenuLabel>Objectif</DropdownMenuLabel>
+                <p className="px-2 pb-2 text-sm text-foreground">
+                  {goal ? `${goal.name} · ${goal.detail}` : "Aucun objectif"}
+                </p>
+              </DropdownMenuContent>
+            </NavGoalSwitcher>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Entraînement</SidebarGroupLabel>
+              <SidebarMenu>
+                <ShellNavItem
+                  href="/activities"
+                  icon={<ActivityIcon />}
+                  label="Activités"
                 />
-              ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  size="sm"
-                  className="min-h-7.5 gap-2 text-meta text-muted-foreground"
-                >
-                  <Link href="/settings/goals">
-                    <PlusIcon className="size-3.5" />
-                    Ajouter une course
+                <ShellNavItem
+                  href="/progress"
+                  icon={<TrendingUpIcon />}
+                  label="Progression"
+                />
+                <ShellNavItem
+                  href="/races"
+                  icon={<FlagIcon />}
+                  label="Courses"
+                />
+              </SidebarMenu>
+            </SidebarGroup>
+            <ProgressSidebarGroup />
+            <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+              <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
+              <SidebarMenu>
+                {races.map((race) => (
+                  <ShellRaceItem
+                    key={race.id}
+                    id={race.id}
+                    name={race.name}
+                    priority={race.priority}
+                    date={shellRaceDate(race.date)}
+                  />
+                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    size="sm"
+                    className="min-h-7.5 gap-2 text-meta text-muted-foreground"
+                  >
+                    <Link href="/settings/goals">
+                      <PlusIcon className="size-3.5" />
+                      Ajouter une course
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <DataActivityStatus
+              compact
+              className="hidden justify-center group-data-[collapsible=icon]:flex"
+            />
+            <NavUser
+              name={athlete.name}
+              detail={athlete.detail}
+              initials={athlete.initials}
+              sync={
+                initialActivity !== undefined ? (
+                  <DataActivityStatus />
+                ) : sync ? (
+                  `Garmin ${sync.toLowerCase()}`
+                ) : undefined
+              }
+              syncDot={initialActivity === undefined}
+            >
+              <DropdownMenuContent className="w-56" side="top" align="start">
+                <DropdownMenuLabel>Compte</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/profile">
+                    <AccountMenuProfileIcon />
+                    Profil
                   </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <NavUser
-            name={athlete.name}
-            detail={athlete.detail}
-            initials={athlete.initials}
-            sync={sync ? `Garmin ${sync.toLowerCase()}` : undefined}
-          >
-            <DropdownMenuContent className="w-56" side="top" align="start">
-              <DropdownMenuLabel>Compte</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings/profile">
-                  <AccountMenuProfileIcon />
-                  Profil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings">
-                  <AccountMenuSettingsIcon />
-                  Réglages
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings/connections">
-                  <AccountMenuConnectionsIcon />
-                  Connexions
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/settings/privacy">
-                  <AccountMenuPrivacyIcon />
-                  Données et confidentialité
-                </Link>
-              </DropdownMenuItem>
-              <ShortcutHelpMenuItem />
-              <DropdownMenuSeparator />
-              <SignOutMenuItem />
-            </DropdownMenuContent>
-          </NavUser>
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-      <SidebarInset className="h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">
+                    <AccountMenuSettingsIcon />
+                    Réglages
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/connections">
+                    <AccountMenuConnectionsIcon />
+                    Connexions
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/privacy">
+                    <AccountMenuPrivacyIcon />
+                    Données et confidentialité
+                  </Link>
+                </DropdownMenuItem>
+                <ShortcutHelpMenuItem />
+                <DropdownMenuSeparator />
+                <SignOutMenuItem />
+              </DropdownMenuContent>
+            </NavUser>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
+        <SidebarInset className="relative h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
+          <DataActivityFeedback />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </DataActivityProvider>
   );
 }

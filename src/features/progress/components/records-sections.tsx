@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { Metric } from "@/components/stride/metric";
 import { ProvenanceLabel } from "@/components/stride/provenance";

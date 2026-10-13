@@ -1,25 +1,15 @@
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { PulseDot, SourceMark } from "@/components/stride/marks";
+import { DataCategoryScope } from "@/features/data-activity/components/status";
 import {
   activitiesQuery,
   formatActivityDate,
-  groupActivities,
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
 import type { ActivityDetailData } from "../detail";
 import type { ActivityView } from "../activity-view";
-import { ActivitySearch } from "./activity-search";
 import { ActivityDetail } from "./activity-detail";
-import {
-  ActivityFilters,
-  ActivityList,
-  ActivityListFooter,
-} from "./activity-list";
-import { ListScrollRegion } from "./list-scroll-region";
+import { ActivityListPane } from "./activity-list-pane";
+import { ActivitySplitFrame, ActivityToolbar } from "./activity-frame";
 
 export function ActivitiesView({
   activities,
@@ -30,7 +20,6 @@ export function ActivitiesView({
   view,
   search,
   current,
-  sync,
   today,
 }: {
   activities: Activity[];
@@ -44,107 +33,41 @@ export function ActivitiesView({
   sync: string | null;
   today: string;
 }) {
-  const ListHeading = current ? "h2" : "h1";
   return (
-    <div className="flex min-h-0 flex-1">
-      <div
-        className={cn(
-          "min-h-0 w-full flex-col bg-surface-inset lg:flex lg:w-80 lg:shrink-0 lg:border-r lg:border-border-subtle",
-          current ? "hidden" : "flex",
-        )}
+    <ActivitySplitFrame
+      current={current}
+      list={
+        <ActivityListPane
+          activities={activities}
+          total={total}
+          filter={filter}
+          limit={limit}
+          search={search}
+          today={today}
+          selectedId={selected?.id ?? null}
+          current={current}
+        />
+      }
+    >
+      <ActivityToolbar
+        href={`/activities${activitiesQuery(filter, limit, search)}`}
       >
-        <div className="flex shrink-0 flex-col gap-3 border-b border-border-subtle px-5 pt-5 pb-3 lg:px-3.5 lg:pt-3.5 lg:pb-2.5">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger
-              aria-label="Afficher ou masquer la barre latérale"
-              className="-ml-2 lg:hidden"
-            />
-            <ListHeading className="flex-1 text-headline font-semibold lg:text-base">
-              Activités
-            </ListHeading>
-            {sync && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <PulseDot tone="success" breathing={false} />
-                <span>
-                  <span className="lg:hidden">Garmin </span>
-                  <span className="lg:hidden">{sync.toLowerCase()}</span>
-                  <span className="hidden lg:inline">{sync}</span>
-                </span>
-              </span>
-            )}
-          </div>
-          <ActivitySearch filter={filter} search={search} />
-          <ActivityFilters filter={filter} search={search} />
-        </div>
-        <ListScrollRegion
-          storageKey={`stride:activities:list:${filter}:${search}`}
-          label="Liste des activités"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
-        >
-          <ActivityList
-            groups={groupActivities(activities, today)}
-            filter={filter}
-            limit={limit}
-            search={search}
-            selectedId={selected?.id ?? null}
-            current={current}
-            today={today}
-          />
-          {activities.length > 0 && (
-            <>
-              <ActivityListFooter
-                filter={filter}
-                limit={limit}
-                search={search}
-                shown={activities.length}
-                total={total}
-              />
-              <p className="flex items-center gap-1.75 px-5 pb-4 text-xs text-muted-foreground lg:px-3.5">
-                <SourceMark source="provider" />
-                Tout vient de Garmin
-              </p>
-            </>
-          )}
-        </ListScrollRegion>
-      </div>
-      <div
-        className={cn(
-          "min-h-0 min-w-0 flex-1 flex-col lg:flex",
-          current ? "flex" : "hidden",
-        )}
-      >
-        <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
-          <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
-          <Separator
-            orientation="vertical"
-            className="data-vertical:h-4 data-vertical:self-center"
-          />
-          <nav
-            aria-label="Fil d’Ariane"
-            className="flex min-w-0 items-center gap-2 text-sm"
-          >
-            <Link
-              href={`/activities${activitiesQuery(filter, limit, search)}`}
-              className="text-muted-foreground hover:text-foreground"
+        {selected && (
+          <>
+            <span aria-hidden="true" className="text-dim">
+              /
+            </span>
+            <span
+              aria-current={current ? "page" : undefined}
+              className="truncate"
             >
-              Activités
-            </Link>
-            {selected && (
-              <>
-                <span aria-hidden="true" className="text-dim">
-                  /
-                </span>
-                <span
-                  aria-current={current ? "page" : undefined}
-                  className="truncate"
-                >
-                  {formatActivityDate(selected.date, today)}
-                </span>
-              </>
-            )}
-          </nav>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {formatActivityDate(selected.date, today)}
+            </span>
+          </>
+        )}
+      </ActivityToolbar>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <DataCategoryScope categories={["activities"]}>
           {selected ? (
             <ActivityDetail
               activity={selected}
@@ -159,8 +82,8 @@ export function ActivitiesView({
                 : "Les activités importées depuis Garmin apparaîtront ici."}
             </p>
           )}
-        </div>
+        </DataCategoryScope>
       </div>
-    </div>
+    </ActivitySplitFrame>
   );
 }

@@ -1,4 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import {
+  useDataActivityNavigation,
+  DataActivityLink as Link,
+} from "@/features/data-activity/components/navigation";
 import { Search } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
@@ -21,10 +26,20 @@ export function ActivitySearch({
   filter: ActivityFilter;
   search: string;
 }) {
+  const navigate = useDataActivityNavigation();
   return (
     <form
       action="/activities"
       method="get"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        const query = new URLSearchParams();
+        for (const [name, value] of data) {
+          if (typeof value === "string") query.set(name, value);
+        }
+        navigate(`/activities?${query.toString()}`);
+      }}
       role="search"
       aria-label="Rechercher une activité par nom"
     >

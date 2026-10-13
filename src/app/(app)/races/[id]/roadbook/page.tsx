@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";

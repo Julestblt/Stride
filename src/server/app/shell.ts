@@ -7,31 +7,20 @@ import {
   shellRaces,
   syncLabel,
 } from "@/features/app-shell/shell";
-import { getGarminClient } from "@/server/garmin/session";
+import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "./session";
 
-async function readLastSync(context: OnboardingContext) {
-  try {
-    const result = await getGarminClient().getSync({
-      accessToken: context.accessToken,
-    });
-    return result.ok ? result.value.lastSyncAt : null;
-  } catch {
-    return null;
-  }
-}
-
 export async function loadShell(context: OnboardingContext, now: Date) {
-  const [profile, goals, lastSyncAt] = await Promise.all([
+  const [profile, goals, activity] = await Promise.all([
     context.client
       .from("athlete_profiles")
       .select("first_name")
       .eq("user_id", context.userId)
       .maybeSingle(),
     readGoals(context).catch(() => null),
-    readLastSync(context),
+    readDataActivity({ accessToken: context.accessToken }),
   ]);
   return {
     athlete: shellAthlete(profile.data?.first_name ?? null, context.email),
@@ -57,7 +46,8 @@ export async function loadShell(context: OnboardingContext, now: Date) {
           localToday(now),
         )
       : [],
-    sync: syncLabel(lastSyncAt, now),
+    sync: syncLabel(activity.ok ? activity.value.sync.lastSyncAt : null, now),
+    initialActivity: activity.ok ? activity.value : null,
   };
 }
 

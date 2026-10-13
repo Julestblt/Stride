@@ -1,3 +1,7 @@
+import {
+  DataActivityStatus,
+  DataActivityThread,
+} from "@/features/data-activity/components/status";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,9 +18,11 @@ export default async function RacesPage() {
   if (race) redirect(`/races/${race.id}`);
   return (
     <>
-      <header className="flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
+      <header className="relative flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
         <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
         <h1 className="text-sm">Courses</h1>
+        <DataActivityStatus className="ml-auto md:hidden" />
+        <DataActivityThread />
       </header>
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="flex max-w-md flex-col items-center gap-4 text-center">
