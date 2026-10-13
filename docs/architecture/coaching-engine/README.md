@@ -1,0 +1,78 @@
+# Agentic coaching engine — RFC
+
+- Status: Proposed, awaiting product-owner review
+- Issue: [#86](https://github.com/Julestblt/Stride/issues/86)
+- Date: 2026-10-13
+- Epics: [E-04 Training plans and adaptation](../../epics/E-04-training-plans.md), [E-05 Stride Coach](../../epics/E-05-stride-coach.md), [E-06 Race intelligence](../../epics/E-06-race-intelligence.md)
+- Scope: research and architecture only. No application code, migration, deployment or garmin_mcp change is part of this RFC.
+
+## Recommendation
+
+Stride should build its coach as **code-orchestrated workflows with one Coach agent, deterministic specialists and a propose → validate → approve ledger**, running in **one worker service next to the existing Next.js app, on the existing Supabase Postgres**.
+
+- Deterministic TypeScript modules own every number, date and safety rule, graded by the strength of their evidence. A single-session distance spike above the longest run of the last 30 days is the main relative-load guard; the acute:chronic ratio is information only.
+- The Coach agent uses a language model where judgment or language is needed: designing a plan within computed bounds, choosing among valid adaptations, interpreting free text and explaining in French. Sports Director, Course Strategist and Recovery & Health are deterministic modules with at most one bounded consult each; the Nutritionist is deferred.
+- Every change is a typed proposal, validated before the athlete sees it, applied by the worker only after the athlete accepts, and recorded as a new immutable plan version. Completed training and past decisions are never rewritten.
+- The runtime reads Garmin data from garmin_mcp's normalized rows under the athlete's RLS scope, through internal typed tools. It does not call the garmin_mcp MCP endpoint, and Stride does not build an MCP server now.
+- Claude models through the official API behind a model gateway: Opus 5.5 for plan design, Sonnet 5.5 for conversation and adaptation, Haiku 5.5 for routing and phrasing. No consumer subscriptions.
+
+## Key figures (estimates, not measurements)
+
+| Workflow              | Expected cost     | Range       | Expected model time                |
+| --------------------- | ----------------- | ----------- | ---------------------------------- |
+| Initial plan          | $0.53             | $0.26–1.18  | about 6 minutes, in the background |
+| Single workout change | $0.04             | $0.04–0.13  | under a minute                     |
+| Weekly review         | $0.02 (Batch API) | $0.001–0.13 | batched                            |
+| Adding a race         | $0.49             | $0.07–1.09  | about 5 minutes                    |
+| Brief question        | $0.02             | $0.007–0.05 | seconds                            |
+
+A typical athlete costs about $0.83 per month in model usage (range $0.39–2.69); 1,000 typical athletes about $830 per month. Details and assumptions: [models and costs](models-and-costs.md).
+
+## Operational complexity
+
+One new container built from the existing image, one database login role, one model-provider account with spend limits, and SQL views for cost and health. No new stateful service, queue product or workflow engine.
+
+## Documents
+
+| #     | Deliverable                                                                | Document                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1–2   | Reference-project audit and reuse matrix                                   | [Reference audit](reference-audit.md)                                                                                                                                                                                                                                                                                                                                                                                          |
+| —     | Verified state of Stride and garmin_mcp, prerequisites                     | [Current state](current-state.md)                                                                                                                                                                                                                                                                                                                                                                                              |
+| 3     | Architecture alternatives and trade-offs                                   | [Alternatives](alternatives.md)                                                                                                                                                                                                                                                                                                                                                                                                |
+| 4     | Recommended target architecture and invariants                             | [Target architecture](target-architecture.md)                                                                                                                                                                                                                                                                                                                                                                                  |
+| 5     | Agent roles, delegation and contracts                                      | [Agents and delegation](agents-and-delegation.md)                                                                                                                                                                                                                                                                                                                                                                              |
+| 6–7   | Garmin integration, Stride tools and authorization                         | [Tools and integrations](tools-and-integrations.md)                                                                                                                                                                                                                                                                                                                                                                            |
+| 8–9   | Initial plan, modification, adaptation, multi-race and follow-up workflows | [Workflows](workflows.md)                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 10    | Deterministic coaching and validation                                      | [Deterministic coaching](deterministic-coaching.md)                                                                                                                                                                                                                                                                                                                                                                            |
+| 11    | Data model and versioning                                                  | [Data model](data-model.md)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 12–13 | Model strategy, budgets, cost and infrastructure estimates                 | [Models and costs](models-and-costs.md)                                                                                                                                                                                                                                                                                                                                                                                        |
+| 14    | Security and multi-user isolation                                          | [Security](security.md)                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 15    | Observability and evaluation                                               | [Observability and evaluation](observability-and-evaluation.md)                                                                                                                                                                                                                                                                                                                                                                |
+| 16    | Phased BMAD roadmap and issue drafts                                       | [Roadmap](roadmap.md)                                                                                                                                                                                                                                                                                                                                                                                                          |
+| 17    | Architecture decision records                                              | [ADR 0007](../../adr/0007-coaching-engine-paradigm-and-agent-topology.md), [ADR 0008](../../adr/0008-versioned-plans-and-proposal-lifecycle.md), [ADR 0009](../../adr/0009-coach-worker-runtime-on-postgres.md), [ADR 0010](../../adr/0010-internal-tools-and-garmin-normalized-data.md), [ADR 0011](../../adr/0011-model-access-and-routing.md), [ADR 0012](../../adr/0012-evidence-graded-guardrails-and-health-boundary.md) |
+| 18    | Risks, assumptions and product-owner decisions                             | [Risks and decisions](risks-and-decisions.md)                                                                                                                                                                                                                                                                                                                                                                                  |
+
+Suggested reading order for review: this page, [risks and decisions](risks-and-decisions.md), [target architecture](target-architecture.md), [workflows](workflows.md), then the rest as needed.
+
+## Decisions needed from the product owner
+
+D1 provider and data residency, D2 consent and retention for health data, D3 automatic minor changes, D4 quotas and pricing, D5 Garmin workout push, D6 plan detail horizon, D7 provider for the existing skills, D8 V1 event scope and expert reviewers. Options and recommendations are in [risks and decisions](risks-and-decisions.md).
+
+## How this RFC was produced
+
+- BMAD deep research (technical type, inline without subagents) across seven dimensions: the reference project, Stride and garmin_mcp, agent runtimes, durable execution, model providers and subscriptions, running-science evidence, and MCP security and regulation. Digests and the decision memlog live in the ignored `_bmad-output` workspace.
+- BMAD architecture workflow on the fast path, because the owner delegated routine technical choices. The spine passed the deterministic linter; the configured reviewer lenses (currency and adversarial consistency) ran inline rather than as independent subagents, and their fixes are included. An independent review of this pull request is recommended.
+- Verification: the reference project at `ece024c` (v1.2.0) and its CI run logs; garmin_mcp at `57e741f` and unauthenticated probes of its deployed endpoint; Stride at `295b6c7`; provider pricing and data-handling pages, npm registry metadata, Supabase and Next.js 16.4 documentation, and primary study abstracts, all read on 2026-10-12 or 2026-10-13. Claims that rest on secondary sources are marked as such.
+
+## Glossary
+
+| Term             | Meaning                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Proposal         | A typed set of plan operations with evidence, validated and waiting for the athlete's decision |
+| Plan version     | An immutable state of a plan created when a proposal is applied                                |
+| Frozen session   | A session dated before the athlete's local today, or matched to an activity; never changed     |
+| Run              | One execution of a workflow by the worker, with budgets, steps and events                      |
+| Consult          | A single bounded model call to a specialist role, returning a typed opinion                    |
+| Context packet   | The deterministic, provenance-tagged summary of an athlete given to a run                      |
+| Athlete scope    | The run-bound capability that makes every tool act for one athlete only                        |
+| Provisional week | A future week with targets and draft sessions, re-detailed by the weekly review                |
