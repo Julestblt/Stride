@@ -88,12 +88,7 @@ export function SettingsShell({
         </div>
       </aside>
       <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-y-auto md:p-2">
-        <div
-          className={cn(
-            "min-h-svh rounded-surface border-0 border-border bg-background md:min-h-[calc(100svh-1rem)] md:border",
-            profile && "border-subtle rounded-panel bg-surface-inset",
-          )}
-        >
+        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border">
           <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
             <Link
               href={active?.slug ? "/settings" : "/activities"}
@@ -134,7 +129,7 @@ export function SettingsShell({
             data-slot="settings-content"
             className={cn(
               "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
-              profile && "max-w-[1000px] md:pt-9 2xl:mx-0",
+              profile && "max-w-[1000px] md:mx-auto md:pt-9",
             )}
           >
             {children}
