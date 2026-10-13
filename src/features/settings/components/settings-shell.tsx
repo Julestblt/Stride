@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ProvenanceLabel } from "@/components/stride/provenance";
 import { usePathname } from "next/navigation";
 import { ArrowLeftIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ export function SettingsShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const profile = pathname === "/settings/profile";
   const active = settingsSections.find(
     (section) => settingsHref(section.slug) === pathname,
   );
@@ -86,7 +88,7 @@ export function SettingsShell({
         </div>
       </aside>
       <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-y-auto md:p-2">
-        <div className="min-h-svh rounded-surface border-0 border-border bg-background md:min-h-[calc(100svh-1rem)] md:border">
+        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border">
           <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
             <Link
               href={active?.slug ? "/settings" : "/activities"}
@@ -100,6 +102,7 @@ export function SettingsShell({
             {active?.slug ? (
               <span className="font-mono text-label tracking-wider text-muted uppercase md:font-sans md:text-sm md:tracking-normal md:normal-case">
                 Réglages
+                {profile ? <span className="md:hidden"> / Profil</span> : null}
               </span>
             ) : (
               <h1 className="text-2xl font-semibold tracking-tight md:text-sm md:font-normal md:tracking-normal md:text-muted">
@@ -112,10 +115,22 @@ export function SettingsShell({
                 <span className="hidden text-sm md:inline">{active.label}</span>
               </>
             )}
+            {profile && (
+              <div className="ml-auto hidden gap-3.5 md:flex">
+                <ProvenanceLabel source="provider">Garmin</ProvenanceLabel>
+                <ProvenanceLabel source="manual">Toi</ProvenanceLabel>
+                <ProvenanceLabel source="estimate">
+                  Estimation Stride
+                </ProvenanceLabel>
+              </div>
+            )}
           </header>
           <div
             data-slot="settings-content"
-            className="mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto"
+            className={cn(
+              "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
+              profile && "max-w-[1000px] md:mx-auto md:pt-9",
+            )}
           >
             {children}
           </div>

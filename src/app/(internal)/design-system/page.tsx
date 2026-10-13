@@ -382,6 +382,9 @@ export default function DesignSystemPage() {
           <Specimen title="Buttons" meta="Button">
             <div className="flex flex-wrap items-center gap-2.5">
               <Button size="md">Accept</Button>
+              <Button size="md" variant="neutral">
+                Appliquer le brouillon
+              </Button>
               <Button size="md" variant="outline">
                 Keep 5 × 6
               </Button>

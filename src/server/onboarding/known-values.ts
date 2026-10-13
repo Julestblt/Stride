@@ -1,4 +1,5 @@
 import "server-only";
+import { readRunningMaximum } from "@/server/heart-rate/maximum";
 import {
   buildKnownValues,
   buildSuggestions,
@@ -18,7 +19,6 @@ export async function loadGarminSignals(
   context: OnboardingContext,
   today: Date,
 ) {
-  const year = new Date(today.getTime() - 365 * 86_400_000).toISOString();
   const [history, firstRun, vo2, maxHr] = await Promise.all([
     loadHistoryContext(context, today),
     context.client
@@ -38,15 +38,7 @@ export async function loadGarminSignals(
       .order("observed_on", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    context.client
-      .from("provider_activities")
-      .select("max_heart_rate, started_at, distance_meters")
-      .eq("user_id", context.userId)
-      .gte("started_at", year)
-      .not("max_heart_rate", "is", null)
-      .order("max_heart_rate", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    readRunningMaximum(context, today),
   ]);
   const inputs = {
     today,
@@ -61,16 +53,17 @@ export async function loadGarminSignals(
           }
         : null,
     maxHeartRate:
-      maxHr.data?.max_heart_rate && maxHr.data.started_at
-        ? {
-            value: Number(maxHr.data.max_heart_rate),
-            startedAt: maxHr.data.started_at,
+      maxHr.value === null
+        ? null
+        : {
+            value: maxHr.value,
+            manual: maxHr.override !== null,
+            startedAt: maxHr.observed?.startedAt ?? today.toISOString(),
             distanceMeters:
-              maxHr.data.distance_meters === null
-                ? null
-                : Number(maxHr.data.distance_meters),
-          }
-        : null,
+              maxHr.override === null
+                ? (maxHr.observed?.distanceMeters ?? null)
+                : null,
+          },
   };
   return inputs;
 }

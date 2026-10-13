@@ -47,7 +47,7 @@ export type AthleteProfileInputs = {
   activities: InsightActivity[];
   observations: InsightObservation[];
   vo2Max: { value: number; observedOn: string } | null;
-  maxHeartRate: { value: number; startedAt: string } | null;
+  maxHeartRate: { value: number; startedAt: string; manual?: boolean } | null;
 };
 export type AthleteProfileView = {
   firstName: string | null;
@@ -278,13 +278,15 @@ export function buildAthleteProfile(
     },
     {
       key: "max_hr",
-      label: "FC max observée",
+      label: input.maxHeartRate?.manual ? "FC max" : "FC max observée",
       value: input.maxHeartRate
         ? `${Math.round(input.maxHeartRate.value)} bpm`
         : null,
-      source: "garmin",
+      source: input.maxHeartRate?.manual ? "athlete" : "garmin",
       detail: input.maxHeartRate
-        ? `Le ${fullDate.format(new Date(input.maxHeartRate.startedAt))} · 12 derniers mois`
+        ? input.maxHeartRate.manual
+          ? "Ta valeur"
+          : `Le ${fullDate.format(new Date(input.maxHeartRate.startedAt))} · 12 derniers mois`
         : "12 derniers mois",
     },
   ];

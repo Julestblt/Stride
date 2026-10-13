@@ -1,5 +1,6 @@
 "use server";
 
+import { persistSettingsProfile } from "@/server/settings/profile";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -185,4 +186,33 @@ export async function removeSettingsRace(data: FormData) {
   const result = await deleteRaces({ context }, { ids: [id.data] });
   if (result.status === "deleted") revalidatePath("/settings/goals");
   redirect(resultPath("/settings/goals", result.status));
+}
+
+export async function updateSettingsProfile(data: FormData) {
+  const current = await context();
+  if (!current)
+    return {
+      status: "session-expired" as const,
+      message: "Ta session a expiré. Reconnecte-toi.",
+    };
+  try {
+    const input: unknown = JSON.parse(String(data.get("profile")));
+    const file = data.get("photo");
+    const result = await persistSettingsProfile(
+      current,
+      input,
+      file instanceof File && file.size > 0 ? file : null,
+    );
+    if (result.status === "saved") {
+      revalidatePath("/settings/profile");
+      revalidatePath("/activities");
+      revalidatePath("/onboarding");
+    }
+    return result;
+  } catch {
+    return {
+      status: "error" as const,
+      message: "Impossible d’enregistrer ton profil. Réessaie.",
+    };
+  }
 }
