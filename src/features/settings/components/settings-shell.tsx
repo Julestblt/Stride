@@ -129,7 +129,7 @@ export function SettingsShell({
             data-slot="settings-content"
             className={cn(
               "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
-              profile && "max-w-[1000px] md:mx-auto md:pt-9",
+              profile && "md:pt-9",
             )}
           >
             {children}
