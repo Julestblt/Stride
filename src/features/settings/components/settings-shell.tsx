@@ -18,7 +18,6 @@ export function SettingsShell({
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const scroller = useRef<HTMLDivElement>(null);
-  const innerScroll = pathname === "/settings/training";
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
   }, [pathname, search]);
@@ -94,25 +93,9 @@ export function SettingsShell({
           </div>
         </div>
       </aside>
-      <main
-        className={cn(
-          "min-w-0 p-0 md:h-svh md:min-h-0 md:p-2",
-          innerScroll ? "md:overflow-hidden" : "md:overflow-y-auto",
-        )}
-      >
-        <div
-          className={cn(
-            "border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border",
-            innerScroll && "md:flex md:h-full md:min-h-0 md:flex-col",
-          )}
-        >
-          <header
-            className={cn(
-              "flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6",
-              innerScroll &&
-                "max-md:sticky max-md:top-0 max-md:z-10 max-md:bg-surface-inset md:shrink-0",
-            )}
-          >
+      <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-hidden md:p-2">
+        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:flex md:h-full md:min-h-0 md:flex-col md:border">
+          <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:sticky max-md:top-0 max-md:z-10 max-md:border-0 max-md:bg-surface-inset md:shrink-0 md:px-6">
             <Link
               href={active?.slug ? "/settings" : "/activities"}
               aria-label={
@@ -150,10 +133,7 @@ export function SettingsShell({
           </header>
           <div
             ref={scroller}
-            className={cn(
-              innerScroll &&
-                "md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain",
-            )}
+            className="md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain"
           >
             <div
               data-slot="settings-content"
