@@ -1,4 +1,5 @@
 import "server-only";
+import { readRunningMaximum } from "@/server/heart-rate/maximum";
 import {
   activityColumns,
   activityNamePattern,
@@ -104,18 +105,9 @@ export async function loadHeartRateZones(
   context: OnboardingContext,
   now: Date,
 ): Promise<HeartRateZones | null> {
-  const year = new Date(now.getTime() - 365 * dayMs).toISOString();
   const month = new Date(now.getTime() - 28 * dayMs).toISOString().slice(0, 10);
   const [maximum, resting] = await Promise.all([
-    context.client
-      .from("provider_activities")
-      .select("max_heart_rate")
-      .eq("user_id", context.userId)
-      .gte("started_at", year)
-      .not("max_heart_rate", "is", null)
-      .order("max_heart_rate", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    readRunningMaximum(context, now),
     context.client
       .from("provider_observations")
       .select("metric, observed_on, value_numeric")
@@ -125,11 +117,9 @@ export async function loadHeartRateZones(
       .gte("observed_on", month)
       .limit(100),
   ]);
-  if (maximum.error || resting.error) return null;
+  if (resting.error) return null;
   return calculateHeartRateZones({
-    maximum: maximum.data?.max_heart_rate
-      ? Number(maximum.data.max_heart_rate)
-      : null,
+    maximum: maximum.value,
     observations: (resting.data ?? []).flatMap((row) =>
       row.metric && row.observed_on && row.value_numeric !== null
         ? [

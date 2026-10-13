@@ -43,8 +43,12 @@ export type Database = {
           height_cm: number | null;
           long_run_day: string | null;
           primary_terrain: string | null;
+          profile_photo_path: string | null;
           revision: number;
+          running_max_heart_rate_override: number | null;
           sex: string | null;
+          threshold_heart_rate_override: number | null;
+          threshold_heart_rate_source: string | null;
           training_access: string[] | null;
           updated_at: string;
           user_id: string;
@@ -61,8 +65,12 @@ export type Database = {
           height_cm?: number | null;
           long_run_day?: string | null;
           primary_terrain?: string | null;
+          profile_photo_path?: string | null;
           revision?: number;
+          running_max_heart_rate_override?: number | null;
           sex?: string | null;
+          threshold_heart_rate_override?: number | null;
+          threshold_heart_rate_source?: string | null;
           training_access?: string[] | null;
           updated_at?: string;
           user_id: string;
@@ -78,8 +86,12 @@ export type Database = {
           height_cm?: number | null;
           long_run_day?: string | null;
           primary_terrain?: string | null;
+          profile_photo_path?: string | null;
           revision?: number;
+          running_max_heart_rate_override?: number | null;
           sex?: string | null;
+          threshold_heart_rate_override?: number | null;
+          threshold_heart_rate_source?: string | null;
           training_access?: string[] | null;
           updated_at?: string;
           user_id?: string;

@@ -26,6 +26,7 @@ export type KnownInputs = {
   maxHeartRate: {
     value: number;
     startedAt: string;
+    manual?: boolean;
     distanceMeters: number | null;
   } | null;
 };
@@ -67,7 +68,9 @@ export function buildKnownValues(input: KnownInputs): KnownValue[] {
       key: "max_hr",
       label: "FC max",
       value: String(Math.round(input.maxHeartRate.value)),
-      detail: `Observée · ${where}${shortMonth.format(new Date(input.maxHeartRate.startedAt))}`,
+      detail: input.maxHeartRate.manual
+        ? "Ta valeur"
+        : `Observée · ${where}${shortMonth.format(new Date(input.maxHeartRate.startedAt))}`,
     });
   }
   const resting = input.observations
