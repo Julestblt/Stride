@@ -84,7 +84,7 @@ export function ActivityFullDetail({
         categories={["activities"]}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
           <article className="mx-auto flex w-full max-w-360 flex-col gap-10 px-5 pt-8 pb-12 sm:px-[4vw]">
             <header className="flex flex-col gap-3">
               <MonoLabel size="label">{kicker.join(" · ")}</MonoLabel>

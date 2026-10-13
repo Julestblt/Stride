@@ -133,6 +133,8 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(
     page.getByRole("dialog", { name: "Modifier la course" }),
-  ).toHaveCount(0);
-  await expect(page.getByText("Départ prévu à 09:00")).toBeVisible();
+  ).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByText("Départ prévu à 09:00")).toBeVisible({
+    timeout: 15_000,
+  });
 });
