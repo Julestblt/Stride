@@ -167,7 +167,7 @@ export default async function GoalsSettingsPage({
               </div>
             </div>
             <div className="flex items-end justify-between gap-4 max-md:border-t max-md:border-border max-md:pt-3 md:contents">
-              <div className="flex flex-col md:items-end">
+              <div className="flex flex-col gap-0.75 md:items-end">
                 <span className="font-metric text-3xl leading-none font-semibold tabular-nums md:text-[1.625rem]">
                   {primary.values.race_date
                     ? `${daysUntil(primary.values.race_date, today)} jours`
