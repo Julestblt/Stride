@@ -1,3 +1,4 @@
+import { DataActivityStatus } from "@/features/data-activity/components/status";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -30,6 +31,7 @@ export default async function RaceLayout({
           />
         </div>
         <MonoLabel className="sm:hidden">Courses</MonoLabel>
+        <DataActivityStatus className="ml-auto md:hidden" />
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain print:overflow-visible">
         <main className="mx-auto flex w-full max-w-360 flex-col gap-6 px-5 pt-6 pb-18 sm:gap-7 sm:px-[clamp(20px,4vw,56px)] sm:pt-9 print:max-w-none print:gap-3 print:p-0">

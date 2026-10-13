@@ -418,9 +418,11 @@ for (const mode of ["empty", "failure", "goal-failure"] as const) {
         page.getByText("Aucun record documenté pour ce filtre."),
       ).toBeVisible();
     } else
-      await expect(page.getByRole("alert")).toContainText(
-        "Impossible de lire ton historique",
-      );
+      await expect(
+        page
+          .getByRole("alert")
+          .filter({ hasText: "Impossible de lire ton historique" }),
+      ).toContainText("Impossible de lire ton historique");
     await page
       .getByRole("navigation", { name: "Sections de la progression" })
       .first()

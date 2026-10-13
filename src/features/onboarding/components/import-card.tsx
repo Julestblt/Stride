@@ -13,7 +13,7 @@ export function ImportCard({ summary }: { summary: ImportSummary }) {
       className="mt-auto flex flex-col gap-2.5 rounded-card border border-border p-3.5"
     >
       <p className="flex items-center gap-2 text-xs font-semibold">
-        {active && <PulseDot />}
+        {active && <PulseDot tone="provider" />}
         {summary.phase === "attention" || summary.phase === "unavailable" ? (
           <PulseDot tone="warning" breathing={false} />
         ) : null}

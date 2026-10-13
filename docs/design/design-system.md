@@ -89,6 +89,16 @@ Auth, onboarding, and application screens must compose this system rather than r
 
 ## Loading and motion
 
+### Garmin data activity
+
+The authenticated shell owns one data activity controller. Its read-only panel shows the four normalized Garmin categories, their actual state, last success and verified activity count. The application status endpoint is independent of onboarding and validates responses without exposing provider credentials. Manual synchronization is unavailable in the current service; no gesture or control starts an import.
+
+Polling is serialized, pauses while hidden or offline, aborts on unmount and stops after four consecutive failures. A valid observation is retained during outages. Active imports use provider blue, with a single thread delayed by 300ms and visible for at least 600ms. Route loading boundaries contribute to that thread without changing the synchronization status into a page-loading claim. Local skeletons cover activities, activity detail, health and races with the same subdued sheen. Activity list loading is isolated in a route group; a dynamic activity layout verifies its owner-scoped summary before streaming so invalid and foreign activities still return HTTP 404.
+
+Background observations never refresh the screen. New category success timestamps or increasing activity counts offer an explicit **Afficher** action; applying or navigating acknowledges that observation. Poll timestamps alone do not count as fresh data. Status and notification overlays preserve screen geometry. Offline and reconnect states stop the thread and keep readable content.
+
+The backend reports categories rather than individual metric freshness. Existing activity and health values can therefore be scoped to activities and recovery only; the UI must not invent per-metric import states. Category-scoped metric values dim during actual imports while labels remain readable. Unrelated race content remains unchanged.
+
 Prefer React Server Components and stable content. Use local skeletons only for independently loading content; their geometry should match the final content and their contrast should stay subtle. Long imports and synchronization need explicit progress and states such as partial, delayed, retrying, or reconnect required, not a full-page spinner or skeleton pretending to be progress.
 
 Motion explains state and hierarchy. Keep transitions restrained; reference timings are starting points, not required animations. Respect `prefers-reduced-motion` by resolving transitions and animations to their end state. Do not animate for decoration.

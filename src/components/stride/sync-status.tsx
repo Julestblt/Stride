@@ -17,7 +17,7 @@ const frames: Record<SyncState, string> = {
 function SyncMark({ state }: { state: SyncState }) {
   switch (state) {
     case "importing":
-      return <PulseDot className="size-2" />;
+      return <PulseDot tone="provider" className="size-2" />;
     case "current":
       return (
         <CheckIcon
@@ -43,7 +43,7 @@ function SyncMark({ state }: { state: SyncState }) {
 export function SyncStatus({
   state,
   progress,
-  progressLabel = "Import progress",
+  progressLabel = "Progression de l’import",
   action,
   className,
   children,
@@ -73,7 +73,7 @@ export function SyncStatus({
           value={progress}
           aria-label={progressLabel}
           className="w-20 shrink-0"
-          indicatorClassName="after:absolute after:inset-0 after:bg-linear-to-r after:from-transparent after:via-foreground/55 after:to-transparent motion-safe:after:animate-sheen"
+          indicatorClassName="bg-provider after:absolute after:inset-0 after:bg-linear-to-r after:from-transparent after:via-foreground/55 after:to-transparent motion-safe:after:animate-sheen"
         />
       )}
       {action && <span className="shrink-0">{action}</span>}

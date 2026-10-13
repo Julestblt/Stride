@@ -181,19 +181,21 @@ export function NavUser({
   detail,
   initials,
   sync,
+  syncDot = true,
   children,
 }: {
   name: string;
   detail: string;
   initials: string;
   sync?: React.ReactNode;
+  syncDot?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <SidebarMenu>
       {sync && (
         <li className="flex items-center gap-2 px-2.5 pb-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-          <PulseDot tone="success" breathing={false} />
+          {syncDot && <PulseDot tone="success" breathing={false} />}
           {sync}
         </li>
       )}

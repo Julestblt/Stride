@@ -1,8 +1,12 @@
+import {
+  DataActivityStatus,
+  DataCategoryScope,
+} from "@/features/data-activity/components/status";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { PulseDot, SourceMark } from "@/components/stride/marks";
+import { SourceMark } from "@/components/stride/marks";
 import {
   activitiesQuery,
   formatActivityDate,
@@ -30,7 +34,6 @@ export function ActivitiesView({
   view,
   search,
   current,
-  sync,
   today,
 }: {
   activities: Activity[];
@@ -62,50 +65,46 @@ export function ActivitiesView({
             <ListHeading className="flex-1 text-headline font-semibold lg:text-base">
               Activités
             </ListHeading>
-            {sync && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <PulseDot tone="success" breathing={false} />
-                <span>
-                  <span className="lg:hidden">Garmin </span>
-                  <span className="lg:hidden">{sync.toLowerCase()}</span>
-                  <span className="hidden lg:inline">{sync}</span>
-                </span>
-              </span>
-            )}
+            <DataActivityStatus />
           </div>
           <ActivitySearch filter={filter} search={search} />
           <ActivityFilters filter={filter} search={search} />
         </div>
-        <ListScrollRegion
-          storageKey={`stride:activities:list:${filter}:${search}`}
-          label="Liste des activités"
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        <DataCategoryScope
+          categories={["activities"]}
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <ActivityList
-            groups={groupActivities(activities, today)}
-            filter={filter}
-            limit={limit}
-            search={search}
-            selectedId={selected?.id ?? null}
-            current={current}
-            today={today}
-          />
-          {activities.length > 0 && (
-            <>
-              <ActivityListFooter
-                filter={filter}
-                limit={limit}
-                search={search}
-                shown={activities.length}
-                total={total}
-              />
-              <p className="flex items-center gap-1.75 px-5 pb-4 text-xs text-muted-foreground lg:px-3.5">
-                <SourceMark source="provider" />
-                Tout vient de Garmin
-              </p>
-            </>
-          )}
-        </ListScrollRegion>
+          <ListScrollRegion
+            storageKey={`stride:activities:list:${filter}:${search}`}
+            label="Liste des activités"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          >
+            <ActivityList
+              groups={groupActivities(activities, today)}
+              filter={filter}
+              limit={limit}
+              search={search}
+              selectedId={selected?.id ?? null}
+              current={current}
+              today={today}
+            />
+            {activities.length > 0 && (
+              <>
+                <ActivityListFooter
+                  filter={filter}
+                  limit={limit}
+                  search={search}
+                  shown={activities.length}
+                  total={total}
+                />
+                <p className="flex items-center gap-1.75 px-5 pb-4 text-xs text-muted-foreground lg:px-3.5">
+                  <SourceMark source="provider" />
+                  Tout vient de Garmin
+                </p>
+              </>
+            )}
+          </ListScrollRegion>
+        </DataCategoryScope>
       </div>
       <div
         className={cn(
@@ -143,22 +142,25 @@ export function ActivitiesView({
               </>
             )}
           </nav>
+          <DataActivityStatus className="ml-auto md:hidden" />
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {selected ? (
-            <ActivityDetail
-              activity={selected}
-              view={view}
-              current={current}
-              detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit, search)}`}
-            />
-          ) : (
-            <p className="px-5 pt-8 text-body text-muted sm:px-10">
-              {search
-                ? "Aucune activité ne correspond à ce nom."
-                : "Les activités importées depuis Garmin apparaîtront ici."}
-            </p>
-          )}
+          <DataCategoryScope categories={["activities"]}>
+            {selected ? (
+              <ActivityDetail
+                activity={selected}
+                view={view}
+                current={current}
+                detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit, search)}`}
+              />
+            ) : (
+              <p className="px-5 pt-8 text-body text-muted sm:px-10">
+                {search
+                  ? "Aucune activité ne correspond à ce nom."
+                  : "Les activités importées depuis Garmin apparaîtront ici."}
+              </p>
+            )}
+          </DataCategoryScope>
         </div>
       </div>
     </div>
