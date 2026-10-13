@@ -23,6 +23,10 @@ for (const viewport of [
     await page.setViewportSize(viewport);
     await signIn(page);
     await page.goto("/races");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Courses" }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: "Ouvrir la course" }).click();
     await expect(page).toHaveURL(
       /\/races\/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb$/,
     );
