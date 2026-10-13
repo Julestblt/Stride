@@ -27,6 +27,35 @@ const nullableNumber = (value: FormDataEntryValue | null) => {
   return text === null ? null : Number(text);
 };
 
+const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function planValues(data: FormData) {
+  const start = nullableText(data.get("start_time"));
+  const cutoff = parseDuration(nullableText(data.get("cutoff_duration")) ?? "");
+  return {
+    start: start !== null && clockPattern.test(start) ? `${start}:00` : null,
+    cutoff: cutoff ?? null,
+  };
+}
+
+async function savePlanValues(
+  current: NonNullable<Awaited<ReturnType<typeof context>>>,
+  raceId: string,
+  plan: ReturnType<typeof planValues>,
+) {
+  const { error } = await current.client.from("race_plans").upsert(
+    {
+      race_id: raceId,
+      user_id: current.userId,
+      start_time: plan.start,
+      start_time_confirmed: plan.start !== null,
+      cutoff_duration_seconds: plan.cutoff,
+    },
+    { onConflict: "race_id" },
+  );
+  return !error;
+}
+
 async function context() {
   return getOnboardingContext({ writable: true });
 }
@@ -136,7 +165,18 @@ export async function saveSettingsRace(data: FormData) {
   )
     redirect(resultPath("/settings/goals", "invalid"));
   const result = await saveRace({ context }, parsed.data);
-  if (result.status === "saved") revalidatePath("/settings/goals");
+  if (result.status === "saved") {
+    const current = await context();
+    const plan = planValues(data);
+    if (
+      current &&
+      (plan.start !== null ||
+        plan.cutoff !== null ||
+        data.get("start_time") !== null)
+    )
+      await savePlanValues(current, parsed.data.id, plan);
+    revalidatePath("/settings/goals");
+  }
   redirect(resultPath("/settings/goals", result.status));
 }
 
@@ -173,10 +213,15 @@ export async function addSettingsRace(data: FormData) {
   if (countError) redirect(resultPath("/settings/goals", "error"));
   if ((count ?? 0) >= maxRaces)
     redirect(resultPath("/settings/goals", "invalid"));
-  const { error } = await current.client
+  const { data: created, error } = await current.client
     .from("athlete_races")
-    .insert({ user_id: current.userId, ...check.data.values });
+    .insert({ user_id: current.userId, ...check.data.values })
+    .select("id")
+    .single();
   if (error) redirect(resultPath("/settings/goals", "error"));
+  const plan = planValues(data);
+  if (plan.start !== null || plan.cutoff !== null)
+    await savePlanValues(current, created.id, plan);
   revalidatePath("/settings/goals");
   redirect(resultPath("/settings/goals", "saved"));
 }

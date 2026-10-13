@@ -22,6 +22,7 @@ export function SettingsShell({
     scroller.current?.scrollTo({ top: 0 });
   }, [pathname, search]);
   const profile = pathname === "/settings/profile";
+  const goals = pathname === "/settings/goals";
   const active = settingsSections.find(
     (section) => settingsHref(section.slug) === pathname,
   );
@@ -109,6 +110,9 @@ export function SettingsShell({
               <span className="font-mono text-label tracking-wider text-muted uppercase md:font-sans md:text-sm md:tracking-normal md:normal-case">
                 Réglages
                 {profile ? <span className="md:hidden"> / Profil</span> : null}
+                {goals ? (
+                  <span className="md:hidden"> / Objectifs et courses</span>
+                ) : null}
               </span>
             ) : (
               <h1 className="text-2xl font-semibold tracking-tight md:text-sm md:font-normal md:tracking-normal md:text-muted">
@@ -120,6 +124,18 @@ export function SettingsShell({
                 <span className="hidden text-muted md:inline">/</span>
                 <span className="hidden text-sm md:inline">{active.label}</span>
               </>
+            )}
+            {goals && (
+              <Link
+                href="/settings/goals?course=nouvelle"
+                aria-label="Ajouter une course"
+                className="ml-auto grid min-h-11 min-w-11 place-items-center rounded-card bg-accent text-xl font-semibold text-background hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-ring md:inline-flex md:min-h-9 md:rounded-control md:px-3.5 md:text-sm"
+              >
+                <span className="md:hidden" aria-hidden="true">
+                  +
+                </span>
+                <span className="hidden md:inline">+ Ajouter une course</span>
+              </Link>
             )}
             {profile && (
               <div className="ml-auto hidden gap-3.5 md:flex">
@@ -133,7 +149,7 @@ export function SettingsShell({
           </header>
           <div
             ref={scroller}
-            className="md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain"
+            className="relative md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain"
           >
             <div
               data-slot="settings-content"
