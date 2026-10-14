@@ -23,8 +23,11 @@ export function SettingsShell({
   }, [pathname, search]);
   const profile = pathname === "/settings/profile";
   const goals = pathname === "/settings/goals";
+  const garmin = pathname === "/settings/connections/garmin";
   const active = settingsSections.find(
-    (section) => settingsHref(section.slug) === pathname,
+    (section) =>
+      settingsHref(section.slug) === pathname ||
+      (garmin && section.slug === "connections"),
   );
   return (
     <div className="min-h-svh bg-background text-foreground md:grid md:h-svh md:min-h-0 md:grid-cols-[16.5rem_minmax(0,1fr)] md:overflow-hidden">
@@ -63,10 +66,12 @@ export function SettingsShell({
                       <Link
                         key={href}
                         href={href}
-                        aria-current={pathname === href ? "page" : undefined}
+                        aria-current={
+                          active?.slug === section.slug ? "page" : undefined
+                        }
                         className={cn(
                           "rounded-control px-2 py-2 text-sm text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
-                          pathname === href &&
+                          active?.slug === section.slug &&
                             "bg-surface-raised font-medium text-foreground",
                         )}
                       >
@@ -98,7 +103,13 @@ export function SettingsShell({
         <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:flex md:h-full md:min-h-0 md:flex-col md:border">
           <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:sticky max-md:top-0 max-md:z-10 max-md:border-0 max-md:bg-surface-inset md:shrink-0 md:px-6">
             <Link
-              href={active?.slug ? "/settings" : "/activities"}
+              href={
+                garmin
+                  ? "/settings/connections"
+                  : active?.slug
+                    ? "/settings"
+                    : "/activities"
+              }
               aria-label={
                 active?.slug ? "Retour aux réglages" : "Retour à Stride"
               }
@@ -122,7 +133,22 @@ export function SettingsShell({
             {active?.slug && (
               <>
                 <span className="hidden text-muted md:inline">/</span>
-                <span className="hidden text-sm md:inline">{active.label}</span>
+                {garmin ? (
+                  <>
+                    <Link
+                      href="/settings/connections"
+                      className="hidden text-sm text-muted hover:text-foreground md:inline"
+                    >
+                      {active.label}
+                    </Link>
+                    <span className="hidden text-muted md:inline">/</span>
+                    <span className="hidden text-sm md:inline">Garmin</span>
+                  </>
+                ) : (
+                  <span className="hidden text-sm md:inline">
+                    {active.label}
+                  </span>
+                )}
               </>
             )}
             {goals && (
