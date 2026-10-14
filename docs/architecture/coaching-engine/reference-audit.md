@@ -1,6 +1,6 @@
 # Reference audit: ai-running-coach
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Subject: [mmornati/ai-running-coach](https://github.com/mmornati/ai-running-coach) at commit `ece024c` (tag v1.2.0, released 2026-10-12), read on 2026-10-12
 - Method: full clone, reading of agents, skills, scripts, configuration, contracts, tests and CI history. No upstream code was executed.
 

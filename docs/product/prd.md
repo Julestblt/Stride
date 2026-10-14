@@ -3,7 +3,7 @@
 - Status: Draft for discovery
 - Owner: Product
 - Source: [Product vision](vision.md), [product brief](brief.md), and [product principles](principles.md)
-- Scope: Candidate first release; requirements below are proposals until discovery validates them, except the accepted onboarding decisions
+- Scope: Candidate first release; requirements below are proposals until discovery validates them, except the accepted onboarding and training plan decisions
 
 ## Accepted onboarding decisions
 
@@ -14,6 +14,17 @@ The product owner accepted these decisions for the E-07 onboarding on 2026-10-09
 - Onboarding progress and everything the athlete enters persist in Stride's Supabase database and resume on any device.
 - Import progress shows only real synchronization data.
 - Onboarding UI copy is French, matching the approved references.
+
+## Accepted training plan decisions
+
+The product owner accepted the coaching engine decisions D1–D8 on 2026-10-13 ([risks and decisions](../architecture/coaching-engine/risks-and-decisions.md), #94). Those that shape product behavior:
+
+- Stride is a personal, open-source application used by its owner and possibly one or two relatives on a self-hosted instance. There is no AI-processing consent flow, no time-based retention purge and no per-athlete quota or monthly budget; isolation between athletes stays.
+- No plan change is ever applied without the athlete's approval; there are no automatic changes.
+- Every week of a plan is fully detailed at creation: every session has its complete structure and its targets.
+- No human expert reviews plans. The deterministic validator, conservative defaults and an automated evaluation suite with an LLM judge are the quality gates; the athlete is the only human in the loop.
+- Supported events: road 5 km to marathon and trail of every distance; plans for events above 60 km carry a low-confidence label instead of being refused.
+- Sending workouts to Garmin is deferred.
 
 ## Product goals
 
@@ -73,6 +84,23 @@ An athlete records a goal event and later uses relevant training, course, and ra
 - FR-09: A proposed plan change is reviewable by the athlete and is not applied until the athlete accepts it.
 - FR-10: Athlete-facing advice does not diagnose injury or disease and directs urgent or medical concerns to qualified care.
 
+### Training plans
+
+These requirements are accepted. Phase 1 of the coaching engine delivers them deterministically, without any model call; the [plan foundation spec](../specs/spec-plan-foundation/spec-plan-foundation.md) maps each of them to its implementation issue. Later phases let the Coach model design and adapt plans under the same requirements.
+
+- FR-19 Objective and horizon: a plan targets one main objective, resolved as the A-priority race, else the nearest dated race, else the athlete's goal focus. It runs from its start date to race day and includes the post-race recovery; other races in the window get a plan role (preparation or secondary goal) without changing the athlete's own priority.
+- FR-20 Planning constraints: the athlete can declare a time zone, a maximum weekly training time and unavailable date ranges in Settings, in addition to the available weekdays, long-run day and weekday session length captured during onboarding. Plans respect all of them; the time zone defines the athlete's local today.
+- FR-21 Baseline and feasibility: plans are built from the athlete's own synchronized history (volume, longest recent run, consistency, intensity distribution when available). Before building, Stride states whether the objective is realistic, ambitious or unrealistic with the facts behind it; a timeline too short for the event yields options, never a silently compressed plan. The verdict informs the athlete, who stays in control of their plan.
+- FR-22 Event scope: Stride builds plans for road 5 km to marathon, trail of every distance and base building without a race. Plans for events above 60 km show a low-confidence label. With fewer than four weeks of history, Stride builds a conservative base-building plan and says so.
+- FR-23 Complete sessions: every session of every week is complete when the plan is created: warm-up, work steps and repetitions, recoveries and cool-down, each step ending on time, distance or lap button, with a title, purpose and short French cues. There are no provisional weeks.
+- FR-24 Training targets: every step carries a pace range, a heart-rate range or an effort (RPE) target computed from the athlete's data, with its source and confidence. Missing calibration is declared and replaced by effort targets, never by invented values. Trail climbs use effort or heart-rate targets rather than pace.
+- FR-25 Validation: every plan and every change is checked by deterministic rules before the athlete sees it and again before it is applied. Blocking rules prevent the plan or change; warnings are shown with their evidence grade. A missing signal never counts as favorable, and passing the rules is never presented as medical safety.
+- FR-26 Versions and frozen history: a plan is a sequence of immutable versions. Sessions dated before the athlete's local today or matched to an activity are frozen; no version change rewrites them.
+- FR-27 Proposals and decisions: every plan creation or change is a proposal with a summary, rationale, evidence, assumptions, uncertainty and validator report. The athlete accepts or rejects it, optionally with a note; nothing changes before acceptance. A proposal becomes stale when the plan changed since it was made, and every decision is recorded in an auditable history.
+- FR-28 Adherence: completed activities are matched to planned sessions as completed, partial or substituted, and unmatched past sessions count as missed. The athlete can correct a match, and the correction survives recomputation.
+- FR-29 Régularité: Progression shows the share of planned and key sessions completed over the selected period once a plan exists, and keeps an honest empty state otherwise.
+- FR-30 Plan screens: the athlete can browse the plan by blocks and weeks and open any session to see its steps, targets, totals, purpose and contingency advice. A plan computed by Stride but not yet saved is labeled as a draft; sections without a data source are hidden rather than filled.
+
 ### Future capabilities
 
 Activity analytics, training load, readiness, multiple specialist agents, course segmentation, race prediction, race roadbooks, and broad provider support are not required for the candidate first release unless discovery changes the priority. Garmin race-calendar lookup, GPX course upload, Stride-derived performance predictions such as threshold pace, climbing speed, race-time estimates and heart-rate zones, and generated import insights are deferred onboarding capabilities.
@@ -80,7 +108,7 @@ Activity analytics, training load, readiness, multiple specialist agents, course
 ## Non-functional requirements
 
 - NFR-01 Privacy: authenticated data access is scoped to its owner; database policies and server checks prevent cross-athlete access.
-- NFR-02 Consent: athletes can understand and withdraw data-source permission; data deletion and retention behavior must be defined before external athlete data is stored.
+- NFR-02 Consent: athletes can understand and withdraw data-source permission. Athlete data is kept for the life of the account and deleted with it; there is no separate AI-processing consent or time-based purge (decision D2).
 - NFR-03 Integrity: repeated syncs do not create duplicate activities, and provider timestamps and units are normalized consistently.
 - NFR-04 Explainability: each recommendation can identify its input evidence, assumptions, and important limitations.
 - NFR-05 Availability and performance: define service objectives and response-time targets when hosting and the first pilot scale are selected; do not promise targets without operational evidence.
@@ -88,6 +116,8 @@ Activity analytics, training load, readiness, multiple specialist agents, course
 - NFR-07 Maintainability: deterministic calculations remain independently testable; AI outputs are structured and validated at the server boundary.
 - NFR-08 Observability: record sync and coaching failures without logging secrets or unnecessary sensitive athlete data.
 - NFR-09 Resilience: onboarding remains usable while Garmin synchronization is slow or temporarily unavailable, and an interrupted save or network loss never discards athlete input without notice.
+- NFR-10 Evaluation: without human expert review, coaching quality is gated by deterministic rule tests, fixture plans across event families and, once models are involved, an automated evaluation suite whose safety scenarios must pass three times out of three and whose rubric is graded by an LLM judge calibrated on seeded defects.
+- NFR-11 Run limits: every coaching run has hard caps on model calls, tool calls, tokens, cost and duration; model usage and cost are recorded per call.
 
 ## Success measures
 
@@ -97,7 +127,7 @@ Instrument these measures for a pilot; set target thresholds after discovery est
 - Data reliability: percentage of successfully imported activities with valid ownership, source provenance, normalized units, and no duplicate record.
 - Coaching usefulness: athlete rating of a weekly proposal and a brief reason for accepting, editing, or declining it.
 - Repeat value: proportion of pilot athletes who return to review or discuss training in later weeks.
-- Safety: results from reviewed scenarios covering missing data, stale data, pain or illness disclosures, and conflicting training constraints.
+- Safety: results from automated evaluation scenarios covering missing data, stale data, pain or illness disclosures, and conflicting training constraints.
 
 Do not optimize for recommendation acceptance alone; an informed decline can be a successful outcome.
 
@@ -115,11 +145,11 @@ Do not optimize for recommendation acceptance alone; an informed decline can be 
 - Native apps, billing, notifications, social features, and coach/team accounts
 - Medical diagnoses or treatment plans
 - Unreviewed automated changes to a training plan
-- A production schema or an exhaustive specialist-agent catalog
+- An exhaustive specialist-agent catalog
+- Sending workouts to Garmin
 
 ## Decisions needed before implementation
 
 - Confirm the first athlete segment, event type, and highest-value journey.
-- Define consent, retention, deletion, and data-source failure behavior.
-- Choose the minimum useful coaching output and the degree of user control.
-- Agree on pilot size, success thresholds, and safety review ownership.
+- Define data-source failure behavior beyond the onboarding states.
+- Agree on success thresholds once real usage exists.

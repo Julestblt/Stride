@@ -1,6 +1,6 @@
 # Target architecture
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Paradigm: a hexagonal coaching core with code-orchestrated workflows and a propose → validate → approve ledger.
 
 ## In one paragraph
@@ -46,13 +46,13 @@ flowchart TB
   GM --> PG
 ```
 
-| Component             | Responsibilities                                                                                                                                                                                                        | Holds                                                                                                       |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `stride-web`          | Authenticate with `getUser`; enqueue runs and record approvals through athlete-session RPCs that check quotas; stream run events over SSE; render plans, proposals and the ledger; keep the existing single-shot skills | Publishable key, athlete sessions, existing constrained onboarding key, provider key for single-shot skills |
-| `stride-coach-worker` | Claim runs; build context packets; execute workflows, agent loops and specialist consults; validate; persist steps, events, proposals and messages; apply accepted proposals; run monitors and the weekly scheduler     | Worker database role credential, model provider key                                                         |
-| Supabase Postgres     | Source of truth for plans, proposals, decisions, runs, conversations and memory; RLS for every athlete-owned row; private functions for privileged writes                                                               | —                                                                                                           |
-| garmin_mcp            | Unchanged: Garmin connection, sync and normalized rows; intraday wellness for the web app                                                                                                                               | Garmin sessions                                                                                             |
-| Model provider        | Inference only; no data stored by default on the selected models ([models and costs](models-and-costs.md#provider-data-handling))                                                                                       | —                                                                                                           |
+| Component             | Responsibilities                                                                                                                                                                                                    | Holds                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `stride-web`          | Authenticate with `getUser`; enqueue runs and record approvals through athlete-session RPCs; stream run events over SSE; render plans, proposals and the ledger; keep the existing single-shot skills               | Publishable key, athlete sessions, existing constrained onboarding key, provider key for single-shot skills |
+| `stride-coach-worker` | Claim runs; build context packets; execute workflows, agent loops and specialist consults; validate; persist steps, events, proposals and messages; apply accepted proposals; run monitors and the weekly scheduler | Worker database role credential, model provider key                                                         |
+| Supabase Postgres     | Source of truth for plans, proposals, decisions, runs, conversations and memory; RLS for every athlete-owned row; private functions for privileged writes                                                           | —                                                                                                           |
+| garmin_mcp            | Unchanged: Garmin connection, sync and normalized rows; intraday wellness for the web app                                                                                                                           | Garmin sessions                                                                                             |
+| Model provider        | Inference only; no data stored by default on the selected models ([models and costs](models-and-costs.md#provider-data-handling))                                                                                   | —                                                                                                           |
 
 ## Invariants
 
@@ -72,9 +72,9 @@ These rules are the contract every implementation issue must follow. They were d
 | AD-10 | All LLM calls go through the `ModelGateway` port with a versioned routing table, one versioned price table, per-call budgets and usage accounting. Provider SDKs live only in gateway adapters.                                                                                                                                                                                                                         | Provider sprawl, unaccounted spend                                                  |
 | AD-11 | The web service authenticates, enqueues, streams and records decisions. One worker service executes every multi-step or tool-using run. Single-shot stateless skills may stay in the web process. No Edge Functions or external workflow engine.                                                                                                                                                                        | Long runs dying with deploys; privileged credentials on the internet-facing process |
 | AD-12 | `agent_runs` is the job record: lease claim with `FOR UPDATE SKIP LOCKED`, attempts and backoff, cancellation flag, idempotency key, one active plan-mutating run per athlete. Steps are memoized by `(run_id, step_key)`. Events are append-only.                                                                                                                                                                      | Duplicate execution, lost or double-paid work                                       |
-| AD-13 | Every run has hard caps for tokens, cost, tool calls, model calls and wall clock. Quotas are checked at enqueue and during the run. Exhaustion yields a degraded deterministic result.                                                                                                                                                                                                                                  | Runaway loops, overspend                                                            |
+| AD-13 | Every run has hard caps for tokens, cost, tool calls, model calls and wall clock. Exhaustion yields a degraded deterministic result. There are no per-athlete quotas or monthly budgets (D4).                                                                                                                                                                                                                           | Runaway loops, overspend                                                            |
 | AD-14 | Athlete and provider free text enters prompts only inside delimited data blocks with provenance and length caps. Numbers in athlete-facing explanations must trace to computed facts.                                                                                                                                                                                                                                   | Prompt injection, invented numbers                                                  |
-| AD-15 | Red flags trigger deterministic hard stops and referral copy. Health data in prompts is limited to the task. Transcripts expire. Models that require provider-side 30-day retention are not used with athlete data.                                                                                                                                                                                                     | Medical claims, unsafe continuation, data sprawl                                    |
+| AD-15 | Red flags trigger deterministic hard stops and referral copy. Health data in prompts is limited to the task. Models that require provider-side 30-day retention are not used with athlete data.                                                                                                                                                                                                                         | Medical claims, unsafe continuation, data sprawl                                    |
 | AD-16 | Prompt, routing and model changes ship only after the coaching evaluation suite meets its thresholds. Rules have unit tests. RLS and tool isolation tests are mandatory for every new table and tool.                                                                                                                                                                                                                   | Silent regressions                                                                  |
 | AD-17 | Planned-versus-completed matching and adherence are computed only by the plans matching module and persisted in `session_activity_matches`, including athlete overrides.                                                                                                                                                                                                                                                | Different adherence answers in different places                                     |
 
@@ -105,7 +105,7 @@ sequenceDiagram
   participant M as Model
   B->>W: POST message (client idempotency key)
   W->>W: getUser
-  W->>DB: post_coach_message RPC as athlete (quota check, insert message, insert queued run, notify)
+  W->>DB: post_coach_message RPC as athlete (insert message, insert queued run, notify)
   W-->>B: run id
   B->>W: GET run events (SSE)
   K->>DB: claim run (lease)
@@ -146,7 +146,7 @@ The athlete starts the run; the worker executes memoized steps and streams progr
 
 ### Monitors and schedules
 
-The worker's scheduler runs cheap deterministic monitors (new activities to match, single-session spikes, missed key sessions, readiness red flags, data freshness) for athletes with an active plan, and creates an LLM run only when a monitor finds something that needs a proposal and the athlete's budget allows it. A weekly review runs on Sunday evening in Europe/Paris for opted-in athletes and uses the Batch API when the result is not needed immediately.
+The worker's scheduler runs cheap deterministic monitors (new activities to match, single-session spikes, missed key sessions, readiness red flags, data freshness) for athletes with an active plan, and creates an LLM run only when a monitor finds something that needs a proposal and the one-monitor-proposal-per-day limit allows it. A weekly review runs on Sunday evening in the athlete's time zone for opted-in athletes, re-checks the coming week against adherence and readiness, and uses the Batch API when the result is not needed immediately.
 
 ## Deployment topology
 
@@ -164,7 +164,7 @@ The worker's scheduler runs cheap deterministic monitors (new activities to matc
 
 ## Operational complexity
 
-New things to operate: one worker container, one database login role, one provider account and key, a daily cost view and a kill switch. Nothing new is stateful outside Postgres. Runbooks to write with the first implementation: rotate the provider key, pause all coaching runs, drain and redeploy the worker, inspect a failed run, and purge expired transcripts.
+New things to operate: one worker container, one database login role, one provider account and key, a daily cost view and a kill switch. Nothing new is stateful outside Postgres. Runbooks to write with the first implementation: rotate the provider key, pause all coaching runs, drain and redeploy the worker, and inspect a failed run.
 
 ## Source layout seed
 

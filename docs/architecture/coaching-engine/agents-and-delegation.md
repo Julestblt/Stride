@@ -1,6 +1,6 @@
 # Agents, specialists and delegation
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Decision record: [ADR 0007](../../adr/0007-coaching-engine-paradigm-and-agent-topology.md)
 
 ## Roles
@@ -142,13 +142,13 @@ When two specialists disagree on something below safety, the Coach does not aver
 
 ## Independent validation
 
-| Check                         | When                                                                               | Independent of the model?                                                        |
-| ----------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Deterministic validator       | Every proposal, at submission and at apply                                         | Yes                                                                              |
-| Numeric guard on explanations | Every athlete-facing explanation                                                   | Yes                                                                              |
-| Schema validation             | Every model output                                                                 | Yes                                                                              |
-| LLM critic review             | Not in V1; evaluated as an option for initial plans and block revisions            | No, and only adopted if evaluations show it catches defects the validator misses |
-| Human coach review            | Templates, rules, evaluation rubric, and sampled plans before and during the pilot | Yes                                                                              |
+| Check                         | When                                                                            | Independent of the model?                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Deterministic validator       | Every proposal, at submission and at apply                                      | Yes                                                                              |
+| Numeric guard on explanations | Every athlete-facing explanation                                                | Yes                                                                              |
+| Schema validation             | Every model output                                                              | Yes                                                                              |
+| LLM critic review             | Not in V1; evaluated as an option for initial plans and block revisions         | No, and only adopted if evaluations show it catches defects the validator misses |
+| LLM-judge evaluation          | Generated plans and answers graded against a written rubric with seeded defects | Partly: a different model than the generator, never replacing the validator      |
 
 Passing these checks means a proposal respects Stride's rules and the athlete's declared constraints. It does not mean the plan is medically safe; the proposal copy never claims that.
 
@@ -165,11 +165,11 @@ Passing these checks means a proposal respects Stride's rules and the athlete's 
 | -------------------------------------------------------- | -------------------------------------- | ------ | --------------- | ------------- |
 | Coach: questions and explanations                        | Sonnet 5.5                             | low    | ≤ 3             | 1,500 tokens  |
 | Coach: session and week adaptations                      | Sonnet 5.5                             | medium | ≤ 4             | 3,000 tokens  |
-| Coach: plan design (initial, block revision, multi-race) | Opus 5.5                               | high   | 1 + ≤ 2 repairs | 16,000 tokens |
+| Coach: plan design (initial, block revision, multi-race) | Opus 5.5                               | high   | 1 + ≤ 2 repairs | 32,000 tokens |
 | Coach: weekly review                                     | Sonnet 5.5 (Batch API when not urgent) | medium | ≤ 2             | 4,000 tokens  |
 | Sports Director consult                                  | Sonnet 5.5                             | high   | ≤ 1             | 3,000 tokens  |
 | Course Strategist consult                                | Sonnet 5.5                             | medium | ≤ 1             | 2,500 tokens  |
 | Recovery & Health consult                                | Sonnet 5.5                             | medium | ≤ 1             | 2,000 tokens  |
 | Routing, extraction, phrasing                            | Haiku 5.5                              | low    | ≤ 2             | 800 tokens    |
 
-Per-run caps and quotas are in [models and costs](models-and-costs.md#budgets-quotas-and-timeouts).
+Per-run caps are in [models and costs](models-and-costs.md#run-caps-and-timeouts). A step whose output fails validation may escalate one tier ([ADR 0011](../../adr/0011-model-access-and-routing.md)).

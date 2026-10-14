@@ -1,6 +1,6 @@
 # Agentic coaching engine — RFC
 
-- Status: Proposed, awaiting product-owner review
+- Status: Accepted on 2026-10-13, amended with the product-owner decisions D1–D8 ([#94](https://github.com/Julestblt/Stride/issues/94))
 - Issue: [#86](https://github.com/Julestblt/Stride/issues/86)
 - Date: 2026-10-13
 - Epics: [E-04 Training plans and adaptation](../../epics/E-04-training-plans.md), [E-05 Stride Coach](../../epics/E-05-stride-coach.md), [E-06 Race intelligence](../../epics/E-06-race-intelligence.md)
@@ -14,19 +14,20 @@ Stride should build its coach as **code-orchestrated workflows with one Coach ag
 - The Coach agent uses a language model where judgment or language is needed: designing a plan within computed bounds, choosing among valid adaptations, interpreting free text and explaining in French. Sports Director, Course Strategist and Recovery & Health are deterministic modules with at most one bounded consult each; the Nutritionist is deferred.
 - Every change is a typed proposal, validated before the athlete sees it, applied by the worker only after the athlete accepts, and recorded as a new immutable plan version. Completed training and past decisions are never rewritten.
 - The runtime reads Garmin data from garmin_mcp's normalized rows under the athlete's RLS scope, through internal typed tools. It does not call the garmin_mcp MCP endpoint, and Stride does not build an MCP server now.
-- Claude models through the official API behind a model gateway: Opus 5.5 for plan design, Sonnet 5.5 for conversation and adaptation, Haiku 5.5 for routing and phrasing. No consumer subscriptions.
+- Claude models through the official API behind a model gateway: Opus 5.5 for plan design, Sonnet 5.5 for conversation and adaptation, Haiku 5.5 for routing and phrasing, with a one-tier escalation when an output fails validation. No consumer subscriptions.
+- Every week of a plan is fully detailed at creation, with complete sessions and targets (D6). No human expert reviews plans: the deterministic validator and an automated evaluation suite with an LLM judge are the quality gates, and the athlete is the only human in the loop (D8).
 
 ## Key figures (estimates, not measurements)
 
 | Workflow              | Expected cost     | Range       | Expected model time                |
 | --------------------- | ----------------- | ----------- | ---------------------------------- |
-| Initial plan          | $0.53             | $0.26–1.18  | about 6 minutes, in the background |
+| Initial plan          | $0.73             | $0.38–1.50  | about 9 minutes, in the background |
 | Single workout change | $0.04             | $0.04–0.13  | under a minute                     |
 | Weekly review         | $0.02 (Batch API) | $0.001–0.13 | batched                            |
 | Adding a race         | $0.49             | $0.07–1.09  | about 5 minutes                    |
 | Brief question        | $0.02             | $0.007–0.05 | seconds                            |
 
-A typical athlete costs about $0.83 per month in model usage (range $0.39–2.69); 1,000 typical athletes about $830 per month. Details and assumptions: [models and costs](models-and-costs.md).
+A typical athlete costs about $0.89 per month in model usage (range $0.43–2.79). Details and assumptions: [models and costs](models-and-costs.md).
 
 ## Operational complexity
 
@@ -45,7 +46,7 @@ One new container built from the existing image, one database login role, one mo
 | 8–9   | Initial plan, modification, adaptation, multi-race and follow-up workflows | [Workflows](workflows.md)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 10    | Deterministic coaching and validation                                      | [Deterministic coaching](deterministic-coaching.md)                                                                                                                                                                                                                                                                                                                                                                            |
 | 11    | Data model and versioning                                                  | [Data model](data-model.md)                                                                                                                                                                                                                                                                                                                                                                                                    |
-| 12–13 | Model strategy, budgets, cost and infrastructure estimates                 | [Models and costs](models-and-costs.md)                                                                                                                                                                                                                                                                                                                                                                                        |
+| 12–13 | Model strategy, run caps, cost and infrastructure estimates                | [Models and costs](models-and-costs.md)                                                                                                                                                                                                                                                                                                                                                                                        |
 | 14    | Security and multi-user isolation                                          | [Security](security.md)                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 15    | Observability and evaluation                                               | [Observability and evaluation](observability-and-evaluation.md)                                                                                                                                                                                                                                                                                                                                                                |
 | 16    | Phased BMAD roadmap and issue drafts                                       | [Roadmap](roadmap.md)                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -54,9 +55,9 @@ One new container built from the existing image, one database login role, one mo
 
 Suggested reading order for review: this page, [risks and decisions](risks-and-decisions.md), [target architecture](target-architecture.md), [workflows](workflows.md), then the rest as needed.
 
-## Decisions needed from the product owner
+## Product-owner decisions
 
-D1 provider and data residency, D2 consent and retention for health data, D3 automatic minor changes, D4 quotas and pricing, D5 Garmin workout push, D6 plan detail horizon, D7 provider for the existing skills, D8 V1 event scope and expert reviewers. Options and recommendations are in [risks and decisions](risks-and-decisions.md).
+The product owner decided D1–D8 on 2026-10-13: Anthropic API without an EU-residency requirement (D1), no consent flow or retention purges (D2), no automatic changes (D3), no quotas or monthly budgets yet (D4), no Garmin push (D5), every week fully detailed at creation (D6), the existing skills on Haiku 5.5 with Sonnet escalation (D7), and no human expert reviewers with all trail distances in scope (D8). Details are in [risks and decisions](risks-and-decisions.md). The Phase 1 contract is the [plan foundation spec](../../specs/spec-plan-foundation/spec-plan-foundation.md).
 
 ## How this RFC was produced
 
@@ -66,13 +67,12 @@ D1 provider and data residency, D2 consent and retention for health data, D3 aut
 
 ## Glossary
 
-| Term             | Meaning                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| Proposal         | A typed set of plan operations with evidence, validated and waiting for the athlete's decision |
-| Plan version     | An immutable state of a plan created when a proposal is applied                                |
-| Frozen session   | A session dated before the athlete's local today, or matched to an activity; never changed     |
-| Run              | One execution of a workflow by the worker, with budgets, steps and events                      |
-| Consult          | A single bounded model call to a specialist role, returning a typed opinion                    |
-| Context packet   | The deterministic, provenance-tagged summary of an athlete given to a run                      |
-| Athlete scope    | The run-bound capability that makes every tool act for one athlete only                        |
-| Provisional week | A future week with targets and draft sessions, re-detailed by the weekly review                |
+| Term           | Meaning                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| Proposal       | A typed set of plan operations with evidence, validated and waiting for the athlete's decision |
+| Plan version   | An immutable state of a plan created when a proposal is applied                                |
+| Frozen session | A session dated before the athlete's local today, or matched to an activity; never changed     |
+| Run            | One execution of a workflow by the worker, with budgets, steps and events                      |
+| Consult        | A single bounded model call to a specialist role, returning a typed opinion                    |
+| Context packet | The deterministic, provenance-tagged summary of an athlete given to a run                      |
+| Athlete scope  | The run-bound capability that makes every tool act for one athlete only                        |

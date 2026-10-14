@@ -1,6 +1,6 @@
 # ADR 0008: Versioned plans changed only through validated, athlete-approved proposals
 
-- Status: Proposed
+- Status: Accepted, amended by decisions D3 and D6 (2026-10-13, #94)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
@@ -17,6 +17,7 @@ E-04 requires that a plan can be reviewed and rejected without changing the acti
 - The athlete accepts or rejects through ownership-checked RPCs. Only the coach worker applies an accepted proposal, after re-validating it, in one transaction that checks the base version.
 - Undo creates an inverse proposal and a new version; history is never edited.
 - Agents never modify athlete-owned profile, goal or race rows; plan-level race roles live in plan versions.
+- Every session of every week carries its complete structure and targets from the first version (D6); there are no provisional weeks. Later weeks change only through proposals, for example from the weekly review.
 
 ## Alternatives considered
 
@@ -33,4 +34,4 @@ Revisioned rows need range predicates and careful indexing, and the changeset lo
 
 - Plan reads filter on `valid_to_version is null` for the active version.
 - Adherence links to session keys and revisions, so planned-versus-completed history stays stable after later changes.
-- Automatic minor changes, if ever approved, reuse the same lifecycle with an explicit approval mode and undo window.
+- There are no automatic changes in V1 (D3). If the product owner revisits that decision, automatic changes reuse the same lifecycle with an explicit approval mode and undo window.

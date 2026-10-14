@@ -1,7 +1,7 @@
 # Security and multi-tenant isolation
 
-- Status: Proposed (RFC #86)
-- Scope: the coaching engine as a multi-tenant production system handling health-related personal data.
+- Status: Accepted (RFC #86, amended by decisions D1–D8 in #94)
+- Scope: the coaching engine as a multi-athlete system handling health-related personal data. Stride is a personal, open-source application used by its owner and possibly one or two relatives on a self-hosted instance; isolation between athletes is still enforced as for any multi-tenant system.
 
 ## Principles
 
@@ -9,7 +9,7 @@
 2. Least privilege per process: the internet-facing web process holds no coaching write privilege; the worker holds a database role that cannot bypass RLS for reads.
 3. Model output is untrusted input. It is parsed, validated, scoped and checked before it can touch state.
 4. Nothing changes a plan without the athlete's decision and a successful re-validation.
-5. Health data is minimized, labeled and retained briefly.
+5. Health data is minimized and labeled; it reaches a model only when the task needs it.
 
 ## Threats and controls
 
@@ -26,13 +26,13 @@
 | Concurrent conflicting updates                       | Optimistic version check at apply; stale proposals; partial unique index on plan-mutating runs; one ready proposal per target                                                                                                                                                                                                              | Concurrency tests applying two proposals on the same base                                                                                                                             |
 | Replay or forged approvals                           | Accept RPC checks owner, status, expiry and base version; the apply run is idempotent per proposal                                                                                                                                                                                                                                         | RPC tests                                                                                                                                                                             |
 | Accidental access to production or admin interfaces  | Separate provider workspaces and keys per environment; the Supabase management MCP and service keys are never configured on the worker; staging uses its own Supabase project                                                                                                                                                              | Environment checklist in the deployment runbook                                                                                                                                       |
-| Denial of wallet                                     | Per-athlete quotas, monthly budget caps, global daily limit at the provider, kill switch                                                                                                                                                                                                                                                   | Budget tests; alerting                                                                                                                                                                |
-| Model provider retention of health data              | Selected models do not retain prompts by default; Covered Models are excluded; residency decided in D1; a data-processing agreement is required before launch                                                                                                                                                                              | Legal review                                                                                                                                                                          |
+| Denial of wallet                                     | Hard per-run caps, usage recorded per call, a spend limit on the provider account, kill switch; no per-athlete quotas or monthly budgets (D4)                                                                                                                                                                                              | Run-cap tests; daily cost view                                                                                                                                                        |
+| Model provider retention of health data              | Anthropic API (D1); the selected models do not retain prompts by default; models that require provider-side 30-day retention are excluded; no EU-residency requirement                                                                                                                                                                     | Routing-table test that rejects excluded models                                                                                                                                       |
 
 ## Identity flow
 
 1. The browser authenticates with Supabase Auth through Stride's server; there is still no browser Supabase client.
-2. A route handler or server action calls `getUser`, then an athlete-session RPC (`post_coach_message`, `request_coach_run`, `accept_plan_proposal`). The RPC uses `auth.uid()` for the run's athlete and checks quotas.
+2. A route handler or server action calls `getUser`, then an athlete-session RPC (`post_coach_message`, `request_coach_run`, `accept_plan_proposal`). The RPC uses `auth.uid()` for the run's athlete and checks the request state.
 3. The worker claims the run and opens per-step transactions that `set local role authenticated` with `request.jwt.claims` holding the run's `sub`, exactly as Stride's database tests already do. Reads are RLS-filtered.
 4. Writes happen after `reset role`, as the worker role, through private functions that take the run id and read the athlete from the run row.
 5. The model never sees ids it could swap to reach another athlete: tool inputs reference session keys and dates within the athlete scope, and every lookup is scoped.
@@ -48,11 +48,11 @@
 
 - Classification: pain and illness reports, readiness signals (HRV, resting heart rate, sleep), check-ins and free-text health mentions are treated as health data under GDPR Article 9.
 - Minimization: workflows receive readiness summaries and active condition reports only when the task needs them; Haiku extraction of symptoms from free text produces a structured draft that the athlete confirms before it is stored.
-- Boundary: the engine does not diagnose, name conditions, recommend treatment or medication, or clear a return to running; red flags produce a stop and a referral message in French reviewed by a clinician before launch.
-- Retention: proposed durations are in the [data model](data-model.md#retention-and-deletion) and require decision D2.
-- Consent: AI processing of health data needs explicit, specific consent recorded in `coach_settings`, withdrawable, with deterministic features continuing to work without it.
-- Transparency: the EU AI Act's Article 50 obligation to inform people that they are interacting with an AI system has applied since 2 August 2026 according to the legal analyses consulted; Stride's coach surfaces must say so in French. Legal review confirms the wording.
-- Medical-device boundary: software qualifies as a medical device by its intended purpose and claims (MDCG 2019-11 guidance). Product copy, prompts and evaluations must avoid diagnostic or therapeutic claims; legal review before launch.
+- Boundary: the engine does not diagnose, name conditions, recommend treatment or medication, or clear a return to running; red flags produce a stop and a conservative referral message in French. No clinician reviews the copy (D8), so it stays generic: stop, rest, consult a health professional.
+- Retention: no time-based purge (D2). Health data lives as long as the account and is deleted with it ([data model](data-model.md#retention-and-deletion)).
+- Consent: no AI-processing consent flow (D2). The athlete chooses to use the coach; deterministic features never depend on a model.
+- Transparency: coach surfaces say in French that answers come from an AI system.
+- Medical-device boundary: software qualifies as a medical device by its intended purpose and claims (MDCG 2019-11 guidance). Product copy, prompts and evaluations avoid diagnostic or therapeutic claims, and evaluation scenarios check it.
 
 ## Operational security
 

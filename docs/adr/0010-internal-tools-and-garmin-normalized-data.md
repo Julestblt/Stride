@@ -1,6 +1,6 @@
 # ADR 0010: Internal typed tools and normalized Garmin data, no Stride MCP server
 
-- Status: Proposed
+- Status: Accepted (2026-10-13, #94)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
@@ -28,5 +28,5 @@ The runtime depends on garmin_mcp's normalized coverage; missing data (heart-rat
 
 ## Consequences
 
-- garmin_mcp drafts G4 (profile and zones) and G8 (change feed) become useful prerequisites.
+- garmin_mcp G4 (heart-rate zones, lactate threshold and athlete metrics) shipped as Julestblt/garmin_mcp#8; G8 (change feed) remains a useful prerequisite before monitors scale.
 - Tool isolation tests are mandatory for every tool.
