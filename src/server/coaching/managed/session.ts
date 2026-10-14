@@ -12,7 +12,7 @@ const userKey = "stride_user_id";
 const sessionBudgetCents = { conversation: "100", plan: "200" } as const;
 
 export type SessionMode = keyof typeof sessionBudgetCents;
-const turnTimeoutMs = 300_000;
+const turnTimeoutMs = 900_000;
 
 export type TurnInput =
   | { kind: "message"; text: string }

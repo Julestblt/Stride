@@ -10,7 +10,7 @@ import {
 } from "@/server/coaching/worker";
 import { getOnboardingContext } from "@/server/onboarding/context";
 
-export const maxDuration = 300;
+export const maxDuration = 900;
 
 const requestSchema = z.discriminatedUnion("action", [
   z.strictObject({
