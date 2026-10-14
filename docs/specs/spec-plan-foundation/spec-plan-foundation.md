@@ -1,6 +1,7 @@
 ---
 id: SPEC-plan-foundation
 companions:
+  - design-adaptations.md
   - ../../architecture/coaching-engine/README.md
   - ../../architecture/coaching-engine/deterministic-coaching.md
   - ../../architecture/coaching-engine/data-model.md
