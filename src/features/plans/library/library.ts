@@ -6,6 +6,7 @@ import {
   type StructureStep,
 } from "../model/structure";
 import type { TrainingTargets } from "../targets/targets";
+import { formatDuration } from "../view/format";
 
 export type Terrain = "road" | "trail" | "treadmill";
 
@@ -15,15 +16,6 @@ export type LibraryContext = {
 };
 
 const minutes = (value: number) => Math.round(value * 60);
-
-export function formatMinutes(seconds: number) {
-  const whole = Math.round(seconds / 60);
-  return whole >= 60 && whole % 60 === 0
-    ? `${whole / 60} h`
-    : whole >= 60
-      ? `${Math.floor(whole / 60)} h ${String(whole % 60).padStart(2, "0")}`
-      : `${whole}’`;
-}
 
 function heartRateCue(context: LibraryContext, intensity: Intensity) {
   const range = context.targets.intensities[intensity].heartRateRange;
@@ -178,7 +170,7 @@ export function qualitySession(
       return content(context, {
         ...key,
         kind: "tempo",
-        title: `Allure soutenue · ${formatMinutes(work)}`,
+        title: `Allure soutenue · ${formatDuration(work)}`,
         purpose:
           "Tenir une allure soutenue et régulière, proche de l’allure marathon.",
         structure: [
@@ -265,7 +257,7 @@ export function qualitySession(
       return content(context, {
         ...key,
         kind: "race_specific",
-        title: `Allure marathon · ${formatMinutes(work)}`,
+        title: `Allure marathon · ${formatDuration(work)}`,
         purpose: "Ancrer l’allure du marathon sur une longue portion continue.",
         structure: [
           step(context, "warmup", warm.warmupSeconds, "easy"),
@@ -374,7 +366,7 @@ export function longRun(
     kind: "long",
     isKey: true,
     priority: "high",
-    title: `${trail ? "Sortie longue trail" : "Sortie longue"} · ${formatMinutes(seconds)}`,
+    title: `${trail ? "Sortie longue trail" : "Sortie longue"} · ${formatDuration(seconds)}`,
     purpose: trail
       ? "Endurance sur terrain varié, montées et descentes à l’effort."
       : "Endurance longue à allure facile et régulière.",
