@@ -1,6 +1,6 @@
 # Deterministic coaching and validation
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86, amended by decisions D6 and D8 in #94)
 - Decision record: [ADR 0012](../../adr/0012-evidence-graded-guardrails-and-health-boundary.md)
 
 ## Principles
@@ -9,10 +9,11 @@
 2. Every rule declares an evidence grade:
    - **evidence**: a primary study supports the direction and the threshold for this population;
    - **convention**: a reasonable default without direct evidence for the threshold;
-   - **integrity**: data, time or consent correctness.
+   - **integrity**: data and time correctness.
 3. A missing signal is never favorable. When a rule cannot be evaluated, it reports `skipped` with a reason, and the uncertainty of the proposal rises.
 4. Estimates are labeled as estimates with their confidence. Garmin composite scores (training readiness, Body Battery, training status) are presented as Garmin data, not reinterpreted as physiological measurements.
 5. Passing the validator means a proposal respects Stride's rules and the athlete's declared constraints. It does not mean the plan is medically safe, and no copy says so.
+6. No human expert reviews plans (D8). Where evidence is weak, defaults lean conservative and are labeled as conventions.
 
 ## Domain modules
 
@@ -41,11 +42,11 @@ Severity: `block` makes a proposal invalid; `warn` is shown to the athlete with 
 | I2  | Operations reference sessions and weeks of the expected base version                                                                     | —                                       | block                   | integrity                                                                                                  | —                                                                 |
 | I3  | Session dates inside the plan, weeks Monday-based, units valid, structured steps sum to the target duration within 10%                   | —                                       | block                   | integrity                                                                                                  | —                                                                 |
 | I4  | A-priority race dates and athlete-declared races are never moved or removed by a proposal                                                | —                                       | block                   | integrity                                                                                                  | —                                                                 |
-| C1  | Sessions only on available weekdays; no more running days than declared                                                                  | —                                       | block                   | athlete constraint                                                                                         | —                                                                 |
-| C2  | Weekday session duration within the athlete's declared maximum (long-run day excepted)                                                   | profile value                           | block                   | athlete constraint                                                                                         | No declared maximum                                               |
+| C1  | Sessions only on available weekdays and outside declared unavailable dates; no more running days than declared                           | —                                       | block                   | athlete constraint                                                                                         | —                                                                 |
+| C2  | Weekday session duration within the athlete's declared maximum (long-run day excepted); weekly planned time within the weekly ceiling    | profile values                          | block                   | athlete constraint                                                                                         | No declared maximum                                               |
 | C3  | Constraints from specialist opinions (`ConstraintSpec`)                                                                                  | —                                       | block                   | as declared by the specialist                                                                              | —                                                                 |
-| H1  | Active pain report ≥ 7/10, worsening pain, illness with systemic symptoms, or a red flag: no running and no load increase; referral copy | ≥ 7/10                                  | block                   | convention, to be reviewed by a clinician                                                                  | —                                                                 |
-| H2  | Active pain report 4–6/10: no quality sessions, no volume increase, reassess within 72 hours                                             | 4/10                                    | block                   | convention, to be reviewed by a clinician                                                                  | —                                                                 |
+| H1  | Active pain report ≥ 7/10, worsening pain, illness with systemic symptoms, or a red flag: no running and no load increase; referral copy | ≥ 7/10                                  | block                   | convention (conservative default)                                                                          | —                                                                 |
+| H2  | Active pain report 4–6/10: no quality sessions, no volume increase, reassess within 72 hours                                             | 4/10                                    | block                   | convention (conservative default)                                                                          | —                                                                 |
 | H3  | Red readiness on the day: no quality session that day or the next                                                                        | —                                       | block                   | convention                                                                                                 | Readiness `unknown` (warn instead)                                |
 | E1  | Single run distance (or duration for time-based sessions) more than 30% above the longest run in the previous 30 days                    | +30%                                    | block                   | evidence: Frandsen 2025                                                                                    | Fewer than 3 runs in the previous 30 days (warn, ask for history) |
 | E2  | Same, between 10% and 30% above                                                                                                          | +10%                                    | warn                    | evidence: Frandsen 2025                                                                                    | As above                                                          |
@@ -74,15 +75,15 @@ Thresholds live in one versioned configuration module. Changing a default is a r
 
 ## Plan construction defaults (conventions)
 
-| Topic                | Default                                                                                                             | Source of the choice                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Peak volume          | Average of the last four complete weeks × template factor (about 1.1–1.2)                                           | Reference project rule; keeps progression within warnings |
-| Lead-in ramp         | +4% per week, capped by P1 and availability, recovery week every fourth week                                        | Convention                                                |
-| Recovery week        | Every 3–4 weeks at about 80% of the previous full week                                                              | Convention                                                |
-| Long-run progression | Respects E1/E2 against the rolling 30-day maximum                                                                   | Evidence-led                                              |
-| Detail horizon       | Next two weeks fully detailed; later weeks provisional                                                              | Product choice to confirm                                 |
-| Intensity targets    | Heart rate from Stride zones when calibrated; pace from recent comparable efforts; otherwise RPE and talk test      | Data availability                                         |
-| Event families       | Road 5–10 km, half, marathon; trail up to 60 km; 60–100 km with low confidence; longer events need product approval | Template coverage                                         |
+| Topic                | Default                                                                                                        | Source of the choice                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Peak volume          | Average of the last four complete weeks × template factor (about 1.1–1.2)                                      | Reference project rule; keeps progression within warnings |
+| Lead-in ramp         | +4% per week, capped by P1 and availability, recovery week every fourth week                                   | Convention                                                |
+| Recovery week        | Every 3–4 weeks at about 80% of the previous full week                                                         | Convention                                                |
+| Long-run progression | Respects E1/E2 against the rolling 30-day maximum                                                              | Evidence-led                                              |
+| Detail horizon       | Every week fully detailed at creation; the weekly review re-checks the coming week and proposes changes        | Product decision D6                                       |
+| Intensity targets    | Heart rate from Stride zones when calibrated; pace from recent comparable efforts; otherwise RPE and talk test | Data availability                                         |
+| Event families       | Road 5–10 km, half, marathon; trail of every distance, with a low-confidence label above 60 km; base building  | Product decision D8                                       |
 
 ## Validation pipeline
 

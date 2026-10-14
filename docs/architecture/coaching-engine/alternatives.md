@@ -1,6 +1,6 @@
 # Architecture alternatives and trade-offs
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Each section lists the options considered, the selected option, why, and what it costs. Versions and limits were verified on 2026-10-12 and 2026-10-13; sources are linked inline.
 
 ## 1. Agent topology

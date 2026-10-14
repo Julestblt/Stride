@@ -1,6 +1,6 @@
 # Tools, Garmin integration and authorization
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Decision record: [ADR 0010](../../adr/0010-internal-tools-and-garmin-normalized-data.md)
 
 ## Part 1 — Garmin data for the coaching runtime
@@ -35,7 +35,7 @@
 
 ### Detecting new data without scanning
 
-Stride migrations must not reference garmin_mcp tables ([ADR 0005](../../adr/0005-shared-supabase-schema-ownership.md)), so Stride cannot add triggers there. V1 monitors iterate only athletes with an active plan and read `max(imported_at)` under each athlete's RLS scope every 15 minutes; this is cheap at pilot scale. The proposed garmin_mcp draft G8 (a per-user change cursor or sync-completed event) removes the scan before scale requires it.
+Stride migrations must not reference garmin_mcp tables ([ADR 0005](../../adr/0005-shared-supabase-schema-ownership.md)), so Stride cannot add triggers there. V1 monitors iterate only athletes with an active plan and read `max(imported_at)` under each athlete's RLS scope every 15 minutes; this is cheap at Stride's scale. The proposed garmin_mcp draft G8 (a per-user change cursor or sync-completed event) removes the scan before scale requires it.
 
 ## Part 2 — Stride tools
 
@@ -95,7 +95,7 @@ flowchart LR
 
 | Principal                                  | May                                                                                                                                                                                                                                                          | May not                                                                                    |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| Athlete session (`authenticated`)          | Read own rows; write athlete-authored tables (feedback, condition reports, answers, memory edits, settings); call enqueue, message, accept, reject, undo and cancel RPCs that check ownership, quotas and state                                              | Write plan tables, proposals, runs or steps directly                                       |
+| Athlete session (`authenticated`)          | Read own rows; write athlete-authored tables (feedback, condition reports, answers, memory edits, settings); call enqueue, message, accept, reject, undo and cancel RPCs that check ownership and state                                                      | Write plan tables, proposals, runs or steps directly                                       |
 | Worker role (`stride_coach_worker`, login) | Claim and update runs; impersonate `authenticated` for one athlete per transaction to read; execute private functions that write proposals, questions, facts, messages, steps, events, matches and plan versions, always taking the athlete from the run row | Bypass RLS; read garmin_mcp secrets, challenges or other services' private tables; run DDL |
 | Model                                      | Choose tools from the per-workflow list                                                                                                                                                                                                                      | Supply athlete identifiers, reach the database, see secrets                                |
 

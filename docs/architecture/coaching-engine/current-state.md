@@ -1,6 +1,6 @@
 # Current state: Stride and garmin_mcp
 
-- Status: Proposed (RFC #86)
+- Status: Accepted (RFC #86)
 - Verified against: Stride `main` at `295b6c7` (2026-10-12), [Julestblt/garmin_mcp](https://github.com/Julestblt/garmin_mcp) `main` at `57e741f` (2026-10-12), unauthenticated probes of `https://garmin-mcp.julez.cat` on 2026-10-12, and the design references under `design/references/app/**`.
 - Legend: **Verified** means read in code or observed; **Intended** means documented or designed but not built; **Missing** means neither.
 
@@ -20,7 +20,7 @@
 | Training plan data model                       | Missing          | No plan, session, proposal or adherence tables.                                                                                                                                                                                                                                                                                            |
 | Agent runtime, worker, run persistence         | Missing          | No queue, no worker, no run records.                                                                                                                                                                                                                                                                                                       |
 | Coaching evaluation harness                    | Missing          | Unit and browser tests only.                                                                                                                                                                                                                                                                                                               |
-| Consent for AI processing of health data       | Missing          | E-01 consent and retention decisions are open; terms and privacy policy are unpublished ([authentication launch gaps](../authentication.md#launch-gaps)).                                                                                                                                                                                  |
+| Consent for AI processing of health data       | Not required     | Decision D2: no AI-processing consent flow or retention purges for a personal, self-hosted application.                                                                                                                                                                                                                                    |
 | Athlete time zone                              | Missing          | The product assumes Europe/Paris for the current day and sync times.                                                                                                                                                                                                                                                                       |
 | Deployment                                     | Intended         | Dokploy homelab with internal access to garmin_mcp; staging readiness was planned in #31. No Stride Dockerfile is in the repository.                                                                                                                                                                                                       |
 
@@ -82,21 +82,20 @@ The service remains publicly reachable, which the Garmin architecture document a
 | Subjective state                               | `athlete_wellness_checkins`; Garmin RPE and feel                    | Available, limited                                                 |
 | Pain and illness reports                       | None                                                                | Missing                                                            |
 | Session feedback                               | None                                                                | Missing                                                            |
-| Garmin HR zones, LTHR, threshold pace settings | None                                                                | Missing (G4)                                                       |
+| Garmin HR zones, LTHR, threshold pace settings | garmin_mcp `provider_heart_rate_zones`, `thresholds` observations   | Imported since garmin_mcp#8 (2026-10-13)                           |
 | Plans, proposals, adherence                    | None                                                                | Missing (this RFC)                                                 |
 
 ## Prerequisites and proposed follow-up work
 
-| Repository | Prerequisite                                                                           | Why                                                                       | Proposed handling                             |
-| ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------- |
-| Stride     | Consent and retention for AI processing of health data                                 | Health-related data reaches a model provider; GDPR special-category data  | Product-owner decision D2, then an E-01 issue |
-| Stride     | Privacy policy, AI disclosure copy                                                     | Publication gap; EU AI Act transparency for chatbots                      | Product and legal                             |
-| Stride     | Athlete time zone and availability details (max weekly hours, unavailable dates)       | Plan dates, frozen sessions, constraints                                  | Phase 1 issue                                 |
-| Stride     | Deployment of the web app and a worker service on Dokploy                              | Background runs need a long-lived process                                 | Phase 2 issue with approval checkpoint        |
-| Stride     | Replace the OpenCode Go provider for existing skills                                   | Unconfirmed terms for application traffic; health aggregates leave Stride | Product-owner decision D7                     |
-| garmin_mcp | G4: profile, biometrics, Garmin HR zones and lactate threshold                         | Better intensity targets; fewer athlete questions                         | Existing draft                                |
-| garmin_mcp | G5: private-network access                                                             | Public endpoint                                                           | Existing draft, approval-gated                |
-| garmin_mcp | G6: `(select auth.uid())` in RLS policies                                              | Query performance when the worker reads per athlete                       | Existing draft                                |
-| garmin_mcp | G8 (new): consumer change feed (per-user "last imported at" or a sync-completed event) | Lets Stride trigger monitors without scanning every athlete               | New draft in the [roadmap](roadmap.md)        |
-| garmin_mcp | G9 (new): audience-bound credentials if the MCP endpoint is ever offered to agents     | MCP specification forbids accepting tokens not issued for the server      | New draft, low priority                       |
-| garmin_mcp | G10 (new): workout push endpoint                                                       | Only if the product approves "Envoyer sur Garmin"                         | Deferred                                      |
+| Repository | Prerequisite                                                                           | Why                                                                       | Proposed handling                      |
+| ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------- |
+| Stride     | AI disclosure copy on coach surfaces                                                   | The athlete must know answers come from an AI system                      | With the Phase 4 Coach screen          |
+| Stride     | Athlete time zone and availability details (max weekly hours, unavailable dates)       | Plan dates, frozen sessions, constraints                                  | Phase 1, #97                           |
+| Stride     | Deployment of the web app and a worker service on Dokploy                              | Background runs need a long-lived process                                 | Phase 2 issue with approval checkpoint |
+| Stride     | Replace the OpenCode Go provider for existing skills                                   | Unconfirmed terms for application traffic; health aggregates leave Stride | Decision D7: Haiku 5.5 in Phase 2      |
+| garmin_mcp | G4: profile, biometrics, Garmin HR zones and lactate threshold                         | Better intensity targets; fewer athlete questions                         | Julestblt/garmin_mcp#8                 |
+| garmin_mcp | G5: private-network access                                                             | Public endpoint                                                           | Existing draft, approval-gated         |
+| garmin_mcp | G6: `(select auth.uid())` in RLS policies                                              | Query performance when the worker reads per athlete                       | Julestblt/garmin_mcp#9                 |
+| garmin_mcp | G8 (new): consumer change feed (per-user "last imported at" or a sync-completed event) | Lets Stride trigger monitors without scanning every athlete               | New draft in the [roadmap](roadmap.md) |
+| garmin_mcp | G9 (new): audience-bound credentials if the MCP endpoint is ever offered to agents     | MCP specification forbids accepting tokens not issued for the server      | New draft, low priority                |
+| garmin_mcp | G10 (new): workout push endpoint                                                       | Only if the product revisits "Envoyer sur Garmin"                         | Deferred by D5                         |
