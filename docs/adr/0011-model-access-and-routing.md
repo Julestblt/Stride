@@ -1,6 +1,6 @@
 # ADR 0011: Claude models through a model gateway, routed by task, on API billing only
 
-- Status: Accepted, amended by decisions D1, D4 and D7 (2026-10-13, #94)
+- Status: Accepted, amended by decisions D1, D4 and D7 (2026-10-13, #94) and by the Managed Agents spike (2026-10-15, #128)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 - Related: [ADR 0006](0006-import-insights-phrasing.md)
@@ -41,3 +41,13 @@ Direct SDK use keeps full control of caching, effort and batching, which drive c
 
 - The gateway keeps the provider swappable; moving to another platform or provider is an adapter plus an evaluation run, not a workflow change.
 - Model upgrades are evaluation-gated changes to the routing table.
+
+## Amendment (2026-10-15, #128)
+
+Coaching agents run on Claude Managed Agents instead of a Stride `ModelGateway`. Agents, the environment and skills are files in `managed-agents/`, synced with `ant apply` and pinned in `claude-lock.json`; sessions are created by Stride's server with the official `@anthropic-ai/sdk`.
+
+- Models: the Coach and Medical run on Claude Sonnet 5.5, the Coach at high effort for plan design. The spike's measured plan design (8 weeks, 37 sessions, valid on the first submission) cost $0.27 with 17.3k output tokens and 135 seconds, so Opus 5.5 is not needed for plan design until an evaluation shows a quality gap.
+- Budgets: every session carries a platform-enforced spend cap ($1 for a conversation, $2 for plan design in the spike), replacing the per-run cost cap.
+- Portability now rests on keeping prompts, skills and tools in the repository and Stride's domain logic (plan format, validator, proposals) outside the agents, so the same agents can move to a custom Messages API runtime if needed.
+- The existing single-shot skills keep this ADR's gateway plan until they move.
+- The API key rule stands: production uses a dedicated, spend-limited key for the dedicated workspace; the spike uses a developer OAuth profile locally.

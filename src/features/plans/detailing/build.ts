@@ -87,9 +87,38 @@ export function buildDeterministicPlan(
     availability: input.availability,
     constraints: input.constraints,
   });
-  const race = objective.race;
-  const report = validatePlan({
-    candidate: state,
+  const report = validateNewPlan(input, state);
+  return {
+    status: "ready",
+    state,
+    report,
+    feasibility,
+    targets,
+    objective,
+    warnings: skeleton.warnings,
+  };
+}
+
+export function validateNewPlan(
+  input: DeterministicPlanInput,
+  candidate: PlanState,
+): ValidationReport {
+  const { today } = input;
+  const summary = summarizeHistory(input.activities, today);
+  const objective = resolveObjective({
+    races: input.races,
+    today,
+    history: summary,
+  });
+  const races = [
+    ...(objective.race ? [objective.race] : []),
+    ...objective.otherRaces,
+  ];
+  const race =
+    races.find((item) => item.id === candidate.plan.primaryRaceId) ??
+    objective.race;
+  return validatePlan({
+    candidate,
     base: null,
     versions: null,
     today,
@@ -100,7 +129,7 @@ export function buildDeterministicPlan(
       maxWeeklyMinutes: input.constraints.maxWeeklyMinutes,
       unavailablePeriods: input.constraints.unavailablePeriods,
     },
-    races: [...(race ? [race] : []), ...objective.otherRaces].map((item) => ({
+    races: races.map((item) => ({
       id: item.id,
       date: item.date,
       priority: item.priority,
@@ -118,13 +147,4 @@ export function buildDeterministicPlan(
       : null,
     specialistConstraints: [],
   });
-  return {
-    status: "ready",
-    state,
-    report,
-    feasibility,
-    targets,
-    objective,
-    warnings: skeleton.warnings,
-  };
 }

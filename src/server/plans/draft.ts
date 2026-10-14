@@ -4,6 +4,7 @@ import { localToday } from "@/features/plans/constraints";
 import {
   buildDeterministicPlan,
   type DeterministicPlan,
+  type DeterministicPlanInput,
 } from "@/features/plans/detailing/build";
 import { addDays } from "@/features/plans/model/dates";
 import { summarizeHistory } from "@/features/plans/history/summary";
@@ -25,6 +26,11 @@ import { loadProgressHistory } from "@/server/progress/history";
 import { readPlanningConstraints } from "./constraints";
 
 export type PlanDraft = { today: string; plan: DeterministicPlan };
+
+export type PlanningInput = {
+  today: string;
+  input: DeterministicPlanInput;
+};
 
 const thresholdMetrics = [
   "lactate_threshold_speed_mps",
@@ -71,8 +77,8 @@ async function readGarminThreshold(context: OnboardingContext) {
   };
 }
 
-export const loadPlanDraft = cache(
-  async (context: OnboardingContext): Promise<PlanDraft> => {
+export const loadPlanningInput = cache(
+  async (context: OnboardingContext): Promise<PlanningInput> => {
     const now = new Date();
     const { timeZone, maxWeeklyMinutes, unavailablePeriods } =
       await readPlanningConstraints(context);
@@ -129,7 +135,7 @@ export const loadPlanDraft = cache(
       primary?.kind === "road" && freshVo2
         ? predictSeconds(freshVo2.value, primary.distanceKm * 1000)
         : null;
-    const plan = buildDeterministicPlan({
+    const input: DeterministicPlanInput = {
       today,
       races,
       activities: history.activities,
@@ -156,7 +162,14 @@ export const loadPlanDraft = cache(
         strideZones: zones ? { zones: zones.zones, asOf: today } : null,
       },
       optimisticSeconds,
-    });
-    return { today, plan };
+    };
+    return { today, input };
+  },
+);
+
+export const loadPlanDraft = cache(
+  async (context: OnboardingContext): Promise<PlanDraft> => {
+    const { today, input } = await loadPlanningInput(context);
+    return { today, plan: buildDeterministicPlan(input) };
   },
 );
