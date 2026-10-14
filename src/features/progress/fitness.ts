@@ -1,9 +1,15 @@
 import type { Trend } from "@/components/stride/marks";
 import type { HeartRateZones } from "@/features/onboarding/heart-rate-zones";
+import type { Adherence } from "@/features/plans/matching/adherence";
 import type { ProgressHistory } from "./history";
 import { buildLoadChart, type LoadChart } from "./load";
 import { fitnessMeasures, sparklineWindows, type Measure } from "./measures";
-import { periodPhrases, periodStart, type ProgressPeriod } from "./period";
+import {
+  periodLabels,
+  periodPhrases,
+  periodStart,
+  type ProgressPeriod,
+} from "./period";
 import { racePredictions, type RacePredictions } from "./predictions";
 import { fitnessRecords } from "./records";
 import { coachNote, fitnessReading, loadNote } from "./reading";
@@ -110,16 +116,70 @@ function predictionTime(key: string, seconds: number) {
     : formatClock(seconds);
 }
 
+function adherenceTrend(share: number): Trend {
+  if (share >= 0.8) return "improving";
+  if (share >= 0.6) return "watch";
+  return "investigate";
+}
+
+function percent(share: number) {
+  return `${formatInteger(Math.round(share * 100))} %`;
+}
+
+function consistencyRow(
+  adherence: Adherence | null,
+  period: ProgressPeriod,
+): MeasureRow {
+  const base = {
+    key: "consistency",
+    label: "Régularité",
+    detail: `Séances réalisées, ${periodLabels[period]}`,
+  };
+  if (!adherence)
+    return {
+      ...base,
+      value: unavailable,
+      verdict: "Disponible avec un plan d’entraînement",
+      sparkline: null,
+      tone: "muted",
+    };
+  if (adherence.share === null)
+    return {
+      ...base,
+      value: unavailable,
+      verdict: "Aucune séance passée sur la période",
+      sparkline: null,
+      tone: "muted",
+    };
+  const trend = adherenceTrend(adherence.share);
+  const counts = `${formatInteger(adherence.done)} sur ${formatInteger(adherence.due)} séances`;
+  return {
+    ...base,
+    value: percent(adherence.share),
+    trend,
+    verdict:
+      adherence.keyShare === null
+        ? counts
+        : `${counts} · séances clés ${percent(adherence.keyShare)}`,
+    sparkline: adherence.windows.map((share) =>
+      share === null ? null : Math.round(share * 100),
+    ),
+    tone: toneByTrend[trend],
+  };
+}
+
 export function fitnessView({
   history,
   zones,
   period,
   today,
+  adherence = null,
 }: {
   history: ProgressHistory;
   zones: HeartRateZones | null;
   period: ProgressPeriod;
   today: string;
+  adherence?: Adherence | null;
 }): FitnessView {
   const start = periodStart(today, period);
   const load = buildLoadChart(history.load, history.races, start, today);
@@ -216,15 +276,7 @@ export function fitnessView({
             : "Maîtrisée · sous 5 %",
       "Aucune sortie longue sur la période",
     ),
-    {
-      key: "consistency",
-      label: "Régularité",
-      detail: "Séances réalisées, 12 sem.",
-      value: unavailable,
-      verdict: "Disponible avec un plan d’entraînement",
-      sparkline: null,
-      tone: "muted",
-    },
+    consistencyRow(adherence, period),
   ];
   const windows = sparklineWindows(start, today);
   const formatters: Record<string, (value: number) => string> = {
@@ -233,13 +285,19 @@ export function fitnessView({
     threshold: (value) => `${formatPace(value)} /km`,
     vo2: (value) => formatInteger(value),
     drift: (value) => `${formatDecimal(value)} %`,
+    consistency: (value) => `${formatInteger(value)} %`,
   };
   for (const item of rows) {
     const format = formatters[item.key];
     if (!format || !item.sparkline) continue;
     item.samples = item.sparkline.map((value, index) => ({
       title: `${formatDayMonthShort(windows[index].from)} – ${formatDayMonthShort(windows[index].to)}`,
-      value: value === null ? "Pas de mesure" : format(value),
+      value:
+        value === null
+          ? item.key === "consistency"
+            ? "Aucune séance passée"
+            : "Pas de mesure"
+          : format(value),
     }));
   }
   const predictions = racePredictions(history.vo2, history.races, today);

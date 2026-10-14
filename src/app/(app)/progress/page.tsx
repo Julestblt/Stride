@@ -11,16 +11,21 @@ import {
   RecordsSection,
   WeeklyHoursSection,
 } from "@/features/progress/components/fitness-sections";
+import { planAdherence } from "@/features/plans/matching/adherence";
 import { fitnessView } from "@/features/progress/fitness";
+import { sparklineWindows } from "@/features/progress/measures";
 import {
   defaultPeriod,
   parsePeriod,
   periodLabels,
+  periodStart,
   progressPeriods,
 } from "@/features/progress/period";
 import { cn } from "@/lib/utils";
 import { loadHeartRateZones } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
+import { readSessionMatches } from "@/server/plans/matches";
+import { readActivePlan } from "@/server/plans/stored";
 import { loadProgressHistory } from "@/server/progress/history";
 
 export const metadata: Metadata = { title: "Forme · Progression" };
@@ -34,11 +39,31 @@ export default async function ProgressFitnessPage({
   const period = parsePeriod(query.period);
   const now = new Date();
   const today = localToday(now);
-  const [history, zones] = await Promise.all([
+  const [history, zones, plan] = await Promise.all([
     loadProgressHistory(context, today),
     loadHeartRateZones(context, now),
+    readActivePlan(context)
+      .then(async (stored) =>
+        stored
+          ? {
+              stored,
+              matches: await readSessionMatches(context, stored.planId),
+            }
+          : null,
+      )
+      .catch(() => null),
   ]);
-  const view = fitnessView({ history, zones, period, today });
+  const start = periodStart(today, period);
+  const adherence = plan
+    ? planAdherence({
+        sessions: plan.stored.state.sessions,
+        matches: plan.matches,
+        start,
+        today,
+        windows: sparklineWindows(start, today),
+      })
+    : null;
+  const view = fitnessView({ history, zones, period, today, adherence });
   return (
     <div className="flex flex-col gap-6.5 sm:gap-13">
       <section className="flex flex-col gap-6.5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
