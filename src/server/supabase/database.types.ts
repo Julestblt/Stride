@@ -42,6 +42,7 @@ export type Database = {
           first_name: string | null;
           height_cm: number | null;
           long_run_day: string | null;
+          max_weekly_minutes: number | null;
           primary_terrain: string | null;
           profile_photo_path: string | null;
           revision: number;
@@ -49,6 +50,7 @@ export type Database = {
           sex: string | null;
           threshold_heart_rate_override: number | null;
           threshold_heart_rate_source: string | null;
+          time_zone: string;
           training_access: string[] | null;
           updated_at: string;
           user_id: string;
@@ -64,6 +66,7 @@ export type Database = {
           first_name?: string | null;
           height_cm?: number | null;
           long_run_day?: string | null;
+          max_weekly_minutes?: number | null;
           primary_terrain?: string | null;
           profile_photo_path?: string | null;
           revision?: number;
@@ -71,6 +74,7 @@ export type Database = {
           sex?: string | null;
           threshold_heart_rate_override?: number | null;
           threshold_heart_rate_source?: string | null;
+          time_zone?: string;
           training_access?: string[] | null;
           updated_at?: string;
           user_id: string;
@@ -85,6 +89,7 @@ export type Database = {
           first_name?: string | null;
           height_cm?: number | null;
           long_run_day?: string | null;
+          max_weekly_minutes?: number | null;
           primary_terrain?: string | null;
           profile_photo_path?: string | null;
           revision?: number;
@@ -92,6 +97,7 @@ export type Database = {
           sex?: string | null;
           threshold_heart_rate_override?: number | null;
           threshold_heart_rate_source?: string | null;
+          time_zone?: string;
           training_access?: string[] | null;
           updated_at?: string;
           user_id?: string;
@@ -142,6 +148,43 @@ export type Database = {
           race_kind?: string;
           revision?: number;
           target_duration_seconds?: number | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      athlete_unavailability: {
+        Row: {
+          created_at: string;
+          ends_on: string;
+          id: string;
+          kind: string;
+          reason: string | null;
+          revision: number;
+          starts_on: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          kind?: string;
+          reason?: string | null;
+          revision?: number;
+          starts_on: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          kind?: string;
+          reason?: string | null;
+          revision?: number;
+          starts_on?: string;
           updated_at?: string;
           user_id?: string;
         };
