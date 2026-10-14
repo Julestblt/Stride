@@ -67,7 +67,7 @@ export function assessFeasibility({
     return {
       verdict: "no_history",
       reasons: [
-        "Pas assez de course à pied synchronisée pour connaître ton volume actuel. Indique ton temps de course hebdomadaire pour construire le plan.",
+        "Pas assez de course à pied synchronisée sur les quatre dernières semaines pour connaître ton volume actuel. Ton plan apparaîtra dès que tes séances récentes seront importées.",
       ],
       options: [],
       demands: [],

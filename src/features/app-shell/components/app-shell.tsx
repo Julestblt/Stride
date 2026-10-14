@@ -5,7 +5,13 @@ import {
 } from "@/features/data-activity/components/status";
 import type { DataActivityObservation } from "@/features/data-activity/model";
 import Link from "next/link";
-import { ActivityIcon, FlagIcon, PlusIcon, TrendingUpIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  ChartColumnIcon,
+  FlagIcon,
+  PlusIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -91,6 +97,11 @@ export function AppShell({
             <SidebarGroup>
               <SidebarGroupLabel>Entraînement</SidebarGroupLabel>
               <SidebarMenu>
+                <ShellNavItem
+                  href="/plan"
+                  icon={<ChartColumnIcon />}
+                  label="Plan"
+                />
                 <ShellNavItem
                   href="/activities"
                   icon={<ActivityIcon />}
