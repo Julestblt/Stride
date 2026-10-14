@@ -6,7 +6,11 @@ import {
   type DeterministicPlan,
 } from "@/features/plans/detailing/build";
 import { addDays } from "@/features/plans/model/dates";
-import type { ObjectiveRace } from "@/features/plans/skeleton/objective";
+import { summarizeHistory } from "@/features/plans/history/summary";
+import {
+  resolveObjective,
+  type ObjectiveRace,
+} from "@/features/plans/skeleton/objective";
 import { fitnessMeasures } from "@/features/progress/measures";
 import {
   maximumVo2AgeDays,
@@ -114,14 +118,11 @@ export const loadPlanDraft = cache(
       .filter((item) => item.day <= today)
       .sort((first, second) => first.day.localeCompare(second.day))
       .at(-1);
-    const primary =
-      races
-        .filter((race) => race.date > today)
-        .sort(
-          (first, second) =>
-            first.priority.localeCompare(second.priority) ||
-            first.date.localeCompare(second.date),
-        )[0] ?? null;
+    const primary = resolveObjective({
+      races,
+      today,
+      history: summarizeHistory(history.activities, today),
+    }).race;
     const freshVo2 =
       vo2 && vo2.day >= addDays(today, -maximumVo2AgeDays) ? vo2 : null;
     const optimisticSeconds =

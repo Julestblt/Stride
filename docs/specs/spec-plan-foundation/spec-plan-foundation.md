@@ -154,7 +154,7 @@ Templates and skeleton rules are ported from the reference project [ai-running-c
 - **Race demand:** peak-week volume and elevation, the biggest session elevation and the longest run are compared with the race's demands (longest run target 60% of the race distance, between 30 and 60 km; biggest session elevation at most half the race elevation, capped at 2,500 m). A component below 75% of its target is reported as short with options (longer lead-in, later race, revised objective, base first); nothing is inflated to close the gap.
 - **Short history:** under four weeks or under one hour per week selects `base_building` with low confidence and states why; the athlete's declared current volume can replace the measured one.
 - **Weekly targets** fit available weekdays, unavailable dates, the weekday session length, the long-run day and the weekly ceiling.
-- **Objective:** the A-priority race, else the nearest dated race, else the goal focus (`base_building`). Other races in the window become preparation or secondary races with a local taper and recovery.
+- **Objective:** the nearest A-priority race whose timeline fits its template minimum, else the nearest A-priority race (which yields `too_short`), else the nearest dated race, else the goal focus (`base_building`). Other races in the window become secondary races (priority A or B) or preparation races (priority C) with a local taper and recovery.
 
 ### Recovery is individual
 

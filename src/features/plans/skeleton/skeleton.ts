@@ -81,7 +81,7 @@ export function planStart(today: string) {
   return isMonday(today) ? today : addDays(mondayOf(today), 7);
 }
 
-function weeksBetween(first: string, last: string) {
+export function weeksBetween(first: string, last: string) {
   return (
     Math.round(
       (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) /
