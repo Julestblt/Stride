@@ -501,6 +501,18 @@ describe("single-session spikes", () => {
     expect(rule(value, "E1").observed).toBeCloseTo(1.4);
   });
 
+  it("counts a planned race as a reference run for later sessions", () => {
+    const value = input(
+      state([
+        run("race", "2026-10-17", 330, { kind: "race", distance: 50_000 }),
+        run("s1", "2026-10-25", 90, { distance: 15_000 }),
+      ]),
+      history(3),
+    );
+    expect(rule(value, "E1").outcome).toBe("pass");
+    expect(rule(value, "E2").outcome).toBe("pass");
+  });
+
   it("skips without three runs in the previous 30 days", () => {
     expect(rule(input(planned(200), history(2)), "E1")).toMatchObject({
       outcome: "skipped",

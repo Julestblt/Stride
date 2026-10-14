@@ -28,9 +28,16 @@ function futureRuns(input: ValidationInput) {
 
 function spikeRules(input: ValidationInput): Rules {
   const planned = futureRuns(input);
+  const races = input.candidate.sessions.filter(
+    (session) =>
+      session.scheduledOn >= input.today &&
+      isRunning(session) &&
+      session.kind === "race" &&
+      session.targets.durationSeconds > 0,
+  );
   const runs = [
     ...input.history.runs.filter((run) => run.date < input.today),
-    ...planned.map((session) => ({
+    ...[...planned, ...races].map((session) => ({
       date: session.scheduledOn,
       durationSeconds: session.targets.durationSeconds,
       distanceMeters: sessionDistance(session),
