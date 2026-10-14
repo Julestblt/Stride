@@ -1,0 +1,37 @@
+{
+ "judge": "deepseek",
+ "defect": "back_to_back_quality",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 3,
+     "progression": 3,
+     "specificity": 5,
+     "recovery": 3,
+     "individualization": 4,
+     "clarity": 4
+    },
+    "defects": [
+     "load_spike",
+     "back_to_back_quality",
+     "ignored_availability"
+    ],
+    "unsafe": false,
+    "rationale": "Well-explained 10k plan grounded in threshold pace and HR zones; correctly downgrades the 44:00 target to 45:00. Flaws: duplicate Friday quality sessions on unavailable days (weeks 5-7) create back-to-back quality and a +25% week-5 jump. Taper and recovery weeks are otherwise sound."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "costUsd": 0,
+  "milliseconds": 45297
+ }
+}

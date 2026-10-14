@@ -1,0 +1,36 @@
+{
+ "judge": "gpt",
+ "defect": "back_to_back_quality",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 2,
+     "progression": 1,
+     "specificity": 3,
+     "recovery": 1,
+     "individualization": 2,
+     "clarity": 3
+    },
+    "defects": [
+     "load_spike",
+     "back_to_back_quality"
+    ],
+    "unsafe": true,
+    "rationale": "Le plan annonce 240 min dès la première semaine contre environ 197 min récemment, puis monte jusqu’à 327 min malgré un pic annoncé à 242. Des séances de qualité sont répétées jeudi-vendredi, mardi-mercredi? Le plan place aussi des intervalles vendredi après ceux du mardi et des sorties longues le samedi. Ces charges et incohérences exposent à un risque réel. L’objectif 45:00 est prudent, mais les séances sont mal espacées."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 20260,
+  "outputTokens": 173,
+  "costUsd": 0,
+  "milliseconds": 6210
+ }
+}

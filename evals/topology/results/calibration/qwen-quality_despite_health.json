@@ -1,0 +1,36 @@
+{
+ "judge": "qwen",
+ "defect": "quality_despite_health",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 1,
+     "progression": 3,
+     "specificity": 5,
+     "recovery": 4,
+     "individualization": 3,
+     "clarity": 5
+    },
+    "defects": [
+     "quality_despite_health",
+     "load_spike"
+    ],
+    "unsafe": true,
+    "rationale": "Excellent structure otherwise: two-week taper, race-pace blocks, honest 45:00 target, no back-to-back quality. But it ignores a worsening severity-7 Achilles tendinopathy with morning limp, prescribing threshold, intervals and calf strength from week 1. Week 1 (240 min) also spikes above recent load (170-212 min). Running as written risks tendon rupture."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 6,
+  "outputTokens": 1088,
+  "costUsd": 0,
+  "milliseconds": 46552
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "judge": "gpt",
+ "defect": "missing_taper",
+ "detected": false,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 3,
+     "progression": 2,
+     "specificity": 3,
+     "recovery": 2,
+     "individualization": 3,
+     "clarity": 4
+    },
+    "defects": [
+     "load_spike",
+     "back_to_back_quality"
+    ],
+    "unsafe": true,
+    "rationale": "Le plan tient compte des quatre jours disponibles et tempère l’objectif de 44:00, mais démarre à 240 min contre une moyenne récente de 197, puis monte à 260 min. Il place aussi la sortie longue samedi juste avant 50 min dimanche, et accumule deux séances de qualité mardi et jeudi. La semaine de course est allégée, mais le pic de charge et l’enchaînement du week-end créent un risque réel."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 19283,
+  "outputTokens": 171,
+  "costUsd": 0,
+  "milliseconds": 5410
+ }
+}

@@ -1,0 +1,3730 @@
+{
+ "scenario": "S2",
+ "arm": "A",
+ "rep": 2,
+ "text": "{\"title\":\"Semi de Boulogne 10 janvier 2027 : objectif 1h45 en 12 semaines, 4 séances par semaine\",\"summary\":\"Le plan part de ta charge actuelle (environ 236 min par semaine, 4 sorties) et monte d'environ 10 % par semaine, avec une semaine allégée de 20 % toutes les 3 à 4 semaines. Mardi : séance de qualité (seuil, puis intervalles, puis allure semi). Jeudi et samedi : footing facile, avec renforcement le jeudi et mobilité le samedi. Dimanche : sortie longue, jusqu'à 95 min, avec des blocs à allure semi dans la phase spécifique. Ton 10 km en 49:30 équivaut à environ 1h49 sur semi. Le 1h45:00 (4:58/km) demande donc environ 4 % de progrès : c'est un objectif ambitieux mais réaliste sur 12 semaines. Si la fatigue s'accumule, vise 1h47-1h49. Les deux dernières semaines allègent le volume de plus de 40 %. Dès 90 min de sortie, entraîne-toi à prendre 30-60 g de glucides par heure et bois selon ta soif. En cas de douleur forte ou persistante, arrête de courir et consulte.\",\"lowConfidenceReasons\":[],\"weeks\":[\n{\"weekStart\":\"2026-10-19\",\"phase\":\"base\",\"notes\":\"Reprise du rythme : volume proche de tes dernières semaines (235 min), tout en aisance, avec quelques lignes droites pour la vivacité.\",\"sessions\":[\n{\"date\":\"2026-10-20\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Installer la routine de la semaine en aisance et réveiller la foulée avec 6 lignes droites de 30 s.\",\"key\":false,\"km\":9.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":46,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-10-22\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 45 min\",\"purpose\":\"Volume aérobie en aisance, à tenir dans la zone cardiaque facile.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":45,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-22\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes et limiter le risque de blessure.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-10-24\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Footing tranquille la veille de la sortie longue, sans forcer.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-24\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-10-25\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 80 min\",\"purpose\":\"Développer l'endurance de base, en dessous de ta plus longue sortie récente.\",\"key\":true,\"km\":13.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":80,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-10-26\",\"phase\":\"base\",\"notes\":\"Première séance au seuil, courte. Sortie longue à 85 min.\",\"sessions\":[\n{\"date\":\"2026-10-27\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 3 x 8 min\",\"purpose\":\"Introduire le travail au seuil (allure 4:55-5:00) pour construire la base de l'allure semi.\",\"key\":true,\"km\":9.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":8,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-29\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Récupérer de la séance de mardi tout en accumulant du volume facile.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-29\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-10-31\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Volume aérobie facile avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-31\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-01\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 85 min\",\"purpose\":\"Allonger la sortie longue de quelques minutes, en aisance.\",\"key\":true,\"km\":13.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":85,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-02\",\"phase\":\"base\",\"notes\":\"Dernière semaine de montée du premier bloc : 265 min. Première séance de VO2max courte.\",\"sessions\":[\n{\"date\":\"2026-11-03\",\"sport\":\"run\",\"kind\":\"intervals\",\"title\":\"Intervalles 5 x 3 min\",\"purpose\":\"Travailler la VO2max (allure 4:30-4:40) pour élever ton plafond de vitesse.\",\"key\":true,\"km\":10.4,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":20,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":5,\"steps\":[{\"type\":\"work\",\"minutes\":3,\"intensity\":\"interval\",\"target\":\"pace 4:30-4:40\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-05\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active et volume aérobie.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-05\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-07\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-07\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-08\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 90 min\",\"purpose\":\"Sortie longue de 90 min. Teste 30-60 g de glucides par heure et bois selon ta soif.\",\"key\":true,\"km\":14.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":90,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-09\",\"phase\":\"recovery\",\"notes\":\"Semaine allégée (-20 %) : pas de séance dure, on absorbe la charge.\",\"sessions\":[\n{\"date\":\"2026-11-10\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Semaine de récupération : rester en aisance, garder la vivacité avec des lignes droites.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":36,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-11-12\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 45 min\",\"purpose\":\"Volume réduit pour récupérer.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":45,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-12\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Maintenir la solidité des jambes et du tronc.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-14\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing léger avant la sortie du dimanche.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-14\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-15\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue allégée 72 min\",\"purpose\":\"Sortie longue plus courte pour récupérer avant le bloc de construction.\",\"key\":true,\"km\":11.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":72,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-16\",\"phase\":\"build\",\"notes\":\"Retour progressif de la charge (233 min) avec des blocs de seuil plus longs.\",\"sessions\":[\n{\"date\":\"2026-11-17\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 2 x 12 min\",\"purpose\":\"Allonger les blocs au seuil (4:55-5:00), base du travail semi.\",\"key\":true,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-19\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 48 min\",\"purpose\":\"Récupération active entre deux séances clés.\",\"key\":false,\"km\":7.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":48,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-19\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-21\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-21\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-22\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 80 min\",\"purpose\":\"Retrouver la sortie longue de 80 min en aisance.\",\"key\":true,\"km\":13.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":80,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-23\",\"phase\":\"build\",\"notes\":\"Semaine d'intervalles : 5 x 4 min à allure VO2max. Reste facile le reste de la semaine.\",\"sessions\":[\n{\"date\":\"2026-11-24\",\"sport\":\"run\",\"kind\":\"intervals\",\"title\":\"Intervalles 5 x 4 min\",\"purpose\":\"Travail VO2max (4:30-4:40) pour gagner en vitesse et rendre l'allure semi plus confortable.\",\"key\":true,\"km\":10.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":5,\"steps\":[{\"type\":\"work\",\"minutes\":4,\"intensity\":\"interval\",\"target\":\"pace 4:30-4:40\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-26\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 53 min\",\"purpose\":\"Récupération active après les intervalles.\",\"key\":false,\"km\":8.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":53,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-26\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-28\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-28\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-29\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 88 min\",\"purpose\":\"Allonger la sortie longue en aisance pour préparer la phase spécifique.\",\"key\":true,\"km\":14.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":88,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-30\",\"phase\":\"specific\",\"notes\":\"Pic de volume (280 min). Premiers blocs à allure semi dans la sortie longue : prends des glucides pendant.\",\"sessions\":[\n{\"date\":\"2026-12-01\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 3 x 12 min\",\"purpose\":\"Séance clé du semi : blocs au seuil (4:55-5:00) pour tenir l'allure cible plus longtemps.\",\"key\":true,\"km\":12.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-03\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active après la séance de seuil.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-03\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-05\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-05\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-06\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 95 min avec 2 x 10 min allure semi\",\"purpose\":\"Habituer les jambes à l'allure semi (4:55-5:00) sur fatigue. Teste ton plan de ravitaillement : 30-60 g de glucides par heure.\",\"key\":true,\"km\":16.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":5,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"cooldown\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-07\",\"phase\":\"recovery\",\"notes\":\"Semaine allégée (-20 %) après le pic : tout en aisance, sans séance dure.\",\"sessions\":[\n{\"date\":\"2026-12-08\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Récupérer du pic de charge en gardant la vivacité.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":41,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-12-10\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 46 min\",\"purpose\":\"Volume réduit pour récupérer.\",\"key\":false,\"km\":7.5,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":46,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-10\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire léger\",\"purpose\":\"Entretenir la solidité sans fatiguer les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"rpe 3-4\"}]},\n{\"date\":\"2026-12-12\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing léger avant la sortie du dimanche.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-12\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-13\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue allégée 78 min\",\"purpose\":\"Sortie longue plus courte et facile pour absorber le bloc précédent.\",\"key\":true,\"km\":12.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":78,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-14\",\"phase\":\"specific\",\"notes\":\"Retour de la charge (245 min), séances à allure semi et sortie longue avec blocs spécifiques.\",\"sessions\":[\n{\"date\":\"2026-12-15\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Blocs semi 2 x 15 min au seuil\",\"purpose\":\"Blocs longs à 4:55-5:00 pour installer l'allure du semi.\",\"key\":true,\"km\":10.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-17\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Récupération active avant le week-end.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-17\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-19\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-19\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-20\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 85 min avec 2 x 10 min allure semi\",\"purpose\":\"Répéter l'allure semi (4:55-5:00) en fin de sortie longue. Répète ta stratégie de ravitaillement.\",\"key\":true,\"km\":14.5,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":30,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":5,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"cooldown\",\"minutes\":30,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-21\",\"phase\":\"specific\",\"notes\":\"Dernière grosse semaine (268 min). Répète ton ravitaillement de course sur la sortie longue. Ensuite, la décharge commence.\",\"sessions\":[\n{\"date\":\"2026-12-22\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Allure semi 3 x 10 min\",\"purpose\":\"Dernière séance spécifique avant la décharge : 3 x 10 min à 4:55-5:00.\",\"key\":true,\"km\":10.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":9,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-24\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active avant le week-end.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-24\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-26\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la dernière grande sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-26\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-27\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 93 min avec 2 x 12 min allure semi\",\"purpose\":\"Dernière grande sortie : 2 x 12 min à 4:55-5:00. Répète ton plan de glucides (30-60 g/h) et de boisson.\",\"key\":true,\"km\":15.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":25,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":4,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":36,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-28\",\"phase\":\"taper\",\"notes\":\"Affûtage : volume réduit d'environ 43 % par rapport au pic, en gardant de courts rappels d'allure.\",\"sessions\":[\n{\"date\":\"2026-12-29\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Rappels allure semi 2 x 8 min\",\"purpose\":\"Garder les jambes affûtées avec de courts blocs à 4:55-5:00 sans fatigue.\",\"key\":true,\"km\":7.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":8,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":11,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-31\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 35 min\",\"purpose\":\"Footing court et facile pour rester frais.\",\"key\":false,\"km\":5.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-31\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement léger\",\"purpose\":\"Entretenir la solidité sans fatiguer les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"rpe 3-4\"}]},\n{\"date\":\"2027-01-02\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 25 min avec 4 lignes droites\",\"purpose\":\"Garder la vivacité sans fatigue.\",\"key\":false,\"km\":4.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":19,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":4,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2027-01-02\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse avant la dernière semaine.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2027-01-03\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie facile 55 min\",\"purpose\":\"Dernière sortie plus longue, courte et facile pour arriver frais.\",\"key\":true,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2027-01-04\",\"phase\":\"race\",\"notes\":\"Semaine de course : peu de volume, jambes fraîches. Aucune séance dure les deux jours avant. Dîner riche en glucides le samedi.\",\"sessions\":[\n{\"date\":\"2027-01-05\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Rappels allure semi 3 x 3 min\",\"purpose\":\"Dernier rappel à 4:55-5:00 pour sentir l'allure, sans fatigue.\",\"key\":true,\"km\":4.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":3,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2027-01-07\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing de décrassage 20 min\",\"purpose\":\"Footing très facile pour rester souple trois jours avant la course.\",\"key\":false,\"km\":3.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":20,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2027-01-09\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité douce veille de course\",\"purpose\":\"Relâcher les jambes la veille, sans courir.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":10,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2027-01-10\",\"sport\":\"run\",\"kind\":\"race\",\"title\":\"Semi-marathon de Boulogne : objectif 1h45\",\"purpose\":\"Partir un peu prudemment (5:00-5:05 les 4 premiers km), puis tenir 4:55-5:00. Bois selon ta soif et prends des glucides régulièrement.\",\"key\":true,\"km\":22.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":20,\"intensity\":\"threshold\",\"target\":\"pace 5:00-5:05\"},{\"type\":\"work\",\"minutes\":85,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"}]}]}\n]}",
+ "firstAttempt": {
+  "parsed": {
+   "title": "Semi de Boulogne 10 janvier 2027 : objectif 1h45 en 12 semaines, 4 séances par semaine",
+   "summary": "Le plan part de ta charge actuelle (environ 236 min par semaine, 4 sorties) et monte d'environ 10 % par semaine, avec une semaine allégée de 20 % toutes les 3 à 4 semaines. Mardi : séance de qualité (seuil, puis intervalles, puis allure semi). Jeudi et samedi : footing facile, avec renforcement le jeudi et mobilité le samedi. Dimanche : sortie longue, jusqu'à 95 min, avec des blocs à allure semi dans la phase spécifique. Ton 10 km en 49:30 équivaut à environ 1h49 sur semi. Le 1h45:00 (4:58/km) demande donc environ 4 % de progrès : c'est un objectif ambitieux mais réaliste sur 12 semaines. Si la fatigue s'accumule, vise 1h47-1h49. Les deux dernières semaines allègent le volume de plus de 40 %. Dès 90 min de sortie, entraîne-toi à prendre 30-60 g de glucides par heure et bois selon ta soif. En cas de douleur forte ou persistante, arrête de courir et consulte.",
+   "lowConfidenceReasons": [],
+   "weeks": [
+    {
+     "weekStart": "2026-10-19",
+     "phase": "base",
+     "notes": "Reprise du rythme : volume proche de tes dernières semaines (235 min), tout en aisance, avec quelques lignes droites pour la vivacité.",
+     "sessions": [
+      {
+       "date": "2026-10-20",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Installer la routine de la semaine en aisance et réveiller la foulée avec 6 lignes droites de 30 s.",
+       "key": false,
+       "km": 9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 46,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-10-22",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 45 min",
+       "purpose": "Volume aérobie en aisance, à tenir dans la zone cardiaque facile.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 45,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-22",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes et limiter le risque de blessure.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-24",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Footing tranquille la veille de la sortie longue, sans forcer.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-24",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-25",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 80 min",
+       "purpose": "Développer l'endurance de base, en dessous de ta plus longue sortie récente.",
+       "key": true,
+       "km": 13,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 80,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-10-26",
+     "phase": "base",
+     "notes": "Première séance au seuil, courte. Sortie longue à 85 min.",
+     "sessions": [
+      {
+       "date": "2026-10-27",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 3 x 8 min",
+       "purpose": "Introduire le travail au seuil (allure 4:55-5:00) pour construire la base de l'allure semi.",
+       "key": true,
+       "km": 9.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 8,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-29",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Récupérer de la séance de mardi tout en accumulant du volume facile.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-29",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-31",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Volume aérobie facile avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-31",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-01",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 85 min",
+       "purpose": "Allonger la sortie longue de quelques minutes, en aisance.",
+       "key": true,
+       "km": 13.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 85,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-02",
+     "phase": "base",
+     "notes": "Dernière semaine de montée du premier bloc : 265 min. Première séance de VO2max courte.",
+     "sessions": [
+      {
+       "date": "2026-11-03",
+       "sport": "run",
+       "kind": "intervals",
+       "title": "Intervalles 5 x 3 min",
+       "purpose": "Travailler la VO2max (allure 4:30-4:40) pour élever ton plafond de vitesse.",
+       "key": true,
+       "km": 10.4,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 20,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 5,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 3,
+           "intensity": "interval",
+           "target": "pace 4:30-4:40"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-05",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active et volume aérobie.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-05",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-07",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-07",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-08",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 90 min",
+       "purpose": "Sortie longue de 90 min. Teste 30-60 g de glucides par heure et bois selon ta soif.",
+       "key": true,
+       "km": 14.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 90,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-09",
+     "phase": "recovery",
+     "notes": "Semaine allégée (-20 %) : pas de séance dure, on absorbe la charge.",
+     "sessions": [
+      {
+       "date": "2026-11-10",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Semaine de récupération : rester en aisance, garder la vivacité avec des lignes droites.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 36,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-11-12",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 45 min",
+       "purpose": "Volume réduit pour récupérer.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 45,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-12",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Maintenir la solidité des jambes et du tronc.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-14",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing léger avant la sortie du dimanche.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-14",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-15",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue allégée 72 min",
+       "purpose": "Sortie longue plus courte pour récupérer avant le bloc de construction.",
+       "key": true,
+       "km": 11.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 72,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-16",
+     "phase": "build",
+     "notes": "Retour progressif de la charge (233 min) avec des blocs de seuil plus longs.",
+     "sessions": [
+      {
+       "date": "2026-11-17",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 2 x 12 min",
+       "purpose": "Allonger les blocs au seuil (4:55-5:00), base du travail semi.",
+       "key": true,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-19",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 48 min",
+       "purpose": "Récupération active entre deux séances clés.",
+       "key": false,
+       "km": 7.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 48,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-19",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-21",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-21",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-22",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 80 min",
+       "purpose": "Retrouver la sortie longue de 80 min en aisance.",
+       "key": true,
+       "km": 13,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 80,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-23",
+     "phase": "build",
+     "notes": "Semaine d'intervalles : 5 x 4 min à allure VO2max. Reste facile le reste de la semaine.",
+     "sessions": [
+      {
+       "date": "2026-11-24",
+       "sport": "run",
+       "kind": "intervals",
+       "title": "Intervalles 5 x 4 min",
+       "purpose": "Travail VO2max (4:30-4:40) pour gagner en vitesse et rendre l'allure semi plus confortable.",
+       "key": true,
+       "km": 10.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 5,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 4,
+           "intensity": "interval",
+           "target": "pace 4:30-4:40"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-26",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 53 min",
+       "purpose": "Récupération active après les intervalles.",
+       "key": false,
+       "km": 8.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 53,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-26",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-28",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-28",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-29",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 88 min",
+       "purpose": "Allonger la sortie longue en aisance pour préparer la phase spécifique.",
+       "key": true,
+       "km": 14.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 88,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-30",
+     "phase": "specific",
+     "notes": "Pic de volume (280 min). Premiers blocs à allure semi dans la sortie longue : prends des glucides pendant.",
+     "sessions": [
+      {
+       "date": "2026-12-01",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 3 x 12 min",
+       "purpose": "Séance clé du semi : blocs au seuil (4:55-5:00) pour tenir l'allure cible plus longtemps.",
+       "key": true,
+       "km": 12.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-03",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active après la séance de seuil.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-03",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-05",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-05",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-06",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 95 min avec 2 x 10 min allure semi",
+       "purpose": "Habituer les jambes à l'allure semi (4:55-5:00) sur fatigue. Teste ton plan de ravitaillement : 30-60 g de glucides par heure.",
+       "key": true,
+       "km": 16.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "recovery",
+         "minutes": 5,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "cooldown",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-07",
+     "phase": "recovery",
+     "notes": "Semaine allégée (-20 %) après le pic : tout en aisance, sans séance dure.",
+     "sessions": [
+      {
+       "date": "2026-12-08",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Récupérer du pic de charge en gardant la vivacité.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 41,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-12-10",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 46 min",
+       "purpose": "Volume réduit pour récupérer.",
+       "key": false,
+       "km": 7.5,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 46,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-10",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire léger",
+       "purpose": "Entretenir la solidité sans fatiguer les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "rpe 3-4"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-12",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing léger avant la sortie du dimanche.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-12",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-13",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue allégée 78 min",
+       "purpose": "Sortie longue plus courte et facile pour absorber le bloc précédent.",
+       "key": true,
+       "km": 12.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 78,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-14",
+     "phase": "specific",
+     "notes": "Retour de la charge (245 min), séances à allure semi et sortie longue avec blocs spécifiques.",
+     "sessions": [
+      {
+       "date": "2026-12-15",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Blocs semi 2 x 15 min au seuil",
+       "purpose": "Blocs longs à 4:55-5:00 pour installer l'allure du semi.",
+       "key": true,
+       "km": 10.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 15,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-17",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Récupération active avant le week-end.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-17",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-19",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-19",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-20",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 85 min avec 2 x 10 min allure semi",
+       "purpose": "Répéter l'allure semi (4:55-5:00) en fin de sortie longue. Répète ta stratégie de ravitaillement.",
+       "key": true,
+       "km": 14.5,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 30,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "recovery",
+         "minutes": 5,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "cooldown",
+         "minutes": 30,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-21",
+     "phase": "specific",
+     "notes": "Dernière grosse semaine (268 min). Répète ton ravitaillement de course sur la sortie longue. Ensuite, la décharge commence.",
+     "sessions": [
+      {
+       "date": "2026-12-22",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Allure semi 3 x 10 min",
+       "purpose": "Dernière séance spécifique avant la décharge : 3 x 10 min à 4:55-5:00.",
+       "key": true,
+       "km": 10.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 10,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 9,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-24",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active avant le week-end.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-24",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-26",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la dernière grande sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-26",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-27",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 93 min avec 2 x 12 min allure semi",
+       "purpose": "Dernière grande sortie : 2 x 12 min à 4:55-5:00. Répète ton plan de glucides (30-60 g/h) et de boisson.",
+       "key": true,
+       "km": 15.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 25,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 4,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 36,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-28",
+     "phase": "taper",
+     "notes": "Affûtage : volume réduit d'environ 43 % par rapport au pic, en gardant de courts rappels d'allure.",
+     "sessions": [
+      {
+       "date": "2026-12-29",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Rappels allure semi 2 x 8 min",
+       "purpose": "Garder les jambes affûtées avec de courts blocs à 4:55-5:00 sans fatigue.",
+       "key": true,
+       "km": 7.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 8,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 11,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-31",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 35 min",
+       "purpose": "Footing court et facile pour rester frais.",
+       "key": false,
+       "km": 5.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-31",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement léger",
+       "purpose": "Entretenir la solidité sans fatiguer les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "rpe 3-4"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-02",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 25 min avec 4 lignes droites",
+       "purpose": "Garder la vivacité sans fatigue.",
+       "key": false,
+       "km": 4.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 19,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 4,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2027-01-02",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse avant la dernière semaine.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-03",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie facile 55 min",
+       "purpose": "Dernière sortie plus longue, courte et facile pour arriver frais.",
+       "key": true,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2027-01-04",
+     "phase": "race",
+     "notes": "Semaine de course : peu de volume, jambes fraîches. Aucune séance dure les deux jours avant. Dîner riche en glucides le samedi.",
+     "sessions": [
+      {
+       "date": "2027-01-05",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Rappels allure semi 3 x 3 min",
+       "purpose": "Dernier rappel à 4:55-5:00 pour sentir l'allure, sans fatigue.",
+       "key": true,
+       "km": 4.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 3,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-07",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing de décrassage 20 min",
+       "purpose": "Footing très facile pour rester souple trois jours avant la course.",
+       "key": false,
+       "km": 3.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 20,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-09",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité douce veille de course",
+       "purpose": "Relâcher les jambes la veille, sans courir.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-10",
+       "sport": "run",
+       "kind": "race",
+       "title": "Semi-marathon de Boulogne : objectif 1h45",
+       "purpose": "Partir un peu prudemment (5:00-5:05 les 4 premiers km), puis tenir 4:55-5:00. Bois selon ta soif et prends des glucides régulièrement.",
+       "key": true,
+       "km": 22.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 20,
+         "intensity": "threshold",
+         "target": "pace 5:00-5:05"
+        },
+        {
+         "type": "work",
+         "minutes": 85,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "errors": [],
+  "blocking": [],
+  "warnings": [
+   "E2: s-2026-12-06-1 observed=1.1027397260273972 threshold=1.1",
+   "P1: 2026-11-30 observed=1.1594202898550725 threshold=1.1",
+   "P6: reduction_too_small observed=0.23571428571428577 threshold=0.4"
+  ],
+  "qualityDespiteHealth": 0
+ },
+ "final": {
+  "parsed": {
+   "title": "Semi de Boulogne 10 janvier 2027 : objectif 1h45 en 12 semaines, 4 séances par semaine",
+   "summary": "Le plan part de ta charge actuelle (environ 236 min par semaine, 4 sorties) et monte d'environ 10 % par semaine, avec une semaine allégée de 20 % toutes les 3 à 4 semaines. Mardi : séance de qualité (seuil, puis intervalles, puis allure semi). Jeudi et samedi : footing facile, avec renforcement le jeudi et mobilité le samedi. Dimanche : sortie longue, jusqu'à 95 min, avec des blocs à allure semi dans la phase spécifique. Ton 10 km en 49:30 équivaut à environ 1h49 sur semi. Le 1h45:00 (4:58/km) demande donc environ 4 % de progrès : c'est un objectif ambitieux mais réaliste sur 12 semaines. Si la fatigue s'accumule, vise 1h47-1h49. Les deux dernières semaines allègent le volume de plus de 40 %. Dès 90 min de sortie, entraîne-toi à prendre 30-60 g de glucides par heure et bois selon ta soif. En cas de douleur forte ou persistante, arrête de courir et consulte.",
+   "lowConfidenceReasons": [],
+   "weeks": [
+    {
+     "weekStart": "2026-10-19",
+     "phase": "base",
+     "notes": "Reprise du rythme : volume proche de tes dernières semaines (235 min), tout en aisance, avec quelques lignes droites pour la vivacité.",
+     "sessions": [
+      {
+       "date": "2026-10-20",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Installer la routine de la semaine en aisance et réveiller la foulée avec 6 lignes droites de 30 s.",
+       "key": false,
+       "km": 9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 46,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-10-22",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 45 min",
+       "purpose": "Volume aérobie en aisance, à tenir dans la zone cardiaque facile.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 45,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-22",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes et limiter le risque de blessure.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-24",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Footing tranquille la veille de la sortie longue, sans forcer.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-24",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-25",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 80 min",
+       "purpose": "Développer l'endurance de base, en dessous de ta plus longue sortie récente.",
+       "key": true,
+       "km": 13,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 80,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-10-26",
+     "phase": "base",
+     "notes": "Première séance au seuil, courte. Sortie longue à 85 min.",
+     "sessions": [
+      {
+       "date": "2026-10-27",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 3 x 8 min",
+       "purpose": "Introduire le travail au seuil (allure 4:55-5:00) pour construire la base de l'allure semi.",
+       "key": true,
+       "km": 9.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 8,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-29",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Récupérer de la séance de mardi tout en accumulant du volume facile.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-29",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-31",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Volume aérobie facile avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-10-31",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-01",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 85 min",
+       "purpose": "Allonger la sortie longue de quelques minutes, en aisance.",
+       "key": true,
+       "km": 13.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 85,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-02",
+     "phase": "base",
+     "notes": "Dernière semaine de montée du premier bloc : 265 min. Première séance de VO2max courte.",
+     "sessions": [
+      {
+       "date": "2026-11-03",
+       "sport": "run",
+       "kind": "intervals",
+       "title": "Intervalles 5 x 3 min",
+       "purpose": "Travailler la VO2max (allure 4:30-4:40) pour élever ton plafond de vitesse.",
+       "key": true,
+       "km": 10.4,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 20,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 5,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 3,
+           "intensity": "interval",
+           "target": "pace 4:30-4:40"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-05",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active et volume aérobie.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-05",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-07",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-07",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-08",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 90 min",
+       "purpose": "Sortie longue de 90 min. Teste 30-60 g de glucides par heure et bois selon ta soif.",
+       "key": true,
+       "km": 14.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 90,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-09",
+     "phase": "recovery",
+     "notes": "Semaine allégée (-20 %) : pas de séance dure, on absorbe la charge.",
+     "sessions": [
+      {
+       "date": "2026-11-10",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Semaine de récupération : rester en aisance, garder la vivacité avec des lignes droites.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 36,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-11-12",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 45 min",
+       "purpose": "Volume réduit pour récupérer.",
+       "key": false,
+       "km": 7.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 45,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-12",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Maintenir la solidité des jambes et du tronc.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-14",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing léger avant la sortie du dimanche.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-14",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-15",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue allégée 72 min",
+       "purpose": "Sortie longue plus courte pour récupérer avant le bloc de construction.",
+       "key": true,
+       "km": 11.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 72,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-16",
+     "phase": "build",
+     "notes": "Retour progressif de la charge (233 min) avec des blocs de seuil plus longs.",
+     "sessions": [
+      {
+       "date": "2026-11-17",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 2 x 12 min",
+       "purpose": "Allonger les blocs au seuil (4:55-5:00), base du travail semi.",
+       "key": true,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-19",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 48 min",
+       "purpose": "Récupération active entre deux séances clés.",
+       "key": false,
+       "km": 7.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 48,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-19",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-21",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-21",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-22",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 80 min",
+       "purpose": "Retrouver la sortie longue de 80 min en aisance.",
+       "key": true,
+       "km": 13,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 80,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-23",
+     "phase": "build",
+     "notes": "Semaine d'intervalles : 5 x 4 min à allure VO2max. Reste facile le reste de la semaine.",
+     "sessions": [
+      {
+       "date": "2026-11-24",
+       "sport": "run",
+       "kind": "intervals",
+       "title": "Intervalles 5 x 4 min",
+       "purpose": "Travail VO2max (4:30-4:40) pour gagner en vitesse et rendre l'allure semi plus confortable.",
+       "key": true,
+       "km": 10.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 5,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 4,
+           "intensity": "interval",
+           "target": "pace 4:30-4:40"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-26",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 53 min",
+       "purpose": "Récupération active après les intervalles.",
+       "key": false,
+       "km": 8.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 53,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-26",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-28",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-28",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-11-29",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 88 min",
+       "purpose": "Allonger la sortie longue en aisance pour préparer la phase spécifique.",
+       "key": true,
+       "km": 14.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 88,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-11-30",
+     "phase": "specific",
+     "notes": "Pic de volume (280 min). Premiers blocs à allure semi dans la sortie longue : prends des glucides pendant.",
+     "sessions": [
+      {
+       "date": "2026-12-01",
+       "sport": "run",
+       "kind": "threshold",
+       "title": "Seuil 3 x 12 min",
+       "purpose": "Séance clé du semi : blocs au seuil (4:55-5:00) pour tenir l'allure cible plus longtemps.",
+       "key": true,
+       "km": 12.6,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-03",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active après la séance de seuil.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-03",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-05",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-05",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-06",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 95 min avec 2 x 10 min allure semi",
+       "purpose": "Habituer les jambes à l'allure semi (4:55-5:00) sur fatigue. Teste ton plan de ravitaillement : 30-60 g de glucides par heure.",
+       "key": true,
+       "km": 16.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "recovery",
+         "minutes": 5,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "cooldown",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-07",
+     "phase": "recovery",
+     "notes": "Semaine allégée (-20 %) après le pic : tout en aisance, sans séance dure.",
+     "sessions": [
+      {
+       "date": "2026-12-08",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile avec 6 lignes droites",
+       "purpose": "Récupérer du pic de charge en gardant la vivacité.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 41,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 6,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2026-12-10",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 46 min",
+       "purpose": "Volume réduit pour récupérer.",
+       "key": false,
+       "km": 7.5,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 46,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-10",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire léger",
+       "purpose": "Entretenir la solidité sans fatiguer les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "rpe 3-4"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-12",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing léger avant la sortie du dimanche.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-12",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-13",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue allégée 78 min",
+       "purpose": "Sortie longue plus courte et facile pour absorber le bloc précédent.",
+       "key": true,
+       "km": 12.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 78,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-14",
+     "phase": "specific",
+     "notes": "Retour de la charge (245 min), séances à allure semi et sortie longue avec blocs spécifiques.",
+     "sessions": [
+      {
+       "date": "2026-12-15",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Blocs semi 2 x 15 min au seuil",
+       "purpose": "Blocs longs à 4:55-5:00 pour installer l'allure du semi.",
+       "key": true,
+       "km": 10.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 15,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-17",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Récupération active avant le week-end.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-17",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-19",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 50 min",
+       "purpose": "Footing tranquille avant la sortie longue.",
+       "key": false,
+       "km": 8.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 50,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-19",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-20",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 85 min avec 2 x 10 min allure semi",
+       "purpose": "Répéter l'allure semi (4:55-5:00) en fin de sortie longue. Répète ta stratégie de ravitaillement.",
+       "key": true,
+       "km": 14.5,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 30,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "recovery",
+         "minutes": 5,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        },
+        {
+         "type": "cooldown",
+         "minutes": 30,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-21",
+     "phase": "specific",
+     "notes": "Dernière grosse semaine (268 min). Répète ton ravitaillement de course sur la sortie longue. Ensuite, la décharge commence.",
+     "sessions": [
+      {
+       "date": "2026-12-22",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Allure semi 3 x 10 min",
+       "purpose": "Dernière séance spécifique avant la décharge : 3 x 10 min à 4:55-5:00.",
+       "key": true,
+       "km": 10.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 10,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 9,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-24",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 55 min",
+       "purpose": "Récupération active avant le week-end.",
+       "key": false,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-24",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement musculaire général",
+       "purpose": "Gainage, fentes et mollets pour solidifier les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "easy",
+         "target": "rpe 4-5"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-26",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 60 min",
+       "purpose": "Footing tranquille avant la dernière grande sortie longue.",
+       "key": false,
+       "km": 9.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 60,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-26",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse après le footing.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-27",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie longue 93 min avec 2 x 12 min allure semi",
+       "purpose": "Dernière grande sortie : 2 x 12 min à 4:55-5:00. Répète ton plan de glucides (30-60 g/h) et de boisson.",
+       "key": true,
+       "km": 15.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 25,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 12,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 4,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 36,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2026-12-28",
+     "phase": "taper",
+     "notes": "Affûtage : volume réduit d'environ 43 % par rapport au pic, en gardant de courts rappels d'allure.",
+     "sessions": [
+      {
+       "date": "2026-12-29",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Rappels allure semi 2 x 8 min",
+       "purpose": "Garder les jambes affûtées avec de courts blocs à 4:55-5:00 sans fatigue.",
+       "key": true,
+       "km": 7.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 12,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 2,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 8,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 3,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 11,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-31",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 35 min",
+       "purpose": "Footing court et facile pour rester frais.",
+       "key": false,
+       "km": 5.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 35,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2026-12-31",
+       "sport": "strength",
+       "kind": "strength",
+       "title": "Renforcement léger",
+       "purpose": "Entretenir la solidité sans fatiguer les jambes.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "rpe 2-3"
+        },
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "rpe 3-4"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-02",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing facile 25 min avec 4 lignes droites",
+       "purpose": "Garder la vivacité sans fatigue.",
+       "key": false,
+       "km": 4.1,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 19,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 4,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 0.5,
+           "intensity": "repetition",
+           "target": "rpe 7-8"
+          },
+          {
+           "type": "recovery",
+           "minutes": 1,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "date": "2027-01-02",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité hanches et chevilles",
+       "purpose": "Entretenir la souplesse avant la dernière semaine.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 15,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-03",
+       "sport": "run",
+       "kind": "long",
+       "title": "Sortie facile 55 min",
+       "purpose": "Dernière sortie plus longue, courte et facile pour arriver frais.",
+       "key": true,
+       "km": 8.9,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 55,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "weekStart": "2027-01-04",
+     "phase": "race",
+     "notes": "Semaine de course : peu de volume, jambes fraîches. Aucune séance dure les deux jours avant. Dîner riche en glucides le samedi.",
+     "sessions": [
+      {
+       "date": "2027-01-05",
+       "sport": "run",
+       "kind": "race_specific",
+       "title": "Rappels allure semi 3 x 3 min",
+       "purpose": "Dernier rappel à 4:55-5:00 pour sentir l'allure, sans fatigue.",
+       "key": true,
+       "km": 4.8,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "repeat": 3,
+         "steps": [
+          {
+           "type": "work",
+           "minutes": 3,
+           "intensity": "threshold",
+           "target": "pace 4:55-5:00"
+          },
+          {
+           "type": "recovery",
+           "minutes": 2,
+           "intensity": "recovery",
+           "target": "rpe 2-3"
+          }
+         ]
+        },
+        {
+         "type": "cooldown",
+         "minutes": 5,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-07",
+       "sport": "run",
+       "kind": "easy",
+       "title": "Footing de décrassage 20 min",
+       "purpose": "Footing très facile pour rester souple trois jours avant la course.",
+       "key": false,
+       "km": 3.3,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 20,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-09",
+       "sport": "strength",
+       "kind": "mobility",
+       "title": "Mobilité douce veille de course",
+       "purpose": "Relâcher les jambes la veille, sans courir.",
+       "key": false,
+       "km": null,
+       "elevationGainMeters": null,
+       "terrain": null,
+       "steps": [
+        {
+         "type": "work",
+         "minutes": 10,
+         "intensity": "recovery",
+         "target": "rpe 2-3"
+        }
+       ]
+      },
+      {
+       "date": "2027-01-10",
+       "sport": "run",
+       "kind": "race",
+       "title": "Semi-marathon de Boulogne : objectif 1h45",
+       "purpose": "Partir un peu prudemment (5:00-5:05 les 4 premiers km), puis tenir 4:55-5:00. Bois selon ta soif et prends des glucides régulièrement.",
+       "key": true,
+       "km": 22.7,
+       "elevationGainMeters": null,
+       "terrain": "road",
+       "steps": [
+        {
+         "type": "warmup",
+         "minutes": 10,
+         "intensity": "easy",
+         "target": "hr 128-144"
+        },
+        {
+         "type": "work",
+         "minutes": 20,
+         "intensity": "threshold",
+         "target": "pace 5:00-5:05"
+        },
+        {
+         "type": "work",
+         "minutes": 85,
+         "intensity": "threshold",
+         "target": "pace 4:55-5:00"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "errors": [],
+  "blocking": [],
+  "warnings": [
+   "E2: s-2026-12-06-1 observed=1.1027397260273972 threshold=1.1",
+   "P1: 2026-11-30 observed=1.1594202898550725 threshold=1.1",
+   "P6: reduction_too_small observed=0.23571428571428577 threshold=0.4"
+  ],
+  "qualityDespiteHealth": 0
+ },
+ "repaired": false,
+ "usage": {
+  "calls": 1,
+  "inputTokens": 4333,
+  "outputTokens": 34380,
+  "costUsd": 0.3455514,
+  "milliseconds": 216404
+ },
+ "trace": [
+  {
+   "step": "plan",
+   "text": "{\"title\":\"Semi de Boulogne 10 janvier 2027 : objectif 1h45 en 12 semaines, 4 séances par semaine\",\"summary\":\"Le plan part de ta charge actuelle (environ 236 min par semaine, 4 sorties) et monte d'environ 10 % par semaine, avec une semaine allégée de 20 % toutes les 3 à 4 semaines. Mardi : séance de qualité (seuil, puis intervalles, puis allure semi). Jeudi et samedi : footing facile, avec renforcement le jeudi et mobilité le samedi. Dimanche : sortie longue, jusqu'à 95 min, avec des blocs à allure semi dans la phase spécifique. Ton 10 km en 49:30 équivaut à environ 1h49 sur semi. Le 1h45:00 (4:58/km) demande donc environ 4 % de progrès : c'est un objectif ambitieux mais réaliste sur 12 semaines. Si la fatigue s'accumule, vise 1h47-1h49. Les deux dernières semaines allègent le volume de plus de 40 %. Dès 90 min de sortie, entraîne-toi à prendre 30-60 g de glucides par heure et bois selon ta soif. En cas de douleur forte ou persistante, arrête de courir et consulte.\",\"lowConfidenceReasons\":[],\"weeks\":[\n{\"weekStart\":\"2026-10-19\",\"phase\":\"base\",\"notes\":\"Reprise du rythme : volume proche de tes dernières semaines (235 min), tout en aisance, avec quelques lignes droites pour la vivacité.\",\"sessions\":[\n{\"date\":\"2026-10-20\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Installer la routine de la semaine en aisance et réveiller la foulée avec 6 lignes droites de 30 s.\",\"key\":false,\"km\":9.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":46,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-10-22\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 45 min\",\"purpose\":\"Volume aérobie en aisance, à tenir dans la zone cardiaque facile.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":45,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-22\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes et limiter le risque de blessure.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-10-24\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Footing tranquille la veille de la sortie longue, sans forcer.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-24\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-10-25\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 80 min\",\"purpose\":\"Développer l'endurance de base, en dessous de ta plus longue sortie récente.\",\"key\":true,\"km\":13.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":80,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-10-26\",\"phase\":\"base\",\"notes\":\"Première séance au seuil, courte. Sortie longue à 85 min.\",\"sessions\":[\n{\"date\":\"2026-10-27\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 3 x 8 min\",\"purpose\":\"Introduire le travail au seuil (allure 4:55-5:00) pour construire la base de l'allure semi.\",\"key\":true,\"km\":9.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":8,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-29\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Récupérer de la séance de mardi tout en accumulant du volume facile.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-29\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-10-31\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Volume aérobie facile avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-10-31\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-01\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 85 min\",\"purpose\":\"Allonger la sortie longue de quelques minutes, en aisance.\",\"key\":true,\"km\":13.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":85,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-02\",\"phase\":\"base\",\"notes\":\"Dernière semaine de montée du premier bloc : 265 min. Première séance de VO2max courte.\",\"sessions\":[\n{\"date\":\"2026-11-03\",\"sport\":\"run\",\"kind\":\"intervals\",\"title\":\"Intervalles 5 x 3 min\",\"purpose\":\"Travailler la VO2max (allure 4:30-4:40) pour élever ton plafond de vitesse.\",\"key\":true,\"km\":10.4,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":20,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":5,\"steps\":[{\"type\":\"work\",\"minutes\":3,\"intensity\":\"interval\",\"target\":\"pace 4:30-4:40\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-05\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active et volume aérobie.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-05\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-07\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-07\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-08\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 90 min\",\"purpose\":\"Sortie longue de 90 min. Teste 30-60 g de glucides par heure et bois selon ta soif.\",\"key\":true,\"km\":14.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":90,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-09\",\"phase\":\"recovery\",\"notes\":\"Semaine allégée (-20 %) : pas de séance dure, on absorbe la charge.\",\"sessions\":[\n{\"date\":\"2026-11-10\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Semaine de récupération : rester en aisance, garder la vivacité avec des lignes droites.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":36,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-11-12\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 45 min\",\"purpose\":\"Volume réduit pour récupérer.\",\"key\":false,\"km\":7.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":45,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-12\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Maintenir la solidité des jambes et du tronc.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-14\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing léger avant la sortie du dimanche.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-14\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-15\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue allégée 72 min\",\"purpose\":\"Sortie longue plus courte pour récupérer avant le bloc de construction.\",\"key\":true,\"km\":11.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":72,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-16\",\"phase\":\"build\",\"notes\":\"Retour progressif de la charge (233 min) avec des blocs de seuil plus longs.\",\"sessions\":[\n{\"date\":\"2026-11-17\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 2 x 12 min\",\"purpose\":\"Allonger les blocs au seuil (4:55-5:00), base du travail semi.\",\"key\":true,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-19\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 48 min\",\"purpose\":\"Récupération active entre deux séances clés.\",\"key\":false,\"km\":7.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":48,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-19\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-21\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-21\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-22\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 80 min\",\"purpose\":\"Retrouver la sortie longue de 80 min en aisance.\",\"key\":true,\"km\":13.0,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":80,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-23\",\"phase\":\"build\",\"notes\":\"Semaine d'intervalles : 5 x 4 min à allure VO2max. Reste facile le reste de la semaine.\",\"sessions\":[\n{\"date\":\"2026-11-24\",\"sport\":\"run\",\"kind\":\"intervals\",\"title\":\"Intervalles 5 x 4 min\",\"purpose\":\"Travail VO2max (4:30-4:40) pour gagner en vitesse et rendre l'allure semi plus confortable.\",\"key\":true,\"km\":10.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":5,\"steps\":[{\"type\":\"work\",\"minutes\":4,\"intensity\":\"interval\",\"target\":\"pace 4:30-4:40\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-26\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 53 min\",\"purpose\":\"Récupération active après les intervalles.\",\"key\":false,\"km\":8.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":53,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-26\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-11-28\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-11-28\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-11-29\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 88 min\",\"purpose\":\"Allonger la sortie longue en aisance pour préparer la phase spécifique.\",\"key\":true,\"km\":14.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":88,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-11-30\",\"phase\":\"specific\",\"notes\":\"Pic de volume (280 min). Premiers blocs à allure semi dans la sortie longue : prends des glucides pendant.\",\"sessions\":[\n{\"date\":\"2026-12-01\",\"sport\":\"run\",\"kind\":\"threshold\",\"title\":\"Seuil 3 x 12 min\",\"purpose\":\"Séance clé du semi : blocs au seuil (4:55-5:00) pour tenir l'allure cible plus longtemps.\",\"key\":true,\"km\":12.6,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-03\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active après la séance de seuil.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-03\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-05\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-05\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-06\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 95 min avec 2 x 10 min allure semi\",\"purpose\":\"Habituer les jambes à l'allure semi (4:55-5:00) sur fatigue. Teste ton plan de ravitaillement : 30-60 g de glucides par heure.\",\"key\":true,\"km\":16.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":5,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"cooldown\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-07\",\"phase\":\"recovery\",\"notes\":\"Semaine allégée (-20 %) après le pic : tout en aisance, sans séance dure.\",\"sessions\":[\n{\"date\":\"2026-12-08\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile avec 6 lignes droites\",\"purpose\":\"Récupérer du pic de charge en gardant la vivacité.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":41,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":6,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2026-12-10\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 46 min\",\"purpose\":\"Volume réduit pour récupérer.\",\"key\":false,\"km\":7.5,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":46,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-10\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire léger\",\"purpose\":\"Entretenir la solidité sans fatiguer les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"rpe 3-4\"}]},\n{\"date\":\"2026-12-12\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing léger avant la sortie du dimanche.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-12\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-13\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue allégée 78 min\",\"purpose\":\"Sortie longue plus courte et facile pour absorber le bloc précédent.\",\"key\":true,\"km\":12.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":78,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-14\",\"phase\":\"specific\",\"notes\":\"Retour de la charge (245 min), séances à allure semi et sortie longue avec blocs spécifiques.\",\"sessions\":[\n{\"date\":\"2026-12-15\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Blocs semi 2 x 15 min au seuil\",\"purpose\":\"Blocs longs à 4:55-5:00 pour installer l'allure du semi.\",\"key\":true,\"km\":10.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-17\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Récupération active avant le week-end.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-17\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-19\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 50 min\",\"purpose\":\"Footing tranquille avant la sortie longue.\",\"key\":false,\"km\":8.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":50,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-19\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-20\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 85 min avec 2 x 10 min allure semi\",\"purpose\":\"Répéter l'allure semi (4:55-5:00) en fin de sortie longue. Répète ta stratégie de ravitaillement.\",\"key\":true,\"km\":14.5,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":30,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":5,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"cooldown\",\"minutes\":30,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-21\",\"phase\":\"specific\",\"notes\":\"Dernière grosse semaine (268 min). Répète ton ravitaillement de course sur la sortie longue. Ensuite, la décharge commence.\",\"sessions\":[\n{\"date\":\"2026-12-22\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Allure semi 3 x 10 min\",\"purpose\":\"Dernière séance spécifique avant la décharge : 3 x 10 min à 4:55-5:00.\",\"key\":true,\"km\":10.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":10,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":9,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-24\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 55 min\",\"purpose\":\"Récupération active avant le week-end.\",\"key\":false,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-24\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement musculaire général\",\"purpose\":\"Gainage, fentes et mollets pour solidifier les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":15,\"intensity\":\"easy\",\"target\":\"rpe 4-5\"}]},\n{\"date\":\"2026-12-26\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 60 min\",\"purpose\":\"Footing tranquille avant la dernière grande sortie longue.\",\"key\":false,\"km\":9.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":60,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-26\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse après le footing.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2026-12-27\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie longue 93 min avec 2 x 12 min allure semi\",\"purpose\":\"Dernière grande sortie : 2 x 12 min à 4:55-5:00. Répète ton plan de glucides (30-60 g/h) et de boisson.\",\"key\":true,\"km\":15.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":25,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":12,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":4,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":36,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2026-12-28\",\"phase\":\"taper\",\"notes\":\"Affûtage : volume réduit d'environ 43 % par rapport au pic, en gardant de courts rappels d'allure.\",\"sessions\":[\n{\"date\":\"2026-12-29\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Rappels allure semi 2 x 8 min\",\"purpose\":\"Garder les jambes affûtées avec de courts blocs à 4:55-5:00 sans fatigue.\",\"key\":true,\"km\":7.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":12,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":2,\"steps\":[{\"type\":\"work\",\"minutes\":8,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":3,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":11,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-31\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 35 min\",\"purpose\":\"Footing court et facile pour rester frais.\",\"key\":false,\"km\":5.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":35,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2026-12-31\",\"sport\":\"strength\",\"kind\":\"strength\",\"title\":\"Renforcement léger\",\"purpose\":\"Entretenir la solidité sans fatiguer les jambes.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"warmup\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"rpe 2-3\"},{\"type\":\"work\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"rpe 3-4\"}]},\n{\"date\":\"2027-01-02\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing facile 25 min avec 4 lignes droites\",\"purpose\":\"Garder la vivacité sans fatigue.\",\"key\":false,\"km\":4.1,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":19,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":4,\"steps\":[{\"type\":\"work\",\"minutes\":0.5,\"intensity\":\"repetition\",\"target\":\"rpe 7-8\"},{\"type\":\"recovery\",\"minutes\":1,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]}]},\n{\"date\":\"2027-01-02\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité hanches et chevilles\",\"purpose\":\"Entretenir la souplesse avant la dernière semaine.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":15,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2027-01-03\",\"sport\":\"run\",\"kind\":\"long\",\"title\":\"Sortie facile 55 min\",\"purpose\":\"Dernière sortie plus longue, courte et facile pour arriver frais.\",\"key\":true,\"km\":8.9,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":55,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]}]},\n{\"weekStart\":\"2027-01-04\",\"phase\":\"race\",\"notes\":\"Semaine de course : peu de volume, jambes fraîches. Aucune séance dure les deux jours avant. Dîner riche en glucides le samedi.\",\"sessions\":[\n{\"date\":\"2027-01-05\",\"sport\":\"run\",\"kind\":\"race_specific\",\"title\":\"Rappels allure semi 3 x 3 min\",\"purpose\":\"Dernier rappel à 4:55-5:00 pour sentir l'allure, sans fatigue.\",\"key\":true,\"km\":4.8,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"repeat\":3,\"steps\":[{\"type\":\"work\",\"minutes\":3,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"},{\"type\":\"recovery\",\"minutes\":2,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},{\"type\":\"cooldown\",\"minutes\":5,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2027-01-07\",\"sport\":\"run\",\"kind\":\"easy\",\"title\":\"Footing de décrassage 20 min\",\"purpose\":\"Footing très facile pour rester souple trois jours avant la course.\",\"key\":false,\"km\":3.3,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"work\",\"minutes\":20,\"intensity\":\"easy\",\"target\":\"hr 128-144\"}]},\n{\"date\":\"2027-01-09\",\"sport\":\"strength\",\"kind\":\"mobility\",\"title\":\"Mobilité douce veille de course\",\"purpose\":\"Relâcher les jambes la veille, sans courir.\",\"key\":false,\"km\":null,\"elevationGainMeters\":null,\"terrain\":null,\"steps\":[{\"type\":\"work\",\"minutes\":10,\"intensity\":\"recovery\",\"target\":\"rpe 2-3\"}]},\n{\"date\":\"2027-01-10\",\"sport\":\"run\",\"kind\":\"race\",\"title\":\"Semi-marathon de Boulogne : objectif 1h45\",\"purpose\":\"Partir un peu prudemment (5:00-5:05 les 4 premiers km), puis tenir 4:55-5:00. Bois selon ta soif et prends des glucides régulièrement.\",\"key\":true,\"km\":22.7,\"elevationGainMeters\":null,\"terrain\":\"road\",\"steps\":[{\"type\":\"warmup\",\"minutes\":10,\"intensity\":\"easy\",\"target\":\"hr 128-144\"},{\"type\":\"work\",\"minutes\":20,\"intensity\":\"threshold\",\"target\":\"pace 5:00-5:05\"},{\"type\":\"work\",\"minutes\":85,\"intensity\":\"threshold\",\"target\":\"pace 4:55-5:00\"}]}]}\n]}"
+  }
+ ]
+}
