@@ -159,10 +159,12 @@ export function SessionDetail({
           Plan / {block.name} / semaine {weekNumber} /{" "}
           {formatLongDay(session.scheduledOn)}
         </MonoLabel>
-        <h1 className="text-display font-semibold text-balance">
+        <h1 className="text-[25px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance sm:text-[clamp(32px,4vw,46px)] sm:leading-[1.05] sm:tracking-[-0.03em]">
           {session.title}
         </h1>
-        <p className="max-w-2xl text-lead text-muted">{session.purpose}</p>
+        <p className="max-w-200 text-sm leading-normal text-pretty text-muted sm:text-base sm:leading-[1.55]">
+          {session.purpose}
+        </p>
       </div>
       {session.kind !== "race" && <StepChart session={session} />}
       <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-y border-border py-5 sm:grid-cols-3 lg:flex lg:flex-wrap lg:gap-x-12">
