@@ -143,11 +143,7 @@ export function AppShell({
             />
             <NavUser
               name={athlete.name}
-              detail={`Profil ${account.profilePercent} %${
-                account.questions > 0
-                  ? ` · ${account.questions} question${account.questions > 1 ? "s" : ""}`
-                  : ""
-              }`}
+              detail="Athlète"
               initials={athlete.initials}
               sync={
                 initialActivity !== undefined ? (
