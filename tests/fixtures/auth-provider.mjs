@@ -41,10 +41,16 @@ const recordsGoalFailureUser = {
   id: "44444444-4444-4444-8444-444444444444",
   email: "records-goal-failure@example.com",
 };
+const planUser = {
+  ...user,
+  id: "55555555-5555-4555-8555-555555555555",
+  email: "plan@example.com",
+};
 const recordsSessions = [
   recordsEmptyUser,
   recordsFailureUser,
   recordsGoalFailureUser,
+  planUser,
 ].map((identity) => ({
   ...session,
   user: identity,
@@ -216,6 +222,16 @@ const tables = {
       duration_seconds: 40500,
       elevation_gain_meters: 1620,
     }),
+    ...Array.from({ length: 64 }, (_, index) =>
+      activity(900 + index, 2 + Math.floor(index / 4) * 7 + (index % 4) * 2, {
+        user_id: planUser.id,
+        activity_name: "Footing",
+        distance_meters: index % 4 === 3 ? 16000 : 9000,
+        duration_seconds: index % 4 === 3 ? 5400 : 3000,
+        average_heart_rate: 142,
+        max_heart_rate: 186,
+      }),
+    ),
     ...Array.from({ length: 70 }, (_, index) =>
       activity(100 + index, 40 + index, {
         activity_name:
@@ -391,8 +407,37 @@ const tables = {
       revision: 1,
       updated_at: "2026-01-01T00:00:00Z",
     },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      user_id: planUser.id,
+      name: "Marathon de Paris",
+      race_kind: "road",
+      race_date: new Date(Date.now() + 150 * day).toISOString().slice(0, 10),
+      distance_km: 42.2,
+      elevation_gain_m: null,
+      priority: "A",
+      target_duration_seconds: null,
+      revision: 1,
+      updated_at: "2026-01-01T00:00:00Z",
+    },
   ],
 };
+tables.athlete_profiles.push({
+  ...tables.athlete_profiles[0],
+  user_id: planUser.id,
+  first_name: "Paula",
+  primary_terrain: "road",
+  available_weekdays: [2, 3, 4, 6, 7],
+  long_run_day: "sunday",
+  weekday_session_minutes: 75,
+  training_access: [],
+  value_sources: {},
+});
+tables.athlete_goals.push({
+  ...tables.athlete_goals[0],
+  user_id: planUser.id,
+  focus: "half_marathon_marathon",
+});
 function nameMatcher(filter) {
   if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
   const pattern = filter.slice(6).replaceAll("*", "%");
