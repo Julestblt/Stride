@@ -1,6 +1,6 @@
 # ADR 0009: A coach worker on Supabase Postgres runs agent workflows
 
-- Status: Accepted (2026-10-13, #94)
+- Status: Accepted (2026-10-13, #94), amended by the Managed Agents spike (2026-10-15, #128)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
@@ -33,3 +33,19 @@ One more container and a small amount of queue code that the team owns, followin
 - Deploys restart the worker safely: in-flight steps are retried and completed steps are reused.
 - The internet-facing process holds no coaching write privilege and no worker credential.
 - A spike must confirm that a custom login role works through the Supabase pooler; the fallback is a direct connection or a constrained server key as in #42.
+
+## Amendment (2026-10-15, #128)
+
+The Managed Agents spike moved the agent loop, its retries and its session state to Claude Managed Agents. Stride no longer needs `agent_runs` leases, memoized steps or a progress event log to drive a conversation or a plan design: a session holds the transcript, the platform runs the loop, and Stride answers custom tool calls from the event stream.
+
+What stays from this ADR:
+
+- Stride executes every custom tool under the athlete's row-level security; agents never receive Stride or Garmin credentials beyond the athlete's own Supabase access token, held in a per-athlete vault for garmin_mcp.
+- Plan changes stay proposals. A proposal is applied only after the athlete accepts it, by the `stride_coach_worker` role through `private.apply_plan_proposal`, after Stride recomputes and revalidates the changeset from the stored operations.
+- `private.delete_plan` lets the worker remove an athlete's plan, used to reset tests.
+
+Open points, carried into Phase 2:
+
+- The spike applies proposals from a development-only route in the web process with the worker database URL. Production moves that credential out of the internet-facing process, into a small worker or a server-only job, as this ADR requires.
+- A custom login role through the Supabase pooler is still unverified.
+- Runs without the athlete online (weekly reviews, monitors) need a credential other than the athlete's session token; this stays with the worker impersonation spike.
