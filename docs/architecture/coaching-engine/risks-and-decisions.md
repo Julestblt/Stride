@@ -20,6 +20,12 @@ The product owner decided D1–D8 on 2026-10-13. Stride is a personal, open-sour
 
 Model routing confirmed with D1: Haiku 5.5 for routing, extraction and phrasing; Sonnet 5.5 for conversation, adaptation, weekly reviews and consults; Opus 5.5 for plan design and multi-race revisions, falling back to Sonnet 5.5 at high effort when Opus is unavailable. Any task may escalate one tier when its output fails validation ([ADR 0011](../../adr/0011-model-access-and-routing.md)).
 
+On 2026-10-14 the product owner added:
+
+| ID  | Topic          | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| --- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D9  | Agent topology | The orchestrated Coach (ADR 0007) and a multi-agent topology modelled on ai-running-coach are benchmarked on the same scenarios before Phase 3, graded by judges from three model families in blind pairwise comparisons and by the owner on their own profile. A pre-registered rule keeps A, adopts B or offers B as an opt-in mode with its cost shown ([topology benchmark](topology-benchmark.md), #119). Only synthetic athletes are sent to non-Anthropic judges. |
+
 ## Risks
 
 | Risk                                                             | Likelihood | Impact | Mitigation                                                                                                                                                                                    |
