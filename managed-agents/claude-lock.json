@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "origin": {
+    "base_url": "https://api.anthropic.com",
+    "organization_id": "6d9a625a-92b5-4276-a9ff-038bd8232738",
+    "workspace_id": "wrkspc_01VAgksppHq4bP23u1VPvrKL"
+  },
+  "resources": {
+    "./agents/coach.md": {
+      "kind": "agent",
+      "id": "agent_012jzvuHJ3N8XJY3HdwejEh1",
+      "version": "1",
+      "hash": "e56d3dff0a6cbddc37c4f0607ce5febd",
+      "remote_hash": "bd9febbdaf8c9e13e6c2f60394d8c96d"
+    },
+    "./agents/medical.md": {
+      "kind": "agent",
+      "id": "agent_01C8KQnGawVN3PRMNzTo4vt6",
+      "version": "1",
+      "hash": "1983659a7fb35d6d67d920a858d9008b",
+      "remote_hash": "aaf1d47d13063d0eb1f062f39b20d287"
+    },
+    "./environments/coaching.yaml": {
+      "kind": "environment",
+      "id": "env_012qdZg1usitf9qbw3zfgjgy",
+      "hash": "6d21d53d2e57a4bc346bb3557e3c9313",
+      "remote_hash": "087ed157a791ddee7a273fd0b8e1297b"
+    }
+  }
+}
