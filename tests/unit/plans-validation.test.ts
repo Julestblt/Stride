@@ -640,11 +640,11 @@ describe("races", () => {
         run("peak", "2026-11-25", 600),
         run(
           "t1",
-          "2026-12-02",
+          "2026-12-09",
           taperMinutes,
           withQuality ? { kind: "threshold", hardMinutes: 20 } : {},
         ),
-        run("t2", "2026-12-09", taperMinutes),
+        run("t2", "2026-12-16", taperMinutes),
         run("race", "2026-12-20", 240, { kind: "race" }),
       ],
       {},

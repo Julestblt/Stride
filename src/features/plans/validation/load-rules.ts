@@ -1,9 +1,8 @@
-import { addDays, mondayOf } from "../model/dates";
+import { addDays, daysBetween, mondayOf } from "../model/dates";
 import type { PlanSession } from "../model/plan";
 import type { RuleId, RuleOutcome } from "./report";
 import { thresholds } from "./thresholds";
 import {
-  daysBetween,
   hardSeconds,
   isQuality,
   isRunning,
@@ -239,7 +238,7 @@ function raceRules(input: ValidationInput): Rules {
     const raceWeek = mondayOf(primary.date);
     const taperStarts = Array.from(
       { length: thresholds.taperWeeks },
-      (_, index) => addDays(raceWeek, -7 * (thresholds.taperWeeks - index)),
+      (_, index) => addDays(raceWeek, -7 * (thresholds.taperWeeks - 1 - index)),
     );
     const loads = new Map(
       weekLoads(input).map((load) => [load.weekStart, load.durationSeconds]),

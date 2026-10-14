@@ -1,4 +1,4 @@
-import { addDays, mondayOf } from "../model/dates";
+import { addDays, isoWeekday, mondayOf } from "../model/dates";
 import { planStateSchema, type PlanSession } from "../model/plan";
 import { computeChangeset, isFrozenSession } from "../operations/apply";
 import type { RuleId, RuleOutcome } from "./report";
@@ -6,7 +6,6 @@ import { thresholds } from "./thresholds";
 import {
   isQuality,
   isRunning,
-  isoWeekday,
   plannedWeeks,
   type ValidationInput,
 } from "./input";

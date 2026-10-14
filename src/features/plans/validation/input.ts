@@ -1,4 +1,4 @@
-import { addDays, mondayOf, parseIsoDate } from "../model/dates";
+import { mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
 import { structureTotals } from "../model/structure";
 
@@ -85,11 +85,6 @@ export function isQuality(session: PlanSession) {
   return isRunning(session) && qualityKinds.has(session.kind);
 }
 
-export function isoWeekday(date: string) {
-  const day = parseIsoDate(date).getUTCDay();
-  return day === 0 ? 7 : day;
-}
-
 export function sessionDistance(session: PlanSession) {
   if (session.targets.distanceMeters !== null)
     return session.targets.distanceMeters;
@@ -151,14 +146,4 @@ export function weekLoads(input: ValidationInput): WeekLoad[] {
   return [...loads.values()].sort((first, second) =>
     first.weekStart.localeCompare(second.weekStart),
   );
-}
-
-export function daysBetween(from: string, to: string) {
-  return Math.round(
-    (parseIsoDate(to).getTime() - parseIsoDate(from).getTime()) / 86_400_000,
-  );
-}
-
-export function dateRange(from: string, days: number) {
-  return Array.from({ length: days }, (_, index) => addDays(from, index));
 }
