@@ -45,4 +45,4 @@ Run the checks relevant to your change:
     npm run test:e2e
     npm run build
 
-Playwright downloads Chromium separately with `npx playwright install chromium`. See [testing expectations](docs/testing.md) and the [engineering workflow](docs/engineering-workflow.md).
+Playwright downloads Chromium separately with `npx playwright install chromium`. See [testing expectations](docs/testing.md), [CI design](docs/ci.md), and the [engineering workflow](docs/engineering-workflow.md).
