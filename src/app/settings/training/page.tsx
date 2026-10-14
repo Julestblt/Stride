@@ -11,7 +11,19 @@ import {
 import { SettingsNotice } from "@/features/settings/components/settings-notice";
 import { requireAthlete } from "@/server/app/session";
 import { readProfile } from "@/server/onboarding/profile";
-import { saveSettingsTraining } from "@/server/settings/actions";
+import {
+  addSettingsUnavailability,
+  removeSettingsUnavailability,
+  saveSettingsPlanning,
+  saveSettingsTraining,
+} from "@/server/settings/actions";
+import {
+  PlanningSection,
+  UnavailabilitySection,
+} from "@/features/settings/components/planning-sections";
+import { localToday } from "@/features/plans/constraints";
+import { currentPeriods } from "@/features/settings/planning";
+import { readPlanningConstraints } from "@/server/plans/constraints";
 
 const weekdays = [
   { value: 1, short: "L", label: "Lundi" },
@@ -51,7 +63,10 @@ export default async function TrainingSettingsPage({
   searchParams: Promise<{ status?: string }>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const profile = await readProfile(context);
+  const [profile, planning] = await Promise.all([
+    readProfile(context),
+    readPlanningConstraints(context),
+  ]);
   const values = profile.values;
   return (
     <div className="flex flex-col gap-6 md:gap-10">
@@ -137,6 +152,19 @@ export default async function TrainingSettingsPage({
           Enregistrer les préférences
         </Button>
       </form>
+      <PlanningSection
+        constraints={planning}
+        revision={planning.profileRevision}
+        action={saveSettingsPlanning}
+      />
+      <UnavailabilitySection
+        periods={currentPeriods(
+          planning.unavailablePeriods,
+          localToday(planning.timeZone),
+        )}
+        addAction={addSettingsUnavailability}
+        removeAction={removeSettingsUnavailability}
+      />
       <PreferenceSection title="Unités">
         <PreferenceRow labelId="u-sys" label="Distance et dénivelé">
           <PreviewSegments

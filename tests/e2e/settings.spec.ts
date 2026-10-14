@@ -589,3 +589,74 @@ test("profile tablet layouts fit without clipping and edit in a sheet", async ({
     await expect(sheet).toBeHidden();
   }
 });
+
+test("training settings save planning constraints and unavailable periods", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/settings/training");
+
+  const zone = page.getByRole("combobox", { name: "Fuseau horaire" });
+  await expect(zone).toHaveText("Paris (Europe)");
+  await zone.click();
+  await page.getByRole("option", { name: "New York (America)" }).click();
+  const ceiling = page.getByRole("textbox", {
+    name: "Temps d’entraînement max",
+  });
+  await ceiling.fill("6h30");
+  await page
+    .getByRole("button", { name: "Enregistrer la planification" })
+    .click();
+  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
+  await page.reload();
+  await expect(zone).toHaveText("New York (America)");
+  await expect(ceiling).toHaveValue("6 h 30");
+
+  await expect(page.getByText("Aucune période à venir.")).toBeVisible();
+  await page.getByLabel("Début").pressSequentially("12112030");
+  await page.getByLabel("Fin").pressSequentially("10112030");
+  await expect(page.getByLabel("Début")).toHaveValue("12/11/2030");
+  await page.getByRole("button", { name: "Ajouter la période" }).click();
+  await expect(
+    page.getByText(
+      "La fin de la période doit tomber le jour du début ou après.",
+    ),
+  ).toBeVisible();
+
+  await page.getByLabel("Début").pressSequentially("10112030");
+  await page.getByLabel("Fin").pressSequentially("12112030");
+  await page.getByText("Repos", { exact: true }).click();
+  await page.getByRole("textbox", { name: "Motif" }).fill("Vacances");
+  await page.getByRole("button", { name: "Ajouter la période" }).click();
+  await expect(
+    page.getByText("Période d’indisponibilité ajoutée."),
+  ).toBeVisible();
+  const periods = page.getByRole("list", { name: "Périodes à venir" });
+  await expect(periods.getByText("Du 10/11/2030 au 12/11/2030")).toBeVisible();
+  await expect(periods.getByText("Repos · Vacances")).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+
+  await page
+    .getByRole("button", {
+      name: "Supprimer la période : Du 10/11/2030 au 12/11/2030",
+    })
+    .click();
+  await expect(
+    page.getByText("Période d’indisponibilité supprimée."),
+  ).toBeVisible();
+  await expect(page.getByText("Aucune période à venir.")).toBeVisible();
+
+  await zone.click();
+  await page.getByRole("option", { name: "Paris (Europe)" }).click();
+  await ceiling.fill("");
+  await page
+    .getByRole("button", { name: "Enregistrer la planification" })
+    .click();
+  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
+});
