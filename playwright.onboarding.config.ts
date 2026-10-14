@@ -4,7 +4,7 @@ if (process.env.CI !== "true")
 export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: "onboarding.spec.ts",
-  fullyParallel: false,
+  fullyParallel: true,
   workers: 1,
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
@@ -21,7 +21,7 @@ export default defineConfig({
       command: "npm run dev -- --port 3110",
       url: "http://127.0.0.1:3110",
       reuseExistingServer: false,
-      timeout: 120000,
+      timeout: 120_000,
       env: {
         PLAYWRIGHT_TEST: "1",
         ONBOARDING_ENABLED: "true",

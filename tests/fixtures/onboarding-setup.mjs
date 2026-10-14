@@ -24,7 +24,13 @@ if (!status.ANON_KEY || !status.SERVICE_ROLE_KEY)
   throw new Error("Missing isolated test credentials.");
 const result = spawnSync(
   "npx",
-  ["playwright", "test", "--config", "playwright.onboarding.config.ts"],
+  [
+    "playwright",
+    "test",
+    "--config",
+    "playwright.onboarding.config.ts",
+    ...process.argv.slice(2),
+  ],
   { stdio: "inherit", env: process.env },
 );
 process.exitCode = result.status ?? 1;

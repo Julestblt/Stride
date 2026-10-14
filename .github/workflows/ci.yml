@@ -9,9 +9,73 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  validate:
+  scope:
     runs-on: ubuntu-latest
+    outputs:
+      documentation_only: ${{ steps.scope.outputs.documentation_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - id: scope
+        run: node scripts/ci-scope.ts
+        env:
+          CI_EVENT_NAME: ${{ github.event_name }}
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+  quality:
+    needs: scope
+    if: needs.scope.outputs.documentation_only != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  browser:
+    needs: scope
+    if: needs.scope.outputs.documentation_only != 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: main-1
+            project: chromium
+            shard: 1/3
+            production: "false"
+          - lane: main-2
+            project: chromium
+            shard: 2/3
+            production: "false"
+          - lane: main-3
+            project: chromium
+            shard: 3/3
+            production: "false"
+          - lane: course
+            project: chromium-race-course
+            shard: 1/1
+            production: "true"
+          - lane: development
+            project: chromium-development
+            shard: 1/1
+            production: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,14 +84,30 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run test:e2e
-      - run: npm run build
+      - run: npm run test:e2e -- --project=${{ matrix.project }} --no-deps --shard=${{ matrix.shard }}
+        env:
+          PLAYWRIGHT_PRODUCTION: ${{ matrix.production }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-${{ matrix.lane }}-results
+          include-hidden-files: true
+          path: |
+            test-results/**/trace.zip
+            test-results/**/error-context.md
+            test-results/*.png
+            test-results/.last-run.json
+          if-no-files-found: warn
+          retention-days: 7
 
-  database:
+  database-onboarding:
+    needs: scope
+    if: needs.scope.outputs.documentation_only != 'true'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,18 +115,75 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run db:start
+      - name: Start isolated database and install Chromium
+        run: |
+          npm run db:start &
+          database_pid=$!
+          npx playwright install --with-deps chromium &
+          browser_pid=$!
+          setup_status=0
+          wait "$database_pid" || setup_status=$?
+          wait "$browser_pid" || setup_status=$?
+          exit "$setup_status"
       - run: npx supabase db reset
       - run: npm run db:advisors
       - run: scripts/supabase-garmin-schema.sh
       - run: npm run db:test
       - run: npm run db:types && git diff --exit-code src/server/supabase/database.types.ts
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e:onboarding
+      - run: npm run test:e2e:onboarding -- --shard=${{ matrix.shard }}/3
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: onboarding-screenshots
-          path: test-results/onboarding-*.png
+          name: onboarding-${{ matrix.shard }}-results
+          include-hidden-files: true
+          path: |
+            test-results/**/trace.zip
+            test-results/**/error-context.md
+            test-results/onboarding-*.png
+            test-results/.last-run.json
           if-no-files-found: warn
           retention-days: 7
+
+  validate:
+    needs: [scope, quality, browser]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert required validation results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          node <<'NODE'
+          const needs = JSON.parse(process.env.NEEDS);
+          const scope = needs.scope;
+          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.documentation_only)) {
+            throw new Error('CI scope did not complete successfully.');
+          }
+          const expected = scope.outputs.documentation_only === 'true' ? 'skipped' : 'success';
+          for (const name of ['quality', 'browser']) {
+            if (needs[name].result !== expected) {
+              throw new Error(`${name} was ${needs[name].result}; expected ${expected}.`);
+            }
+          }
+          NODE
+
+  database:
+    needs: [scope, database-onboarding]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert required database results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          node <<'NODE'
+          const needs = JSON.parse(process.env.NEEDS);
+          const scope = needs.scope;
+          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.documentation_only)) {
+            throw new Error('CI scope did not complete successfully.');
+          }
+          const expected = scope.outputs.documentation_only === 'true' ? 'skipped' : 'success';
+          if (needs['database-onboarding'].result !== expected) {
+            throw new Error(`database-onboarding was ${needs['database-onboarding'].result}; expected ${expected}.`);
+          }
+          NODE
