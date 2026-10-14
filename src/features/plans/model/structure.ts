@@ -15,16 +15,16 @@ export const durationTolerance = 0.1;
 const stepEndSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("time"),
-    seconds: z.number().int().min(1).max(86_400),
+    seconds: z.number().int().min(1).max(259_200),
   }),
   z.strictObject({
     kind: z.literal("distance"),
     meters: z.number().int().min(1).max(400_000),
-    estimatedSeconds: z.number().int().min(1).max(86_400).optional(),
+    estimatedSeconds: z.number().int().min(1).max(259_200).optional(),
   }),
   z.strictObject({
     kind: z.literal("lap_button"),
-    estimatedSeconds: z.number().int().min(1).max(86_400),
+    estimatedSeconds: z.number().int().min(1).max(259_200),
   }),
 ]);
 

@@ -29,7 +29,7 @@ export const planOperationSchema = z.discriminatedUnion("op", [
   z.strictObject({
     op: z.literal("shorten_session"),
     sessionKey: key,
-    durationSeconds: z.number().int().min(0).max(86_400),
+    durationSeconds: z.number().int().min(0).max(259_200),
     structure: sessionStructureSchema,
   }),
   z.strictObject({

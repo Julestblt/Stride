@@ -103,7 +103,7 @@ export const weekTargetsSchema = z
     distanceMeters: optionalAmount(2_000_000),
     elevationGainMeters: optionalAmount(50_000),
     qualitySessions: z.number().int().min(0).max(7),
-    longRunSeconds: optionalAmount(86_400),
+    longRunSeconds: optionalAmount(259_200),
     intensitySplit: z.strictObject({
       easyPct: z.number().int().min(0).max(100),
       moderatePct: z.number().int().min(0).max(100),
@@ -125,7 +125,7 @@ export const weekSchema = z.strictObject({
 });
 
 export const sessionTargetsSchema = z.strictObject({
-  durationSeconds: z.number().int().min(0).max(86_400),
+  durationSeconds: z.number().int().min(0).max(259_200),
   distanceMeters: optionalAmount(400_000),
   elevationGainMeters: optionalAmount(30_000),
 });
