@@ -320,6 +320,401 @@ export type Database = {
         };
         Relationships: [];
       };
+      plan_blocks: {
+        Row: {
+          block_key: string;
+          ends_on: string;
+          id: string;
+          kind: string;
+          name: string;
+          objective: string;
+          plan_id: string;
+          race_id: string | null;
+          starts_on: string;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_key: string;
+          ends_on: string;
+          id?: string;
+          kind: string;
+          name: string;
+          objective: string;
+          plan_id: string;
+          race_id?: string | null;
+          starts_on: string;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version?: number | null;
+        };
+        Update: {
+          block_key?: string;
+          ends_on?: string;
+          id?: string;
+          kind?: string;
+          name?: string;
+          objective?: string;
+          plan_id?: string;
+          race_id?: string | null;
+          starts_on?: string;
+          user_id?: string;
+          valid_from_version?: number;
+          valid_to_version?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_blocks_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plan_decisions: {
+        Row: {
+          actor: string;
+          created_at: string;
+          decision: string;
+          id: string;
+          note: string | null;
+          proposal_id: string;
+          resulting_version: number | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actor: string;
+          created_at?: string;
+          decision: string;
+          id?: string;
+          note?: string | null;
+          proposal_id: string;
+          resulting_version?: number | null;
+          user_id: string;
+        };
+        Update: {
+          actor?: string;
+          created_at?: string;
+          decision?: string;
+          id?: string;
+          note?: string | null;
+          proposal_id?: string;
+          resulting_version?: number | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_decisions_proposal_id_fkey";
+            columns: ["proposal_id"];
+            isOneToOne: false;
+            referencedRelation: "plan_proposals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plan_proposals: {
+        Row: {
+          agent_run_id: string | null;
+          applied_version: number | null;
+          assumptions: NonNullable<Json>;
+          base_version: number | null;
+          created_at: string;
+          evidence: NonNullable<Json>;
+          expires_at: string | null;
+          id: string;
+          operations: NonNullable<Json>;
+          origin: string;
+          plan_id: string | null;
+          preview: Json | null;
+          rationale: string | null;
+          requested_by: string;
+          scope: string;
+          specialist_opinions: NonNullable<Json>;
+          status: string;
+          summary: string | null;
+          superseded_by: string | null;
+          target_keys: string[];
+          title: string;
+          uncertainty: Json | null;
+          updated_at: string;
+          user_id: string;
+          validation: Json | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          agent_run_id?: string | null;
+          applied_version?: number | null;
+          assumptions?: NonNullable<Json>;
+          base_version?: number | null;
+          created_at?: string;
+          evidence?: NonNullable<Json>;
+          expires_at?: string | null;
+          id?: string;
+          operations: NonNullable<Json>;
+          origin: string;
+          plan_id?: string | null;
+          preview?: Json | null;
+          rationale?: string | null;
+          requested_by: string;
+          scope: string;
+          specialist_opinions?: NonNullable<Json>;
+          status?: string;
+          summary?: string | null;
+          superseded_by?: string | null;
+          target_keys?: string[];
+          title: string;
+          uncertainty?: Json | null;
+          updated_at?: string;
+          user_id: string;
+          validation?: Json | null;
+        };
+        Update: {
+          agent_run_id?: string | null;
+          applied_version?: number | null;
+          assumptions?: NonNullable<Json>;
+          base_version?: number | null;
+          created_at?: string;
+          evidence?: NonNullable<Json>;
+          expires_at?: string | null;
+          id?: string;
+          operations?: NonNullable<Json>;
+          origin?: string;
+          plan_id?: string | null;
+          preview?: Json | null;
+          rationale?: string | null;
+          requested_by?: string;
+          scope?: string;
+          specialist_opinions?: NonNullable<Json>;
+          status?: string;
+          summary?: string | null;
+          superseded_by?: string | null;
+          target_keys?: string[];
+          title?: string;
+          uncertainty?: Json | null;
+          updated_at?: string;
+          user_id?: string;
+          validation?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_proposals_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "plan_proposals_superseded_by_fkey";
+            columns: ["superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "plan_proposals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plan_sessions: {
+        Row: {
+          contingencies: NonNullable<Json>;
+          id: string;
+          is_key: boolean;
+          kind: string;
+          origin: string;
+          plan_id: string;
+          priority: string;
+          purpose: string;
+          scheduled_on: string;
+          session_key: string;
+          sport: string;
+          structure: NonNullable<Json>;
+          targets: NonNullable<Json>;
+          terrain: string | null;
+          title: string;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          contingencies?: NonNullable<Json>;
+          id?: string;
+          is_key: boolean;
+          kind: string;
+          origin: string;
+          plan_id: string;
+          priority: string;
+          purpose: string;
+          scheduled_on: string;
+          session_key: string;
+          sport: string;
+          structure: NonNullable<Json>;
+          targets: NonNullable<Json>;
+          terrain?: string | null;
+          title: string;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version?: number | null;
+        };
+        Update: {
+          contingencies?: NonNullable<Json>;
+          id?: string;
+          is_key?: boolean;
+          kind?: string;
+          origin?: string;
+          plan_id?: string;
+          priority?: string;
+          purpose?: string;
+          scheduled_on?: string;
+          session_key?: string;
+          sport?: string;
+          structure?: NonNullable<Json>;
+          targets?: NonNullable<Json>;
+          terrain?: string | null;
+          title?: string;
+          user_id?: string;
+          valid_from_version?: number;
+          valid_to_version?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_sessions_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plan_versions: {
+        Row: {
+          confidence: NonNullable<Json>;
+          content_hash: string;
+          created_at: string;
+          created_by: string;
+          effective_from: string;
+          parent_version: number | null;
+          plan_id: string;
+          race_roles: NonNullable<Json>;
+          source_proposal_id: string | null;
+          summary: string | null;
+          user_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          confidence: NonNullable<Json>;
+          content_hash: string;
+          created_at?: string;
+          created_by: string;
+          effective_from: string;
+          parent_version?: number | null;
+          plan_id: string;
+          race_roles?: NonNullable<Json>;
+          source_proposal_id?: string | null;
+          summary?: string | null;
+          user_id: string;
+          version: number;
+        };
+        Update: {
+          confidence?: NonNullable<Json>;
+          content_hash?: string;
+          created_at?: string;
+          created_by?: string;
+          effective_from?: string;
+          parent_version?: number | null;
+          plan_id?: string;
+          race_roles?: NonNullable<Json>;
+          source_proposal_id?: string | null;
+          summary?: string | null;
+          user_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_versions_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "plan_versions_source_proposal_id_fkey";
+            columns: ["source_proposal_id"];
+            isOneToOne: false;
+            referencedRelation: "plan_proposals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plan_weeks: {
+        Row: {
+          block_key: string;
+          id: string;
+          intensity_split: NonNullable<Json>;
+          long_run_target_s: number | null;
+          notes: string | null;
+          plan_id: string;
+          quality_sessions: number;
+          target_distance_m: number | null;
+          target_duration_s: number;
+          target_elevation_m: number | null;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version: number | null;
+          week_key: string;
+          week_start: string;
+          week_type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          block_key: string;
+          id?: string;
+          intensity_split: NonNullable<Json>;
+          long_run_target_s?: number | null;
+          notes?: string | null;
+          plan_id: string;
+          quality_sessions: number;
+          target_distance_m?: number | null;
+          target_duration_s: number;
+          target_elevation_m?: number | null;
+          user_id: string;
+          valid_from_version: number;
+          valid_to_version?: number | null;
+          week_key: string;
+          week_start: string;
+          week_type: string;
+        };
+        Update: {
+          block_key?: string;
+          id?: string;
+          intensity_split?: NonNullable<Json>;
+          long_run_target_s?: number | null;
+          notes?: string | null;
+          plan_id?: string;
+          quality_sessions?: number;
+          target_distance_m?: number | null;
+          target_duration_s?: number;
+          target_elevation_m?: number | null;
+          user_id?: string;
+          valid_from_version?: number;
+          valid_to_version?: number | null;
+          week_key?: string;
+          week_start?: string;
+          week_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_weeks_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       provider_activities: {
         Row: {
           activity_name: string | null;
@@ -1041,6 +1436,57 @@ export type Database = {
           },
         ];
       };
+      training_plans: {
+        Row: {
+          active_version: number;
+          created_at: string;
+          ends_on: string;
+          id: string;
+          primary_race_id: string | null;
+          starts_on: string;
+          status: string;
+          time_zone: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          active_version: number;
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          primary_race_id?: string | null;
+          starts_on: string;
+          status?: string;
+          time_zone: string;
+          title: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          active_version?: number;
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          primary_race_id?: string | null;
+          starts_on?: string;
+          status?: string;
+          time_zone?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "training_plans_primary_race_id_fkey";
+            columns: ["primary_race_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_races";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       provider_training_weeks: {
@@ -1060,6 +1506,42 @@ export type Database = {
       };
     };
     Functions: {
+      accept_plan_proposal: {
+        Args: { p_note?: string; p_proposal_id: string };
+        Returns: {
+          agent_run_id: string | null;
+          applied_version: number | null;
+          assumptions: NonNullable<Json>;
+          base_version: number | null;
+          created_at: string;
+          evidence: NonNullable<Json>;
+          expires_at: string | null;
+          id: string;
+          operations: NonNullable<Json>;
+          origin: string;
+          plan_id: string | null;
+          preview: Json | null;
+          rationale: string | null;
+          requested_by: string;
+          scope: string;
+          specialist_opinions: NonNullable<Json>;
+          status: string;
+          summary: string | null;
+          superseded_by: string | null;
+          target_keys: string[];
+          title: string;
+          uncertainty: Json | null;
+          updated_at: string;
+          user_id: string;
+          validation: Json | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "plan_proposals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       acquire_provider_lease: {
         Args: { p_connection_id: string; p_owner: string };
         Returns: boolean;
@@ -1188,6 +1670,42 @@ export type Database = {
         Returns: number;
       };
       race_owned: { Args: { p_race_id: string }; Returns: boolean };
+      reject_plan_proposal: {
+        Args: { p_note?: string; p_proposal_id: string };
+        Returns: {
+          agent_run_id: string | null;
+          applied_version: number | null;
+          assumptions: NonNullable<Json>;
+          base_version: number | null;
+          created_at: string;
+          evidence: NonNullable<Json>;
+          expires_at: string | null;
+          id: string;
+          operations: NonNullable<Json>;
+          origin: string;
+          plan_id: string | null;
+          preview: Json | null;
+          rationale: string | null;
+          requested_by: string;
+          scope: string;
+          specialist_opinions: NonNullable<Json>;
+          status: string;
+          summary: string | null;
+          superseded_by: string | null;
+          target_keys: string[];
+          title: string;
+          uncertainty: Json | null;
+          updated_at: string;
+          user_id: string;
+          validation: Json | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "plan_proposals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       release_provider_lease: {
         Args: { p_connection_id: string; p_owner: string };
         Returns: undefined;
