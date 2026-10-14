@@ -17,7 +17,7 @@ test("keyboard help is searchable, platform-aware and available from the account
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto("/activities");
-  await page.getByRole("button", { name: "Jules athlete@example.com" }).click();
+  await page.getByRole("button", { name: "Jules Athlète" }).click();
   await page.getByRole("menuitem", { name: "Raccourcis clavier" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Raccourcis clavier" });
@@ -70,7 +70,7 @@ test("mobile account menu opens gesture help and a connected keyboard opens shor
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
     .first()
     .click();
-  await page.getByRole("button", { name: "Jules athlete@example.com" }).click();
+  await page.getByRole("button", { name: "Jules Athlète" }).click();
   await page.getByRole("menuitem", { name: "Gestes et commandes" }).click();
 
   const gestures = page.getByRole("dialog", { name: "Gestes et commandes" });
@@ -137,7 +137,7 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await page
     .getByRole("button", { name: "Enregistrer les préférences" })
     .click();
-  await expect(page).toHaveURL(/\/settings\/training\?status=saved$/);
+  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
   await page.reload();
   await expect(page.getByRole("radio", { name: "Route" })).toBeChecked();
   await page
@@ -149,17 +149,26 @@ test("desktop settings reflect stored athlete data and expose every supported se
     .getByRole("combobox", { name: "Quel est ton objectif ?" })
     .selectOption("trail");
   await page.getByRole("button", { name: "Enregistrer l’objectif" }).click();
-  await expect(page).toHaveURL(/\/settings\/goals\?status=saved$/);
+  await expect(page.getByText("Objectif enregistré.")).toBeVisible();
   await page.reload();
   await expect(
     page.getByRole("combobox", { name: "Quel est ton objectif ?" }),
   ).toHaveValue("trail");
-  const add = page.getByRole("form", { name: "Ajouter la course" });
-  await add.getByLabel("Nom de la course").fill("Training 10K");
-  await add.getByLabel("Date").fill("2027-08-10");
-  await add.getByLabel("Distance (km)").fill("10");
-  await add.getByRole("button", { name: "Ajouter la course" }).click();
-  await expect(page).toHaveURL(/\/settings\/goals\?status=saved$/);
+  await page.getByRole("link", { name: "Ajouter une course" }).click();
+  const wizard = page.getByRole("dialog", { name: "Ajouter une course" });
+  await expect(wizard).toBeVisible();
+  await wizard.getByLabel("Nom").fill("Training 10K");
+  await wizard.getByLabel("Date").fill("10/08/2027");
+  await wizard.getByLabel("Distance").fill("10");
+  await wizard.getByRole("button", { name: "Continuer" }).click();
+  await wizard
+    .getByRole("button", { name: "Voir l’effet sur le plan" })
+    .click();
+  await expect(
+    wizard.getByText("Course ajoutée à tes objectifs."),
+  ).toBeVisible();
+  await wizard.getByRole("button", { name: "Terminer" }).click();
+  await expect(page).toHaveURL(/\/settings\/goals$/);
   await page.goto("/settings");
   await expect(
     page.getByRole("link", {
@@ -168,13 +177,20 @@ test("desktop settings reflect stored athlete data and expose every supported se
   ).toBeVisible();
   await page.goto("/settings/goals");
   await page.reload();
-  await page.getByText("Training 10K", { exact: false }).first().click();
+  await page
+    .locator("div")
+    .filter({ hasText: "Training 10K" })
+    .filter({ has: page.getByRole("link", { name: "Modifier" }) })
+    .last()
+    .getByRole("link", { name: "Modifier" })
+    .click();
   await page.getByRole("button", { name: "Supprimer la course" }).click();
   await expect(page.getByRole("alertdialog")).toBeVisible();
   await page
     .getByRole("alertdialog")
     .getByRole("button", { name: "Supprimer la course" })
     .click();
+  await expect(page.getByText("Course supprimée.")).toBeVisible();
   await expect(page.getByText("Training 10K")).toHaveCount(0);
   await page
     .getByRole("navigation", { name: "Réglages des données" })
@@ -244,8 +260,7 @@ test("settings pages use the available desktop width and center on wide screens"
     const content = page.locator('[data-slot="settings-content"]');
     await expect(content).toBeVisible();
     const bounds = await content.boundingBox();
-    if (route === "/settings/profile") expect(bounds?.width).toBe(1000);
-    else expect(bounds?.width).toBeGreaterThan(1000);
+    expect(bounds?.width).toBeGreaterThan(1000);
     if (route === "/settings") {
       await page.screenshot({
         path: "test-results/settings-laptop-layout.png",
@@ -257,12 +272,17 @@ test("settings pages use the available desktop width and center on wide screens"
   await page.goto("/settings/connections/garmin");
   const content = page.locator('[data-slot="settings-content"]');
   const bounds = await content.boundingBox();
-  const panel = await content.locator("..").boundingBox();
   expect(bounds?.width).toBe(1440);
-  expect(bounds?.x).toBeCloseTo(
-    (panel?.x ?? 0) + ((panel?.width ?? 0) - 1440) / 2,
-    0,
-  );
+  const gaps = await content.evaluate((element) => {
+    const parent = element.parentElement;
+    const parentBox = parent!.getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    return {
+      left: box.left - parentBox.left,
+      right: parentBox.left + parent!.clientWidth - box.right,
+    };
+  });
+  expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(1);
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(2560);
@@ -277,7 +297,7 @@ test("desktop settings keep the account footer fixed and aligned with the app", 
   await signIn(page);
   await page.goto("/activities");
   const appAvatar = await page
-    .getByRole("button", { name: "Jules athlete@example.com" })
+    .getByRole("button", { name: "Jules Athlète" })
     .locator("span")
     .first()
     .boundingBox();
@@ -293,9 +313,12 @@ test("desktop settings keep the account footer fixed and aligned with the app", 
     expect(Math.abs(settingsAvatar!.x - appAvatar!.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(settingsAvatar!.y - appAvatar!.y)).toBeLessThanOrEqual(1);
 
-    const scrollTop = await page.locator("main").evaluate((main) => {
-      main.scrollTop = main.scrollHeight;
-      return main.scrollTop;
+    const scroller = page
+      .locator('[data-slot="settings-content"]')
+      .locator("..");
+    const scrollTop = await scroller.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+      return element.scrollTop;
     });
     expect(scrollTop).toBeGreaterThan(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
