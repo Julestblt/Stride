@@ -8,23 +8,59 @@
   "resources": {
     "./agents/coach.md": {
       "kind": "agent",
-      "id": "agent_012jzvuHJ3N8XJY3HdwejEh1",
+      "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
       "version": "1",
-      "hash": "e56d3dff0a6cbddc37c4f0607ce5febd",
-      "remote_hash": "bd9febbdaf8c9e13e6c2f60394d8c96d"
+      "hash": "ed4003090e89eab84a51711e50bcb5a6",
+      "remote_hash": "c80c5b4cc3addec616190ca1a2d8f0ea"
     },
     "./agents/medical.md": {
       "kind": "agent",
-      "id": "agent_01C8KQnGawVN3PRMNzTo4vt6",
+      "id": "agent_011dYKZ33Wq7xwdNR3SqpugL",
       "version": "1",
-      "hash": "1983659a7fb35d6d67d920a858d9008b",
-      "remote_hash": "aaf1d47d13063d0eb1f062f39b20d287"
+      "hash": "0c9fad39f74e06fcfb4826c49008f45b",
+      "remote_hash": "6e5e441efde6522a9f97547e2c632c7c"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
-      "id": "env_012qdZg1usitf9qbw3zfgjgy",
-      "hash": "6d21d53d2e57a4bc346bb3557e3c9313",
-      "remote_hash": "087ed157a791ddee7a273fd0b8e1297b"
+      "id": "env_01VLDfiFmxn52uU7BCPirTCB",
+      "hash": "1d890d72191fe02dc9248cd2d0e1f297",
+      "remote_hash": "72d0b2cd62455eb38b15979e13b46c91"
+    },
+    "./skills/fueling": {
+      "kind": "skill",
+      "id": "skill_01MUkdrYENWzre6pp9m9Yzt2",
+      "version": "skver_011bHzr86juxpJREv3LXfkaz",
+      "hash": "087e78331231b70cb8365068448c6865"
+    },
+    "./skills/health-recovery": {
+      "kind": "skill",
+      "id": "skill_01McDG7svjNWDicbWjdxAV1f",
+      "version": "skver_01Pao6UPF8eYgRgsA6qCLp4H",
+      "hash": "faf3012c818394b9f8376c4bbd16d07f"
+    },
+    "./skills/plan-format": {
+      "kind": "skill",
+      "id": "skill_012bHRN9qv9aAfHU1DJVygLt",
+      "version": "skver_011a5nafbcNL4Bf4vJmDnDoT",
+      "hash": "2cfa82412163d955253bdd5f68b6d482"
+    },
+    "./skills/plan-periodization": {
+      "kind": "skill",
+      "id": "skill_01DHHZifHU7Eq6byKet5Xfoc",
+      "version": "skver_018WtCDSLohmZWGa31dwT2rA",
+      "hash": "9d235e4d41eb0b93ee79457bde921206"
+    },
+    "./skills/race-specificity": {
+      "kind": "skill",
+      "id": "skill_01VQqXNMQneHCr5RJSGEKkSN",
+      "version": "skver_01HdqscgktnfJur599ZN9TFo",
+      "hash": "50833efd4e40f675e45ae46c8293036c"
+    },
+    "./skills/session-design": {
+      "kind": "skill",
+      "id": "skill_01AroJ3qNVuGNpe3nfH26hf8",
+      "version": "skver_01WJw4bRrduaRpxDrrAWMNHL",
+      "hash": "45276f491502042844e01e5ccc98a7e6"
     }
   }
 }
