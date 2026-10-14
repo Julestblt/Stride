@@ -14,10 +14,15 @@ export function PlanEmpty({
       ? `Pas assez de semaines avant ${objective.race?.name ?? "ta course"}`
       : "Pas encore assez de données pour construire ton plan";
   return (
-    <section className="flex max-w-2xl flex-col gap-5">
-      <h1 className="text-display font-semibold text-balance">{title}</h1>
+    <section className="flex max-w-200 flex-col gap-5">
+      <h1 className="text-[25px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance sm:text-[clamp(32px,4vw,46px)] sm:leading-[1.05] sm:tracking-[-0.03em]">
+        {title}
+      </h1>
       {feasibility.reasons.map((reason) => (
-        <p key={reason} className="text-lead text-muted">
+        <p
+          key={reason}
+          className="text-sm leading-normal text-pretty text-muted sm:text-base sm:leading-[1.55]"
+        >
           {reason}
         </p>
       ))}

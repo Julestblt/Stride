@@ -220,11 +220,11 @@ export function WeekHeader({
         </MonoLabel>
       </div>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex max-w-2xl flex-col gap-2 max-sm:hidden">
-          <h1 className="text-display font-semibold">
+        <div className="flex max-w-200 flex-col gap-3 max-sm:hidden">
+          <h1 className="text-[clamp(32px,4vw,46px)] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">
             Semaine {position.number} · {range}
           </h1>
-          <p className="text-lead text-muted">
+          <p className="text-base leading-[1.55] text-pretty text-muted">
             {weekSummary(state, weekStart)}
           </p>
         </div>

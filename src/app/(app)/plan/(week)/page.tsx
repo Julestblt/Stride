@@ -44,6 +44,7 @@ export default async function PlanPage({
         { label: `Semaine ${position.number}` },
       ]}
     >
+      <WeekHeader state={state} weekStart={weekStart} />
       <DraftBanner />
       <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <BlockNavigation
@@ -53,7 +54,6 @@ export default async function PlanPage({
           className="max-lg:hidden lg:sticky lg:top-0 lg:self-start"
         />
         <div className="flex min-w-0 flex-col gap-8">
-          <WeekHeader state={state} weekStart={weekStart} />
           <WeekSessions
             state={state}
             weekStart={weekStart}

@@ -206,6 +206,27 @@ describe("resolveObjective", () => {
     ).toBe(21.1);
   });
 
+  it("targets the next A race when the nearest one is too close", () => {
+    const imminent = race(50, "2026-10-17", {
+      id: "imminent",
+      kind: "trail",
+    });
+    const next = race(120, "2027-03-20", { id: "next", kind: "trail" });
+    const objective = resolveObjective({
+      races: [imminent, race(10, "2026-12-06", { priority: "C" }), next],
+      today,
+      history: summary,
+    });
+    expect(objective.race?.id).toBe("next");
+    expect(objective.otherRaces).toEqual([
+      expect.objectContaining({ id: "imminent", role: "secondary" }),
+      expect.objectContaining({ id: "race-10", role: "preparation" }),
+    ]);
+    expect(
+      resolveObjective({ races: [imminent], today, history: summary }).race?.id,
+    ).toBe("imminent");
+  });
+
   it("labels long events and short history", () => {
     expect(
       resolveObjective({
