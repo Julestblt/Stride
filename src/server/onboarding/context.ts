@@ -10,6 +10,7 @@ export type OnboardingContext = {
   client: SupabaseClient<Database>;
   userId: string;
   email: string | null;
+  createdAt?: string | null;
   accessToken: string;
 };
 export async function verifyOnboardingContext(
@@ -31,6 +32,7 @@ export async function verifyOnboardingContext(
     client,
     userId: data.user.id,
     email: data.user.email ?? null,
+    createdAt: data.user.created_at ?? null,
     accessToken: session.session.access_token,
   };
 }

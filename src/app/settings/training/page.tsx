@@ -1,21 +1,48 @@
 import { Button } from "@/components/ui/button";
 import {
-  SettingsHeading,
-  SettingsGroup,
-  UnavailableSettingRow,
-} from "@/features/settings/components/settings-shell";
-import { ChoiceRow } from "@/features/settings/components/choices";
-import { SettingsNotice } from "@/features/settings/components/form-parts";
+  PreferenceRow,
+  PreferenceSection,
+  PreviewNotificationRow,
+  PreviewSegments,
+  PreviewSwitch,
+  SegmentedField,
+  WeekdayField,
+} from "@/features/settings/components/preferences";
+import { SettingsNotice } from "@/features/settings/components/settings-notice";
 import { requireAthlete } from "@/server/app/session";
 import { readProfile } from "@/server/onboarding/profile";
 import { saveSettingsTraining } from "@/server/settings/actions";
 
-const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const weekdays = [
+  { value: 1, short: "L", label: "Lundi" },
+  { value: 2, short: "M", label: "Mardi" },
+  { value: 3, short: "M", label: "Mercredi" },
+  { value: 4, short: "J", label: "Jeudi" },
+  { value: 5, short: "V", label: "Vendredi" },
+  { value: 6, short: "S", label: "Samedi" },
+  { value: 7, short: "D", label: "Dimanche" },
+];
 const access = [
-  { value: "hills", label: "Côtes" },
-  { value: "incline_treadmill", label: "Tapis incliné" },
-  { value: "gym", label: "Salle de sport" },
+  { value: "hills", label: "Dénivelé" },
+  { value: "incline_treadmill", label: "Tapis · jusqu’à 12 %" },
+  { value: "gym", label: "Salle" },
   { value: "track", label: "Piste" },
+];
+const notifications = [
+  { label: "Rappel de séance", hint: "Le matin d’une séance, 07:00" },
+  {
+    label: "Un changement du plan t’attend",
+    hint: "Quand une proposition est en attente",
+  },
+  {
+    label: "Alertes de récupération",
+    hint: "Deux nuits de VFC basse d’affilée, FC au repos inhabituelle",
+  },
+  {
+    label: "Préparation de course",
+    hint: "Séances clés, check du matériel, début de l’affûtage",
+  },
+  { label: "Bilan hebdo", hint: "Dimanche soir" },
 ];
 
 export default async function TrainingSettingsPage({
@@ -27,129 +54,181 @@ export default async function TrainingSettingsPage({
   const profile = await readProfile(context);
   const values = profile.values;
   return (
-    <>
-      <SettingsHeading
-        title="Entraînement et coach"
-        description="Tes disponibilités et ton terrain de course aident Stride à comprendre ton entraînement."
-      />
+    <div className="flex flex-col gap-6 md:gap-10">
+      <div className="flex flex-col gap-2 px-1 md:px-0">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-[2rem] md:tracking-[-0.025em]">
+          Entraînement et coach
+        </h1>
+        <p className="text-sm leading-normal text-muted md:text-body">
+          Ça guide mes plans et ma façon de te parler. Changer tes
+          disponibilités déclenchera une proposition de mise à jour, sans
+          réécrire ta semaine en douce.
+        </p>
+      </div>
       <SettingsNotice status={query.status} />
-      <form action={saveSettingsTraining}>
+      <form action={saveSettingsTraining} className="flex flex-col gap-6">
         <input type="hidden" name="revision" value={profile.revision ?? ""} />
-        <SettingsGroup title="Entraînement et coach">
-          <ChoiceRow
-            name="primary_terrain"
-            legend="Terrain principal"
-            value={values.primary_terrain}
-            options={[
-              { value: "road", label: "Route" },
-              { value: "trail", label: "Trail" },
-              { value: "mixed", label: "Les deux" },
-            ]}
-          />
-          <fieldset className="border-b border-border px-4 py-4 md:px-0">
-            <legend className="mb-3 text-sm font-medium">
-              Jours de course
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {weekdays.map((day, index) => (
-                <label key={day} className="cursor-pointer">
-                  <input
-                    className="peer sr-only"
-                    type="checkbox"
-                    name="available_weekdays"
-                    value={index + 1}
-                    defaultChecked={values.available_weekdays?.includes(
-                      index + 1,
-                    )}
-                  />
-                  <span className="grid size-10 place-items-center rounded-full border border-border-strong text-xs text-muted peer-checked:border-accent peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-ring">
-                    {day}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <ChoiceRow
-            name="long_run_day"
-            legend="Jour de sortie longue"
-            value={values.long_run_day}
-            options={[
-              { value: "saturday", label: "Samedi" },
-              { value: "sunday", label: "Dimanche" },
-              { value: "flexible", label: "Flexible" },
-            ]}
-          />
-          <ChoiceRow
-            name="weekday_session_minutes"
-            legend="Durée des séances en semaine"
-            value={String(values.weekday_session_minutes ?? "")}
-            options={[45, 60, 75, 90].map((minutes) => ({
-              value: String(minutes),
-              label: minutes === 90 ? "90+ min" : `${minutes} min`,
-            }))}
-          />
-          <fieldset className="px-4 py-4 md:px-0">
-            <legend className="mb-3 text-sm font-medium">
-              Équipements disponibles
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {access.map((item) => (
-                <label key={item.value} className="cursor-pointer">
-                  <input
-                    className="peer sr-only"
-                    type="checkbox"
-                    name="training_access"
-                    value={item.value}
-                    defaultChecked={values.training_access?.includes(
-                      item.value,
-                    )}
-                  />
-                  <span className="inline-flex min-h-10 items-center rounded-control border border-border-strong px-3 text-sm text-muted peer-checked:border-foreground peer-checked:bg-foreground peer-checked:text-background peer-focus-visible:outline-2 peer-focus-visible:outline-ring">
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        </SettingsGroup>
-        <Button type="submit">Enregistrer les préférences</Button>
+        <PreferenceSection title="Entraînement">
+          <PreferenceRow labelId="t-type" label="Discipline principale">
+            <SegmentedField
+              name="primary_terrain"
+              labelledBy="t-type"
+              stretch
+              selected={values.primary_terrain ? [values.primary_terrain] : []}
+              options={[
+                { value: "road", label: "Route" },
+                { value: "trail", label: "Trail" },
+                { value: "mixed", label: "Les deux" },
+              ]}
+            />
+          </PreferenceRow>
+          <PreferenceRow
+            labelId="t-days"
+            label="Jours de course"
+            hint="5 max par semaine"
+          >
+            <WeekdayField
+              name="available_weekdays"
+              labelledBy="t-days"
+              days={weekdays}
+              selected={values.available_weekdays ?? []}
+            />
+          </PreferenceRow>
+          <PreferenceRow labelId="t-long" label="Jour de la sortie longue">
+            <SegmentedField
+              name="long_run_day"
+              labelledBy="t-long"
+              stretch
+              selected={values.long_run_day ? [values.long_run_day] : []}
+              options={[
+                { value: "saturday", label: "Samedi" },
+                { value: "sunday", label: "Dimanche" },
+                { value: "flexible", label: "Flexible" },
+              ]}
+            />
+          </PreferenceRow>
+          <PreferenceRow labelId="t-time" label="Durée en semaine">
+            <SegmentedField
+              name="weekday_session_minutes"
+              labelledBy="t-time"
+              stretch
+              selected={
+                values.weekday_session_minutes
+                  ? [String(values.weekday_session_minutes)]
+                  : []
+              }
+              options={[45, 60, 75, 90].map((minutes) => ({
+                value: String(minutes),
+                label: minutes === 90 ? "90’+" : `${minutes}’`,
+              }))}
+            />
+          </PreferenceRow>
+          <PreferenceRow labelId="t-acc" label="Accès à">
+            <SegmentedField
+              name="training_access"
+              type="checkbox"
+              labelledBy="t-acc"
+              selected={values.training_access ?? []}
+              options={access}
+            />
+          </PreferenceRow>
+        </PreferenceSection>
+        <Button type="submit" className="self-start">
+          Enregistrer les préférences
+        </Button>
       </form>
-      <div className="mt-9">
-        <SettingsGroup title="Unités">
-          <UnavailableSettingRow
-            title="Distance et dénivelé"
-            detail="Stride affiche les kilomètres et les mètres."
-            value="km · m"
+      <PreferenceSection title="Unités">
+        <PreferenceRow labelId="u-sys" label="Distance et dénivelé">
+          <PreviewSegments
+            labelledBy="u-sys"
+            stretch
+            options={["km · m", "mi · ft"]}
+            selected="km · m"
           />
-          <UnavailableSettingRow
-            title="Allure"
-            detail="L’allure est affichée au kilomètre."
-            value="min/km"
+        </PreferenceRow>
+        <PreferenceRow labelId="u-pace" label="Allure">
+          <PreviewSegments
+            labelledBy="u-pace"
+            stretch
+            options={["min/km · 4:38", "km/h · 12,9"]}
+            selected="min/km · 4:38"
           />
-        </SettingsGroup>
-      </div>
-      <SettingsGroup title="Coach">
-        <UnavailableSettingRow
-          title="Ton et niveau de détail"
-          detail="Les conversations avec le coach ne sont pas encore disponibles."
-        />
-        <UnavailableSettingRow
-          title="Modifications du plan"
-          detail="Les plans d’entraînement ne sont pas encore disponibles."
-        />
-        <UnavailableSettingRow
-          title="Conseils spontanés"
-          detail="Stride ne propose pas encore de conseils spontanés."
-        />
-      </SettingsGroup>
-      <div id="notifications">
-        <SettingsGroup title="Notifications">
-          <UnavailableSettingRow
-            title="Rappels et alertes"
-            detail="Stride n’envoie pas encore de notifications."
+        </PreferenceRow>
+      </PreferenceSection>
+      <PreferenceSection title="Coach" accent badge="Bientôt">
+        <PreferenceRow labelId="c-tone" label="Ton">
+          <div className="flex flex-col gap-2">
+            <PreviewSegments
+              labelledBy="c-tone"
+              options={["Direct", "Équilibré", "Encourageant"]}
+            />
+            <span className="text-xs text-muted-foreground">
+              « Aujourd’hui : 4 × 6. Nuit courte, jambes fraîches. »
+            </span>
+          </div>
+        </PreferenceRow>
+        <PreferenceRow labelId="c-detail" label="Niveau de détail">
+          <PreviewSegments
+            labelledBy="c-detail"
+            options={["Court", "Standard", "Avec les chiffres"]}
           />
-        </SettingsGroup>
-      </div>
-    </>
+        </PreferenceRow>
+        <PreferenceRow
+          labelId="c-adapt"
+          label="Changements du plan"
+          hint="Rien ne change sans trace dans le journal."
+        >
+          <div
+            role="radiogroup"
+            aria-labelledby="c-adapt"
+            className="flex flex-col gap-1.5"
+          >
+            <label className="flex items-start gap-2.5 rounded-control border border-border px-3 py-2.5 text-sm opacity-70">
+              <input
+                type="radio"
+                name="adapt"
+                disabled
+                className="mt-0.75 accent-accent"
+              />
+              Me demander avant chaque changement
+            </label>
+            <label className="flex items-start gap-2.5 rounded-control border border-border px-3 py-2.5 text-sm opacity-70">
+              <input
+                type="radio"
+                name="adapt"
+                disabled
+                className="mt-0.75 accent-accent"
+              />
+              <span className="flex flex-col gap-0.5">
+                Appliquer les petits ajustements, me demander pour le reste
+                <span className="text-xs text-muted-foreground">
+                  Lignes droites, quelques minutes en plus ou en moins ·
+                  annulable 48 h
+                </span>
+              </span>
+            </label>
+          </div>
+        </PreferenceRow>
+        <PreferenceRow
+          labelId="c-proactive"
+          label="Prendre la parole en premier"
+          hint="Brief du matin, alertes de récupération, tendances repérées"
+        >
+          <div className="flex items-center gap-3">
+            <PreviewSwitch label="Coaching proactif" />
+            <span className="text-sm text-muted">Désactivé</span>
+          </div>
+        </PreferenceRow>
+      </PreferenceSection>
+      <PreferenceSection
+        id="notifications"
+        title="Notifications"
+        badge="Bientôt"
+      >
+        {notifications.map((item) => (
+          <PreviewNotificationRow key={item.label} {...item} />
+        ))}
+      </PreferenceSection>
+    </div>
   );
 }

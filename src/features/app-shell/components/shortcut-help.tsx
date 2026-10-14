@@ -392,6 +392,7 @@ export function ShortcutHelp() {
 export function ShortcutHelpMenuItem() {
   return (
     <DropdownMenuItem
+      className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
       onSelect={() => window.dispatchEvent(new Event(OPEN_SHORTCUT_HELP_EVENT))}
     >
       <AccountMenuKeyboardIcon />

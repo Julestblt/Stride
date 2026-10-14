@@ -27,6 +27,42 @@ const nullableNumber = (value: FormDataEntryValue | null) => {
   return text === null ? null : Number(text);
 };
 
+const clockPattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function planValues(data: FormData) {
+  const start = nullableText(data.get("start_time"));
+  const cutoff = parseDuration(nullableText(data.get("cutoff_duration")) ?? "");
+  return {
+    start: start !== null && clockPattern.test(start) ? `${start}:00` : null,
+    cutoff: cutoff ?? null,
+  };
+}
+
+async function savePlanValues(
+  current: NonNullable<Awaited<ReturnType<typeof context>>>,
+  raceId: string,
+  plan: ReturnType<typeof planValues>,
+) {
+  const values = {
+    start_time: plan.start,
+    start_time_confirmed: plan.start !== null,
+    cutoff_duration_seconds: plan.cutoff,
+  };
+  const { data, error } = await current.client
+    .from("race_plans")
+    .update(values)
+    .eq("race_id", raceId)
+    .eq("user_id", current.userId)
+    .select("race_id");
+  if (error) return false;
+  if (data && data.length > 0) return true;
+  if (plan.start === null && plan.cutoff === null) return true;
+  const { error: insertError } = await current.client
+    .from("race_plans")
+    .insert({ race_id: raceId, user_id: current.userId, ...values });
+  return !insertError;
+}
+
 async function context() {
   return getOnboardingContext({ writable: true });
 }
@@ -68,7 +104,8 @@ export async function saveSettingsTraining(data: FormData) {
     !values.primary_terrain ||
     !values.long_run_day ||
     !values.weekday_session_minutes ||
-    !values.available_weekdays?.length
+    !values.available_weekdays?.length ||
+    values.available_weekdays.length > 5
   )
     redirect(resultPath("/settings/training", "invalid"));
   await commitProfile(data, values, "/settings/training");
@@ -110,37 +147,14 @@ export async function saveSettingsGoal(data: FormData) {
   redirect(resultPath("/settings/goals", result.status));
 }
 
-export async function saveSettingsRace(data: FormData) {
-  const raw = {
-    id: data.get("id"),
-    revision: Number(data.get("revision")),
-    values: {
-      race_kind: data.get("race_kind"),
-      name: nullableText(data.get("name")),
-      race_date: nullableText(data.get("race_date")),
-      distance_km: nullableNumber(data.get("distance_km")),
-      elevation_gain_m: nullableNumber(data.get("elevation_gain_m")),
-      priority: data.get("priority"),
-      target_duration_seconds: parseDuration(
-        nullableText(data.get("target_duration")) ?? "",
-      ),
-    },
-  };
-  const parsed = raceSaveSchema.safeParse(raw);
-  if (
-    !parsed.success ||
-    !raw.values.name ||
-    !raw.values.race_date ||
-    !raw.values.distance_km
-  )
-    redirect(resultPath("/settings/goals", "invalid"));
-  const result = await saveRace({ context }, parsed.data);
-  if (result.status === "saved") revalidatePath("/settings/goals");
-  redirect(resultPath("/settings/goals", result.status));
-}
+export type RaceSubmitResult =
+  | { status: "saved"; id: string }
+  | {
+      status: "invalid" | "conflict" | "missing" | "error" | "session-expired";
+    };
 
-export async function addSettingsRace(data: FormData) {
-  const values = {
+function raceFormValues(data: FormData) {
+  return {
     race_kind: data.get("race_kind"),
     name: nullableText(data.get("name")),
     race_date: nullableText(data.get("race_date")),
@@ -151,9 +165,16 @@ export async function addSettingsRace(data: FormData) {
       nullableText(data.get("target_duration")) ?? "",
     ),
   };
+}
+
+export async function submitSettingsRace(
+  data: FormData,
+): Promise<RaceSubmitResult> {
+  const values = raceFormValues(data);
+  const id = nullableText(data.get("id"));
   const check = raceSaveSchema.safeParse({
-    id: "00000000-0000-4000-8000-000000000000",
-    revision: 1,
+    id: id ?? "00000000-0000-4000-8000-000000000000",
+    revision: id ? Number(data.get("revision")) : 1,
     values,
   });
   if (
@@ -162,22 +183,36 @@ export async function addSettingsRace(data: FormData) {
     !values.race_date ||
     !values.distance_km
   )
-    redirect(resultPath("/settings/goals", "invalid"));
+    return { status: "invalid" };
   const current = await context();
-  if (!current) redirect(resultPath("/settings/goals", "session-expired"));
+  if (!current) return { status: "session-expired" };
+  const plan = planValues(data);
+  if (id) {
+    const result = await saveRace({ context }, check.data);
+    if (result.status !== "saved") return { status: result.status };
+    if (!(await savePlanValues(current, id, plan))) return { status: "error" };
+    revalidatePath("/settings/goals");
+    return { status: "saved", id };
+  }
   const { count, error: countError } = await current.client
     .from("athlete_races")
     .select("id", { count: "exact", head: true })
     .eq("user_id", current.userId);
-  if (countError) redirect(resultPath("/settings/goals", "error"));
-  if ((count ?? 0) >= maxRaces)
-    redirect(resultPath("/settings/goals", "invalid"));
-  const { error } = await current.client
+  if (countError) return { status: "error" };
+  if ((count ?? 0) >= maxRaces) return { status: "invalid" };
+  const { data: created, error } = await current.client
     .from("athlete_races")
-    .insert({ user_id: current.userId, ...check.data.values });
-  if (error) redirect(resultPath("/settings/goals", "error"));
+    .insert({ user_id: current.userId, ...check.data.values })
+    .select("id")
+    .single();
+  if (error) return { status: "error" };
+  if (
+    (plan.start !== null || plan.cutoff !== null) &&
+    !(await savePlanValues(current, created.id, plan))
+  )
+    return { status: "error" };
   revalidatePath("/settings/goals");
-  redirect(resultPath("/settings/goals", "saved"));
+  return { status: "saved", id: created.id };
 }
 
 export async function removeSettingsRace(data: FormData) {

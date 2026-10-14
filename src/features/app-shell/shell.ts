@@ -1,5 +1,10 @@
 import type { GoalFocus } from "@/features/onboarding/goals";
 import { focusLabels } from "@/features/onboarding/athlete-profile";
+import {
+  isAnswered,
+  profileFields,
+  type ProfileValues,
+} from "@/features/onboarding/profile";
 
 export type ShellRace = {
   name: string | null;
@@ -12,6 +17,11 @@ export type ShellRaceLink = {
   name: string;
   priority: string;
   date: string | null;
+};
+export type ShellAccount = {
+  profilePercent: number;
+  questions: number;
+  garminSince: string | null;
 };
 export type ShellAthlete = { name: string; initials: string; detail: string };
 
@@ -112,4 +122,33 @@ export function shellRaces<T extends ShellRaceLink>(races: T[], today: string) {
     if (pastA !== pastB) return pastA ? 1 : -1;
     return (a.date ?? "9999").localeCompare(b.date ?? "9999");
   });
+}
+
+export function shortSince(iso: string | null, now: Date) {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  const minutes = Math.max(
+    0,
+    Math.floor((now.getTime() - date.getTime()) / 60_000),
+  );
+  if (minutes < 60) return `${Math.max(1, minutes)} min`;
+  const hours = Math.floor(minutes / 60);
+  return hours < 24 ? `${hours} h` : `${Math.floor(hours / 24)} j`;
+}
+
+export function shellAccount(
+  profile: ProfileValues,
+  focusMissing: boolean,
+  lastSyncAt: string | null,
+  now: Date,
+): ShellAccount {
+  const answered = profileFields.filter((field) =>
+    isAnswered(profile, field),
+  ).length;
+  return {
+    profilePercent: Math.round((answered / profileFields.length) * 100),
+    questions: profileFields.length - answered + (focusMissing ? 1 : 0),
+    garminSince: shortSince(lastSyncAt, now),
+  };
 }

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ProvenanceLabel } from "@/components/stride/provenance";
-import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { settingsHref, settingsSections } from "../navigation";
@@ -15,9 +16,18 @@ export function SettingsShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const search = useSearchParams().toString();
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: 0 });
+  }, [pathname, search]);
   const profile = pathname === "/settings/profile";
+  const goals = pathname === "/settings/goals";
+  const garmin = pathname === "/settings/connections/garmin";
   const active = settingsSections.find(
-    (section) => settingsHref(section.slug) === pathname,
+    (section) =>
+      settingsHref(section.slug) === pathname ||
+      (garmin && section.slug === "connections"),
   );
   return (
     <div className="min-h-svh bg-background text-foreground md:grid md:h-svh md:min-h-0 md:grid-cols-[16.5rem_minmax(0,1fr)] md:overflow-hidden">
@@ -56,10 +66,12 @@ export function SettingsShell({
                       <Link
                         key={href}
                         href={href}
-                        aria-current={pathname === href ? "page" : undefined}
+                        aria-current={
+                          active?.slug === section.slug ? "page" : undefined
+                        }
                         className={cn(
                           "rounded-control px-2 py-2 text-sm text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
-                          pathname === href &&
+                          active?.slug === section.slug &&
                             "bg-surface-raised font-medium text-foreground",
                         )}
                       >
@@ -87,11 +99,17 @@ export function SettingsShell({
           </div>
         </div>
       </aside>
-      <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-y-auto md:p-2">
-        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:min-h-[calc(100svh-1rem)] md:border">
-          <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:border-0 md:px-6">
+      <main className="min-w-0 p-0 md:h-svh md:min-h-0 md:overflow-hidden md:p-2">
+        <div className="border-subtle min-h-svh rounded-panel border-0 bg-surface-inset md:flex md:h-full md:min-h-0 md:flex-col md:border">
+          <header className="flex min-h-14 items-center gap-3 border-b border-border px-5 max-md:sticky max-md:top-0 max-md:z-10 max-md:border-0 max-md:bg-surface-inset md:shrink-0 md:px-6">
             <Link
-              href={active?.slug ? "/settings" : "/activities"}
+              href={
+                garmin
+                  ? "/settings/connections"
+                  : active?.slug
+                    ? "/settings"
+                    : "/activities"
+              }
               aria-label={
                 active?.slug ? "Retour aux réglages" : "Retour à Stride"
               }
@@ -103,6 +121,9 @@ export function SettingsShell({
               <span className="font-mono text-label tracking-wider text-muted uppercase md:font-sans md:text-sm md:tracking-normal md:normal-case">
                 Réglages
                 {profile ? <span className="md:hidden"> / Profil</span> : null}
+                {goals ? (
+                  <span className="md:hidden"> / Objectifs et courses</span>
+                ) : null}
               </span>
             ) : (
               <h1 className="text-2xl font-semibold tracking-tight md:text-sm md:font-normal md:tracking-normal md:text-muted">
@@ -112,8 +133,35 @@ export function SettingsShell({
             {active?.slug && (
               <>
                 <span className="hidden text-muted md:inline">/</span>
-                <span className="hidden text-sm md:inline">{active.label}</span>
+                {garmin ? (
+                  <>
+                    <Link
+                      href="/settings/connections"
+                      className="hidden text-sm text-muted hover:text-foreground md:inline"
+                    >
+                      {active.label}
+                    </Link>
+                    <span className="hidden text-muted md:inline">/</span>
+                    <span className="hidden text-sm md:inline">Garmin</span>
+                  </>
+                ) : (
+                  <span className="hidden text-sm md:inline">
+                    {active.label}
+                  </span>
+                )}
               </>
+            )}
+            {goals && (
+              <Link
+                href="/settings/goals?course=nouvelle"
+                aria-label="Ajouter une course"
+                className="ml-auto grid min-h-11 min-w-11 place-items-center rounded-card bg-accent text-xl font-semibold text-background hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-ring md:inline-flex md:min-h-9 md:rounded-control md:px-3.5 md:text-sm"
+              >
+                <span className="md:hidden" aria-hidden="true">
+                  +
+                </span>
+                <span className="hidden md:inline">+ Ajouter une course</span>
+              </Link>
             )}
             {profile && (
               <div className="ml-auto hidden gap-3.5 md:flex">
@@ -126,13 +174,18 @@ export function SettingsShell({
             )}
           </header>
           <div
-            data-slot="settings-content"
-            className={cn(
-              "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
-              profile && "max-w-[1000px] md:mx-auto md:pt-9",
-            )}
+            ref={scroller}
+            className="relative md:min-h-0 md:flex-1 md:[scrollbar-gutter:stable] md:overflow-y-auto md:overscroll-contain"
           >
-            {children}
+            <div
+              data-slot="settings-content"
+              className={cn(
+                "mx-auto w-full max-w-[1440px] px-4 pt-4 pb-16 md:mx-0 md:px-12 md:pt-10 2xl:mx-auto",
+                profile && "md:pt-9",
+              )}
+            >
+              {children}
+            </div>
           </div>
         </div>
       </main>
@@ -192,10 +245,12 @@ export function SettingsLinkRow({
   return (
     <Link
       href={href}
-      className="flex min-h-17 items-center gap-4 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring md:px-0"
+      className="flex min-h-17 items-center gap-4 border-b border-border px-4 py-3 last:border-b-0 hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-ring md:grid md:grid-cols-[9.5rem_minmax(0,1fr)_1rem] md:gap-5 md:px-0 md:py-4.5"
     >
-      <strong className="min-w-0 flex-1 text-sm">{title}</strong>
-      <span className="max-w-[55%] text-right text-sm text-muted">
+      <strong className="min-w-0 flex-1 text-sm md:flex-none md:text-base">
+        {title}
+      </strong>
+      <span className="max-w-[55%] text-right text-sm text-muted md:max-w-none md:text-left">
         {detail}
       </span>
       <ChevronRightIcon className="size-4 shrink-0 text-muted" />
