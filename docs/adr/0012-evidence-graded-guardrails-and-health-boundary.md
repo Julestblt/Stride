@@ -13,7 +13,7 @@ Coaching accuracy must not depend on model reasoning alone, and many popular tra
 - A deterministic validator evaluates every proposal at submission and at apply. Its `block` results are final.
 - Every rule declares a grade (`evidence`, `convention`, `integrity`), a severity (`block`, `warn`, `info`) and explicit skip conditions with reasons. A missing signal is never treated as favorable.
 - Integrity rules (frozen history, base version, valid dates, athlete races untouched) and athlete constraints (availability, declared limits, specialist constraints) block.
-- Single-session distance more than 30% above the longest run of the previous 30 days blocks; 10–30% warns.
+- Single-session distance more than 30% above the longest run of the previous 30 days is a strong warning that the proposal must state; 10–30% warns. As in the reference project, which blocks only on a red health verdict, the athlete decides on warnings.
 - Weekly progression caps, elevation caps, long-run share, back-to-back quality and intensity distribution warn and are labeled conventions. The acute:chronic ratio is information only.
 - Health boundary: declared pain from 7/10, worsening pain, illness with systemic symptoms or other red flags stop running proposals and show referral copy; pain from 4/10 blocks quality sessions and load increases until reassessed. These thresholds are conservative conventions. No clinician or coach reviews them (D8); they change only through a reviewed pull request with tests and an evaluation run.
 - The engine never diagnoses, names conditions, recommends treatment or clears a return to running. Passing the validator is never presented as medical safety.
@@ -29,7 +29,7 @@ Coaching accuracy must not depend on model reasoning alone, and many popular tra
 
 ## Trade-offs
 
-Conservative blocks can occasionally refuse a reasonable plan, and some useful heuristics become warnings only. Evidence grades make the system honest about uncertainty and easy to revise as evidence or pilot data changes.
+Keeping blocks to integrity, declared constraints and health leaves room for the Coach's judgment and the athlete's control, at the cost of relying on clearly stated warnings for load progression. Evidence grades make the system honest about uncertainty and easy to revise as evidence or pilot data changes.
 
 ## Consequences
 
