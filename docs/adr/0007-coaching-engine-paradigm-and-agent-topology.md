@@ -1,6 +1,6 @@
 # ADR 0007: Code-orchestrated coaching with one Coach agent and bounded specialists
 
-- Status: Accepted (2026-10-13, #94); topology to be confirmed by benchmark (decision D9, #119)
+- Status: Accepted (2026-10-13, #94); plan design by the single Coach confirmed by decision D10, specialist agents for conversations proposed in the [coaching team proposal](../architecture/coaching-engine/coaching-team-proposal.md)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 

@@ -1,6 +1,6 @@
 # Topology benchmark: single agent, single agent with skills, multi-agent delegation
 
-- Status: Accepted protocol, run pending (issue [#119](https://github.com/Julestblt/Stride/issues/119))
+- Status: Run stopped early on 2026-10-14 by the product owner; superseded by decision D10 and the [coaching team proposal](coaching-team-proposal.md) (issue [#119](https://github.com/Julestblt/Stride/issues/119))
 - Decision record: [ADR 0007](../../adr/0007-coaching-engine-paradigm-and-agent-topology.md), decision D9 in [risks and decisions](risks-and-decisions.md)
 - Runs at the end of Phase 1, before the Phase 2 model gateway is built, so its outcome shapes the Phase 2 runtime. Results are committed in the pull request that runs it.
 
@@ -122,3 +122,21 @@ Only synthetic athletes are used. Judge providers are used for evaluation only, 
 
 - `evals/topology/results/`: every generated plan, judge output and the computed results table, committed in the pull request that runs the benchmark.
 - A results summary in this document and the outcome recorded in ADR 0007.
+
+## Partial run (2026-10-14)
+
+The run was stopped after 34 of 48 plans because the Claude subscription quota ran out. No judging took place, so the decision rule was not applied. Raw plans, traces and the generated table are in `evals/topology/results/`.
+
+| Arm                   | Plans | Invalid after repair | Valid first attempt | Warnings / plan | Calls / plan | Cost / plan (USD, API-equivalent) | Minutes / plan |
+| --------------------- | ----: | -------------------: | ------------------: | --------------: | -----------: | --------------------------------: | -------------: |
+| A, single agent       |    12 |                    0 |                   9 |             2.8 |          1.3 |                              0.35 |            3.4 |
+| C, single with skills |    11 |                    0 |                   4 |             2.5 |          2.6 |                              0.38 |            3.2 |
+| B, multi-agent        |    11 |                    1 |                   4 |             3.7 |          6.9 |                              0.53 |            4.5 |
+
+Coverage: S1 to S5 complete, S6 partial (A twice, B and C once), S7 and S8 not run. No S6 plan scheduled quality in the first two weeks. Judge calibration: DeepSeek 4 of 4 seeded defects, GPT 3 of 4, Qwen not completed.
+
+Observations, without statistical weight: delegation did not reduce validator findings (B had the most long-run share warnings, 8 against 1 for each other arm, and the only invalid plan) and cost 1.5 to 2 times arm A. Weekly increases above 10% and a light taper were flagged in every arm, which points at the shared corpus and prompts rather than the topology.
+
+## Outcome
+
+The product owner decided without the judged comparison (decision D10): plans are designed by the single Coach with skills, and specialists are kept for conversation workflows as described in the [coaching team proposal](coaching-team-proposal.md). The harness stays in `evals/topology/` and can compare arms A and C later.
