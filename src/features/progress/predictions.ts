@@ -30,11 +30,11 @@ const distances = [
   { key: "marathon", label: "Marathon", meters: 42_195, confidence: "low" },
 ] as const;
 
-function oxygenCost(metersPerMinute: number) {
+export function oxygenCost(metersPerMinute: number) {
   return -4.6 + 0.182258 * metersPerMinute + 0.000104 * metersPerMinute ** 2;
 }
 
-function sustainableFraction(minutes: number) {
+export function sustainableFraction(minutes: number) {
   return (
     0.8 +
     0.1894393 * Math.exp(-0.012778 * minutes) +
