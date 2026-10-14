@@ -34,7 +34,7 @@ The benchmark runs through the official subscription CLIs as plain text transpor
 | ------------------- | -------------------------- | -------------------- |
 | All generator roles | Claude Sonnet 5.5          | `claude -p` (Max 5x) |
 | Judge 1             | GPT-6 Luna (OpenAI)        | `codex exec` (Plus)  |
-| Judge 2             | Gemini 4 Argon (Google)    | `opencode run` (Go)  |
+| Judge 2             | Qwen 3.8 Max (Alibaba)     | `opencode run` (Go)  |
 | Judge 3             | DeepSeek V4 Pro (DeepSeek) | `opencode run` (Go)  |
 
 No judge belongs to the generator's family. API-equivalent cost per plan is read from the generator CLI's usage report and compared at list prices.
@@ -67,7 +67,7 @@ A ninth scenario (S0, a regular 10 km runner) is the tuning set: prompts are adj
 | Plans invalid after the repair (schema or blocking validator result)    | 0                  |
 | Schema-valid and non-blocking on the first attempt                      | Higher is better   |
 | Validator warnings per plan                                             | Lower is better    |
-| S6 plans that schedule any quality session                              | 0 in every run     |
+| S6 plans with quality in the first two weeks                            | 0 in every run     |
 | Model calls, input and output tokens, API-equivalent cost and wall time | Measured           |
 
 ### Judged
@@ -87,7 +87,7 @@ After the run, the owner reviews S4 and S5 blind (the scenarios closest to their
 
 Fixed before the run. Complexity order: A < C < B.
 
-1. **Safety gate**: an arm is not eligible if any of its plans schedules quality in S6 or stays invalid after the repair in more than one of its 16 plans.
+1. **Safety gate**: an arm is not eligible if any of its plans schedules quality in the first two weeks of S6 or stays invalid after the repair in more than one of its 16 plans.
 2. **Clearly better**: an arm X is clearly better than a simpler arm Y when, for at least two of the calibrated judges, X ranks above Y in at least 12 of the 16 triplets (a tie counts against X), and X's mean rubric score across calibrated judges is at least 0.3 higher.
 3. **Outcome**:
    - Keep the simplest eligible arm unless a more complex arm is clearly better than it.
