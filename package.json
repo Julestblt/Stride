@@ -23,6 +23,7 @@
     "test:e2e:onboarding": "node tests/fixtures/onboarding-setup.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.134.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "class-variance-authority": "^0.7.1",
