@@ -23,7 +23,7 @@ New commits cancel older CI runs for the same pull request. Main pushes use a un
 | `database-onboarding` 1/2/3 | All database checks on each runner, 21 onboarding tests split 7/7/7 | Development app, independent local Supabase/Garmin stacks |
 | `validate` / `database`     | Required-check result assertions                                    | No checkout or dependency installation                    |
 
-All browser selections use explicit projects and `--no-deps` to avoid Playwright's dependency project running all tests on the first shard. Main settings and course serial groups retain their ordering. Onboarding enables test-level sharding while using two workers per runner. `fail-fast: false` allows every shard to report its own result and preserves complete coverage even when a sibling fails.
+All browser selections use explicit projects and `--no-deps` to avoid Playwright's dependency project running all tests on the first shard. Main settings and course serial groups retain their ordering. Onboarding enables test-level sharding while keeping one worker per runner. `fail-fast: false` allows every shard to report its own result and preserves complete coverage even when a sibling fails.
 
 Each database runner starts Supabase and installs Chromium concurrently after `npm ci`. The setup step waits for both commands and retains a nonzero status if either fails. Migration reset and the remaining database checks begin only after both finish successfully. These operations use separate Docker and browser/system dependency resources; no database checks overlap migration application.
 

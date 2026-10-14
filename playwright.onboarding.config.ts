@@ -5,7 +5,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: "onboarding.spec.ts",
   fullyParallel: true,
-  workers: 2,
+  workers: 1,
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
   use: { baseURL: "http://127.0.0.1:3110", trace: "retain-on-failure" },
