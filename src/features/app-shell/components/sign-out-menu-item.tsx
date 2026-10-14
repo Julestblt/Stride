@@ -11,7 +11,7 @@ export function SignOutMenuItem() {
   const [failed, setFailed] = useState(false);
   return (
     <DropdownMenuItem
-      variant="destructive"
+      className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
       disabled={pending}
       onSelect={(event) => {
         event.preventDefault();

@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
@@ -29,6 +30,7 @@ import {
 import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
 import {
   shellRaceDate,
+  type ShellAccount,
   type ShellAthlete,
   type ShellGoal,
   type ShellRaceLink,
@@ -47,6 +49,7 @@ import {
 
 export function AppShell({
   athlete,
+  account,
   goal,
   races,
   sync,
@@ -55,6 +58,7 @@ export function AppShell({
   children,
 }: {
   athlete: ShellAthlete;
+  account: ShellAccount;
   goal: ShellGoal | null;
   races: ShellRaceLink[];
   sync: string | null;
@@ -139,7 +143,11 @@ export function AppShell({
             />
             <NavUser
               name={athlete.name}
-              detail={athlete.detail}
+              detail={`Profil ${account.profilePercent} %${
+                account.questions > 0
+                  ? ` · ${account.questions} question${account.questions > 1 ? "s" : ""}`
+                  : ""
+              }`}
               initials={athlete.initials}
               sync={
                 initialActivity !== undefined ? (
@@ -150,35 +158,77 @@ export function AppShell({
               }
               syncDot={initialActivity === undefined}
             >
-              <DropdownMenuContent className="w-56" side="top" align="start">
-                <DropdownMenuLabel>Compte</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
+              <DropdownMenuContent
+                className="w-(--radix-dropdown-menu-trigger-width) min-w-60 gap-px rounded-surface border border-border-strong bg-popover p-1.5"
+                side="top"
+                align="start"
+              >
+                <div className="mb-1 flex items-center gap-2.5 border-b border-border-strong px-2.5 pt-2 pb-2.5">
+                  <span
+                    aria-hidden="true"
+                    className="grid size-8 shrink-0 place-items-center rounded-control bg-border-strong text-xs font-semibold"
+                  >
+                    {athlete.initials}
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-semibold">
+                      {athlete.name}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {athlete.detail}
+                    </span>
+                  </span>
+                </div>
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
+                >
                   <Link href="/settings/profile">
                     <AccountMenuProfileIcon />
                     Profil
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {account.profilePercent}%
+                    </span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
+                >
                   <Link href="/settings">
                     <AccountMenuSettingsIcon />
                     Réglages
+                    <DropdownMenuShortcut className="max-md:hidden">
+                      ⌘,
+                    </DropdownMenuShortcut>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
+                >
                   <Link href="/settings/connections">
                     <AccountMenuConnectionsIcon />
                     Connexions
+                    {account.garminSince && (
+                      <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <span className="size-1.5 rounded-full bg-success" />
+                        Garmin · {account.garminSince}
+                      </span>
+                    )}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem
+                  asChild
+                  className="min-h-9 gap-2.5 px-2.5 text-sm [&_svg]:text-muted-foreground"
+                >
                   <Link href="/settings/privacy">
                     <AccountMenuPrivacyIcon />
                     Données et confidentialité
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 bg-border-strong" />
                 <ShortcutHelpMenuItem />
-                <DropdownMenuSeparator />
                 <SignOutMenuItem />
               </DropdownMenuContent>
             </NavUser>

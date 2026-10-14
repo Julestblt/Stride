@@ -213,7 +213,7 @@ export function NavUser({
               >
                 {initials}
               </span>
-              <span className="flex min-w-0 flex-col text-left">
+              <span className="flex min-w-0 flex-1 flex-col text-left">
                 <span className="truncate text-meta leading-tight font-semibold text-foreground">
                   {name}
                 </span>
@@ -221,6 +221,10 @@ export function NavUser({
                   {detail}
                 </span>
               </span>
+              <ChevronsUpDownIcon
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden"
+              />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           {children}
