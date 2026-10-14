@@ -16,12 +16,28 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
+type ProposalWeek = {
+  weekStart: string;
+  minutes: number;
+  sessions: { date: string; title: string; minutes: number }[];
+};
+
 type Proposal = {
   id: string;
   title: string;
   summary: string | null;
   status: string;
+  weeks: ProposalWeek[] | null;
 };
+
+type Mode = "conversation" | "plan";
+
+const budgets: Record<Mode, string> = { conversation: "1 $", plan: "2 $" };
+
+function frDate(iso: string) {
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
+}
 
 type TranscriptItem =
   | { type: "coach"; text: string }
@@ -99,6 +115,8 @@ export function CoachSpike({
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [mode, setMode] = useState<Mode>("plan");
   const [notice, setNotice] = useState<string | null>(null);
 
   const last = entries.at(-1)?.turn ?? null;
@@ -117,6 +135,7 @@ export function CoachSpike({
     const { ok, data } = await post({
       action: "turn",
       sessionId,
+      mode,
       input: pending
         ? { kind: "answer", toolUseId: pending.toolUseId, text: message }
         : { kind: "message", text: message },
@@ -146,6 +165,26 @@ export function CoachSpike({
     router.refresh();
   }
 
+  async function apply(proposalId: string) {
+    setBusy(true);
+    const { data } = await post({ action: "apply", proposalId });
+    setNotice(
+      data?.ok
+        ? `Plan enregistré en version ${data.version}.`
+        : `Application impossible (${data?.reason ?? "erreur"}).`,
+    );
+    setBusy(false);
+    router.refresh();
+  }
+
+  async function deletePlan() {
+    setBusy(true);
+    const { data } = await post({ action: "delete-plan" });
+    setNotice(data?.ok ? "Plan supprimé." : "Suppression impossible.");
+    setBusy(false);
+    router.refresh();
+  }
+
   async function decide(proposalId: string, decision: "accept" | "reject") {
     setBusy(true);
     const { ok } = await post({ action: "decide", proposalId, decision });
@@ -162,7 +201,15 @@ export function CoachSpike({
             ? `Plan actif en version ${planVersion}.`
             : "Aucun plan actif enregistré."}
         </p>
-        {!hasPlan && (
+        {hasPlan ? (
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() => setConfirmingDelete(true)}
+          >
+            Supprimer le plan
+          </Button>
+        ) : (
           <Button variant="outline" disabled={busy} onClick={seed}>
             Enregistrer le brouillon comme plan
           </Button>
@@ -184,6 +231,46 @@ export function CoachSpike({
               </div>
               {proposal.summary && (
                 <p className="text-sm text-muted">{proposal.summary}</p>
+              )}
+              {proposal.weeks && (
+                <details className="text-sm">
+                  <summary>
+                    {proposal.weeks.length} semaines ·{" "}
+                    {proposal.weeks.reduce(
+                      (total, week) => total + week.sessions.length,
+                      0,
+                    )}{" "}
+                    séances
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {proposal.weeks.map((week) => (
+                      <div key={week.weekStart}>
+                        <p className="font-medium">
+                          Semaine du {frDate(week.weekStart)} ·{" "}
+                          {Math.round(week.minutes)} min
+                        </p>
+                        <ul className="text-muted">
+                          {week.sessions.map((session, index) => (
+                            <li key={index}>
+                              {frDate(session.date)} · {session.title} ·{" "}
+                              {Math.round(session.minutes)} min
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              {proposal.status === "accepted" && (
+                <Button
+                  size="sm"
+                  className="self-start"
+                  disabled={busy}
+                  onClick={() => apply(proposal.id)}
+                >
+                  Appliquer
+                </Button>
               )}
               {proposal.status === "ready" && (
                 <div className="flex gap-2">
@@ -257,6 +344,22 @@ export function CoachSpike({
       </section>
 
       <section className="flex flex-col gap-2">
+        {!sessionId && (
+          <div className="flex gap-2">
+            {(["plan", "conversation"] as const).map((option) => (
+              <Button
+                key={option}
+                size="sm"
+                variant={mode === option ? "default" : "outline"}
+                aria-pressed={mode === option}
+                onClick={() => setMode(option)}
+              >
+                {option === "plan" ? "Génération de plan" : "Conversation"} (
+                {budgets[option]})
+              </Button>
+            ))}
+          </div>
+        )}
         <Textarea
           aria-label={pending ? "Ta réponse au coach" : "Ton message au coach"}
           placeholder={
@@ -294,7 +397,25 @@ export function CoachSpike({
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={() => void send()}>
-              Démarrer (budget 1 $)
+              Démarrer (budget {budgets[mode]})
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le plan ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Le plan actif, ses versions et ses propositions seront supprimés
+              définitivement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void deletePlan()}>
+              Supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

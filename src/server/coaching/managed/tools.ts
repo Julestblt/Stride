@@ -1,11 +1,24 @@
 import "server-only";
 import { z } from "zod";
+import {
+  compactPlanSchema,
+  compactToPlanState,
+} from "@/features/plans/compact/compact";
 import { localToday } from "@/features/plans/constraints";
+import {
+  buildDeterministicPlan,
+  validateNewPlan,
+} from "@/features/plans/detailing/build";
+import { summarizeHistory } from "@/features/plans/history/summary";
+import { planStateSchema } from "@/features/plans/model/plan";
 import { addDays } from "@/features/plans/model/dates";
 import { applyOperations } from "@/features/plans/operations/apply";
 import { planOperationSchema } from "@/features/plans/operations/operations";
+import type { RuleResult } from "@/features/plans/validation/report";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readPlanningConstraints } from "@/server/plans/constraints";
+import { readProfile } from "@/server/onboarding/profile";
+import { loadPlanningInput } from "@/server/plans/draft";
 import { readSessionMatches } from "@/server/plans/matches";
 import { readActivePlan } from "@/server/plans/stored";
 
@@ -144,10 +157,174 @@ async function createPlanProposal(context: OnboardingContext, input: unknown) {
   };
 }
 
+const contextInput = z.strictObject({});
+const submitPlanInput = z.strictObject({ plan: z.unknown() });
+
+function ageOn(birthDate: string | null, today: string) {
+  if (!birthDate) return null;
+  const years = Number(today.slice(0, 4)) - Number(birthDate.slice(0, 4));
+  return today.slice(5) < birthDate.slice(5) ? years - 1 : years;
+}
+
+async function readAthleteContext(context: OnboardingContext, input: unknown) {
+  const parsed = contextInput.safeParse(input ?? {});
+  if (!parsed.success) return invalid(parsed.error);
+  const [{ today, input: planning }, profile, stored] = await Promise.all([
+    loadPlanningInput(context),
+    readProfile(context),
+    readActivePlan(context),
+  ]);
+  const { data: checkins } = await context.client
+    .from("athlete_wellness_checkins")
+    .select("checkin_date, legs, soreness, stress")
+    .eq("user_id", context.userId)
+    .gte("checkin_date", addDays(today, -14))
+    .order("checkin_date", { ascending: false });
+  const reference = buildDeterministicPlan(planning);
+  const history = summarizeHistory(planning.activities, today);
+  return {
+    ok: true,
+    content: {
+      today,
+      timeZone: planning.constraints.timeZone,
+      athlete: {
+        age: ageOn(profile.values.birth_date, today),
+        sex: profile.values.sex,
+        heightCm: profile.values.height_cm,
+        weightKg: profile.values.weight_kg,
+        primaryTerrain: profile.values.primary_terrain,
+        trainingAccess: profile.values.training_access,
+      },
+      availability: {
+        availableWeekdays: planning.availability.availableWeekdays,
+        longRunDay: planning.availability.longRunDay,
+        maxWeekdaySessionMinutes: planning.availability.weekdaySessionMinutes,
+        maxWeeklyMinutes: planning.constraints.maxWeeklyMinutes,
+        unavailablePeriods: planning.constraints.unavailablePeriods,
+      },
+      races: planning.races.filter((race) => race.date >= today),
+      history: {
+        weeks: history.weeks,
+        held: history.held,
+        heldPaceSecondsPerKm: history.heldPaceSecondsPerKm,
+        longestRun30d: history.longestRun30d,
+        runsLast30d: history.runsLast30d,
+        trailShare: history.trailShare,
+        sufficient: history.sufficient,
+      },
+      targets: reference.targets,
+      deterministicReference: {
+        objectiveRaceId: reference.objective.race?.id ?? null,
+        feasibility: reference.feasibility,
+      },
+      wellnessCheckins: checkins ?? [],
+      activePlan: stored
+        ? {
+            title: stored.state.plan.title,
+            startsOn: stored.state.plan.startsOn,
+            endsOn: stored.state.plan.endsOn,
+            version: stored.activeVersion,
+          }
+        : null,
+    },
+  };
+}
+
+function describeRule(result: RuleResult) {
+  return {
+    rule: result.ruleId,
+    strong: result.strong,
+    issues: result.issues,
+    keys: result.keys.slice(0, 8),
+    observed: result.observed,
+    threshold: result.threshold,
+  };
+}
+
+async function submitPlan(context: OnboardingContext, input: unknown) {
+  const wrapper = submitPlanInput.safeParse(input);
+  if (!wrapper.success) return invalid(wrapper.error);
+  const parsed = compactPlanSchema.safeParse(wrapper.data.plan);
+  if (!parsed.success)
+    return {
+      ok: false,
+      content: {
+        error: "invalid_plan",
+        issues: parsed.error.issues.slice(0, 20).map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+    };
+  const compact = parsed.data;
+  const { today, input: planning } = await loadPlanningInput(context);
+  const state = compactToPlanState(compact, planning.constraints.timeZone);
+  const shape = planStateSchema.safeParse(state);
+  if (!shape.success)
+    return {
+      ok: false,
+      content: {
+        error: "invalid_plan",
+        issues: shape.error.issues.slice(0, 20).map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+    };
+  const report = validateNewPlan(planning, shape.data);
+  const failed = report.results.filter((result) => result.outcome === "fail");
+  const blocking = failed.filter((result) => result.severity === "block");
+  const warnings = failed
+    .filter((result) => result.severity === "warn")
+    .map(describeRule);
+  if (blocking.length)
+    return {
+      ok: false,
+      content: {
+        error: "validation_failed",
+        blocking: blocking.map(describeRule),
+        warnings,
+      },
+    };
+  const operations = [{ op: "create_plan" as const, state: shape.data }];
+  const result = applyOperations(null, operations, {
+    today,
+    matchedSessionKeys: new Set(),
+  });
+  if (!result.ok)
+    return {
+      ok: false,
+      content: { error: "validation_failed", errors: result.errors },
+    };
+  const { data, error } = await context.client.rpc("submit_plan_proposal", {
+    p_scope: "new_plan",
+    p_origin: "training",
+    p_title: compact.title,
+    p_summary: compact.summary.slice(0, 500),
+    p_rationale: compact.summary,
+    p_operations: operations,
+    p_preview: result.changeset,
+    p_target_keys: ["plan"],
+  });
+  if (error) return { ok: false, content: { error: error.message } };
+  return {
+    ok: true,
+    content: {
+      proposalId: data.id,
+      weeks: shape.data.weeks.length,
+      sessions: shape.data.sessions.length,
+      warnings,
+      note: "The athlete must approve this plan in the app before it is saved.",
+    },
+  };
+}
+
 const handlers: Record<
   string,
   (context: OnboardingContext, input: unknown) => Promise<ToolOutcome>
 > = {
+  read_athlete_context: readAthleteContext,
+  submit_plan: submitPlan,
   read_active_plan: readPlanRange,
   read_health_reports: readHealthReports,
   create_plan_proposal: createPlanProposal,

@@ -1,7 +1,30 @@
 import { redirect } from "next/navigation";
+import { mondayOf } from "@/features/plans/model/dates";
+import { planOperationsSchema } from "@/features/plans/operations/operations";
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { readActivePlan } from "@/server/plans/stored";
 import { CoachSpike } from "./coach-spike";
+
+function proposalWeeks(operations: unknown) {
+  const parsed = planOperationsSchema.safeParse(operations);
+  if (!parsed.success) return null;
+  const [creation] = parsed.data;
+  if (creation.op !== "create_plan") return null;
+  return creation.state.weeks.map((week) => {
+    const sessions = creation.state.sessions
+      .filter((session) => mondayOf(session.scheduledOn) === week.weekStart)
+      .map((session) => ({
+        date: session.scheduledOn,
+        title: session.title,
+        minutes: session.targets.durationSeconds / 60,
+      }));
+    return {
+      weekStart: week.weekStart,
+      minutes: week.targets.durationSeconds / 60,
+      sessions,
+    };
+  });
+}
 
 export default async function CoachSpikePage() {
   const context = await getOnboardingContext();
@@ -10,7 +33,7 @@ export default async function CoachSpikePage() {
     readActivePlan(context),
     context.client
       .from("plan_proposals")
-      .select("id, title, summary, status, created_at")
+      .select("id, title, summary, status, scope, operations, created_at")
       .eq("user_id", context.userId)
       .in("status", ["ready", "accepted"])
       .order("created_at", { ascending: false })
@@ -24,7 +47,13 @@ export default async function CoachSpikePage() {
       <CoachSpike
         hasPlan={plan !== null}
         planVersion={plan?.activeVersion ?? null}
-        proposals={proposals.data ?? []}
+        proposals={(proposals.data ?? []).map((proposal) => ({
+          id: proposal.id,
+          title: proposal.title,
+          summary: proposal.summary,
+          status: proposal.status,
+          weeks: proposalWeeks(proposal.operations),
+        }))}
       />
     </main>
   );

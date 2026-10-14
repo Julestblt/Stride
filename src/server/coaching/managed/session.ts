@@ -9,7 +9,9 @@ import { runCustomTool } from "./tools";
 import { syncAthleteVault } from "./vault";
 
 const userKey = "stride_user_id";
-const sessionBudgetCents = "100";
+const sessionBudgetCents = { conversation: "100", plan: "200" } as const;
+
+export type SessionMode = keyof typeof sessionBudgetCents;
 const turnTimeoutMs = 300_000;
 
 export type TurnInput =
@@ -57,7 +59,11 @@ function questionOf(input: unknown): Omit<PendingQuestion, "toolUseId"> {
   };
 }
 
-async function openSession(context: OnboardingContext, sessionId?: string) {
+async function openSession(
+  context: OnboardingContext,
+  sessionId: string | undefined,
+  mode: SessionMode,
+) {
   const client = managedClient();
   const vaultId = await syncAthleteVault(context.userId, context.accessToken);
   if (sessionId) {
@@ -71,10 +77,10 @@ async function openSession(context: OnboardingContext, sessionId?: string) {
     environment_id: managedResources.environmentId,
     title: "Stride coach spike",
     vault_ids: [vaultId],
-    metadata: { [userKey]: context.userId },
+    metadata: { [userKey]: context.userId, mode },
     budget: {
       type: "limit",
-      max_list_cost: { amount: sessionBudgetCents, currency: "USD" },
+      max_list_cost: { amount: sessionBudgetCents[mode], currency: "USD" },
     },
   });
   return session.id;
@@ -84,10 +90,11 @@ export async function runCoachTurn(
   context: OnboardingContext,
   sessionId: string | undefined,
   input: TurnInput,
+  mode: SessionMode,
 ): Promise<TurnResult> {
   const client = managedClient();
   const started = Date.now();
-  const id = await openSession(context, sessionId);
+  const id = await openSession(context, sessionId, mode);
   const sessionMs = Date.now() - started;
 
   const transcript: TranscriptItem[] = [];

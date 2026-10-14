@@ -5,3 +5,5 @@ config:
     type: limited
     allow_package_managers: false
     allow_mcp_servers: true
+    allowed_hosts:
+      - garmin-mcp.julez.cat

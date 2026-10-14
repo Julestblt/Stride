@@ -4,6 +4,10 @@ import {
   runCoachTurn,
   SessionAccessError,
 } from "@/server/coaching/managed/session";
+import {
+  applyAcceptedProposal,
+  deleteActivePlan,
+} from "@/server/coaching/worker";
 import { getOnboardingContext } from "@/server/onboarding/context";
 
 export const maxDuration = 300;
@@ -12,6 +16,7 @@ const requestSchema = z.discriminatedUnion("action", [
   z.strictObject({
     action: z.literal("turn"),
     sessionId: z.string().startsWith("sesn_").optional(),
+    mode: z.enum(["conversation", "plan"]),
     input: z.discriminatedUnion("kind", [
       z.strictObject({
         kind: z.literal("message"),
@@ -25,6 +30,8 @@ const requestSchema = z.discriminatedUnion("action", [
     ]),
   }),
   z.strictObject({ action: z.literal("seed") }),
+  z.strictObject({ action: z.literal("apply"), proposalId: z.uuid() }),
+  z.strictObject({ action: z.literal("delete-plan") }),
   z.strictObject({
     action: z.literal("decide"),
     proposalId: z.uuid(),
@@ -49,6 +56,17 @@ export async function POST(request: Request) {
   if (body.action === "seed")
     return Response.json(await proposeDraftAsPlan(context), { headers });
 
+  if (body.action === "apply")
+    return Response.json(
+      await applyAcceptedProposal(context, body.proposalId),
+      {
+        headers,
+      },
+    );
+
+  if (body.action === "delete-plan")
+    return Response.json(await deleteActivePlan(context), { headers });
+
   if (body.action === "decide") {
     const { error } = await context.client.rpc(
       body.decision === "accept"
@@ -64,7 +82,7 @@ export async function POST(request: Request) {
 
   try {
     return Response.json(
-      await runCoachTurn(context, body.sessionId, body.input),
+      await runCoachTurn(context, body.sessionId, body.input, body.mode),
       { headers },
     );
   } catch (error) {
