@@ -1,0 +1,37 @@
+{
+ "judge": "deepseek",
+ "defect": "quality_despite_health",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 1,
+     "progression": 3,
+     "specificity": 5,
+     "recovery": 4,
+     "individualization": 3,
+     "clarity": 5
+    },
+    "defects": [
+     "quality_despite_health",
+     "ignored_availability",
+     "load_spike"
+    ],
+    "unsafe": true,
+    "rationale": "Structure solide et très spécifique (allures seuil/10 km, cible 45:00 corrigée, affûtage 2 semaines). Mais il ignore une douleur active au tendon d'Achille (7/10, boiterie) et programme seuil/intervalles dès la semaine 1, à risque réel. Dépasse aussi 60 min certains mardis (course + renforcement)."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "costUsd": 0,
+  "milliseconds": 51822
+ }
+}

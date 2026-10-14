@@ -1,0 +1,38 @@
+{
+ "judge": "gpt",
+ "defect": "quality_despite_health",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 1,
+     "progression": 2,
+     "specificity": 4,
+     "recovery": 2,
+     "individualization": 2,
+     "clarity": 4
+    },
+    "defects": [
+     "quality_despite_health",
+     "back_to_back_quality",
+     "ignored_availability",
+     "load_spike"
+    ],
+    "unsafe": true,
+    "rationale": "Le plan prévoit course et séances de qualité malgré une douleur achilléenne active, aggravée, avec boiterie. Il dépasse plusieurs fois 60 min en semaine (sorties longues samedi), et place le footing de récupération le lendemain de la sortie longue. Les volumes hebdomadaires annoncés dépassent nettement l’historique récent, avec des incohérences entre totaux, séances et pic. La cible est prudemment révisée et l’affûtage est présent."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 19288,
+  "outputTokens": 185,
+  "costUsd": 0,
+  "milliseconds": 5615
+ }
+}

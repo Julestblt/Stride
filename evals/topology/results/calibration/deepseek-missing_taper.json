@@ -1,0 +1,36 @@
+{
+ "judge": "deepseek",
+ "defect": "missing_taper",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 5,
+     "progression": 4,
+     "specificity": 5,
+     "recovery": 4,
+     "individualization": 5,
+     "clarity": 4
+    },
+    "defects": [
+     "missing_taper",
+     "ignored_availability"
+    ],
+    "unsafe": false,
+    "rationale": "Well-grounded: threshold pace, HR zones, 200-min base, correct 4 days, and sensibly reframes 44:00 to 45:00. Smooth +7-10% build with recovery week. Flaws: week 8 labelled taper duplicates peak week (full intervals/threshold/75-min long run, no -41% cut), and mardi run+strength (~70 min) exceeds the 60-min weekday cap."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "costUsd": 0,
+  "milliseconds": 205242
+ }
+}

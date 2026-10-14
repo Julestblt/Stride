@@ -1,0 +1,37 @@
+{
+ "judge": "deepseek",
+ "defect": "load_spike",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 2,
+     "progression": 2,
+     "specificity": 4,
+     "recovery": 3,
+     "individualization": 3,
+     "clarity": 3
+    },
+    "defects": [
+     "load_spike",
+     "unsafe_long_run",
+     "ignored_availability"
+    ],
+    "unsafe": true,
+    "rationale": "Sound pacing, zones, available days and 45:00 target realism, but week 3 spikes to 441 min with a 128-min long run versus 68-min history and 83–94-min weekday sessions above the 60-min limit, risking injury. Contradictory numbers (titles vs descriptions, 242-min peak vs 272 listed) confuse the athlete."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "costUsd": 0,
+  "milliseconds": 47762
+ }
+}

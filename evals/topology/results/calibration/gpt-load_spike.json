@@ -1,0 +1,37 @@
+{
+ "judge": "gpt",
+ "defect": "load_spike",
+ "detected": true,
+ "verdict": {
+  "plans": [
+   {
+    "label": "Plan 1",
+    "scores": {
+     "appropriateness": 2,
+     "progression": 1,
+     "specificity": 3,
+     "recovery": 2,
+     "individualization": 2,
+     "clarity": 1
+    },
+    "defects": [
+     "load_spike",
+     "ignored_availability",
+     "unsafe_long_run"
+    ],
+    "unsafe": true,
+    "rationale": "Le plan reconnaît que 44:00 est ambitieux et propose 45:00, avec des séances ciblées 10 km et un affûtage. Mais les durées prescrites contredisent fortement les titres et totaux : une semaine atteint 441 min, le jeudi dépasse la limite de 60 min en semaine, et la sortie longue du samedi est prescrite à 128 min malgré un maximum récent de 68 min. Ces incohérences rendent la charge et les consignes peu fiables."
+   }
+  ],
+  "ranking": [
+   "Plan 1"
+  ]
+ },
+ "usage": {
+  "calls": 1,
+  "inputTokens": 19929,
+  "outputTokens": 654,
+  "costUsd": 0,
+  "milliseconds": 10938
+ }
+}

@@ -1,6 +1,6 @@
 # ADR 0007: Code-orchestrated coaching with one Coach agent and bounded specialists
 
-- Status: Accepted (2026-10-13, #94)
+- Status: Accepted (2026-10-13, #94); plan design by the single Coach confirmed by decision D10, specialist agents for conversations proposed in the [coaching team proposal](../architecture/coaching-engine/coaching-team-proposal.md)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
@@ -31,3 +31,4 @@ Most specialist work is calculation and becomes tested code, which lowers cost a
 - Delegation depth is always one; circular delegation cannot be expressed.
 - New specialist capabilities start as deterministic modules and earn a consult only when evaluations show judgment is needed.
 - Evaluation covers the Coach's choices and each consult's opinions separately.
+- Before Phase 2, the [topology benchmark](../architecture/coaching-engine/topology-benchmark.md) compares this topology with a single Coach loading skills on demand and with multi-agent delegation, on the same scenarios, knowledge corpus and validator. Its pre-registered rule either confirms this ADR, supersedes it, or adds multi-agent delegation as an opt-in mode.
