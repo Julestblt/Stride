@@ -18,6 +18,13 @@ import {
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { deleteRaces, saveGoal, saveRace } from "@/server/onboarding/goals";
 import { readProfile, saveProfile } from "@/server/onboarding/profile";
+import { isTimeZone } from "@/features/plans/constraints";
+import {
+  maxUnavailablePeriods,
+  parseUnavailabilityInput,
+  parseWeeklyCeiling,
+} from "@/features/settings/planning";
+import { readPlanningConstraints } from "@/server/plans/constraints";
 
 const revisionSchema = z.coerce.number().int().positive();
 const nullableText = (value: FormDataEntryValue | null) =>
@@ -250,4 +257,88 @@ export async function updateSettingsProfile(data: FormData) {
       message: "Impossible d’enregistrer ton profil. Réessaie.",
     };
   }
+}
+
+const trainingPath = "/settings/training";
+
+export async function saveSettingsPlanning(data: FormData) {
+  const timeZone = nullableText(data.get("time_zone"));
+  const ceiling = parseWeeklyCeiling(String(data.get("max_weekly") ?? ""));
+  const revision = revisionSchema.safeParse(data.get("revision"));
+  if (!timeZone || !isTimeZone(timeZone) || ceiling === undefined)
+    redirect(resultPath(trainingPath, "invalid"));
+  const current = await context();
+  if (!current) redirect(resultPath(trainingPath, "session-expired"));
+  const settings = await readPlanningConstraints(current).catch(() => null);
+  if (!settings) redirect(resultPath(trainingPath, "error"));
+  const expected = revision.success ? revision.data : null;
+  if (settings.profileRevision !== expected)
+    redirect(resultPath(trainingPath, "conflict"));
+  const values = { time_zone: timeZone, max_weekly_minutes: ceiling };
+  const response =
+    expected === null
+      ? await current.client
+          .from("athlete_profiles")
+          .insert({ user_id: current.userId, ...values })
+          .select("revision")
+      : await current.client
+          .from("athlete_profiles")
+          .update(values)
+          .eq("user_id", current.userId)
+          .eq("revision", expected)
+          .select("revision");
+  if (response.error)
+    redirect(
+      resultPath(
+        trainingPath,
+        response.error.code === "23514" ? "invalid" : "error",
+      ),
+    );
+  if (!response.data?.length) redirect(resultPath(trainingPath, "conflict"));
+  revalidatePath(trainingPath);
+  redirect(resultPath(trainingPath, "saved"));
+}
+
+export async function addSettingsUnavailability(data: FormData) {
+  const parsed = parseUnavailabilityInput({
+    start: String(data.get("starts_on") ?? ""),
+    end: String(data.get("ends_on") ?? ""),
+    kind: String(data.get("kind") ?? ""),
+    reason: String(data.get("reason") ?? ""),
+  });
+  if (!parsed.ok)
+    redirect(resultPath(trainingPath, `unavailability-${parsed.error}`));
+  const current = await context();
+  if (!current) redirect(resultPath(trainingPath, "session-expired"));
+  const { count, error: countError } = await current.client
+    .from("athlete_unavailability")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", current.userId);
+  if (countError) redirect(resultPath(trainingPath, "error"));
+  if ((count ?? 0) >= maxUnavailablePeriods)
+    redirect(resultPath(trainingPath, "unavailability-limit"));
+  const { error } = await current.client
+    .from("athlete_unavailability")
+    .insert({ user_id: current.userId, ...parsed.value });
+  if (error)
+    redirect(
+      resultPath(trainingPath, error.code === "23514" ? "invalid" : "error"),
+    );
+  revalidatePath(trainingPath);
+  redirect(resultPath(trainingPath, "period-added"));
+}
+
+export async function removeSettingsUnavailability(data: FormData) {
+  const id = z.uuid().safeParse(data.get("id"));
+  if (!id.success) redirect(resultPath(trainingPath, "invalid"));
+  const current = await context();
+  if (!current) redirect(resultPath(trainingPath, "session-expired"));
+  const { error } = await current.client
+    .from("athlete_unavailability")
+    .delete()
+    .eq("id", id.data)
+    .eq("user_id", current.userId);
+  if (error) redirect(resultPath(trainingPath, "error"));
+  revalidatePath(trainingPath);
+  redirect(resultPath(trainingPath, "period-removed"));
 }

@@ -359,6 +359,8 @@ const tables = {
       threshold_heart_rate_override: null,
       threshold_heart_rate_source: null,
       profile_photo_path: null,
+      time_zone: "Europe/Paris",
+      max_weekly_minutes: null,
       value_sources: {
         weight_kg: { source: "garmin", observed_on: "2026-10-07" },
       },
@@ -366,6 +368,7 @@ const tables = {
       updated_at: "2026-10-07T00:00:00Z",
     },
   ],
+  athlete_unavailability: [],
   athlete_goals: [
     {
       user_id: user.id,
@@ -803,6 +806,24 @@ createServer(async (request, response) => {
         .filter((item) => item !== existing)
         .concat(checkin);
       return send(201, checkin);
+    }
+    if (url.pathname === "/rest/v1/athlete_unavailability") {
+      if (request.method === "POST") {
+        tables.athlete_unavailability.push({
+          id: randomUUID(),
+          kind: "other",
+          reason: null,
+          ...body,
+          revision: 1,
+        });
+        return send(201, undefined);
+      }
+      if (request.method === "DELETE") {
+        tables.athlete_unavailability = tables.athlete_unavailability.filter(
+          (item) => url.searchParams.get("id") !== `eq.${item.id}`,
+        );
+        return send(204, undefined);
+      }
     }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {
