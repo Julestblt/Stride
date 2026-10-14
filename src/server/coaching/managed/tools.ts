@@ -158,6 +158,12 @@ async function createPlanProposal(context: OnboardingContext, input: unknown) {
 }
 
 const contextInput = z.strictObject({});
+const predictionMetrics = [
+  "race_prediction_5k_seconds",
+  "race_prediction_10k_seconds",
+  "race_prediction_half_marathon_seconds",
+  "race_prediction_marathon_seconds",
+];
 const submitPlanInput = z.strictObject({ plan: z.unknown() });
 
 function ageOn(birthDate: string | null, today: string) {
@@ -180,6 +186,14 @@ async function readAthleteContext(context: OnboardingContext, input: unknown) {
     .eq("user_id", context.userId)
     .gte("checkin_date", addDays(today, -14))
     .order("checkin_date", { ascending: false });
+  const { data: predictions } = await context.client
+    .from("provider_observations")
+    .select("metric, observed_on, value_numeric")
+    .eq("user_id", context.userId)
+    .eq("availability", "available")
+    .in("metric", predictionMetrics)
+    .order("observed_on", { ascending: false })
+    .limit(predictionMetrics.length * 4);
   const reference = buildDeterministicPlan(planning);
   const history = summarizeHistory(planning.activities, today);
   return {
@@ -213,6 +227,26 @@ async function readAthleteContext(context: OnboardingContext, input: unknown) {
         sufficient: history.sufficient,
       },
       targets: reference.targets,
+      garmin: {
+        vo2Max: planning.targets.vo2Max,
+        lactateThreshold: planning.targets.garminLactateThreshold,
+        racePredictions: Object.fromEntries(
+          predictionMetrics.map((metric) => {
+            const latest = (predictions ?? []).find(
+              (row) => row.metric === metric && row.value_numeric !== null,
+            );
+            return [
+              metric.replace("race_prediction_", "").replace("_seconds", ""),
+              latest
+                ? {
+                    seconds: Number(latest.value_numeric),
+                    asOf: latest.observed_on,
+                  }
+                : null,
+            ];
+          }),
+        ),
+      },
       deterministicReference: {
         objectiveRaceId: reference.objective.race?.id ?? null,
         feasibility: reference.feasibility,

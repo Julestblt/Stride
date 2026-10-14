@@ -41,6 +41,7 @@ Call `submit_plan` with `{"plan": <plan>}` where `<plan>` is one JSON object:
 Rules:
 
 - Every session has at least one work step, and every work step has a target other than `"none"`. The session duration is the sum of its steps.
+- Every `run` and `trail` session has `km`, including quality sessions: estimate it from the steps' durations and paces (use the easy pace for warm-up, recoveries and cool-down). Leave `km` null only for `strength`, `cross` and `mobility`.
 - Do not list rest days. The objective race is a session of kind `race` on the race date.
 - Every week from `startsOn` to `endsOn` is fully detailed.
 - Schedule sessions only on the athlete's available weekdays, keep weekday sessions within the maximum weekday duration, respect the weekly maximum, and schedule nothing during unavailable periods.

@@ -20,7 +20,8 @@ tools:
       Read the athlete's context computed by Stride: today's date and time
       zone, profile, availability and limits, upcoming races with their ids,
       dates, priorities and targets, a summary of the last weeks of training,
-      training zones and paces, a deterministic feasibility reference, recent
+      training zones and paces, Garmin VO2max, lactate threshold and race
+      predictions, a deterministic feasibility reference, recent
       wellness check-ins, and the active plan header. Call it first in every
       conversation.
     input_schema:
