@@ -1361,6 +1361,67 @@ export type Database = {
           },
         ];
       };
+      session_activity_matches: {
+        Row: {
+          activity_id: string | null;
+          algorithm_version: string | null;
+          compliance: NonNullable<Json>;
+          computed_at: string;
+          confidence: number;
+          id: string;
+          method: string;
+          plan_id: string;
+          session_key: string;
+          session_revision_id: string;
+          status: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activity_id?: string | null;
+          algorithm_version?: string | null;
+          compliance?: NonNullable<Json>;
+          computed_at?: string;
+          confidence: number;
+          id?: string;
+          method: string;
+          plan_id: string;
+          session_key: string;
+          session_revision_id: string;
+          status: string;
+          user_id: string;
+        };
+        Update: {
+          activity_id?: string | null;
+          algorithm_version?: string | null;
+          compliance?: NonNullable<Json>;
+          computed_at?: string;
+          confidence?: number;
+          id?: string;
+          method?: string;
+          plan_id?: string;
+          session_key?: string;
+          session_revision_id?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_activity_matches_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "training_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "session_activity_matches_session_revision_id_fkey";
+            columns: ["session_revision_id"];
+            isOneToOne: false;
+            referencedRelation: "plan_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sync_jobs: {
         Row: {
           activity_count: number;
@@ -1586,6 +1647,10 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      clear_session_match: {
+        Args: { p_plan_id: string; p_session_key: string };
+        Returns: number;
+      };
       complete_onboarding_step: {
         Args: { p_expected_revision: number; p_step: string };
         Returns: {
@@ -1759,6 +1824,34 @@ export type Database = {
           to: "onboarding_progress";
           isOneToOne: true;
           isSetofReturn: false;
+        };
+      };
+      set_session_match: {
+        Args: {
+          p_activity_ids: string[];
+          p_plan_id: string;
+          p_session_key: string;
+          p_status?: string;
+        };
+        Returns: {
+          activity_id: string | null;
+          algorithm_version: string | null;
+          compliance: NonNullable<Json>;
+          computed_at: string;
+          confidence: number;
+          id: string;
+          method: string;
+          plan_id: string;
+          session_key: string;
+          session_revision_id: string;
+          status: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "session_activity_matches";
+          isOneToOne: false;
+          isSetofReturn: true;
         };
       };
       store_provider_secret: {

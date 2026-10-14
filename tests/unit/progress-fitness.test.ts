@@ -407,4 +407,58 @@ describe("fitness reading", () => {
     expect(view.predictions).toBeNull();
     expect(view.records).toEqual([]);
   });
+
+  it("shows consistency from the active plan adherence", () => {
+    const view = fitnessView({
+      history: { activities: [], laps: [], load: [], vo2: [], races: [] },
+      zones: null,
+      period: "12w",
+      today,
+      adherence: {
+        due: 10,
+        done: 8,
+        substituted: 1,
+        missed: 1,
+        keyDue: 4,
+        keyDone: 3,
+        share: 0.8,
+        keyShare: 0.75,
+        windows: [1, 0.5, null, 1, 1, 0.5, 1, 1],
+      },
+    });
+    const consistency = view.rows.find((row) => row.key === "consistency");
+    expect(consistency).toMatchObject({
+      value: "80 %",
+      detail: "Séances réalisées, 12 sem.",
+      verdict: "8 sur 10 séances · séances clés 75 %",
+      trend: "improving",
+      tone: "success",
+      sparkline: [100, 50, null, 100, 100, 50, 100, 100],
+    });
+    expect(consistency?.samples?.[1].value).toBe("50 %");
+    expect(consistency?.samples?.[2].value).toBe("Aucune séance passée");
+  });
+
+  it("keeps consistency empty when no plan session is due yet", () => {
+    const view = fitnessView({
+      history: { activities: [], laps: [], load: [], vo2: [], races: [] },
+      zones: null,
+      period: "6w",
+      today,
+      adherence: {
+        due: 0,
+        done: 0,
+        substituted: 0,
+        missed: 0,
+        keyDue: 0,
+        keyDone: 0,
+        share: null,
+        keyShare: null,
+        windows: Array(8).fill(null),
+      },
+    });
+    const consistency = view.rows.find((row) => row.key === "consistency");
+    expect(consistency?.value).toBe("—");
+    expect(consistency?.verdict).toBe("Aucune séance passée sur la période");
+  });
 });

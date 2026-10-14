@@ -91,7 +91,7 @@ function midPace(step: SimpleStep) {
     : null;
 }
 
-function stepSeconds(step: SimpleStep) {
+export function stepSeconds(step: SimpleStep) {
   if (step.end.kind === "time") return step.end.seconds;
   if (step.end.kind === "lap_button") return step.end.estimatedSeconds;
   if (step.end.estimatedSeconds) return step.end.estimatedSeconds;
@@ -107,7 +107,7 @@ function stepMeters(step: SimpleStep, seconds: number | null) {
     : Math.round((seconds / pace) * 1000);
 }
 
-function flatten(structure: SessionStructure) {
+export function flatten(structure: SessionStructure) {
   return structure.flatMap((step) =>
     step.type === "repeat"
       ? Array.from({ length: step.count }, () => step.steps).flat()
