@@ -50,7 +50,7 @@ Each capability maps to one GitHub issue under parent [#95](https://github.com/J
   - **success:** Every rule has tests just below, at and above its threshold plus a skip test; missing data yields `skipped`, never a pass; the Garmin load ratio never blocks; identical input yields an identical report.
 - **CAP-5 Templates, skeleton and feasibility**
   - **intent:** Code resolves the objective, summarizes history, selects an event-family template and builds a skeleton of blocks, weeks and weekly targets to race day, with a feasibility verdict.
-  - **success:** Fixtures from 5 km to a 100+ km trail produce skeletons the validator never blocks; taper and recovery-week invariants hold; short history selects base building with low confidence; an impossible timeline yields `unrealistic` with alternatives.
+  - **success:** Fixtures from 5 km to a 100+ km trail produce skeletons the validator never blocks; taper and recovery-week invariants hold; short history selects base building with low confidence; a timeline shorter than the template minimum yields `too_short` with options, never a compressed plan.
 - **CAP-6 Session library and complete detailing**
   - **intent:** A parameterized session library and a detailing step turn a skeleton into a complete plan where every session has a structure and computed targets; `buildDeterministicPlan` is the single entry point.
   - **success:** Every session of every fixture plan has a structure that sums to its duration within 10% and a target per step; key-session progression is monotonic within a block and resets after recovery weeks; no fixture plan is blocked.
@@ -119,35 +119,59 @@ The closed union is `create_plan`, `move_session`, `swap_sessions`, `shorten_ses
 
 - Intensities: `recovery`, `easy`, `marathon`, `threshold`, `interval`, `repetition`, plus `uphill` and `downhill` guidance for trail.
 - Pace sources, in order: threshold pace from recent flat laps, a recent race or best effort, the VO₂ max–based estimate used by Progression. Heart-rate sources: Garmin lactate-threshold heart rate and zones imported by garmin_mcp when present and recent, then Stride zones from the profile. With no reliable source, the step uses RPE and the talk test only.
-- Confidence: `high` when the source is at most 60 days old, `medium` up to 120 days, `low` beyond; sources older than 365 days are ignored. These ages live in the thresholds module.
+- Confidence: `high` when the source is at most 60 days old, `medium` up to 120 days, `low` beyond; sources older than 365 days are ignored. These ages are Stride conventions (the reference has no equivalent) and live in the thresholds module.
 - Trail climbs and descents use heart-rate or RPE targets; pace appears only on flat or rolling sections.
 - Output `TrainingTargets`: per intensity `paceRange`, `heartRateRange`, `rpe`, `source`, `asOf`, `confidence`, plus `calibrationGaps`.
 
 ### Validator report
 
-One entry per evaluated rule: rule id, severity (`block`, `warn`, `info`), grade (`evidence`, `convention`, `integrity`, `athlete_constraint`) with its citation, outcome (`pass`, `fail`, `skipped`), observed value, threshold, session or week keys involved, and the skip reason. The report records the thresholds version and validates against its Zod schema. Phase 1 applies rules I1–I4, C1–C3, E1–E2, P1–P8 and D1; H1–H3 are implemented against condition and readiness inputs supplied by the caller and are exercised by fixtures, since condition reports arrive in Phase 4.
+One entry per evaluated rule: rule id, severity (`block`, `warn`, `info`), grade (`evidence`, `convention`, `integrity`, `athlete_constraint`) with its citation, outcome (`pass`, `fail`, `skipped`), observed value, threshold, session or week keys involved, and the skip reason. The report records the thresholds version and validates against its Zod schema. Phase 1 applies rules I1–I4, C1–C3, E1–E2, P1–P8 and D1; H1–H3 are implemented against condition and readiness inputs supplied by the caller and are exercised by fixtures, since condition reports arrive in Phase 4. Following the reference project, which blocks only on a red health verdict, Stride blocks only integrity (I1–I4), the athlete's own declared constraints (C1–C3) and health stops (H1–H3); the single-session spike E1 is a strong warning that the proposal must state, and every other rule warns or informs.
 
 ### Templates and skeleton defaults
 
-All values below are conventions, labeled as such in the templates module and adjustable only through a reviewed change with tests (D8).
+Templates and skeleton rules are ported from the reference project [ai-running-coach](https://github.com/mmornati/ai-running-coach) (MIT licence, v1.3.0 at `510b2d5`): its `config/plans/*.json` templates, `scripts/arc_plan_templates.py` and `scripts/arc_plan_skeleton.py`. Its numbers are "approximations du projet": prudent starting points, not a published protocol, and Stride labels them the same way. Only the direction of two choices rests on publications: taper reduces volume while keeping intensity (Mujika and Padilla 2003) and intensity distribution is polarized (Seiler 2010).
 
-| Event family                  | Minimum weeks | Taper   | Post-race recovery | Confidence |
-| ----------------------------- | ------------- | ------- | ------------------ | ---------- |
-| Road 5–10 km                  | 6             | 1 week  | 1 week             | normal     |
-| Half marathon                 | 8             | 2 weeks | 1 week             | normal     |
-| Marathon                      | 12            | 2 weeks | 2 weeks            | normal     |
-| Trail up to 60 km             | 10            | 2 weeks | 2 weeks            | normal     |
-| Trail above 60 km             | 14            | 2 weeks | 3 weeks            | low        |
-| Base building (no dated race) | 4             | —       | —                  | normal     |
+| Template             | Event (distance band, lower bound included) | Block weeks (default) | Taper     | Post-race recovery | Confidence |
+| -------------------- | ------------------------------------------- | --------------------- | --------- | ------------------ | ---------- |
+| `road_5_10k`         | Road under 15 km                            | 6–12 (8)              | 1 week    | 1 week             | normal     |
+| `road_half`          | Road 15–30 km                               | 8–16 (12)             | 1–2 weeks | 1 week             | normal     |
+| `road_marathon`      | Road 30–60 km                               | 12–20 (16)            | 2–3 weeks | 1–2 weeks          | normal     |
+| `trail_short`        | Trail under 30 km                           | 8–16 (12)             | 1–2 weeks | 1 week             | normal     |
+| `trail_marathon`     | Trail 30–60 km                              | 12–20 (16)            | 2 weeks   | 1–2 weeks          | normal     |
+| `trail_ultra_80_100` | Trail 60–130 km                             | 16–24 (20)            | 2–3 weeks | 2 weeks            | low        |
+| `trail_100_miles`    | Trail 130 km and more                       | 20–29 (24)            | 2–3 weeks | 2–3 weeks          | low        |
+| `base_building`      | No dated race, or history too short         | open-ended            | —         | —                  | normal     |
 
-- Objective: the A-priority race, else the nearest dated race, else the goal focus (base building). Other races in the window become preparation or secondary races with a local taper and recovery.
-- Workload: held volume is the average of the last four complete weeks; peak is held volume × the template factor (1.1–1.2); a lead-in ramps at about 4% per week when needed; a recovery week every 3–4 weeks at about 80% of the previous full week; taper reduces volume 40–60% while keeping some intensity.
-- Weekly targets fit available weekdays, unavailable dates, the weekday session length, the long-run day and the weekly ceiling.
-- History under four weeks or under one hour per week selects base building with low confidence and states why.
+`road_5_10k` and `base_building` are Stride additions: the reference has no template under 15 km on road. `road_5_10k` follows the `road_half` shape with shorter phases and a lower long-run cap.
+
+- **Template content** (per the reference): five phases in order — base, development, specific, taper (ending with race week) and post-race recovery, which does not count in the block length. Each phase declares its week range, volume and trail elevation as a percentage of the peak week (start and end), an easy/moderate/hard split with at least about 75% easy, a maximum number of quality sessions per week, and the long-run share and cap in minutes. A lighter week every 4 weeks in base, development and specific at 0.8 × the last full week's volume and elevation, with at most one quality session; the week before the taper stays the peak week.
+- **Stretching:** each phase starts at its minimum, then the remaining weeks are distributed one by one in the order development, specific, base, taper, up to each phase's maximum; volume progresses linearly within a phase. Same input, same output.
+- **Template choice:** by event distance and terrain. A high-elevation race near the top of its band may use the next template; the choice and its reason are stated.
+- **Peak:** derived, never chosen: peak = held volume (mean of the last four complete weeks, in duration, plus elevation for trail) × `100 / first-week volume_pct` of the template, capped by the weekly ceiling. A peak below the template's indicative range is reported, with a lead-in or a revised objective as options, never a stretched template.
+- **Lead-in:** when the race is further away than the template maximum, lead-in weeks ramp volume by about 4% per week, capped by the weekly progression warning threshold and the weekly ceiling, with a lighter week every 4; the template then starts from the volume reached.
+- **Race week and post-race:** at most three easy runs before the race, the day before left free; no running in the 3 days after the race; volume prorated to the remaining days.
+- **Race demand:** peak-week volume and elevation, the biggest session elevation and the longest run are compared with the race's demands (longest run target 60% of the race distance, between 30 and 60 km; biggest session elevation at most half the race elevation, capped at 2,500 m). A component below 75% of its target is reported as short with options (longer lead-in, later race, revised objective, base first); nothing is inflated to close the gap.
+- **Short history:** under four weeks or under one hour per week selects `base_building` with low confidence and states why; the athlete's declared current volume can replace the measured one.
+- **Weekly targets** fit available weekdays, unavailable dates, the weekday session length, the long-run day and the weekly ceiling.
+- **Objective:** the A-priority race, else the nearest dated race, else the goal focus (`base_building`). Other races in the window become preparation or secondary races with a local taper and recovery.
+
+### Recovery is individual
+
+Template recovery values are defaults, not prescriptions. Phase 1 uses the lower bound of each range deterministically. From Phase 3, the Coach chooses the post-race recovery length and the lighter-week cadence (every 3 to 5 weeks) from the athlete's own signals: readiness (HRV, resting heart rate and sleep against their usual range), check-ins, how they recovered after past races and long blocks in their history, and age or injury history when declared. The weekly review re-checks the coming week against the same signals. The athlete can change any of it, as for any other part of the plan.
 
 ### Feasibility verdict
 
-`realistic`, `ambitious` or `unrealistic`, each with French reasons built from computed facts and, when not realistic, alternatives: a later race, a shorter format, a different race role, or a base block first. Starting conventions: fewer weeks than the template minimum is `ambitious` when at least 75% of the minimum remains and the long-run progression fits E1/E2, otherwise `unrealistic`; a target time faster than the optimistic bound of the estimate band is `ambitious`, and more than 5% faster is `unrealistic`; a peak long run, weekly elevation or volume below 70% of race demands (rule D1) is `ambitious`.
+`realistic`, `ambitious` or `too_short`, each with French reasons built from computed facts:
+
+- `too_short`: fewer weeks than the template minimum. No compressed plan is produced; the options are a shorter format, the earliest workable race date, or a block without a template (base building toward the race).
+- `ambitious`: a race-demand component is short, the derived peak is below the template's indicative range, or the target time is faster than the optimistic bound of Stride's estimate band.
+- `realistic` otherwise.
+
+The verdict informs; it never refuses a plan the athlete wants. The athlete decides.
+
+### Freedom of the Coach (Phase 3 onward)
+
+Templates, the skeleton and the session library are starting points for the Coach model, not a cage. Within the block rules, the Coach may pick another template, move phase boundaries within the template ranges, change the lighter-week cadence, choose or compose any session structure that fits the week's targets, and progress key sessions as it judges best from the athlete's data. Code still computes every pace and heart-rate range and checks every total; warnings are explained in the proposal rather than avoided at all costs. Any deviation from the template is stated in the plan rationale.
 
 ### Deterministic build
 
@@ -170,7 +194,7 @@ Routes under `src/app/(app)/plan`: plan overview by blocks and weeks, week view 
 - Code owns every number, date and target; no model call anywhere in Phase 1.
 - A missing signal is never favorable; it produces a skip, a gap and lower confidence.
 - Passing the validator is never presented as medical safety; health copy stays generic and refers to a health professional.
-- Every rule cites its grade; conventions lean conservative because no human expert reviews them (D8).
+- Every rule cites its grade; conventions come from the reference project or are labeled Stride conventions. The validator blocks only what must never happen; everything else is a warning the athlete reads and decides on, since they review every plan (D8).
 - Stride-owned tables use owner-only RLS with `(select auth.uid())`, no `anon` grants, column grants and revision triggers, following the existing migrations; garmin_mcp tables are read under RLS only.
 - Athlete-facing copy is French, dates are JJ/MM/AAAA with `fr-FR` formatting, and no native date input is used.
 - UI reuses `src/components/stride` patterns (`SessionShape`, `ConfidenceMeter`, `SignalChip` and the loading conventions) before adding new ones.
