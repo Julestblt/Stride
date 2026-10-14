@@ -1,6 +1,6 @@
 # ADR 0009: A coach worker on Supabase Postgres runs agent workflows
 
-- Status: Proposed
+- Status: Accepted (2026-10-13, #94)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 

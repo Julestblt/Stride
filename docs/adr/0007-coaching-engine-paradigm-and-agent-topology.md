@@ -1,6 +1,6 @@
 # ADR 0007: Code-orchestrated coaching with one Coach agent and bounded specialists
 
-- Status: Proposed
+- Status: Accepted (2026-10-13, #94)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
