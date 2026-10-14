@@ -45,6 +45,10 @@ When a BMAD workflow creates a working draft or memlog in _bmad-output, use it t
 
 OpenCode registers the vendor-managed skills in `.agents/skills` through the project configuration in `.opencode/opencode.jsonc`, which also denies the `bmod-*` module-metadata skills. `AGENTS.md` remains the only always-on context source because OpenCode V2 accepts but does not load the `instructions` configuration array.
 
+Codex discovers the source skills in `.agents/skills`. Claude Code discovers project skills in `.claude/skills`; that directory contains relative links to the same sources, excluding the non-invocable `bmod-*` metadata. Keep these links when updating skills and add or remove links when the invocable skill set changes. Do not copy or customize vendor skill bodies. Claude's ability to read `AGENTS.md` does not register skills from another directory.
+
+Claude Code supports [symlinked skill directories](https://code.claude.com/docs/en/skills). Start a fresh Claude session after checkout and check that `/bmad-build` and `/bmad-code-review` are available; ask Claude to list available project skills for skills such as shadcn that hide themselves from the command menu. Recent Claude Code versions read `AGENTS.md` directly by default; see [instruction discovery](https://code.claude.com/docs/en/memory). No duplicate `CLAUDE.md` or instruction-printing hook is needed for this setup. Git must check out directory symlinks as links; Windows clones require symlink support, such as Developer Mode and `core.symlinks=true`.
+
 Installed skills are not universal context. Start with `AGENTS.md`; load only skills that the current task needs. Use BMAD for planning, specification, architecture, and implementation workflow. Load shadcn for UI component work. Load Ponytail for a targeted simplicity check before abstractions, dependencies, refactors, or architecture reviews. Load future specialist skills only when an active issue directly requires them. Avoid overlapping skill stacks and do not copy full skill instructions into `AGENTS.md`.
 
 | Layer                                                                         | Use                                                                       |
@@ -56,6 +60,18 @@ Installed skills are not universal context. Start with `AGENTS.md`; load only sk
 | Future specialist skills                                                      | Load just in time when an active issue requires them                      |
 
 Skills provide task guidance but do not override Stride's required boundaries: AI runtime isolation, Garmin integration, domain separation, Supabase security, structured validation, accessibility, or testing. Ponytail reduces accidental complexity; it cannot remove those requirements. Its suggestion to add source comments for simplifications does not apply because Stride prohibits code comments. Shadcn supplies low-level UI primitives; the Stride design system remains the product identity.
+
+### Context efficiency
+
+Use one implementation conversation per scoped issue or PR, and keep follow-up fixes for that PR in the same conversation. For another issue, hand off its acceptance criteria, relevant decisions, verification results, and file paths instead of carrying the whole previous conversation. A fresh session rebuilds its cache, so compare cached input, uncached input, and output separately before claiming quota savings.
+
+Load the selected skill's full instructions once while they remain available; read references and project documentation only as the current task requires. Reload changed instructions or context lost through compaction. In plan frontmatter and agent handoffs, list only necessary files and distill relevant decisions instead of requiring every agent to reread entire PRDs or architecture folders.
+
+Keep searches and tool results scoped to the current question. Filter GitHub JSON fields, inspect the relevant log or code section, and retain full logs in temporary files when needed. A failed check still requires enough surrounding output to diagnose and verify its fix. Context efficiency never removes relevant tests, specialist security guidance, or independent review.
+
+BMAD Build already provides an independent review. Record its coverage and findings in the PR and count that review when it covers the current diff and risks. Use standalone BMAD Code Review when no adequate independent review exists, or target uncovered risks and substantive changes made afterward. For low-risk, clearly scoped changes, its `quick` review uses one independent reviewer; use `thorough` when broader review is warranted. Keep specialist review coverage for the sensitive areas listed in the delivery lifecycle below.
+
+Making skills discoverable in Claude adds their descriptions to its initial catalog; their full instructions still load on demand. This restores workflow guidance, rather than directly reducing startup tokens. The expected savings come from scoped reads, narrow handoffs, and avoiding duplicate reviews; measure them on comparable PRs rather than promising a subscription gain.
 
 ## Epics to GitHub Issues
 
@@ -102,7 +118,7 @@ One issue normally maps to one branch and one focused pull request. Branch from 
 3. Branch from current `main` using the required issue branch pattern.
 4. Implement only the scoped outcome, add relevant tests, and make small atomic Conventional Commits.
 5. Run relevant validation and open a PR linked to the issue. Include purpose, scope, material decisions, validation, visual verification results for UI changes, limitations, and review notes. Replace the status label with `status:review`.
-6. Request independent review; use the installed `bmad-code-review` skill for meaningful PRs. A lighter review is suitable for trivial changes. Never skip review for authentication, Supabase RLS, Garmin authentication or ingestion, athlete data, AI orchestration, plan adaptation, migrations, or security changes. The implementation agent does not approve or merge its own PR.
+6. Request independent review; a completed BMAD Build review counts when it covers the current diff and risks. Otherwise use the installed `bmad-code-review` skill for meaningful PRs, with review depth appropriate to risk. Review uncovered risks and subsequent substantive changes before delivery. A lighter review is suitable for trivial changes. Never skip review for authentication, Supabase RLS, Garmin authentication or ingestion, athlete data, AI orchestration, plan adaptation, migrations, or security changes. The implementation agent does not approve or merge its own PR.
 7. When the PR fully completes its issue, include GitHub's native closing keyword such as `Closes #123`. For partial work, use `Related to #123` instead. GitHub closes the issue when the PR is merged into the repository's default branch. Do not add custom auto-close automation. Verify closure after merge when a GitHub connector is available; explicitly close only if native closure did not occur. Never close before merge.
 
 GitHub Issues, PRs, labels, optional milestones, GitHub Actions, and optional GitHub Projects are the workflow. Projects are only a visualization over Issues. Do not create local TODO trackers, BMAD execution boards, mirrored task state, Trello boards, or parallel backlog files. For commit policy and label guidance, see [engineering workflow](engineering-workflow.md).

@@ -61,6 +61,9 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 
 - Use the official BMAD skills installed under `.agents/skills` for discovery, product artifacts, UX, architecture, and scoped implementation when appropriate. See `docs/planning-workflow.md` for the mapping to Stride's canonical documents.
 - Skills are task-scoped, not universal context: load only the relevant installed skill. Follow the skill hierarchy and boundaries in `docs/planning-workflow.md`.
+- Read selected skill instructions fully; reuse them within the session and reload when changed or no longer available after compaction. Read only issue-relevant documentation sections and supporting references.
+- Keep tool output focused: use targeted searches, filtered JSON, and concise test summaries. Store verbose logs in temporary files and inspect relevant excerpts; retain surrounding code and failure details needed to verify behavior.
+- Give delegated agents the acceptance criteria and only the context needed for their task. Reuse an independent review of the current diff when it covers the change's risks; review subsequent substantive changes and uncovered risks before delivery.
 - Keep accepted product and architecture decisions in `docs/product`, `docs/design`, `docs/architecture`, `docs/adr`, and `docs/epics`.
 - GitHub Issues are the only execution tracker. Do not create or maintain local ticket trees, TODO backlogs, or mirrored issue status. Epic documents describe capability boundaries without execution state.
 - Start implementation from a GitHub Issue and carry its acceptance criteria, linked artifacts, plan, and verification into the pull request.
