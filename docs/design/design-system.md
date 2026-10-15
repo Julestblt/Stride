@@ -10,6 +10,8 @@ Stride's approved visual direction is **Night Track**. The PNGs in [`design/refe
 | Inset       | `surface-inset`                     | `#0C0D0B` | Content inset and deepest panel                                                       |
 | Surface     | `surface`                           | `#131411` | Cards, fields, menus and grouped content                                              |
 | Raised      | `surface-raised`                    | `#1A1B18` | Selected rows, hover and raised controls                                              |
+| Panel       | `surface-panel`                     | `#0F100E` | Chart panels and past day cards                                                       |
+| Current     | `surface-current`                   | `#161714` | Today's day card                                                                      |
 | Hairline    | `border`                            | `#262722` | Separators and restrained frames                                                      |
 | Strong line | `border-strong`, `input`            | `#34352F` | Field and outline-control borders, tags, chips                                        |
 | Subtle line | `border-subtle`                     | `#1F201C` | Inner dividers and progress tracks                                                    |
@@ -21,7 +23,7 @@ Stride's approved visual direction is **Night Track**. The PNGs in [`design/refe
 | Success     | `success` (+ `-surface`, `-border`) | `#7FD4A0` | Done, accepted, improving, up to date                                                 |
 | Warning     | `warning` (+ `-border`)             | `#FFB547` | Needs you, watch, partial, retrying                                                   |
 | Investigate | `danger` (+ `-surface`, `-border`)  | `#FF6A3D` | Failed, expired or investigate state                                                  |
-| Garmin      | `provider`                          | `#5E8FB8` | Provider provenance                                                                   |
+| Garmin      | `provider` (+ `-muted`)             | `#5E8FB8` | Provider provenance and easy volume; `provider-muted` is past or light volume         |
 | Zones       | `zone-1` … `zone-5`                 | see CSS   | Training intensity; zone 2 is the provider blue and zone 5 the danger orange          |
 
 Values live once in `src/app/globals.css` and are exposed through `@theme inline`. Use Volt sparingly. Success, warning, danger, provider, and training-zone states have distinct semantic tokens; do not conflate status meaning with the brand accent. Do not scatter raw color values through components. Add or adjust semantic tokens only when a reference or actual state requires them.
@@ -68,7 +70,7 @@ Installed primitives: Alert, AlertDialog, Badge, Button, Checkbox, Collapsible, 
 - `Sidebar` is configured for 264px expanded, a 56px icon rail with tooltips, and an off-canvas sheet below 768px. Use `variant="inset"` and `collapsible="icon"`.
 - The product is dark-only: primitives do not use `dark:` variants, which would follow the operating system rather than Stride.
 
-Stride patterns: `MonoLabel`, `SectionHeader`, `Metric`, `StrideMark`, status marks (`TrendMark`, `TrendLabel`, `DirectionMark`, `SourceMark`, `DecisionMark`, `DoneMark`, `PulseDot`), `VerdictList`/`VerdictRow`, `ProvenanceLabel`, `SignalList`/`SignalRow`, `ProviderValueInput`, `SignalChip`, `ConfidenceMeter`, `Sparkline`, `Recommendation` and its parts, `LedgerEntry`/`DecisionLegend`, `CoachActivity`, `CoachNote`, `SyncStatus`, `Stepper`/`StepperItem`/`StepperSegments`, `SessionShape`, the sidebar parts (`NavGoalSwitcher`, `NavItem`, `NavBadge`, `NavDayRow`, `NavUser`), and `MobileTabBar`/`MobileTab`/`MobileAskAction`.
+Stride patterns: `MonoLabel`, `SectionHeader`, `Metric`, `StrideMark`, status marks (`TrendMark`, `TrendLabel`, `DirectionMark`, `SourceMark`, `DecisionMark`, `DoneMark`, `PulseDot`), `VerdictList`/`VerdictRow`, `ProvenanceLabel`, `SignalList`/`SignalRow`, `ProviderValueInput`, `SignalChip`, `ConfidenceMeter`, `Sparkline`, `Recommendation` and its parts, `LedgerEntry`/`DecisionLegend`, `CoachActivity`, `CoachNote`, `SyncStatus`, `Stepper`/`StepperItem`/`StepperSegments`, `SessionShape`, `SessionKindTile` (session family tile in four sizes, with rest and race states), the sidebar parts (`NavGoalSwitcher`, `NavItem`, `NavBadge`, `NavDayRow`, `NavUser`), and `MobileTabBar`/`MobileTab`/`MobileAskAction`.
 
 Tailwind utilities inside React components own layout, responsive behavior, typography, and component appearance. Reserve `globals.css` for tokens, base styles, and global accessibility defaults. Standard shadcn color aliases map to Night Track roles: card → surface, popover → surface, secondary → raised surface, primary → accent, destructive → danger, input → strong line, and ring → focus. Adapt registry styles before use: Stride's `muted` means supporting text, so replace registry `bg-muted` surfaces with `bg-surface-raised`, and registry `bg-accent` hover states with `bg-surface-raised`, because Stride's accent is Volt.
 
