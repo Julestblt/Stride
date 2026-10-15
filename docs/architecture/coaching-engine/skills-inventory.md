@@ -6,7 +6,7 @@
 
 ## Summary
 
-- The reference ships 22 skills. Stride adapts 6 of them into 3 skills, defers 6 and drops 10.
+- The reference ships 22 skills. Stride adapts 5 of them into 3 skills, defers 6 and drops 11.
 - Most reference skills are integration plumbing for a single-athlete Markdown workspace: file contracts, sync, installers, Garmin and Intervals.icu writes. Stride owns that work in code, in the database or in garmin_mcp.
 - Most coaching substance lives in the reference's agent files, not in its skills. The [agent knowledge map](#agent-knowledge-map) shows where each part lands in Stride.
 - Two tools are needed to finish the ported skills: `read_plan_progress` and `read_plan_history`. Until they exist, the skills answer from the current tools and say what is not available yet.
@@ -58,7 +58,7 @@ Inputs are what the skill reads; scripts or files are what it runs or writes in 
 | `gear-inspection`              | Defer, no gear model in Stride       | None              | None                                                                                          | None                            |
 | `inspection`                   | Defer, no gear model in Stride       | None              | None                                                                                          | None                            |
 | `arc-backfill`                 | Drop, owned by Stride                | None              | Supabase tables and migrations                                                                | None                            |
-| `workspace-data-contract`      | Drop, owned by Stride and garmin_mcp | None              | Zod schemas, database constraints, garmin_mcp normalized rows                                 | I1–I4                           |
+| `workspace-data-contract`      | Drop, owned by Stride and garmin_mcp | None              | Zod schemas, database constraints, garmin_mcp normalized rows                                 | None                            |
 | `coach-doctor`                 | Drop, owned by Stride                | None              | Deployment health checks and observability                                                    | None                            |
 | `coach-setup`                  | Drop, owned by Stride                | None              | Stride onboarding (profile, availability, races)                                              | C1–C2 from the declared profile |
 | `update-coach`                 | Drop, owned by Stride                | None              | Stride deployments                                                                            | None                            |
@@ -106,7 +106,7 @@ The reference's coaching substance is mostly in `agents/*.md`. Each section land
 
 Requested for the Phase 2 tool registry (`src/server/coaching/managed/tools.ts`). The ported skills already name them and fall back to the current tools until they exist.
 
-| Tool                 | Returns                                                                                                                                                  | Source in Stride                                                  | Used by                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------ |
-| `read_plan_progress` | Planned sessions for a date range with their completion status (completed, missed, upcoming) and the matched activity's duration, distance and elevation | Planned-versus-completed matching (`src/server/plans/matches.ts`) | `status-reports`                     |
-| `read_plan_history`  | Plan proposals with title, summary, rationale, operations, origin, status, dates, validation result and specialist opinions                              | `plan_proposals` and plan versions                                | `explain-decision`, `status-reports` |
+| Tool                 | Returns                                                                                                                                                  | Source in Stride                                                  | Used by            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------ |
+| `read_plan_progress` | Planned sessions for a date range with their completion status (completed, missed, upcoming) and the matched activity's duration, distance and elevation | Planned-versus-completed matching (`src/server/plans/matches.ts`) | `status-reports`   |
+| `read_plan_history`  | Plan proposals with title, summary, rationale, operations, origin, status, dates, validation result and specialist opinions                              | `plan_proposals` and plan versions                                | `explain-decision` |

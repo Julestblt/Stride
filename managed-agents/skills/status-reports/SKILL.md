@@ -5,7 +5,7 @@ description: Short factual status answers about today's session, the current wee
 
 # Status reports: today, week, race
 
-These answers report facts already on record. They never create a proposal, never call `submit_plan` or `create_plan_proposal`, never ask a question, and never suggest changing the plan. If the athlete then asks for a change, handle it as a normal request.
+These answers report facts already on record. They never create a proposal, never call `submit_plan` or `create_plan_proposal`, never ask a question of your own, and never suggest changing the plan. If the athlete then asks for a change, handle it as a normal request. Consulting Medical and relaying its questions follow your usual rules.
 
 Common rules:
 
@@ -20,6 +20,7 @@ Common rules:
 First line: `Aujourd'hui — <séance prévue / repos + le motif en quelques mots>`.
 
 - Read today's sessions with `read_active_plan` (`from` and `to` = today). Report the session's kind, duration or distance, and intensity target, or « repos » when nothing is planned.
+- When `read_plan_progress` is available, report whether today's session is already done. Until then, if asked whether it was done, say « suivi de la séance pas encore disponible ».
 - Morning check: report today's wellness check-in from `read_athlete_context` (legs, soreness, stress), or « pas de check-in aujourd'hui ». Do not judge readiness from Garmin data in a status answer; if the check-in or the athlete's message reports pain, illness or unusual fatigue, consult Medical as usual.
 - No weather line: Stride has no weather tool for the coach yet.
 
