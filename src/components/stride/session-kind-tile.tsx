@@ -63,6 +63,7 @@ const sizes = {
   sm: "size-5 rounded-tag [&_svg]:size-2.75",
   md: "size-6.5 rounded-control [&_svg]:size-3.5",
   lg: "size-8 rounded-surface [&_svg]:size-4",
+  xl: "size-11 rounded-[11px] [&_svg]:size-5",
 } as const;
 
 export function SessionKindTile({
