@@ -162,6 +162,9 @@ skills:
   - ../skills/session-design
   - ../skills/health-recovery
   - ../skills/fueling
+  - ../skills/status-reports
+  - ../skills/explain-decision
+  - ../skills/garmin-data-access
 multiagent:
   type: coordinator
   agents:

@@ -19,6 +19,19 @@ Both agents run on Claude Sonnet 5.5. Their only sandbox tool is `read`, which l
 
 Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowlist on each agent and the athlete's Supabase access token supplied by a per-athlete vault, never by these files.
 
+## Skills
+
+| Skill                                                                     | Agents            |
+| ------------------------------------------------------------------------- | ----------------- |
+| `plan-format`, `plan-periodization`, `race-specificity`, `session-design` | Coach             |
+| `health-recovery`                                                         | Coach and Medical |
+| `fueling`                                                                 | Coach             |
+| `status-reports`: today's session, the current week, the next race        | Coach             |
+| `explain-decision`: why a proposal or change was made                     | Coach             |
+| `garmin-data-access`: bounded, read-only Garmin reads                     | Coach and Medical |
+
+`status-reports`, `explain-decision` and `garmin-data-access` are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and lists the planned `read_plan_progress` and `read_plan_history` tools.
+
 ## Development page
 
 `/coach` (development only) starts a conversation session ($1 cap) or a plan design session ($2 cap) after confirmation, shows the transcript with latency and cost, and lets the athlete approve, apply or delete plans. Applying and deleting use the `stride_coach_worker` role and need `COACH_WORKER_DATABASE_URL` in `.env.local`.
