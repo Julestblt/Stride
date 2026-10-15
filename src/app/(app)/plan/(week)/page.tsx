@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { mondayOf } from "@/features/plans/model/dates";
 import { buildProgram } from "@/features/plans/view/program";
 import { requireAthlete } from "@/server/app/session";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
+import { loadSessionPanel } from "@/server/plans/session-panel";
 import { PlanEmpty } from "../_components/plan-empty";
 import { PlanFrame } from "../_components/plan-frame";
 import { ProgramExplorer } from "../_components/program-explorer";
 import { ProgramHeader, ProgramTabs } from "../_components/program-hero";
+import { SessionSheet } from "../_components/session-sheet";
 
 export const metadata: Metadata = { title: "Programme complet · Plan" };
 
@@ -15,7 +18,11 @@ export default async function PlanPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const overview = await loadPlanOverview(context);
+  const seance = typeof query.seance === "string" ? query.seance : null;
+  const [overview, panel] = await Promise.all([
+    loadPlanOverview(context),
+    seance ? loadSessionPanel(context, seance) : null,
+  ]);
   if (!overview)
     return (
       <PlanFrame crumbs={[{ label: "Plan" }]}>
@@ -27,7 +34,15 @@ export default async function PlanPage({
   const program =
     programs.find((item) => race !== null && item.raceId === race) ??
     programs[0];
-  const requested = typeof query.week === "string" ? query.week : null;
+  const session = overview.plan.state.sessions.find(
+    (item) => item.sessionKey === seance,
+  );
+  const requested =
+    typeof query.week === "string"
+      ? query.week
+      : session
+        ? mondayOf(session.scheduledOn)
+        : null;
   const initialWeekKey =
     program.weeks.find((week) => week.weekStart === requested)?.weekKey ?? null;
   return (
@@ -47,10 +62,11 @@ export default async function PlanPage({
       <ProgramTabs programs={programs} active={program} />
       <ProgramHeader program={program} />
       <ProgramExplorer
-        key={`${program.raceId}-${initialWeekKey}`}
+        key={program.raceId ?? "plan"}
         program={program}
         initialWeekKey={initialWeekKey}
       />
+      {panel && <SessionSheet key={panel.sessionKey} panel={panel} />}
     </PlanFrame>
   );
 }

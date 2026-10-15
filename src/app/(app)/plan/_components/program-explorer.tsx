@@ -83,6 +83,11 @@ export function ProgramExplorer({
   const [selected, setSelected] = useState(
     initialWeekKey ?? program.defaultWeekKey,
   );
+  const [requested, setRequested] = useState(initialWeekKey);
+  if (requested !== initialWeekKey) {
+    setRequested(initialWeekKey);
+    if (initialWeekKey) setSelected(initialWeekKey);
+  }
   const index = weeks.findIndex((week) => week.weekKey === selected);
   const week = weeks[index] ?? null;
 
@@ -172,7 +177,19 @@ export function ProgramExplorer({
         selected={selected}
         onSelect={select}
       />
-      {week && <ProgramWeekPanel week={week} navigation={navigation} />}
+      {week && (
+        <ProgramWeekPanel
+          week={week}
+          navigation={navigation}
+          sessionHref={(sessionKey) => {
+            const query = new URLSearchParams();
+            if (program.raceId) query.set("race", program.raceId);
+            query.set("week", week.weekStart);
+            query.set("seance", sessionKey);
+            return `/plan?${query}`;
+          }}
+        />
+      )}
       {program.milestones.length > 0 && (
         <Milestones milestones={program.milestones} onSelect={select} />
       )}

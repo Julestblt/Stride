@@ -9,7 +9,7 @@ async function signIn(page: Page) {
 }
 
 const sessionLinks = (page: Page) =>
-  page.locator('a[href^="/plan/sessions/"]').filter({ visible: true });
+  page.locator('a[href*="seance="]').filter({ visible: true });
 
 test("a session opens in a side panel and navigates within the week", async ({
   page,
@@ -18,7 +18,7 @@ test("a session opens in a side panel and navigates within the week", async ({
   await signIn(page);
   await page.goto("/plan");
   await sessionLinks(page).filter({ hasText: /Seuil/ }).first().click();
-  await expect(page).toHaveURL(/\/plan\/sessions\/s-/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/plan\?.*seance=s-/, { timeout: 20_000 });
   const panel = page.getByRole("dialog");
   await expect(panel).toBeVisible();
   await expect(panel.getByRole("heading", { level: 2 })).toContainText("Seuil");
@@ -43,6 +43,27 @@ test("a session opens in a side panel and navigates within the week", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL(/\/plan$/);
+});
+
+test("closing a session restores focus and history", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/plan");
+  const link = sessionLinks(page).filter({ hasText: /Seuil/ }).first();
+  await link.click();
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 20_000 });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/plan$/);
+  await expect(link).toBeFocused();
+
+  await link.click();
+  await expect(page.getByRole("dialog")).toBeVisible({ timeout: 20_000 });
+  await page.goBack();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(/\/plan$/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
 });
 
 test("a completed session shows planned versus completed", async ({ page }) => {
@@ -90,17 +111,25 @@ test("a completed session shows planned versus completed", async ({ page }) => {
   throw new Error("No completed session with an activity was found");
 });
 
-test("a session link loaded directly renders the full page", async ({
-  page,
-}) => {
+test("a session link loaded directly opens the panel", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
   await page.goto("/plan");
   await sessionLinks(page).filter({ hasText: /Seuil/ }).first().click();
+  const panel = page.getByRole("dialog");
+  await expect(panel).toBeVisible({ timeout: 20_000 });
+  const title = await panel.getByRole("heading", { level: 2 }).textContent();
+  const url = page.url();
+  await page.goto("about:blank");
+  await page.goto(url);
   await expect(page.getByRole("dialog")).toBeVisible();
-  await page.reload();
+  await expect(
+    page.getByRole("dialog").getByRole("heading", { level: 2 }),
+  ).toHaveText(title ?? "");
+  await expect(page.locator("main h1")).toContainText("Marathon de Paris");
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Étapes" })).toBeVisible();
+  await expect(page).not.toHaveURL(/seance=/);
 });
 
 test("a session opens as a bottom sheet on a phone", async ({ page }) => {
@@ -117,9 +146,6 @@ test("a session opens as a bottom sheet on a phone", async ({ page }) => {
       return box && [box.x, Math.round(box.y), Math.round(box.y + box.height)];
     })
     .toEqual([0, 58, 844]);
-  await expect(
-    sheet.getByRole("link", { name: "Page complète" }),
-  ).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
@@ -128,4 +154,9 @@ test("a session opens as a bottom sheet on a phone", async ({ page }) => {
   await expect(
     sheet.getByRole("button", { name: "Séance précédente" }),
   ).toBeEnabled();
+  await page.reload();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByRole("dialog").getByText(/^Séance \d+ \/ \d+ · glisse/),
+  ).toBeVisible();
 });

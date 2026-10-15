@@ -100,11 +100,11 @@ test("the plan shows the stored program with the current week selected", async (
   await expect(current).toHaveAttribute("aria-pressed", "true");
 
   await page
-    .locator('a[href^="/plan/sessions/"]')
+    .locator('a[href*="seance="]')
     .filter({ hasText: /Seuil/ })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/plan\/sessions\/s-\d{4}-\d{2}-\d{2}-/);
+  await expect(page).toHaveURL(/\/plan\?.*seance=s-\d{4}-\d{2}-\d{2}-/);
   await expect(page.getByRole("dialog")).toContainText("Étapes");
   await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
 });
@@ -167,11 +167,12 @@ test("the program fits a phone and shows the selected week", async ({
     fullPage: true,
   });
   await page
-    .locator('a[href^="/plan/sessions/"]')
+    .locator('a[href*="seance="]')
     .filter({ visible: true })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/plan\/sessions\//);
+  await expect(page).toHaveURL(/\/plan\?.*seance=/);
+  await expect(page.getByRole("dialog")).toBeVisible();
 });
 
 test("the program is reachable with the keyboard", async ({ page }) => {
@@ -201,10 +202,22 @@ test("the program is reachable with the keyboard", async ({ page }) => {
   expect(await outline(milestone)).not.toBe("none");
 });
 
-test("an unknown session is not found", async ({ page }) => {
+test("an unknown session leaves Plan without a panel", async ({ page }) => {
   await signIn(page, "plan@example.com");
-  const response = await page.goto("/plan/sessions/s-2000-01-01-1");
-  expect(response?.status()).toBe(404);
+  const response = await page.goto("/plan?seance=s-2000-01-01-1");
+  expect(response?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", { level: 1, name: /Marathon de Paris$/ }),
+  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("the removed week and session pages are not found", async ({ page }) => {
+  await signIn(page, "plan@example.com");
+  expect((await page.goto("/plan/week"))?.status()).toBe(404);
+  expect((await page.goto("/plan/sessions/s-2000-01-01-1"))?.status()).toBe(
+    404,
+  );
 });
 
 test("an athlete without a stored plan is invited to ask the coach", async ({

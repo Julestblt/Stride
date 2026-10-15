@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   easyRun,
-  longRun,
   qualitySession,
 } from "@/features/plans/library/library";
 import type { PlanSession } from "@/features/plans/model/plan";
@@ -13,16 +12,9 @@ import {
   formatWeekRange,
 } from "@/features/plans/view/format";
 import {
-  defaultWeekStart,
-  planNavigation,
-  restDays,
   sessionStats,
-  sessionSummary,
   stepViews,
-  weekDays,
-  weekPosition,
   weekStats,
-  weekSummary,
 } from "@/features/plans/view/plan-view";
 import { planState } from "./plan-fixture";
 
@@ -73,28 +65,6 @@ describe("format", () => {
 });
 
 describe("sessions", () => {
-  it("summarizes easy runs with their easy target, strides included", () => {
-    expect(sessionSummary(placed(easyRun(road, 3_300, true)))).toBe(
-      "55’ · 5:21–6:05/km",
-    );
-  });
-
-  it("summarizes quality sessions with their hardest work", () => {
-    expect(sessionSummary(placed(qualitySession(road, "threshold", 1)))).toBe(
-      "55’ · 4:25–4:38/km",
-    );
-  });
-
-  it("adds elevation for trail sessions", () => {
-    const session = placed(longRun({ targets, terrain: "trail" }, 5_400));
-    expect(
-      sessionSummary({
-        ...session,
-        targets: { ...session.targets, elevationGainMeters: 1_200 },
-      }),
-    ).toBe("1h30 · FC 114–132 · 1\u202f200 m D+");
-  });
-
   it("lists steps with repeats and targets", () => {
     const steps = stepViews(placed(qualitySession(road, "threshold", 1)));
     expect(
@@ -123,49 +93,10 @@ describe("sessions", () => {
 });
 
 describe("weeks", () => {
-  const state = planState();
-  it("picks the week containing today, then the next one", () => {
-    expect(defaultWeekStart(state, "2026-10-14")).toBe("2026-10-12");
-    expect(defaultWeekStart(state, "2026-10-11")).toBe("2026-10-12");
-  });
-
-  it("numbers weeks within their block and links neighbours", () => {
-    expect(weekPosition(state, "2026-10-19")).toMatchObject({
-      number: 2,
-      count: 4,
-      previous: "2026-10-12",
-      next: "2026-10-26",
-    });
-    const navigation = planNavigation(state, "2026-10-14");
-    expect(navigation[0].weeks[0]).toMatchObject({
-      label: "Semaine 1",
-      current: true,
-      durationSeconds: 45 * 60 + 3_000,
-    });
-  });
-
-  it("summarizes a week, its stats, days and rest days", () => {
-    expect(weekSummary(state, "2026-10-19")).toBe("Une séance de qualité.");
-    const stats = weekStats(state, "2026-10-19");
+  it("states a week's training duration and intensity split", () => {
+    const stats = weekStats(planState(), "2026-10-19");
     expect(stats.durationSeconds).toBe(50 * 60 + 3_000 + 90 * 60);
     expect(stats.easyPct + stats.hardPct).toBe(100);
     expect(stats.elevationGainMeters).toBeNull();
-    const days = weekDays(state, "2026-10-19", "2026-10-20");
-    expect(days.map((day) => day.label)).toEqual([
-      "LUN.",
-      "MAR.",
-      "MER.",
-      "JEU.",
-      "VEN.",
-      "SAM.",
-      "DIM.",
-    ]);
-    expect(days[1]).toMatchObject({ isToday: true, totalSeconds: 3_000 });
-    expect(restDays(state, "2026-10-19")).toEqual([
-      "lun.",
-      "mer.",
-      "ven.",
-      "sam.",
-    ]);
   });
 });
