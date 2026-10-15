@@ -121,6 +121,31 @@ export function raceSnapshot(
   };
 }
 
+export type RaceCourseValues = {
+  distanceM: number;
+  elevationGainM: number | null;
+};
+
+export function withRaceCourse<
+  T extends Pick<RaceValues, "distance_km" | "elevation_gain_m">,
+>(values: T, course: RaceCourseValues | null | undefined): T {
+  if (!course) return values;
+  return {
+    ...values,
+    distance_km: Math.round(course.distanceM / 10) / 100,
+    elevation_gain_m: course.elevationGainM ?? values.elevation_gain_m,
+  };
+}
+
+export function resolveRaceSnapshots<
+  T extends { id: string; values: RaceValues },
+>(races: T[], courses: ReadonlyMap<string, RaceCourseValues>): T[] {
+  return races.map((race) => ({
+    ...race,
+    values: withRaceCourse(race.values, courses.get(race.id)),
+  }));
+}
+
 export const requiredRaceFields = ["name", "race_date", "distance_km"] as const;
 export type RequiredRaceField = (typeof requiredRaceFields)[number];
 

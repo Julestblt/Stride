@@ -12,7 +12,9 @@ import {
 } from "@/features/progress/history";
 import { addDays } from "@/features/progress/period";
 import type { OnboardingContext } from "@/server/onboarding/context";
+import { resolveRaceSnapshots } from "@/features/onboarding/goals";
 import { readGoals } from "@/server/onboarding/goals";
+import { readRaceCourses } from "@/server/races/courses";
 
 const pageSize = 1000;
 const fitnessMetrics = [
@@ -40,22 +42,24 @@ export async function readRaces(
   context: OnboardingContext,
   strict = false,
 ): Promise<ProgressRace[]> {
-  const goals = strict
-    ? await readGoals(context)
-    : await readGoals(context).catch(() => null);
-  return (goals?.races ?? []).flatMap(({ id, values }) =>
-    values.race_date
-      ? [
-          {
-            id,
-            name: values.name ?? "Course sans nom",
-            day: values.race_date,
-            kind: values.race_kind,
-            distanceKm: values.distance_km,
-            priority: values.priority,
-          },
-        ]
-      : [],
+  const [goals, courses] = await Promise.all([
+    strict ? readGoals(context) : readGoals(context).catch(() => null),
+    readRaceCourses(context),
+  ]);
+  return resolveRaceSnapshots(goals?.races ?? [], courses).flatMap(
+    ({ id, values }) =>
+      values.race_date
+        ? [
+            {
+              id,
+              name: values.name ?? "Course sans nom",
+              day: values.race_date,
+              kind: values.race_kind,
+              distanceKm: values.distance_km,
+              priority: values.priority,
+            },
+          ]
+        : [],
   );
 }
 
