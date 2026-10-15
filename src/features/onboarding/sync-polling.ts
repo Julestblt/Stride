@@ -1,5 +1,7 @@
 import { z } from "zod";
 import {
+  garminJobPhases,
+  garminJobStates,
   garminSyncStates,
   isSyncActive,
   type GarminSyncStatus,
@@ -11,6 +13,10 @@ const category = z.object({
   lastErrorCode: z.string().nullable(),
   activityCount: z.number().int().nonnegative().nullable(),
 });
+const job = z.object({
+  state: z.enum(garminJobStates),
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
 export const syncObservationSchema = z.object({
   started: z.boolean(),
   categories: z.object({
@@ -21,6 +27,8 @@ export const syncObservationSchema = z.object({
   }),
   lastSyncAt: z.iso.datetime({ offset: true }).nullable(),
   updatedAt: z.iso.datetime({ offset: true }).nullable(),
+  phases: z.partialRecord(z.enum(garminJobPhases), job).optional(),
+  manualSyncAvailableAt: z.iso.datetime({ offset: true }).nullable().optional(),
   firstActivityDate: z.iso.date().nullable().default(null),
 });
 export type SyncObservation = GarminSyncStatus & {

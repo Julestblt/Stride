@@ -39,6 +39,7 @@ export const garminErrorCodes = [
   "service_unavailable",
   "disconnected",
   "connection_replaced",
+  "sync_throttled",
 ] as const;
 
 export type GarminErrorCode = (typeof garminErrorCodes)[number];

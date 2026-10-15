@@ -9,6 +9,7 @@ import {
 } from "../../src/features/garmin/connection";
 import {
   isSyncActive,
+  requestedSyncProgress,
   syncPhase,
   type GarminSyncStatus,
 } from "../../src/features/garmin/sync";
@@ -126,6 +127,56 @@ describe("Garmin client requests", () => {
       expect(serialized).not.toContain(secret);
     expect(log).not.toHaveBeenCalled();
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe("Garmin manual sync request", () => {
+  it("posts an empty body and reads the queued status", async () => {
+    const send = respond(200, {
+      request: "queued",
+      connection_id: "0b6d8f8e-6a7c-4b1d-9f0e-2c3d4e5f6a7b",
+      categories: {
+        activities: { state: "complete" },
+        recovery: { state: "complete" },
+        fitness: { state: "complete" },
+        patterns: { state: "complete" },
+      },
+      incremental_phases: {
+        activities: {
+          state: "queued",
+          phase: "activities",
+          updated_at: "2026-10-16T08:00:00+00:00",
+        },
+        thresholds: { state: "queued", phase: "thresholds" },
+      },
+      manual_sync_available_at: "2026-10-16T08:05:00+00:00",
+    });
+    const result = await client(send).requestSync(context);
+    const [, init] = send.mock.calls[0];
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBe("{}");
+    if (!result.ok) throw new Error(result.failure.code);
+    expect(result.value.request).toBe("queued");
+    expect(result.value.phases).toEqual({
+      activities: { state: "queued", updatedAt: "2026-10-16T08:00:00+00:00" },
+    });
+    expect(result.value.manualSyncAvailableAt).toBe(
+      "2026-10-16T08:05:00+00:00",
+    );
+  });
+
+  it("reads a throttled request with its retry delay", async () => {
+    const result = await client(
+      respond(
+        429,
+        { error: { code: "sync_throttled" }, available_at: "x" },
+        { "Retry-After": "120" },
+      ),
+    ).requestSync(context);
+    expect(result).toEqual({
+      ok: false,
+      failure: { code: "sync_throttled", retryAfterSeconds: 120 },
+    });
   });
 });
 
@@ -419,6 +470,35 @@ describe("Garmin client against the contract fixture", () => {
       if (!isSyncActive(sync.value)) break;
     }
     expect(counts).toEqual([25, 50, 75, 100]);
+  });
+
+  it("queues a manual sync once, follows its jobs and throttles repeats", async () => {
+    const athlete = { accessToken: "fixture-athlete-manual" };
+    const disconnected = await garmin.requestSync(athlete);
+    expect(!disconnected.ok && disconnected.failure.code).toBe("disconnected");
+    await garmin.startConnection(athlete, {
+      email: "athlete@example.com",
+      password: "correct-password",
+    });
+    const queued = await garmin.requestSync(athlete);
+    if (!queued.ok) throw new Error(queued.failure.code);
+    expect(queued.value.request).toBe("queued");
+    expect(queued.value.phases?.activities?.state).toBe("queued");
+    expect(queued.value.manualSyncAvailableAt).not.toBeNull();
+    let settled = false;
+    for (let read = 0; read < 5 && !settled; read += 1) {
+      const sync = await garmin.getSync(athlete);
+      if (!sync.ok) throw new Error(sync.failure.code);
+      settled = requestedSyncProgress(queued.value, sync.value).settled;
+    }
+    expect(settled).toBe(true);
+    const repeated = await garmin.requestSync(athlete);
+    expect(!repeated.ok && repeated.failure).toMatchObject({
+      code: "sync_throttled",
+    });
+    expect(!repeated.ok && repeated.failure.retryAfterSeconds).toBeGreaterThan(
+      0,
+    );
   });
 
   it("keeps athletes isolated and rejects missing tokens", async () => {
