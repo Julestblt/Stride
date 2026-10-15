@@ -35,7 +35,7 @@ const statusRank: Record<MatchStatus, number> = {
   substituted: 0,
 };
 
-function sessionStatuses(matches: SessionMatchRecord[]) {
+export function sessionStatuses(matches: SessionMatchRecord[]) {
   const statuses = new Map<string, MatchStatus>();
   for (const match of matches) {
     const current = statuses.get(match.sessionKey);

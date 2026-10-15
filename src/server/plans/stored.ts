@@ -11,6 +11,7 @@ export type StoredPlan = {
   status: "active" | "archived";
   activeVersion: number;
   version: number;
+  versionSummary: string | null;
   state: PlanState;
 };
 
@@ -44,7 +45,7 @@ async function readRows(
   const [versionRow, blocks, weeks, sessions] = await Promise.all([
     context.client
       .from("plan_versions")
-      .select("version, race_roles, confidence")
+      .select("version, race_roles, confidence, summary")
       .eq("plan_id", plan.id)
       .eq("version", version)
       .maybeSingle(),
@@ -75,6 +76,7 @@ async function readRows(
     status: plan.status === "archived" ? "archived" : "active",
     activeVersion: plan.active_version,
     version,
+    versionSummary: versionRow.data.summary,
     state: toPlanState({
       plan,
       version: versionRow.data,
