@@ -88,12 +88,18 @@ export function ProgramTabs({
   );
 }
 
-export function ProgramHeader({ program }: { program: RaceProgram }) {
+export function ProgramHeader({
+  program,
+  eyebrow = program.eyebrow,
+}: {
+  program: RaceProgram;
+  eyebrow?: string;
+}) {
   return (
     <section className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:gap-7">
       <div className="flex flex-col gap-1.5 sm:mr-auto">
         <MonoLabel size="nano" className="sm:text-label">
-          {program.eyebrow}
+          {eyebrow}
         </MonoLabel>
         <h1 className="text-2xl leading-[1.1] font-semibold tracking-[-0.02em] text-balance sm:text-[34px] sm:leading-[1.05] sm:tracking-[-0.025em]">
           {program.title}

@@ -904,10 +904,13 @@ function defaultWeek(weeks: ProgramWeek[]) {
   );
 }
 
+export function weekEyebrow(week: ProgramWeek, count: number) {
+  return `Semaine ${week.number} sur ${count} · ${week.blockName}`;
+}
+
 function eyebrow(weeks: ProgramWeek[]) {
   const current = weeks.find((week) => week.status === "current");
-  if (current)
-    return `Semaine ${current.number} sur ${weeks.length} · ${current.blockName}`;
+  if (current) return weekEyebrow(current, weeks.length);
   const first = weeks[0];
   const span = plural(weeks.length, "semaine", "semaines");
   return first && first.daysUntil > 0

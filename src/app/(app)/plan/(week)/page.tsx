@@ -8,7 +8,7 @@ import { loadSessionPanel } from "@/server/plans/session-panel";
 import { PlanEmpty } from "../_components/plan-empty";
 import { PlanFrame } from "../_components/plan-frame";
 import { ProgramExplorer } from "../_components/program-explorer";
-import { ProgramHeader, ProgramTabs } from "../_components/program-hero";
+import { ProgramTabs } from "../_components/program-hero";
 import { SessionSheet } from "../_components/session-sheet";
 
 export const metadata: Metadata = { title: "Programme complet · Plan" };
@@ -62,7 +62,6 @@ export default async function PlanPage({
         Plan
       </p>
       <ProgramTabs programs={programs} active={program} />
-      <ProgramHeader program={program} />
       <ProgramExplorer
         key={program.raceId ?? "plan"}
         program={program}
