@@ -113,7 +113,7 @@ describe("sessions", () => {
     ).toEqual({
       total: "55’",
       distance: expect.stringMatching(/^≈ \d+,\d km$/),
-      intensityTime: { value: "24’", label: "au seuil" },
+      intensityTime: { seconds: 1_440, value: "24’", label: "au seuil" },
       pace: "4:25–4:38",
       heartRate: "152–170",
       elevation: null,
