@@ -709,6 +709,47 @@ const planBlocks = planBlockDefinitions.map(
 const pastPlanSessions = planSessions.filter(
   (session) => session.scheduled_on < planToday,
 );
+const planMatchedSessions = pastPlanSessions.filter(
+  (session, index) => index !== 2,
+);
+const planDoneSession = planMatchedSessions.findLast(
+  (session) => session.kind === "easy",
+);
+const planDoneActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005000";
+const planDoneStart = Date.parse(`${planDoneSession.scheduled_on}T17:12:00Z`);
+tables.provider_activities.push({
+  ...activity(5000, 0, {
+    distance_meters: 8320,
+    duration_seconds: 3012,
+    average_heart_rate: 142,
+    detail_imported_at: new Date(
+      planDoneStart + (3012 + 180) * 1000,
+    ).toISOString(),
+  }),
+  user_id: planUser.id,
+  started_at: new Date(planDoneStart).toISOString(),
+  local_started_at: `${planDoneSession.scheduled_on} 19:12:00`,
+});
+tables.provider_activity_tracks.push({
+  activity_id: planDoneActivityId,
+  user_id: planUser.id,
+  status: "available",
+  route: null,
+  bounds: null,
+  series: (() => {
+    const elapsed = Array.from({ length: 302 }, (_, index) => index * 10);
+    let meters = 0;
+    const distance = elapsed.map((time) => {
+      const minute = Math.floor(time / 60);
+      const pace = 362 + Math.sin(minute / 4) * 6;
+      if (time > 0) meters += (10 * 1000) / pace;
+      return Math.round(meters);
+    });
+    return { elapsed_s: elapsed, distance_m: distance };
+  })(),
+  heart_rate_histogram: null,
+  source_point_count: 302,
+});
 const nextPlanSession = planSessions.find(
   (session) => session.scheduled_on > planToday && session.kind !== "race",
 );
@@ -747,19 +788,17 @@ Object.assign(tables, {
   plan_blocks: planBlocks,
   plan_weeks: planWeeks,
   plan_sessions: planSessions,
-  session_activity_matches: pastPlanSessions
-    .filter((session, index) => index !== 2)
-    .map((session, index) => ({
-      user_id: planUser.id,
-      plan_id: planId,
-      session_key: session.session_key,
-      activity_id: null,
-      method: "auto",
-      status: "completed",
-      confidence: 0.9,
-      compliance: { duration: [0.98, 1, 0.94, 1.02][index % 4] },
-      algorithm_version: "match-v1",
-    })),
+  session_activity_matches: planMatchedSessions.map((session, index) => ({
+    user_id: planUser.id,
+    plan_id: planId,
+    session_key: session.session_key,
+    activity_id: session === planDoneSession ? planDoneActivityId : null,
+    method: "auto",
+    status: "completed",
+    confidence: 0.9,
+    compliance: { duration: [0.98, 1, 0.94, 1.02][index % 4] },
+    algorithm_version: "match-v1",
+  })),
   plan_proposals: nextPlanSession
     ? [
         {
