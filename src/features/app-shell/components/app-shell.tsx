@@ -41,6 +41,8 @@ import {
   type ShellGoal,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
+import { PlanSidebarGroup } from "./plan-nav";
+import type { ProgramNav } from "@/features/plans/view/program";
 import { ProgressSidebarGroup } from "@/features/progress/components/progress-nav";
 import { ShellNavItem } from "./shell-nav-item";
 import { ShellRaceItem } from "./shell-race-item";
@@ -61,6 +63,7 @@ export function AppShell({
   sync,
   defaultOpen,
   initialActivity,
+  planNav = null,
   children,
 }: {
   athlete: ShellAthlete;
@@ -69,6 +72,7 @@ export function AppShell({
   races: ShellRaceLink[];
   sync: string | null;
   initialActivity?: DataActivityObservation | null;
+  planNav?: ProgramNav | null;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
@@ -119,6 +123,7 @@ export function AppShell({
                 />
               </SidebarMenu>
             </SidebarGroup>
+            <PlanSidebarGroup nav={planNav} />
             <ProgressSidebarGroup />
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
               <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
