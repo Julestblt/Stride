@@ -1,93 +1,94 @@
 import { cn } from "@/lib/utils";
 import type { Glyph } from "../weather";
 
+const outline = {
+  stroke: "currentColor",
+  strokeWidth: 1.6,
+  strokeLinejoin: "round" as const,
+  strokeLinecap: "round" as const,
+};
+
+const cloud =
+  "M4.6 13.2H11.6A2.8 2.8 0 0 0 11.4 7.6A3.9 3.9 0 0 0 4 8.6A2.3 2.3 0 0 0 4.6 13.2Z";
+
+function Cloud({ d = cloud }: { d?: string }) {
+  return (
+    <path
+      d={d}
+      className="text-muted"
+      fill="currentColor"
+      fillOpacity={0.18}
+      {...outline}
+    />
+  );
+}
+
 export function WeatherGlyph({ glyph }: { glyph: Glyph }) {
-  const line = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.4,
-    strokeLinejoin: "round" as const,
-  };
   switch (glyph) {
     case "moon":
       return (
-        <path d="M11.8 10.6A5 5 0 0 1 5.4 4.2A5 5 0 1 0 11.8 10.6Z" {...line} />
+        <path
+          d="M12.2 10.4A5.2 5.2 0 0 1 5.6 3.8A5.2 5.2 0 1 0 12.2 10.4Z"
+          className="text-night"
+          fill="currentColor"
+          fillOpacity={0.3}
+          {...outline}
+        />
       );
     case "sun":
       return (
-        <>
-          <circle cx="8" cy="8" r="3" {...line} />
+        <g className="text-warning">
+          <circle cx="8" cy="8" r="3" fill="currentColor" />
           <path
-            d="M8 1.5V3 M8 13V14.5 M1.5 8H3 M13 8H14.5 M3.4 3.4L4.4 4.4 M11.6 11.6L12.6 12.6 M3.4 12.6L4.4 11.6 M11.6 4.4L12.6 3.4"
-            stroke="currentColor"
-            strokeWidth={1.3}
-            strokeLinecap="round"
+            d="M8 1.2V2.8 M8 13.2V14.8 M1.2 8H2.8 M13.2 8H14.8 M3.2 3.2L4.3 4.3 M11.7 11.7L12.8 12.8 M3.2 12.8L4.3 11.7 M11.7 4.3L12.8 3.2"
+            {...outline}
           />
-        </>
+        </g>
       );
     case "partly":
       return (
         <>
-          <path
-            d="M5 4.2A2.6 2.6 0 0 1 9.6 3.4 M5.2 1.2V2 M1.9 3.6L2.6 4.1 M8.9 1.6L8.4 2.3"
-            stroke="currentColor"
-            strokeWidth={1.2}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path
-            d="M5 13.5H11.8A2.7 2.7 0 0 0 11.5 8.1A3.6 3.6 0 0 0 4.7 9.1A2.2 2.2 0 0 0 5 13.5Z"
-            {...line}
-          />
+          <g className="text-warning">
+            <circle cx="5.6" cy="5.4" r="2.3" fill="currentColor" />
+            <path
+              d="M5.6 1V1.9 M1.2 5.4H2.1 M2.5 2.3L3.1 2.9 M8.7 2.3L8.1 2.9"
+              {...outline}
+              strokeWidth={1.4}
+            />
+          </g>
+          <Cloud d="M5.4 14H12A2.6 2.6 0 0 0 11.8 8.8A3.5 3.5 0 0 0 5.2 9.7A2.1 2.1 0 0 0 5.4 14Z" />
         </>
       );
     case "rain":
       return (
         <>
+          <Cloud d="M4.6 9.6H11.6A2.8 2.8 0 0 0 11.4 4A3.9 3.9 0 0 0 4 5A2.3 2.3 0 0 0 4.6 9.6Z" />
           <path
-            d="M4.5 9.5H11.5A2.8 2.8 0 0 0 11.2 3.9A3.8 3.8 0 0 0 3.9 5A2.3 2.3 0 0 0 4.5 9.5Z"
-            {...line}
-          />
-          <path
-            d="M5.5 11.5L4.8 13.5 M8.5 11.5L7.8 13.5 M11.3 11.5L10.6 13.5"
-            stroke="currentColor"
-            strokeWidth={1.4}
-            strokeLinecap="round"
+            d="M5.6 11.6L4.8 14 M8.6 11.6L7.8 14 M11.4 11.6L10.6 14"
+            className="text-provider"
+            {...outline}
+            strokeWidth={1.8}
           />
         </>
       );
     default:
-      return (
-        <path
-          d="M4.5 12.5H11.5A3 3 0 0 0 11.2 6.5A4 4 0 0 0 3.6 7.6A2.5 2.5 0 0 0 4.5 12.5Z"
-          {...line}
-        />
-      );
+      return <Cloud />;
   }
-}
-
-export function glyphTone(glyph: Glyph) {
-  return glyph === "moon"
-    ? "text-night"
-    : glyph === "rain"
-      ? "text-provider"
-      : "text-muted";
 }
 
 export function WeatherIcon({
   glyph,
   className,
-  tone = true,
 }: {
   glyph: Glyph;
   className?: string;
-  tone?: boolean;
 }) {
   return (
     <svg
       viewBox="0 0 16 16"
       aria-hidden="true"
-      className={cn("size-4 shrink-0", tone && glyphTone(glyph), className)}
+      fill="none"
+      className={cn("size-5 shrink-0", className)}
     >
       <WeatherGlyph glyph={glyph} />
     </svg>

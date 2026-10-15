@@ -331,13 +331,7 @@ export function WeatherCard({
       <div className="flex items-center gap-3.5 rounded-[10px] bg-surface-raised px-4 py-3.5">
         <WeatherIcon
           glyph={weather.mode === "forecast" ? headlineGlyph : "partly"}
-          tone={false}
-          className={cn(
-            "size-7.5",
-            weather.mode === "forecast" && headlineGlyph === "rain"
-              ? "text-provider"
-              : "text-foreground",
-          )}
+          className="size-8"
         />
         <div className="flex flex-1 flex-col gap-0.5">
           <MonoLabel size="nano">
@@ -391,7 +385,7 @@ export function WeatherCard({
                 <span
                   className={cn(
                     "text-micro",
-                    wet ? "text-provider" : "text-dim",
+                    wet ? "text-provider" : "text-muted-foreground",
                   )}
                 >
                   {Math.round(slot.precipitationProbability)} %
