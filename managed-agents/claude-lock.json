@@ -9,16 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "4",
-      "hash": "4d89d7363d36ecca5120ec14cc206212",
-      "remote_hash": "8d8fb9aa998f71257d3a43ffbb76aece"
+      "version": "5",
+      "hash": "b590cedff6aeed30d17ee245726493eb",
+      "remote_hash": "7db25c3889f01c94638e9577418ddf76"
     },
     "./agents/medical.md": {
       "kind": "agent",
       "id": "agent_011dYKZ33Wq7xwdNR3SqpugL",
-      "version": "3",
-      "hash": "35036a343ddb587fb274f79b9fa105f1",
-      "remote_hash": "3c74677aea613fa8da71bc713cf3d02b"
+      "version": "4",
+      "hash": "2daf35d79ce07b35bac50f72f48610b8",
+      "remote_hash": "fe06eb548f52cdcd9604f74411ef83c3"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
@@ -41,8 +41,8 @@
     "./skills/garmin-data-access": {
       "kind": "skill",
       "id": "skill_01DUdrTJ4ZWGvHdqoVeoGiw4",
-      "version": "skver_019EhkswjHKv3DMKYr9BMZvL",
-      "hash": "7774635ba2ed7810e34f3c1b9adf1a3e"
+      "version": "skver_01KUYkNbUrfyDbBMpqRqSvUC",
+      "hash": "8564de47b004d03f29034d61e96798e1"
     },
     "./skills/health-recovery": {
       "kind": "skill",
@@ -77,8 +77,8 @@
     "./skills/status-reports": {
       "kind": "skill",
       "id": "skill_016RBxwbMwvtMjh1XnsutLF5",
-      "version": "skver_01TstmTZnNn8sF6Ugd8VuPDw",
-      "hash": "ca2a556a12742f06f726165f91306f75"
+      "version": "skver_01HhBPn3G38iUqadudZRW4TL",
+      "hash": "e9af6e0d3602bddf3bf97b6f03877daf"
     }
   }
 }
