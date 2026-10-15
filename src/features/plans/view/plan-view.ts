@@ -5,10 +5,12 @@ import type { PlanSession, PlanState } from "../model/plan";
 import {
   structureTotals,
   type Intensity,
+  type IntensityPaces,
   type SimpleStep,
   type StructureStep,
 } from "../model/structure";
-import type { TrainingTargets } from "../targets/targets";
+import { sessionDistance } from "../model/volume";
+import { intensityPaces, type TrainingTargets } from "../targets/targets";
 import {
   formatDistance,
   formatDuration,
@@ -179,8 +181,10 @@ export function chartSegments(session: PlanSession): ChartSegment[] {
 export function sessionStats(
   session: PlanSession,
   targets: TrainingTargets | null = null,
+  paces: IntensityPaces | null = targets ? intensityPaces(targets) : null,
 ) {
   const totals = structureTotals(session.structure);
+  const distance = sessionDistance(session, paces);
   const work = mainWork(session);
   const hard = work && work.intensity !== "easy" ? work.intensity : null;
   const pace =
@@ -193,12 +197,9 @@ export function sessionStats(
       : null;
   return {
     total: formatDuration(session.targets.durationSeconds),
-    distance:
-      session.targets.distanceMeters !== null
-        ? formatDistance(session.targets.distanceMeters)
-        : totals.distanceComplete && totals.distanceMeters > 0
-          ? `≈ ${formatDistance(totals.distanceMeters)}`
-          : null,
+    distance: distance
+      ? `${distance.estimated ? "≈ " : ""}${formatDistance(distance.meters)}`
+      : null,
     intensityTime: hard
       ? {
           seconds: totals.secondsByIntensity[hard],

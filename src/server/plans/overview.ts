@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { z } from "zod";
 import { localToday } from "@/features/plans/constraints";
+import type { IntensityPaces } from "@/features/plans/model/structure";
 import type { ProgramInput, ProgramRace } from "@/features/plans/view/program";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readSessionMatches, type SessionMatch } from "./matches";
@@ -62,7 +63,10 @@ export const loadPlanOverview = cache(
   },
 );
 
-export function programInput(overview: PlanOverview): ProgramInput {
+export function programInput(
+  overview: PlanOverview,
+  paces: IntensityPaces | null = null,
+): ProgramInput {
   return {
     state: overview.plan.state,
     today: overview.today,
@@ -70,5 +74,6 @@ export function programInput(overview: PlanOverview): ProgramInput {
     matches: overview.matches,
     proposalKeys: overview.proposals.flatMap((proposal) => proposal.targetKeys),
     races: overview.races,
+    paces,
   };
 }
