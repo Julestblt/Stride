@@ -49,17 +49,17 @@ On 2026-10-14 the product owner added:
 
 ## Assumptions
 
-| ID  | Assumption                                                                                  | If wrong                                                                                     |
-| --- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| A1  | Stride serves its owner and at most a few relatives                                         | Revisit D2 and D4 (consent, retention, quotas), monitor scanning (G8) and worker concurrency |
-| A2  | Athletes are mostly in France; Europe/Paris is the fallback time zone                       | The profile time zone added in Phase 1 already covers other zones                            |
-| A3  | Garmin remains the only data source                                                         | The context packet and tools already depend only on normalized rows                          |
-| A4  | French is the only athlete-facing language                                                  | No impact on architecture                                                                    |
-| A5  | Token counts and latencies in the cost model are reasonable planning figures                | Replace with measurements after the first evaluation runs                                    |
-| A6  | A custom worker login role can connect through Supavisor and impersonate `authenticated`    | Fallbacks in the Phase 2 spike                                                               |
-| A7  | The design references under `design/references/app` describe the target coaching experience | UX workflow before Phase 4                                                                   |
-| A8  | No Garmin write in V1                                                                       | D5                                                                                           |
-| A9  | Supabase Pro limits suffice                                                                 | Disk add-on at $0.125 per GB                                                                 |
+| ID  | Assumption                                                                                                      | If wrong                                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| A1  | Stride serves its owner and at most a few relatives                                                             | Revisit D2 and D4 (consent, retention, quotas), monitor scanning (G8) and worker concurrency |
+| A2  | Athletes are mostly in France; Europe/Paris is the fallback time zone                                           | The profile time zone added in Phase 1 already covers other zones                            |
+| A3  | Garmin remains the only data source                                                                             | The context packet and tools already depend only on normalized rows                          |
+| A4  | French is the only athlete-facing language                                                                      | No impact on architecture                                                                    |
+| A5  | Token counts and latencies in the cost model are reasonable planning figures                                    | Replace with measurements after the first evaluation runs                                    |
+| A6  | A custom worker login role can connect through Supavisor and impersonate `authenticated`                        | Fallbacks in the Phase 2 spike                                                               |
+| A7  | The `App` artboards of the [design board](../../design/design-board.md) describe the target coaching experience | UX workflow before Phase 4                                                                   |
+| A8  | No Garmin write in V1                                                                                           | D5                                                                                           |
+| A9  | Supabase Pro limits suffice                                                                                     | Disk add-on at $0.125 per GB                                                                 |
 
 ## Open questions without a human expert
 

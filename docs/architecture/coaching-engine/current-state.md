@@ -1,7 +1,7 @@
 # Current state: Stride and garmin_mcp
 
 - Status: Accepted (RFC #86)
-- Verified against: Stride `main` at `295b6c7` (2026-10-12), [Julestblt/garmin_mcp](https://github.com/Julestblt/garmin_mcp) `main` at `57e741f` (2026-10-12), unauthenticated probes of `https://garmin-mcp.julez.cat` on 2026-10-12, and the design references under `design/references/app/**`.
+- Verified against: Stride `main` at `295b6c7` (2026-10-12), [Julestblt/garmin_mcp](https://github.com/Julestblt/garmin_mcp) `main` at `57e741f` (2026-10-12), unauthenticated probes of `https://garmin-mcp.julez.cat` on 2026-10-12, and the `App` artboards of the [design board](../../design/design-board.md).
 - Legend: **Verified** means read in code or observed; **Intended** means documented or designed but not built; **Missing** means neither.
 
 ## Stride
