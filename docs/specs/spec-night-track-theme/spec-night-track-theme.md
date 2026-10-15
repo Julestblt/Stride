@@ -2,8 +2,7 @@
 id: SPEC-night-track-theme
 companions:
   - ../../design/design-system.md
-  - ../../../design/references/system/product-system/screenshots/board.png
-  - ../../../design/references/system/reusable-patterns/screenshots/board.png
+  - ../../design/design-board.md
 sources: []
 ---
 
@@ -20,7 +19,7 @@ Stride needs a reusable visual foundation before its first authentication screen
 
 ## Constraints
 
-- Treat the supplied system PNGs as the visual source of truth.
+- Treat the `Foundations` artboards of the design board as the visual source of truth.
 - Use the repository's Tailwind CSS v4, Next.js font loading, and accessible React patterns.
 - Use semantic CSS variables and Tailwind theme names.
 - Keep the current page a small foundation surface. Do not add an application shell, dashboard, authentication UI, or unrelated dependency. Initialize shadcn as the accessible primitive foundation without adding unused components.

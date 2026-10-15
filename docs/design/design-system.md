@@ -1,6 +1,6 @@
 # Stride design system
 
-Stride's approved visual direction is **Night Track**. The PNGs in [`design/references/system`](../../design/references/system/) are the visual source of truth. Production code should match their intent as closely as practical while using Stride architecture, Tailwind, accessible React patterns, and shadcn primitives where useful. The images define intent, not implementation technology; do not copy mockup code.
+Stride's approved visual direction is **Night Track**. The `Foundations` artboards of the [design board](design-board.md) are the visual source of truth. Production code should match their intent as closely as practical while using Stride architecture, Tailwind, accessible React patterns, and shadcn primitives where useful. The artboards define intent, not implementation technology; do not copy mockup code.
 
 ## Color
 
@@ -87,7 +87,7 @@ Auth, onboarding, and application screens must compose this system rather than r
 
 ### Validation gallery
 
-`/design-system` renders every token, primitive, pattern, and state, and `/design-system/shell` renders the application shell with the expanded sidebar, the icon rail, and the mobile sheet and tabs. Both routes are development-only: they return 404 in production builds. Use them to compare against `design/references/system` at the same viewport before and after changing the system. Browser tests in `tests/e2e/design-system.spec.ts` cover keyboard behavior, state exposure, reduced motion, and responsive fit.
+`/design-system` renders every token, primitive, pattern, and state, and `/design-system/shell` renders the application shell with the expanded sidebar, the icon rail, and the mobile sheet and tabs. Both routes are development-only: they return 404 in production builds. Use them to compare against the board's `Foundations` artboards at the same viewport before and after changing the system. Browser tests in `tests/e2e/design-system.spec.ts` cover keyboard behavior, state exposure, reduced motion, and responsive fit.
 
 ## Loading and motion
 
@@ -109,13 +109,13 @@ Motion tokens: `ease-stride` (`cubic-bezier(0.4, 0, 0.2, 1)`), `animate-rise` (3
 
 ## Responsive behavior
 
-Preserve information hierarchy from desktop to mobile. The references show a desktop contextual sidebar and inset work area; on mobile, navigation becomes a sheet with four thumb-reachable destinations and a central Ask action. Keep status and provenance visible at narrow widths. Screen-specific references belong below `design/references/<area>/<screen>/` as described in [`design/references/README.md`](../../design/references/README.md); keep system references in `design/references/system/`. PNGs remain the visual source of truth. Optional HTML can explain structure but must not be copied into production.
+Preserve information hierarchy from desktop to mobile. The references show a desktop contextual sidebar and inset work area; on mobile, navigation becomes a sheet with four thumb-reachable destinations and a central Ask action. Keep status and provenance visible at narrow widths. Each screen has desktop and mobile artboards on the [design board](design-board.md). Artboard HTML explains structure and exact values but must not be copied into production.
 
 ## Reference use
 
-Before styling a screen, inspect its matching PNG at the target viewport and the system references. Compare implementation screenshots at the same viewport, iterate on material differences, and retain accessible focus, contrast, and reduced-motion behavior. System patterns include the contextual sidebar, recommendation anatomy, decision ledger, provenance rows, sync-state banners, onboarding stepper, verdict rows, and restrained coach activity indicator; reuse these where the screen needs them rather than creating new visual idioms.
+Before styling a screen, read its matching artboard for the target device and the `Foundations` artboards, as described in [design-board.md](design-board.md). Compare implementation screenshots at the same viewport, iterate on material differences, and retain accessible focus, contrast, and reduced-motion behavior. System patterns include the contextual sidebar, recommendation anatomy, decision ledger, provenance rows, sync-state banners, onboarding stepper, verdict rows, and restrained coach activity indicator; reuse these where the screen needs them rather than creating new visual idioms.
 
-Reference images are read-only inputs, never application assets. Do not modify, recreate, transform, or derive production assets from them without explicit instruction. Keep temporary comparison screenshots untracked in `test-results/` or outside the repository; do not commit visual validation evidence by default.
+The design board is a read-only input, never a source of application assets. Do not export, recreate, transform, or derive production assets from it without explicit instruction. Keep temporary comparison screenshots untracked in `test-results/` or outside the repository; do not commit visual validation evidence by default.
 
 ## Profile settings editing
 

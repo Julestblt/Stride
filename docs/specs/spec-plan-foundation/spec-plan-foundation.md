@@ -188,7 +188,7 @@ Same-day match first, then a session moved within the same week, then substituti
 
 ### Plan screens
 
-Routes under `src/app/(app)/plan`: plan overview by blocks and weeks, week view and session detail, following `design/references/app/plan` and `design/references/app/workout-detail`. The deterministic plan is built on each request under the athlete's session and is not persisted. A visible French label states that it is a draft computed by Stride, not yet saved. Feasibility, confidence and validator warnings are shown. Actions (accept, edit, replace a session, send to Garmin), compliance, the weekly changes list and panels without a data source (habits, nutrition, shoes, best time slot) are hidden.
+Routes under `src/app/(app)/plan`: plan overview by blocks and weeks, week view and session detail, following the `App · Plan` and `App · Workout detail` artboards of the [design board](../../design/design-board.md). The deterministic plan is built on each request under the athlete's session and is not persisted. A visible French label states that it is a draft computed by Stride, not yet saved. Feasibility, confidence and validator warnings are shown. Actions (accept, edit, replace a session, send to Garmin), compliance, the weekly changes list and panels without a data source (habits, nutrition, shoes, best time slot) are hidden.
 
 ## Constraints
 
@@ -217,7 +217,7 @@ For the owner's real account, the Plan screens show a complete plan to their nex
 
 - Phase 1 shows the deterministic plan as an unsaved draft. Plans become persisted versions when the coach worker can apply an accepted `create_plan` proposal, from Phase 2–3.
 - garmin_mcp keeps its normalized activity, threshold and heart-rate zone contracts; Garmin thresholds are optional inputs.
-- The design references under `design/references/app/plan` and `workout-detail` describe the target plan screens.
+- The `App · Plan` and `App · Workout detail` artboards of the design board describe the target plan screens.
 
 ## Open Questions
 

@@ -1,6 +1,6 @@
 # Plan screens design adaptations
 
-The approved references in `design/references/app/plan` and `design/references/app/workout-detail` remain the visual source of truth. These adaptations apply only where Phase 1 data or an accepted product decision cannot support the mockup.
+The `App · Plan` and `App · Workout detail` artboards of the [design board](../../design/design-board.md) remain the visual source of truth. These adaptations apply only where Phase 1 data or an accepted product decision cannot support the mockup.
 
 | Screen         | Mockup element                                                                               | Implementation                                                                                                                            | Reason                                                                                       |
 | -------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |

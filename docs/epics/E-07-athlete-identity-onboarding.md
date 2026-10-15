@@ -8,7 +8,7 @@ Take an authenticated athlete from account creation to a reviewed first athlete 
 
 - Supabase Auth identity, sessions and authenticated route handling (delivered before this epic's onboarding slices).
 - Durable onboarding progress, athlete profile, training preferences, goals and races owned by Stride in Supabase with row-level security.
-- A six-step flow following `design/references/onboarding/**`: Welcome, Connect Garmin, Import history, About you, Goals, Athlete profile.
+- A six-step flow following the `Onboarding` artboards of the [design board](../design/design-board.md): Welcome, Connect Garmin, Import history, About you, Goals, Athlete profile.
 - Garmin connection, MFA and historical import status through the garmin_mcp REST API behind the Stride server.
 - Profile values that show their source and let the athlete override Garmin suggestions without later silent overwrites.
 
