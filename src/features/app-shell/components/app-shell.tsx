@@ -1,4 +1,5 @@
 import { DataActivityProvider } from "@/features/data-activity/components/provider";
+import { PullToSync } from "@/features/data-activity/components/pull-to-sync";
 import {
   DataActivityStatus,
   DataActivityFeedback,
@@ -249,7 +250,7 @@ export function AppShell({
         </Sidebar>
         <SidebarInset className="relative h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
           <DataActivityFeedback />
-          {children}
+          <PullToSync>{children}</PullToSync>
         </SidebarInset>
       </SidebarProvider>
     </DataActivityProvider>

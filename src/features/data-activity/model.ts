@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { garminConnectionStatuses } from "@/features/garmin/connection";
-import { garminSyncCategories, isSyncActive } from "@/features/garmin/sync";
+import {
+  garminSyncCategories,
+  isSyncActive,
+  type RequestedSyncPhase,
+  type RequestedSyncProgress,
+} from "@/features/garmin/sync";
 import { syncObservationSchema } from "@/features/onboarding/sync-polling";
 
 export const dataActivitySchema = z.object({
@@ -84,3 +89,19 @@ export const activityLabels: Record<DataActivityState, string> = {
   complete: "Garmin à jour",
   waiting: "En attente de données Garmin",
 };
+
+const requestedPhaseLabels: Record<RequestedSyncPhase, string> = {
+  activities: "activités",
+  recovery: "sommeil",
+};
+
+export function requestedSyncLabel(progress: RequestedSyncProgress) {
+  const current = progress.current
+    ? ` · ${requestedPhaseLabels[progress.current]}`
+    : "";
+  return `Garmin · ${progress.done} sur ${progress.total}${current}`;
+}
+
+export function requestedSyncShare(progress: RequestedSyncProgress) {
+  return progress.total ? Math.max(0.1, progress.done / progress.total) : 1;
+}
