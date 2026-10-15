@@ -1,5 +1,11 @@
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
-import { DownloadIcon, MapPinIcon, UploadIcon } from "lucide-react";
+import {
+  ArrowDownRightIcon,
+  ArrowUpRightIcon,
+  DownloadIcon,
+  MapPinIcon,
+  UploadIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -181,10 +187,11 @@ function stats(
 ): Stat[] {
   const announcedKm = race.distanceKm;
   const announcedGain = race.elevationGainM;
-  const loss =
-    course?.elevationLossM != null
-      ? `D− ${formatInteger(course.elevationLossM)}`
-      : null;
+  const gain =
+    course?.elevationGainM != null
+      ? course.elevationGainM
+      : (announcedGain ?? null);
+  const loss = course?.elevationLossM ?? null;
   const start = plan.startMinutes ?? defaultStartMinutes;
   const scenarios = [
     plan.ambitiousSeconds &&
@@ -200,32 +207,52 @@ function stats(
           ? `${formatInteger(announcedKm)} km`
           : "—",
       label: "Distance",
-      detail: course
-        ? `GPX${announcedKm ? ` · annoncé ${formatInteger(announcedKm)} km` : ""}`
-        : "annoncé",
+      detail: null,
     },
     {
       key: "gain",
       value:
-        course?.elevationGainM != null
-          ? `${formatInteger(course.elevationGainM)} m`
-          : announcedGain !== null
-            ? `${formatInteger(announcedGain)} m`
-            : "—",
-      label: (
-        <>
-          D+
-          {loss && <span className="sm:hidden"> · {loss}</span>}
-        </>
+        gain !== null ? (
+          <span className="inline-flex items-center gap-1">
+            <ArrowUpRightIcon
+              aria-hidden="true"
+              className="size-4 shrink-0 text-accent sm:size-5"
+              strokeWidth={2.5}
+            />
+            <span className="sr-only">D+ </span>
+            {formatInteger(gain)} m
+          </span>
+        ) : (
+          "—"
+        ),
+      label:
+        loss !== null ? (
+          <>
+            <span className="max-sm:sr-only">Dénivelé</span>
+            <span className="inline-flex items-center gap-0.5 sm:hidden">
+              <ArrowDownRightIcon
+                aria-hidden="true"
+                className="size-3 shrink-0 text-accent"
+                strokeWidth={2.5}
+              />
+              <span className="sr-only">, D− </span>
+              {formatInteger(loss)} m
+            </span>
+          </>
+        ) : (
+          "Dénivelé"
+        ),
+      detail: loss !== null && (
+        <span className="inline-flex items-center gap-0.5">
+          <ArrowDownRightIcon
+            aria-hidden="true"
+            className="size-3.5 shrink-0 text-accent"
+            strokeWidth={2.5}
+          />
+          <span className="sr-only">D− </span>
+          {formatInteger(loss)} m
+        </span>
       ),
-      detail: [
-        loss && `${loss} m`,
-        course?.elevationGainM != null
-          ? `GPX${announcedGain !== null ? ` · annoncé ${formatInteger(announcedGain)} m` : ""}`
-          : "annoncé",
-      ]
-        .filter(Boolean)
-        .join(" · "),
     },
     {
       key: "start",
