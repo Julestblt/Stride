@@ -59,6 +59,7 @@ tools:
       - { name: get_rhr_day, enabled: true }
 skills:
   - ../skills/health-recovery
+  - ../skills/garmin-data-access
 mcp_servers:
   - type: url
     name: garmin
