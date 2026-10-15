@@ -60,7 +60,7 @@ Filed as [#95](https://github.com/Julestblt/Stride/issues/95) with sub-issues #9
 
 ## garmin_mcp follow-ups
 
-GitHub Issues are enabled on garmin_mcp. G4 (heart-rate zones, lactate threshold and athlete metrics) is filed as Julestblt/garmin_mcp#8 and G6 (`(select auth.uid())` in policies) as Julestblt/garmin_mcp#9. G5 (private network access) and the drafts below are filed when they become near-term.
+GitHub Issues are enabled on garmin_mcp. G4 (heart-rate zones, lactate threshold and athlete metrics) is filed as Julestblt/garmin_mcp#8 and G6 (`(select auth.uid())` in policies) as Julestblt/garmin_mcp#9. The [ADR 0010 amendment](../../adr/0010-internal-tools-and-garmin-normalized-data.md#amendment-2026-10-15-130) (#130) filed G9 as Julestblt/garmin_mcp#14, bounded MCP reads (date-range and response size caps) as Julestblt/garmin_mcp#12, and fail-fast lease contention for MCP calls as Julestblt/garmin_mcp#13. G5 (private network access) and the remaining drafts below are filed when they become near-term.
 
 ### G8 — Consumer change feed
 
@@ -68,10 +68,10 @@ GitHub Issues are enabled on garmin_mcp. G4 (heart-rate zones, lactate threshold
 - **Scope:** expose per-user import progress Stride can read under RLS, either as a small owner-readable table updated by the worker (`provider_import_cursor`: user, category, last imported at, last source update) or as an outbox of sync-completed events; document the contract.
 - **Acceptance:** a consumer can ask "what changed since T for this user" with one indexed query; replay-safe; covered by migration smoke tests.
 
-### G9 — Audience-bound credentials for MCP
+### G9 — Audience-bound credentials for MCP (filed as Julestblt/garmin_mcp#14)
 
 - **Context:** the MCP endpoint accepts the general Supabase user token, while the MCP specification says servers must not accept tokens not issued for them.
-- **Scope:** only if MCP is offered to agents or third-party clients: audience-restricted tokens or an OAuth layer with per-tool scopes; keep the REST contract unchanged.
+- **Scope:** MCP is now offered to coaching agents (#130): audience-restricted tokens or an OAuth layer with per-tool scopes; keep the REST contract unchanged.
 - **Acceptance:** tokens without the garmin_mcp audience are rejected on `/mcp`; documented migration for existing consumers.
 
 ### G10 — Workout push (deferred)

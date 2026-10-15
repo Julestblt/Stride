@@ -93,7 +93,7 @@ Each agent starts with a small context packet computed by code (history summary,
 - Stride typed tools for Stride data (plan, proposals, races, check-ins, health reports), which garmin_mcp does not hold.
 - An allowlist of read-only garmin_mcp MCP tools for Garmin detail (an activity's laps, sleep and HRV for a date range, a past race). garmin_mcp already authenticates the athlete's Supabase token and derives the user, so athlete scope holds.
 
-Guards on the MCP tools: read-only allowlist per agent, one date or a bounded range per call, output size cap with summarization above it, and tools with known defects excluded until fixed (for example `get_lactate_threshold`, which misreads Garmin's speed unit). Normalized rows stay the source of truth for anything the validator checks. This amends [ADR 0010](../../adr/0010-internal-tools-and-garmin-normalized-data.md), which currently excludes the MCP endpoint in production.
+Guards on the MCP tools are recorded in the [ADR 0010 amendment](../../adr/0010-internal-tools-and-garmin-normalized-data.md#amendment-2026-10-15-130) (#130). Since Julestblt/garmin_mcp#12 and #13, garmin_mcp enforces the documented read-only tool set, at most 14 days per ranged call, a response size cap and a 3-second lease wait with stable error codes; Managed Agents enforces the per-agent allowlist. Tools with known defects stay outside the set, for example `get_lactate_threshold`, which misreads Garmin's speed unit. Normalized rows stay the source of truth for anything the validator checks.
 
 ## Honest assessment
 

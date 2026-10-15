@@ -20,7 +20,7 @@
 | Token audience                   | Accepts the general Supabase user token, not a token issued for the MCP server                                                                                                                                            | The MCP specification says servers "MUST NOT accept any tokens that were not explicitly issued for the MCP server" |
 | Performance and rate limits      | Live Garmin calls; Garmin rate-limited onboarding logins on 2026-10-09 (draft G2)                                                                                                                                         | Agent loops would multiply Garmin traffic                                                                          |
 
-**Decision:** the production coaching runtime does not use the garmin_mcp MCP endpoint. It reads normalized rows under RLS, which garmin_mcp already maintains for exactly this purpose, and which are the same data the athlete sees in Activités and Progression. The MCP endpoint stays useful for interactive, developer-facing exploration.
+**Decision:** the production coaching runtime does not use the garmin_mcp MCP endpoint. It reads normalized rows under RLS, which garmin_mcp already maintains for exactly this purpose, and which are the same data the athlete sees in Activités and Progression. The MCP endpoint stays useful for interactive, developer-facing exploration. Amended by [#130](../../adr/0010-internal-tools-and-garmin-normalized-data.md#amendment-2026-10-15-130): the Coach and Medical may call an allowlist of read-only garmin_mcp MCP tools for interactive drill-down.
 
 ### Data contract used by the runtime
 
