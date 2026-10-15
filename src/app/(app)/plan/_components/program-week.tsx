@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { formatDuration, formatElevation } from "@/features/plans/view/format";
 import type { ProgramDay, ProgramWeek } from "@/features/plans/view/program";
 import { formatInteger } from "@/features/progress/format";
-import { sessionHref } from "./week-view";
+import { markSessionOpened } from "./session-sheet";
 
 function DayState({ day }: { day: ProgramDay }) {
   switch (day.state) {
@@ -42,7 +42,13 @@ function DayState({ day }: { day: ProgramDay }) {
   }
 }
 
-function DayCard({ day }: { day: ProgramDay }) {
+function DayCard({
+  day,
+  sessionHref,
+}: {
+  day: ProgramDay;
+  sessionHref: (sessionKey: string) => string;
+}) {
   const rest = day.sessionKey === null;
   const body = (
     <>
@@ -101,6 +107,8 @@ function DayCard({ day }: { day: ProgramDay }) {
   return day.sessionKey ? (
     <Link
       href={sessionHref(day.sessionKey)}
+      onClick={markSessionOpened}
+      data-session-key={day.sessionKey}
       aria-current={day.isToday ? "date" : undefined}
       className={className}
     >
@@ -111,7 +119,13 @@ function DayCard({ day }: { day: ProgramDay }) {
   );
 }
 
-function DayRow({ day }: { day: ProgramDay }) {
+function DayRow({
+  day,
+  sessionHref,
+}: {
+  day: ProgramDay;
+  sessionHref: (sessionKey: string) => string;
+}) {
   const rest = day.sessionKey === null;
   const details = [day.summary, day.elevation].filter(Boolean).join(" · ");
   const body = (
@@ -150,6 +164,8 @@ function DayRow({ day }: { day: ProgramDay }) {
   return day.sessionKey ? (
     <Link
       href={sessionHref(day.sessionKey)}
+      onClick={markSessionOpened}
+      data-session-key={day.sessionKey}
       aria-current={day.isToday ? "date" : undefined}
       className={className}
     >
@@ -246,9 +262,11 @@ function progress(week: ProgramWeek) {
 export function ProgramWeekPanel({
   week,
   navigation,
+  sessionHref,
 }: {
   week: ProgramWeek;
   navigation: React.ReactNode;
+  sessionHref: (sessionKey: string) => string;
 }) {
   const subtitle = [week.blockName, week.label].filter(Boolean).join(" · ");
   return (
@@ -306,12 +324,12 @@ export function ProgramWeekPanel({
       </div>
       <div className="grid grid-cols-7 gap-2 max-lg:hidden">
         {week.days.map((day) => (
-          <DayCard key={day.date} day={day} />
+          <DayCard key={day.date} day={day} sessionHref={sessionHref} />
         ))}
       </div>
       <div className="flex flex-col lg:hidden">
         {week.days.map((day) => (
-          <DayRow key={day.date} day={day} />
+          <DayRow key={day.date} day={day} sessionHref={sessionHref} />
         ))}
       </div>
     </section>

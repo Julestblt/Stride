@@ -1,13 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  SquareArrowOutUpRightIcon,
-  XIcon,
-} from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent } from "@/components/ui/sheet";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -19,27 +14,49 @@ import { SessionPanelBody } from "./session-panel";
 const iconButton =
   "size-8.5 rounded-control border-border text-muted hover:text-foreground";
 
-function href(sessionKey: string) {
-  return `/plan/sessions/${encodeURIComponent(sessionKey)}`;
+let openedFromPlan = false;
+
+export function markSessionOpened(event: React.MouseEvent) {
+  openedFromPlan =
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey;
 }
 
 export function SessionSheet({ panel }: { panel: SessionPanel }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const mobile = useIsMobile();
   const [open, setOpen] = useState(true);
   const touch = useRef<number | null>(null);
 
+  const navigate = useCallback(
+    (sessionKey: string | null) => {
+      const query = new URLSearchParams(searchParams);
+      if (sessionKey) query.set("seance", sessionKey);
+      else query.delete("seance");
+      const search = query.toString();
+      router.replace(search ? `/plan?${search}` : "/plan", { scroll: false });
+    },
+    [router, searchParams],
+  );
+
   const go = useCallback(
     (sessionKey: string | null) => {
-      if (sessionKey) router.replace(href(sessionKey), { scroll: false });
+      if (sessionKey) navigate(sessionKey);
     },
-    [router],
+    [navigate],
   );
 
   const close = useCallback(() => {
     setOpen(false);
-    router.back();
-  }, [router]);
+    if (openedFromPlan) {
+      openedFromPlan = false;
+      router.back();
+    } else navigate(null);
+  }, [navigate, router]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -79,11 +96,6 @@ export function SessionSheet({ panel }: { panel: SessionPanel }) {
       <ChevronRightIcon aria-hidden="true" />
     </Button>
   );
-  const fullPage = (
-    <a href={href(panel.sessionKey)} aria-label="Ouvrir en page complète">
-      <SquareArrowOutUpRightIcon aria-hidden="true" />
-    </a>
-  );
 
   return (
     <Sheet open={open} onOpenChange={(value) => !value && close()}>
@@ -92,6 +104,13 @@ export function SessionSheet({ panel }: { panel: SessionPanel }) {
         showCloseButton={false}
         aria-describedby={undefined}
         overlayClassName="bg-background/45"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          const links = document.querySelectorAll<HTMLElement>(
+            `[data-session-key="${CSS.escape(panel.sessionKey)}"]`,
+          );
+          [...links].find((link) => link.offsetParent !== null)?.focus();
+        }}
         onTouchStart={(event) => {
           touch.current = event.touches[0]?.clientX ?? null;
         }}
@@ -142,20 +161,12 @@ export function SessionSheet({ panel }: { panel: SessionPanel }) {
                   {position} de la semaine · ← → · Échap
                 </MonoLabel>
               </span>
-              <Button
-                asChild
-                variant="outline"
-                size="icon"
-                className={cn(iconButton, "ml-auto")}
-              >
-                {fullPage}
-              </Button>
               <SheetClose asChild>
                 <Button
                   variant="outline"
                   size="icon"
                   aria-label="Fermer"
-                  className={iconButton}
+                  className={cn(iconButton, "ml-auto")}
                 >
                   <XIcon aria-hidden="true" />
                 </Button>
@@ -163,30 +174,14 @@ export function SessionSheet({ panel }: { panel: SessionPanel }) {
             </>
           )}
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4.5 pb-6 sm:px-5.5 sm:pt-5">
-          <SessionPanelBody panel={panel} titleId="session-panel-title" />
-        </div>
-        <footer
+        <div
           className={cn(
-            "flex items-center gap-2 border-t border-border-subtle bg-surface-inset px-4 py-3.5",
-            mobile && "pb-[max(0.875rem,env(safe-area-inset-bottom))]",
+            "min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-4.5 pb-6 sm:px-5.5 sm:pt-5",
+            mobile && "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           )}
         >
-          <Button
-            asChild
-            variant="outline"
-            size="md"
-            className={cn(
-              "rounded-control text-[13px]",
-              mobile ? "min-h-11 flex-1" : "ml-auto min-h-9.5",
-            )}
-          >
-            <a href={href(panel.sessionKey)}>
-              <SquareArrowOutUpRightIcon aria-hidden="true" />
-              Page complète
-            </a>
-          </Button>
-        </footer>
+          <SessionPanelBody panel={panel} titleId="session-panel-title" />
+        </div>
       </SheetContent>
     </Sheet>
   );
