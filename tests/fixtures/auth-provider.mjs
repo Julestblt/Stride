@@ -46,11 +46,17 @@ const planUser = {
   id: "55555555-5555-4555-8555-555555555555",
   email: "plan@example.com",
 };
+const syncUser = {
+  ...user,
+  id: "66666666-6666-4666-8666-666666666666",
+  email: "sync@example.com",
+};
 const recordsSessions = [
   recordsEmptyUser,
   recordsFailureUser,
   recordsGoalFailureUser,
   planUser,
+  syncUser,
 ].map((identity) => ({
   ...session,
   user: identity,
@@ -437,6 +443,15 @@ tables.athlete_goals.push({
   ...tables.athlete_goals[0],
   user_id: planUser.id,
   focus: "half_marathon_marathon",
+});
+tables.athlete_profiles.push({
+  ...tables.athlete_profiles[0],
+  user_id: syncUser.id,
+  first_name: "Sacha",
+});
+tables.athlete_goals.push({
+  ...tables.athlete_goals[0],
+  user_id: syncUser.id,
 });
 const planId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 const isoDay = (time) => new Date(time).toISOString().slice(0, 10);
