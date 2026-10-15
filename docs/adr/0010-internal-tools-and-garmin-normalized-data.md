@@ -12,7 +12,7 @@ The coaching runtime needs athlete-scoped access to Garmin and Stride data and n
 
 - Tools are TypeScript functions in a typed registry with Zod input and output schemas, a class (`read`, `compute`, `propose`), allowed workflows and a data class. They run inside the worker with the run's athlete scope.
 - Read tools return minimized, provenance-tagged data computed from normalized rows read under RLS. Propose tools submit proposals, questions or memory facts through private functions. No tool runs SQL, fetches URLs, touches files, runs commands, pushes to Garmin, changes goals or races, or reaches another athlete.
-- Amended by [#130](#amendment-2026-10-15-130): the production runtime does not call the garmin_mcp MCP endpoint; freshness comes from connection and sync rows. Intraday wellness stays an athlete-initiated web feature.
+- Replaced by the [#130 amendment](#amendment-2026-10-15-130): originally, the production runtime did not call the garmin_mcp MCP endpoint; freshness still comes from connection and sync rows for background runs. Intraday wellness stays an athlete-initiated web feature.
 - Stride does not build an MCP server now. If an external, athlete-authorized client appears, a read-only MCP facade with audience-bound OAuth tokens and per-tool scopes wraps the same registry.
 - The Supabase management MCP is never connected to production coaching agents.
 
@@ -54,26 +54,27 @@ Coaching agents may call the garmin_mcp MCP endpoint read-only, for interactive 
 | `get_stats`              | Yes                                  | No    | No      |
 | `get_vo2max_trend`       | Yes                                  | No    | No      |
 
-The exposed set is `DEFAULT_TOOLS` in garmin_mcp `stride_mcp.py`, repeated in `GARMIN_ENABLED_TOOLS` in its `docker-compose.yml`. The agent columns are the `mcp_toolset` configs in `managed-agents/agents/coach.md` and `medical.md`, where every other tool is disabled by default.
+The exposed set is deployment configuration, not code: `GARMIN_ENABLED_TOOLS` in garmin_mcp's `docker-compose.yml` sets it, and `DEFAULT_TOOLS` in `stride_mcp.py` is only the default when the variable is empty. The agent columns are the `mcp_toolset` configs in `managed-agents/agents/coach.md` and `medical.md`, where every other tool is disabled by default.
 
-Excluded: every write tool, `get_lactate_threshold` (it misreads Garmin's speed unit; Stride reads lactate threshold from normalized rows) and every tool outside the exposed set. Widening an agent's allowlist needs a change to this table.
+Excluded: every write tool, `get_lactate_threshold` (it misreads Garmin's speed unit; Stride reads lactate threshold from normalized rows) and every tool outside the exposed set. Write tools are refused at startup by the read-only prefix check. `get_lactate_threshold` passes that check, so its exclusion holds only by configuration (absent from `GARMIN_ENABLED_TOOLS`) and by the per-agent allowlist. Widening an agent's allowlist needs a change to this table.
 
 `get_activities(start, limit)` is paginated newest-first with no date filter. `get_activities_by_date` exists in garmin_mcp but is not exposed. The skills therefore read a small `limit` and keep only the dates they need.
 
 ### Guards
 
-| Guard                                | Where enforced today                                                                                                                  | Gap                                                               | Follow-up                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Read-only tools, fixed exposed set   | garmin_mcp, at startup: Stride mode refuses to start unless every enabled tool starts with `get_`, `count_`, `search_` or `download_` | The prefix check is a naming rule, not a per-tool review          | None                                                                         |
-| Per-agent allowlist                  | Claude Managed Agents, from the agent's `mcp_toolset` configs                                                                         | None                                                              | None                                                                         |
-| One date or at most 14 days per call | Instructions only (`garmin-data-access` skill)                                                                                        | Range tools accept any range; `get_activities` has no date filter | [Julestblt/garmin_mcp#12](https://github.com/Julestblt/garmin_mcp/issues/12) |
-| Output size cap                      | None                                                                                                                                  | Stride mode has no response cap; sleep payloads can exceed 400 KB | [Julestblt/garmin_mcp#12](https://github.com/Julestblt/garmin_mcp/issues/12) |
-| MCP values never checked as truth    | Stride's validator works only from normalized rows and Stride tables                                                                  | None                                                              | None                                                                         |
+| Guard                                | Where enforced today                                                                                                                  | Gap                                                                                                                                                 | Follow-up                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Read-only tools                      | garmin_mcp, at startup: Stride mode refuses to start unless every enabled tool starts with `get_`, `count_`, `search_` or `download_` | A naming rule, not a per-tool review                                                                                                                | None                                                                         |
+| Exposed set                          | Deployment configuration only: `GARMIN_ENABLED_TOOLS` in compose, `DEFAULT_TOOLS` as default                                          | Not fixed in code; any prefixed tool, including `get_lactate_threshold`, can be enabled by configuration. The per-agent allowlist still excludes it | None                                                                         |
+| Per-agent allowlist                  | Claude Managed Agents, from the agent's `mcp_toolset` configs                                                                         | None                                                                                                                                                | None                                                                         |
+| One date or at most 14 days per call | Instructions only (`garmin-data-access` skill)                                                                                        | Range tools accept any range; `get_activities` has no date filter                                                                                   | [Julestblt/garmin_mcp#12](https://github.com/Julestblt/garmin_mcp/issues/12) |
+| Output size cap                      | None                                                                                                                                  | Stride mode has no response cap; sleep payloads can exceed 400 KB                                                                                   | [Julestblt/garmin_mcp#12](https://github.com/Julestblt/garmin_mcp/issues/12) |
+| MCP values never checked as truth    | Stride's validator works only from normalized rows and Stride tables                                                                  | None                                                                                                                                                | None                                                                         |
 
 ### Token
 
 - Stride writes the athlete's current Supabase access token as a `static_bearer` credential in a per-athlete vault before every turn, both new messages and `ask_athlete` answers (`syncAthleteVault` in `src/server/coaching/managed/session.ts`). `mcp_oauth` is not pursued.
-- Expiry: a turn can last up to 15 minutes, so a token close to expiry can lapse mid-turn. The runtime foundations issue under #131 must refresh the Supabase session before syncing the vault whenever the token expires within the turn timeout. A 401 from garmin_mcp is reported to the athlete as data unavailable.
+- Expiry: a turn can last up to 15 minutes, so a token close to expiry can lapse mid-turn. The runtime foundations issue under #131 must refresh the Supabase session before syncing the vault whenever the token expires within the turn timeout. garmin_mcp then rejects the token and the call fails; the failure is reported as data unavailable (by the Coach to the athlete).
 - Accepted risk: the token is a general Supabase user token, not one issued for garmin_mcp. G9, filed as [Julestblt/garmin_mcp#14](https://github.com/Julestblt/garmin_mcp/issues/14), adds audience-bound credentials on `/mcp`.
 
 ### Isolation
@@ -85,9 +86,11 @@ Excluded: every write tool, `get_lactate_threshold` (it misreads Garmin's speed 
 
 ### Live calls
 
-- Each MCP call takes the same per-connection session lease as the garmin_mcp sync worker. Behind a sync, a call waits up to 90 seconds, then fails with `PROVIDER_UNAVAILABLE` (503). [Julestblt/garmin_mcp#13](https://github.com/Julestblt/garmin_mcp/issues/13) makes MCP calls fail fast with an explicit busy error.
-- A Garmin 429 comes back as `RATE_LIMITED`.
-- On any of these errors the agent reports the data as unavailable and never retries in a loop.
+- Each MCP call takes the same per-connection session lease as the garmin_mcp sync worker. Behind a sync, a call waits up to 90 seconds.
+- The wait is a synchronous `time.sleep` loop inside `async` tool handlers, with no thread offload on the tool path, so a contended call can block garmin_mcp's event loop and stall other requests for up to 90 seconds.
+- Errors do not arrive as HTTP statuses. Every tool catches exceptions and returns text starting with `Error`: a lease timeout comes back as tool text containing `PROVIDER_UNAVAILABLE`, and a Garmin 429 as the raw garminconnect exception text, because only session setup maps errors to codes.
+- Agents recognize a failure from `Error …` tool text, report the data as unavailable and never retry in a loop.
+- [Julestblt/garmin_mcp#13](https://github.com/Julestblt/garmin_mcp/issues/13) makes MCP calls fail fast without blocking other requests and gives tool errors stable codes.
 
 ### Background runs
 

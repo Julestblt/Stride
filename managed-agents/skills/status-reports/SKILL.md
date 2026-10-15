@@ -30,7 +30,7 @@ First line: `Semaine — <réalisé>/<prévu>` (duration or km), with the Monday
 
 - Planned: read the week with `read_active_plan` (Monday to Sunday).
 - When `read_plan_progress` is available, use it for each session's status (`réalisée`, `manquée`, `à venir`) and the completed load.
-- Until then: list the planned sessions with their date, kind and load, read the runs completed since Monday with the garmin `get_activities` tool (newest first, `start` 0 and `limit` at most 20, no dates) and keep only the runs dated from Monday to today, and give the completed total from those runs. Say « suivi séance par séance pas encore disponible » and do not pair runs with sessions yourself.
+- Until then: list the planned sessions with their date, kind and load, read the runs completed since Monday with the garmin `get_activities` tool (newest first, `start` 0 and `limit` at most 20, no dates; while `has_more` is true and the oldest activity returned is still on or after Monday, call again with `start` set to `next_start`, at most 3 calls), keep only the running activities dated from Monday to today, and give the completed total from those runs only. Say « suivi séance par séance pas encore disponible » and do not pair runs with sessions yourself.
 - Do not rerun guardrails: Stride's validator checks every plan and proposal.
 
 ## Race
