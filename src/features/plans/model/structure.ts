@@ -78,30 +78,37 @@ export type RepeatStep = z.infer<typeof repeatStepSchema>;
 export type StructureStep = z.infer<typeof structureStepSchema>;
 export type SessionStructure = z.infer<typeof sessionStructureSchema>;
 
+export type IntensityPaces = Partial<Record<Intensity, number>>;
+
 export type StructureTotals = {
   durationSeconds: number | null;
   distanceMeters: number;
   distanceComplete: boolean;
+  distanceEstimated: boolean;
   secondsByIntensity: Record<Intensity, number>;
 };
 
-function midPace(step: SimpleStep) {
+function midPace(step: SimpleStep, paces?: IntensityPaces | null) {
   return step.target.kind === "pace_range"
     ? (step.target.fastSecondsPerKm + step.target.slowSecondsPerKm) / 2
-    : null;
+    : (paces?.[step.intensity] ?? null);
 }
 
-export function stepSeconds(step: SimpleStep) {
+export function stepSeconds(step: SimpleStep, paces?: IntensityPaces | null) {
   if (step.end.kind === "time") return step.end.seconds;
   if (step.end.kind === "lap_button") return step.end.estimatedSeconds;
   if (step.end.estimatedSeconds) return step.end.estimatedSeconds;
-  const pace = midPace(step);
+  const pace = midPace(step, paces);
   return pace === null ? null : Math.round((step.end.meters / 1000) * pace);
 }
 
-function stepMeters(step: SimpleStep, seconds: number | null) {
+function stepMeters(
+  step: SimpleStep,
+  seconds: number | null,
+  paces?: IntensityPaces | null,
+) {
   if (step.end.kind === "distance") return step.end.meters;
-  const pace = midPace(step);
+  const pace = midPace(step, paces);
   return pace === null || seconds === null
     ? null
     : Math.round((seconds / pace) * 1000);
@@ -115,28 +122,36 @@ export function flatten(structure: SessionStructure) {
   );
 }
 
-export function structureTotals(structure: SessionStructure): StructureTotals {
+export function structureTotals(
+  structure: SessionStructure,
+  paces?: IntensityPaces | null,
+): StructureTotals {
   const secondsByIntensity = Object.fromEntries(
     intensities.map((intensity) => [intensity, 0]),
   ) as Record<Intensity, number>;
   let durationSeconds: number | null = 0;
   let distanceMeters = 0;
   let distanceComplete = true;
+  let distanceEstimated = false;
   for (const step of flatten(structure)) {
-    const seconds = stepSeconds(step);
-    const meters = stepMeters(step, seconds);
+    const seconds = stepSeconds(step, paces);
+    const meters = stepMeters(step, seconds, paces);
     if (seconds === null) durationSeconds = null;
     else {
       if (durationSeconds !== null) durationSeconds += seconds;
       secondsByIntensity[step.intensity] += seconds;
     }
     if (meters === null) distanceComplete = false;
-    else distanceMeters += meters;
+    else {
+      distanceMeters += meters;
+      if (step.end.kind !== "distance") distanceEstimated = true;
+    }
   }
   return {
     durationSeconds,
     distanceMeters,
     distanceComplete,
+    distanceEstimated,
     secondsByIntensity,
   };
 }

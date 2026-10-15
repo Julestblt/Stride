@@ -63,6 +63,7 @@ function Bar({
     week.totals.distanceMeters !== null
       ? formatInteger(week.totals.distanceMeters / 1000)
       : null;
+  const approximate = week.totals.distanceEstimated;
   return (
     <button
       type="button"
@@ -70,7 +71,7 @@ function Bar({
       aria-label={[
         `Semaine ${week.number}, ${week.range}`,
         formatDuration(week.totals.durationSeconds),
-        distance ? `${distance} km` : null,
+        distance ? `${approximate ? "environ " : ""}${distance} km` : null,
       ]
         .filter(Boolean)
         .join(", ")}
@@ -114,7 +115,7 @@ function Bar({
         />
       </span>
       <span className="font-metric text-[11px] leading-none font-semibold text-muted-foreground tabular-nums">
-        {distance ?? "–"}
+        {distance ? `${approximate ? "≈" : ""}${distance}` : "–"}
       </span>
       <MonoLabel
         size="nano"

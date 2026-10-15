@@ -9,7 +9,8 @@ import { cardiacDrift } from "@/features/progress/measures";
 import type { MatchStatus } from "../matching/adherence";
 import { addDays, mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
-import { structureTotals } from "../model/structure";
+import type { IntensityPaces } from "../model/structure";
+import { sessionDistance } from "../model/volume";
 import { formatDistance, formatDuration, formatLongDay } from "./format";
 import {
   chartSegments,
@@ -61,6 +62,7 @@ export type SessionPanelInput = {
   activity: PanelActivity | null;
   laps: PanelLap[];
   series: Series | null;
+  paces?: IntensityPaces | null;
 };
 
 export type PanelStatus =
@@ -143,15 +145,6 @@ function weekSessions(state: PlanState, session: PlanSession) {
     );
 }
 
-function plannedDistance(session: PlanSession) {
-  if (session.targets.distanceMeters !== null)
-    return session.targets.distanceMeters;
-  const totals = structureTotals(session.structure);
-  return totals.distanceComplete && totals.distanceMeters > 0
-    ? totals.distanceMeters
-    : null;
-}
-
 function tone(ratio: number | null): PanelTone {
   if (ratio === null || !Number.isFinite(ratio)) return "muted";
   const gap = Math.abs(ratio - 1);
@@ -227,7 +220,8 @@ function completion(
   if (!activity || !match.activityId) return null;
   const durationRatio = match.compliance.duration;
   const pct = durationRatio !== null ? Math.round(durationRatio * 100) : null;
-  const planned = plannedDistance(session);
+  const distance = sessionDistance(session, input.paces ?? null);
+  const planned = distance?.meters ?? null;
   const rows: PanelRow[] = [];
   if (activity.durationSeconds !== null)
     rows.push({
@@ -241,7 +235,9 @@ function completion(
     rows.push({
       key: "distance",
       label: "Distance",
-      planned: planned !== null ? formatDistance(planned) : "–",
+      planned: distance
+        ? `${distance.estimated ? "≈ " : ""}${formatDistance(distance.meters)}`
+        : "–",
       actual: `${kilometers.format(activity.distanceMeters / 1000)} km`,
       tone: tone(planned !== null ? activity.distanceMeters / planned : null),
     });
@@ -368,7 +364,7 @@ export function buildSessionPanel(
               key === `session:${session.sessionKey}`,
           ),
         ) ?? null);
-  const stats = sessionStats(session);
+  const stats = sessionStats(session, null, input.paces ?? null);
   const statList: PanelStat[] = [
     {
       key: "duration",

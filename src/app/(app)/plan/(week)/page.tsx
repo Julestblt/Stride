@@ -3,6 +3,7 @@ import { mondayOf } from "@/features/plans/model/dates";
 import { buildProgram } from "@/features/plans/view/program";
 import { requireAthlete } from "@/server/app/session";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
+import { loadIntensityPaces } from "@/server/plans/paces";
 import { loadSessionPanel } from "@/server/plans/session-panel";
 import { PlanEmpty } from "../_components/plan-empty";
 import { PlanFrame } from "../_components/plan-frame";
@@ -19,9 +20,10 @@ export default async function PlanPage({
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
   const seance = typeof query.seance === "string" ? query.seance : null;
-  const [overview, panel] = await Promise.all([
+  const [overview, panel, paces] = await Promise.all([
     loadPlanOverview(context),
     seance ? loadSessionPanel(context, seance) : null,
+    loadIntensityPaces(context),
   ]);
   if (!overview)
     return (
@@ -29,7 +31,7 @@ export default async function PlanPage({
         <PlanEmpty />
       </PlanFrame>
     );
-  const { programs } = buildProgram(programInput(overview));
+  const { programs } = buildProgram(programInput(overview, paces));
   const race = typeof query.race === "string" ? query.race : null;
   const program =
     programs.find((item) => race !== null && item.raceId === race) ??

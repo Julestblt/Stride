@@ -13,7 +13,12 @@ import type {
   PlanState,
   PlanWeek,
 } from "../model/plan";
-import { structureTotals } from "../model/structure";
+import { structureTotals, type IntensityPaces } from "../model/structure";
+import {
+  isRunningSession,
+  sessionDistance,
+  type SessionDistance,
+} from "../model/volume";
 import {
   formatDateSpan,
   formatDistance,
@@ -80,6 +85,7 @@ export type ProgramInput = {
   matches: ProgramMatch[];
   proposalKeys: string[];
   races: ProgramRace[];
+  paces?: IntensityPaces | null;
 };
 
 export type WeekStatus = "past" | "current" | "future";
@@ -106,6 +112,7 @@ export type ProgramDay = {
 export type ProgramTotals = {
   durationSeconds: number;
   distanceMeters: number | null;
+  distanceEstimated: boolean;
   elevationMeters: number | null;
 };
 
@@ -229,7 +236,6 @@ const labelTones: Record<PlanWeek["weekType"], LabelTone> = {
 };
 
 const easyIntensities = new Set(["recovery", "easy"]);
-const runningSports = new Set<PlanSession["sport"]>(["run", "trail"]);
 
 const sum = (values: number[]) =>
   values.reduce((total, value) => total + value, 0);
@@ -239,13 +245,22 @@ function presentSum(values: (number | null)[]) {
   return present.length > 0 ? sum(present) : null;
 }
 
-function sessionDistance(session: PlanSession) {
-  if (session.targets.distanceMeters !== null)
-    return session.targets.distanceMeters;
-  const totals = structureTotals(session.structure);
-  return totals.distanceComplete && totals.distanceMeters > 0
-    ? Math.round(totals.distanceMeters)
-    : null;
+function completeDistance(
+  distances: (SessionDistance | null)[],
+): SessionDistance | null {
+  if (distances.length === 0) return null;
+  let meters = 0;
+  let estimated = false;
+  for (const distance of distances) {
+    if (distance === null) return null;
+    meters += distance.meters;
+    estimated ||= distance.estimated;
+  }
+  return { meters, estimated };
+}
+
+function approximate(text: string, estimated: boolean) {
+  return estimated ? `≈ ${text}` : text;
 }
 
 function plural(count: number, one: string, many: string) {
@@ -273,6 +288,7 @@ function ratio(value: number | null) {
 
 export function buildProgram(input: ProgramInput): ProgramOverview {
   const { state, today } = input;
+  const paces = input.paces ?? null;
   const statuses = sessionStatuses(input.matches);
   const compliance = new Map(
     input.matches.map((match) => [match.sessionKey, match.compliance]),
@@ -312,9 +328,8 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
     const label = raceName
       ? `${raceName} · ${isPrimaryRace ? "objectif" : (race?.priority ?? "course")}`
       : weekTypeLabels[week.weekType];
-    const running = sessions.filter(
-      (session) => runningSports.has(session.sport) && session.kind !== "race",
-    );
+    const runs = sessions.filter(isRunningSession);
+    const running = runs.filter((session) => session.kind !== "race");
     let easySeconds = 0;
     let qualitySeconds = 0;
     for (const session of running)
@@ -323,22 +338,47 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
       ))
         if (easyIntensities.has(intensity)) easySeconds += seconds;
         else qualitySeconds += seconds;
+    const distance =
+      completeDistance(
+        runs.map((session) => sessionDistance(session, paces)),
+      ) ??
+      (week.targets.distanceMeters !== null
+        ? { meters: week.targets.distanceMeters, estimated: true }
+        : null);
     const totals: ProgramTotals = {
       durationSeconds: sum(
-        sessions.map((session) => session.targets.durationSeconds),
+        runs.map((session) => session.targets.durationSeconds),
       ),
-      distanceMeters:
-        presentSum(sessions.map(sessionDistance)) ??
-        week.targets.distanceMeters,
+      distanceMeters: distance?.meters ?? null,
+      distanceEstimated: distance?.estimated ?? false,
       elevationMeters:
         presentSum(
-          sessions.map((session) => session.targets.elevationGainMeters),
+          runs.map((session) => session.targets.elevationGainMeters),
         ) ?? week.targets.elevationGainMeters,
     };
-    const doneSessions = sessions.filter((session) => {
+    const doneSessions = runs.filter((session) => {
       const status = statuses.get(session.sessionKey);
       return status === "completed" || status === "partial";
     });
+    const doneDistance =
+      doneSessions.length === 0
+        ? { meters: 0, estimated: false }
+        : completeDistance(
+            doneSessions.map((session) => {
+              const distance = sessionDistance(session, paces);
+              return (
+                distance && {
+                  meters: Math.round(
+                    distance.meters *
+                      ratio(
+                        compliance.get(session.sessionKey)?.distance ?? null,
+                      ),
+                  ),
+                  estimated: distance.estimated,
+                }
+              );
+            }),
+          );
     const done: ProgramTotals = {
       durationSeconds: Math.round(
         sum(
@@ -350,17 +390,8 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
         ),
       ),
       distanceMeters:
-        totals.distanceMeters === null
-          ? null
-          : Math.round(
-              sum(
-                doneSessions.map(
-                  (session) =>
-                    (sessionDistance(session) ?? 0) *
-                    ratio(compliance.get(session.sessionKey)?.distance ?? null),
-                ),
-              ),
-            ),
+        totals.distanceMeters === null ? null : (doneDistance?.meters ?? null),
+      distanceEstimated: doneDistance?.estimated ?? false,
       elevationMeters:
         totals.elevationMeters === null
           ? null
@@ -425,7 +456,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
                 : isPast && main.kind !== "race"
                   ? "missed"
                   : null;
-      const distance = sessionDistance(main);
+      const distance = sessionDistance(main, paces);
       return {
         ...base,
         sessionKey: main.sessionKey,
@@ -439,7 +470,9 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
             main.kind === "race"
               ? null
               : formatDuration(main.targets.durationSeconds),
-            distance !== null ? formatDistance(distance) : null,
+            distance !== null
+              ? approximate(formatDistance(distance.meters), distance.estimated)
+              : null,
           ]
             .filter(Boolean)
             .join(" · ") || null,
@@ -514,6 +547,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
       (week) => state.weeks[week.number - 1].blockKey === block.blockKey,
     );
     const first = blockWeeks[0]?.weekStart ?? block.startsOn;
+    const distance = weeksDistance(blockWeeks);
     const last = blockWeeks.at(-1)
       ? addDays(blockWeeks.at(-1)!.weekStart, 6)
       : block.endsOn;
@@ -528,9 +562,8 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
         durationSeconds: sum(
           blockWeeks.map((week) => week.totals.durationSeconds),
         ),
-        distanceMeters: presentSum(
-          blockWeeks.map((week) => week.totals.distanceMeters),
-        ),
+        distanceMeters: distance?.meters ?? null,
+        distanceEstimated: distance?.estimated ?? false,
         elevationMeters: presentSum(
           blockWeeks.map((week) => week.totals.elevationMeters),
         ),
@@ -568,6 +601,21 @@ const qualityFamilies = new Set<SessionFamily>([
   "hills",
   "race_specific",
 ]);
+
+function weeksDistance(weeks: ProgramWeek[]) {
+  return completeDistance(
+    weeks.map((week) =>
+      week.totals.distanceMeters === null && week.totals.durationSeconds === 0
+        ? { meters: 0, estimated: false }
+        : week.totals.distanceMeters === null
+          ? null
+          : {
+              meters: week.totals.distanceMeters,
+              estimated: week.totals.distanceEstimated,
+            },
+    ),
+  );
+}
 
 function blockOf(state: PlanState, week: ProgramWeek) {
   const blockKey = state.weeks.find(
@@ -669,7 +717,7 @@ function programMilestones(
   }
   const runs = state.sessions.filter(
     (session) =>
-      runningSports.has(session.sport) &&
+      isRunningSession(session) &&
       session.kind !== "race" &&
       weeks.some(
         (week) =>
@@ -729,7 +777,7 @@ function programKpis(
   primary: boolean,
 ): ProgramKpi[] {
   const total = sum(weeks.map((week) => week.totals.durationSeconds));
-  const distance = presentSum(weeks.map((week) => week.totals.distanceMeters));
+  const distance = weeksDistance(weeks);
   const sessions = state.sessions.filter((session) =>
     weeks.some(
       (week) =>
@@ -740,10 +788,7 @@ function programKpis(
   const longest = Math.max(
     0,
     ...sessions
-      .filter(
-        (session) =>
-          runningSports.has(session.sport) && session.kind !== "race",
-      )
+      .filter((session) => isRunningSession(session) && session.kind !== "race")
       .map((session) => session.targets.durationSeconds),
   );
   const peak = Math.max(0, ...weeks.map((week) => week.totals.durationSeconds));
@@ -759,11 +804,11 @@ function programKpis(
         : formatDuration(total),
     },
   ];
-  if (distance !== null && distance > 0)
+  if (distance !== null && distance.meters > 0)
     kpis.push({
       key: "distance",
       label: "Distance",
-      value: kilometers(distance),
+      value: approximate(kilometers(distance.meters), distance.estimated),
     });
   if (primary) {
     if (longest > 0)

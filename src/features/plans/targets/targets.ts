@@ -2,7 +2,11 @@ import {
   oxygenCost,
   sustainableFraction,
 } from "@/features/progress/predictions";
-import { intensities, type Intensity } from "../model/structure";
+import {
+  intensities,
+  type Intensity,
+  type IntensityPaces,
+} from "../model/structure";
 
 export const targetsVersion = "2026-10-14";
 
@@ -333,4 +337,15 @@ export function trainingTargets(input: TargetsInput): TrainingTargets {
     },
     calibrationGaps,
   };
+}
+
+export function intensityPaces(targets: TrainingTargets): IntensityPaces {
+  return Object.fromEntries(
+    intensities.flatMap((intensity) => {
+      const range = targets.intensities[intensity].paceRange;
+      return range
+        ? [[intensity, (range.fastSecondsPerKm + range.slowSecondsPerKm) / 2]]
+        : [];
+    }),
+  );
 }

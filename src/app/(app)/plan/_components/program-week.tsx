@@ -210,8 +210,8 @@ function WeekStatus({ week }: { week: ProgramWeek }) {
   return null;
 }
 
-function kilometers(meters: number) {
-  return `${formatInteger(meters / 1000)} km`;
+function kilometers(meters: number, estimated: boolean) {
+  return `${estimated ? "≈ " : ""}${formatInteger(meters / 1000)} km`;
 }
 
 function weekMetrics(week: ProgramWeek) {
@@ -229,10 +229,10 @@ function weekMetrics(week: ProgramWeek) {
       ? [
           {
             key: "distance",
-            value: kilometers(totals.distanceMeters),
+            value: kilometers(totals.distanceMeters, totals.distanceEstimated),
             note:
               started && done.distanceMeters !== null
-                ? `${kilometers(done.distanceMeters)} faits`
+                ? `${kilometers(done.distanceMeters, done.distanceEstimated)} faits`
                 : "Distance",
           },
         ]
