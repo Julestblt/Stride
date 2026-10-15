@@ -105,7 +105,7 @@ test("the plan shows the stored program with the current week selected", async (
     .first()
     .click();
   await expect(page).toHaveURL(/\/plan\/sessions\/s-\d{4}-\d{2}-\d{2}-/);
-  await expect(page.getByRole("heading", { name: "Étapes" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("Étapes");
   await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
 });
 

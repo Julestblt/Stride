@@ -415,6 +415,7 @@ export function sessionStats(
           : null,
     intensityTime: hard
       ? {
+          seconds: totals.secondsByIntensity[hard],
           value: formatDuration(totals.secondsByIntensity[hard]),
           label: intensityTimeLabels[hard],
         }
