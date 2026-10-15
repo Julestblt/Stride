@@ -14,6 +14,7 @@ Garmin responses are verbose; sleep payloads can exceed 400 KB. Read as little a
 - Resting heart rate: `get_rhr_day` for the date. Never call `get_sleep_data` just to read resting heart rate.
 - Readiness: HRV (`get_hrv_data`), resting heart rate (`get_rhr_day`) and training readiness (`get_training_readiness`) are read together for the same date, never one or two alone. Without all three tools, do not judge readiness from Garmin data: the Coach consults Medical.
 - Never paste raw JSON into your reasoning or answers. Keep the few fields you need (date, duration, distance, elevation, heart rate, scores) and drop the rest.
-- A garmin tool that fails returns text starting with `Error` instead of data. If a garmin tool fails (unavailable, busy, rate limited or unauthorized), say « donnée non disponible » for that data and continue without it. Never retry the call in a loop.
+- A garmin tool that fails returns an error starting with a code: `provider_busy` (a sync is using the Garmin session), `rate_limited`, `provider_unavailable`, `reconnect_required`, `unauthorized`, `range_too_large` or `invalid_request`. Say « donnée non disponible » for that data and continue without it; for `range_too_large`, ask again with at most 14 days. Never retry the same call in a loop.
 - A value Garmin did not return is absent, never 0 and never estimated. Say « donnée non disponible » for that date.
 - Garmin values describe the past and are not the source of truth for plan checks; Stride's validator works from its own normalized data.
+- A response whose first line starts with `[truncated]` is incomplete: ask for a single date or a narrower range instead of reasoning on the cut data.
