@@ -51,6 +51,7 @@ export const activityDetailRowSchema = z
     const local = row.local_started_at ?? row.started_at;
     return {
       id: row.id,
+      startedAt: row.started_at,
       type: row.activity_type,
       name: row.activity_name?.trim() || null,
       routeName: row.route_name?.trim() || null,
