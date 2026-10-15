@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 110,
-    "html_exports": 111,
-    "matched": 111,
-    "exact": 111,
+    "screenshots": 113,
+    "html_exports": 114,
+    "matched": 114,
+    "exact": 114,
     "high": 0,
     "uncertain": 0
   },
@@ -1456,6 +1456,45 @@
       "original_export_name": "App · Plan · Proposition 2 · 10K sélectionné · Mobile-html.zip",
       "matched_confidence": "exact",
       "notes": "Programme complet, proposition 2, mobile with a secondary race (10K) selected: nested program weeks and the selected week as a day list. No mobile default state exists; derive it from this and the desktop reference."
+    },
+    {
+      "id": "app/plan-session/desktop",
+      "area": "app",
+      "screen": "plan-session",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/plan-session/screenshots/desktop.png",
+      "html_reference_path": "design/references/app/plan-session/source/desktop.zip",
+      "original_screenshot_name": "App · Plan · Détail de séance (panneau) · Desktop@2x.png",
+      "original_export_name": "App · Plan · Détail de séance (panneau) · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Planned session in a side panel over the Programme complet: session navigation, pending proposal, key figures, structure, steps, contingencies and actions. Added 2026-10-15."
+    },
+    {
+      "id": "app/plan-session/done-desktop",
+      "area": "app",
+      "screen": "plan-session",
+      "state": "done",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/plan-session/screenshots/done-desktop.png",
+      "html_reference_path": "design/references/app/plan-session/source/done-desktop.zip",
+      "original_screenshot_name": "App · Plan · Séance faite (panneau) · Desktop@2x.png",
+      "original_export_name": "App · Plan · Séance faite (panneau) · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Completed session in the side panel: compliance, planned versus completed table, pace per minute, coach comment and activity links. Added 2026-10-15."
+    },
+    {
+      "id": "app/plan-session/mobile",
+      "area": "app",
+      "screen": "plan-session",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/app/plan-session/screenshots/mobile.png",
+      "html_reference_path": "design/references/app/plan-session/source/mobile.zip",
+      "original_screenshot_name": "App · Plan · Détail de séance (feuille) · Mobile@2x.png",
+      "original_export_name": "App · Plan · Détail de séance (feuille) · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Planned session as a bottom sheet over Plan. No mobile done state exists; derive it from done-desktop. Added 2026-10-15."
     }
   ],
   "unresolved": []
