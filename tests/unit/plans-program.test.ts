@@ -5,6 +5,7 @@ import {
   chartDescription,
   programNavigation,
   sessionFamilyOf,
+  weekSplit,
   withRaceValues,
   type ProgramInput,
 } from "@/features/plans/view/program";
@@ -113,6 +114,23 @@ describe("program overview", () => {
     expect(first.totals.durationSeconds).toBe(5_700);
     expect(first.easySeconds + first.qualitySeconds).toBe(6_000);
     expect(first.qualitySeconds).toBe(4 * 360);
+  });
+
+  it("reports the planned running easy share against the 80/20 target", () => {
+    const [first] = buildProgram(input()).weeks;
+    expect(first.easyPct).toBe(76);
+    expect(weekSplit(first)).toEqual({
+      easyPct: 76,
+      easySeconds: 4_560,
+      qualitySeconds: 1_440,
+      met: false,
+    });
+    expect(
+      weekSplit({ easySeconds: 4_920, qualitySeconds: 1_080, easyPct: 82 }),
+    ).toMatchObject({ met: true });
+    expect(
+      weekSplit({ easySeconds: 0, qualitySeconds: 0, easyPct: 100 }),
+    ).toBeNull();
   });
 
   it("derives past completion and current progress from matching", () => {

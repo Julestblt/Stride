@@ -43,7 +43,7 @@ export default async function RaceLayout({
             race={data.race}
             plan={data.plan}
             course={data.course}
-            waypointCount={data.waypoints.length}
+            waypoints={data.waypoints}
             today={today}
           />
           <RaceTabs raceId={data.race.id} kind={data.race.kind} />

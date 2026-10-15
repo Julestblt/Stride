@@ -78,6 +78,11 @@ test("the plan shows the stored program with the current week selected", async (
     page.getByText(/^Fait/).filter({ visible: true }).first(),
   ).toBeVisible();
   await expect(page.getByText("Repères du programme")).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: /^\d+ % du temps de course en facile, cible 80 %$/,
+    }),
+  ).toBeVisible();
 
   const sidebar = page.getByRole("link", { name: /^Programme complet/ });
   await expect(sidebar).toHaveAttribute("aria-current", "page");
@@ -89,7 +94,11 @@ test("the plan shows the stored program with the current week selected", async (
   await expect(
     page.getByRole("heading", { level: 2, name: /^S3 / }),
   ).toBeVisible();
+  await expect(page.getByText(/^Semaine 3 sur \d+ · /)).toBeVisible();
   await page.keyboard.press("ArrowLeft");
+  await expect(
+    page.getByText(/^Semaine 2 sur \d+ · Reconstruction$/),
+  ).toBeVisible();
   await expect(current).toHaveAttribute("aria-pressed", "true");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");

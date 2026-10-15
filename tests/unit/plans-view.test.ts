@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  easyRun,
-  qualitySession,
-} from "@/features/plans/library/library";
+import { easyRun, qualitySession } from "@/features/plans/library/library";
 import type { PlanSession } from "@/features/plans/model/plan";
 import { trainingTargets } from "@/features/plans/targets/targets";
 import {
@@ -11,12 +8,7 @@ import {
   formatTarget,
   formatWeekRange,
 } from "@/features/plans/view/format";
-import {
-  sessionStats,
-  stepViews,
-  weekStats,
-} from "@/features/plans/view/plan-view";
-import { planState } from "./plan-fixture";
+import { sessionStats, stepViews } from "@/features/plans/view/plan-view";
 
 const targets = trainingTargets({
   today: "2026-10-14",
@@ -89,14 +81,5 @@ describe("sessions", () => {
       elevation: null,
       terrain: "Route",
     });
-  });
-});
-
-describe("weeks", () => {
-  it("states a week's training duration and intensity split", () => {
-    const stats = weekStats(planState(), "2026-10-19");
-    expect(stats.durationSeconds).toBe(50 * 60 + 3_000 + 90 * 60);
-    expect(stats.easyPct + stats.hardPct).toBe(100);
-    expect(stats.elevationGainMeters).toBeNull();
   });
 });

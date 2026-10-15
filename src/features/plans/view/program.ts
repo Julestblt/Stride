@@ -29,7 +29,7 @@ import {
   formatWeekRange,
   formatWeekdayShort,
 } from "./format";
-import { sessionBlocks, weekStats } from "./plan-view";
+import { sessionBlocks } from "./plan-view";
 
 export type SessionFamily = SessionTileKind;
 
@@ -145,6 +145,20 @@ export type ProgramWeek = {
   note: string | null;
   days: ProgramDay[];
 };
+
+export const easyTargetPct = 80;
+
+export function weekSplit(
+  week: Pick<ProgramWeek, "easySeconds" | "qualitySeconds" | "easyPct">,
+) {
+  if (week.easySeconds + week.qualitySeconds <= 0) return null;
+  return {
+    easyPct: week.easyPct,
+    easySeconds: week.easySeconds,
+    qualitySeconds: week.qualitySeconds,
+    met: week.easyPct >= easyTargetPct,
+  };
+}
 
 export type ProgramBlock = {
   blockKey: string;
@@ -566,7 +580,10 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
       done,
       easySeconds,
       qualitySeconds,
-      easyPct: weekStats(state, week.weekStart).easyPct,
+      easyPct:
+        easySeconds + qualitySeconds > 0
+          ? Math.round((easySeconds / (easySeconds + qualitySeconds)) * 100)
+          : 100,
       status,
       completionPct: adherence !== null ? Math.round(adherence * 100) : null,
       proposed:
@@ -887,10 +904,13 @@ function defaultWeek(weeks: ProgramWeek[]) {
   );
 }
 
+export function weekEyebrow(week: ProgramWeek, count: number) {
+  return `Semaine ${week.number} sur ${count} · ${week.blockName}`;
+}
+
 function eyebrow(weeks: ProgramWeek[]) {
   const current = weeks.find((week) => week.status === "current");
-  if (current)
-    return `Semaine ${current.number} sur ${weeks.length} · ${current.blockName}`;
+  if (current) return weekEyebrow(current, weeks.length);
   const first = weeks[0];
   const span = plural(weeks.length, "semaine", "semaines");
   return first && first.daysUntil > 0

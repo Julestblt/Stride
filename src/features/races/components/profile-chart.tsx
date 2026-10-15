@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import { formatClock, formatKm, formatMeters } from "../format";
 import type { ProfileData, ProfileMarker } from "../profile";
-import { WeatherGlyph, glyphTone } from "./weather-icon";
+import { WeatherGlyph } from "./weather-icon";
 
 type Variant = "full" | "mobile" | "compact" | "editor";
 
@@ -363,14 +363,14 @@ export function ProfileChart({
                 {slot.hour}
               </text>
               <g
-                transform={`translate(${cx - 8 * scale},${16 * scale}) scale(${scale})`}
-                className={glyphTone(slot.glyph)}
+                transform={`translate(${cx - 10 * scale},${14 * scale}) scale(${1.25 * scale})`}
+                fill="none"
               >
                 <WeatherGlyph glyph={slot.glyph} />
               </g>
               <text
                 x={cx}
-                y={45 * scale}
+                y={49 * scale}
                 textAnchor="middle"
                 className="fill-foreground font-metric font-semibold"
                 fontSize={14 * scale}
@@ -380,11 +380,13 @@ export function ProfileChart({
               {variant !== "mobile" && (
                 <text
                   x={cx}
-                  y={55}
+                  y={60}
                   textAnchor="middle"
                   className={cn(
                     "font-mono",
-                    slot.precipitation >= 50 ? "fill-provider" : "fill-dim",
+                    slot.precipitation >= 50
+                      ? "fill-provider"
+                      : "fill-muted-foreground",
                   )}
                   fontSize={8}
                 >

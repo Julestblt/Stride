@@ -5,12 +5,14 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
-import type {
-  MilestoneTone,
-  ProgramMilestone,
-  RaceProgram,
+import {
+  weekEyebrow,
+  type MilestoneTone,
+  type ProgramMilestone,
+  type RaceProgram,
 } from "@/features/plans/view/program";
 import { ProgramChart } from "./program-chart";
+import { ProgramHeader } from "./program-hero";
 import { ProgramWeekPanel } from "./program-week";
 
 const milestoneTones: Record<MilestoneTone, string> = {
@@ -170,6 +172,14 @@ export function ProgramExplorer({
 
   return (
     <>
+      <ProgramHeader
+        program={program}
+        eyebrow={
+          week && selected !== program.defaultWeekKey
+            ? weekEyebrow(week, weeks.length)
+            : program.eyebrow
+        }
+      />
       <ProgramChart
         weeks={weeks}
         bands={program.bands}

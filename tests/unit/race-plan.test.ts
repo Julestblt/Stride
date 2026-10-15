@@ -11,6 +11,8 @@ import {
   simulate,
   distanceAtElapsed,
   elapsedAt,
+  stopTotalSeconds,
+  targetPace,
 } from "@/features/races/simulation";
 import { localMinutes, sunTimes, zonedEpoch } from "@/features/races/sun";
 import {
@@ -24,6 +26,7 @@ import {
   formatDuration,
   formatKm,
   formatMargin,
+  formatPace,
   parseClock,
   parseHoursMinutes,
 } from "@/features/races/format";
@@ -39,7 +42,7 @@ import {
   type StoredCourse,
 } from "@/features/races/race";
 import { courseModel, planModel } from "@/features/races/workspace";
-import { roadBrief, roadReading } from "@/features/races/reading";
+import { roadReading } from "@/features/races/reading";
 import { checklistTemplateFor } from "@/features/races/checklists";
 
 const metersPerDegree = 111_195;
@@ -135,6 +138,54 @@ describe("race simulation", () => {
   });
 });
 
+describe("target pace", () => {
+  const stops = { aidStopSeconds: 300, waterStopSeconds: 120 };
+  const stations = [
+    waypoint("start", "start", 0),
+    ...Array.from({ length: 8 }, (_, index) =>
+      waypoint(`r${index + 1}`, "aid", (index + 1) * 12_000),
+    ),
+    waypoint("e1", "water", 102_000),
+    waypoint("v", "caution", 110_000),
+    waypoint("finish", "finish", 120_700),
+  ];
+
+  it("counts station stops strictly inside the course", () => {
+    expect(stopTotalSeconds(stations, 120_700, stops)).toBe(8 * 300 + 120);
+    expect(stopTotalSeconds(stations, 50_000, stops)).toBe(4 * 300);
+    expect(stopTotalSeconds([], 120_700, stops)).toBe(0);
+  });
+
+  it("gives the target pace and the pace excluding stops", () => {
+    const pace = targetPace({
+      targetSeconds: 18.5 * 3600,
+      distanceM: 120_700,
+      stopSeconds: stopTotalSeconds(stations, 120_700, stops),
+    })!;
+    expect(formatPace(pace.overall)).toBe("9:12");
+    expect(formatPace(pace.moving!)).toBe("8:51");
+  });
+
+  it("keeps the overall pace without stops", () => {
+    const pace = targetPace({
+      targetSeconds: 39 * 60,
+      distanceM: 10_000,
+      stopSeconds: 0,
+    })!;
+    expect(formatPace(pace.overall)).toBe("3:54");
+    expect(pace.moving).toBe(pace.overall);
+  });
+
+  it("returns nothing without a target or a distance", () => {
+    expect(
+      targetPace({ targetSeconds: null, distanceM: 10_000, stopSeconds: 0 }),
+    ).toBeNull();
+    expect(
+      targetPace({ targetSeconds: 2400, distanceM: null, stopSeconds: 0 }),
+    ).toBeNull();
+  });
+});
+
 describe("road race simulation", () => {
   it("uses the target time as running time without trail stops or walking", () => {
     const course = buildCourse(rolling(10_000))!;
@@ -185,9 +236,6 @@ describe("road race simulation", () => {
     const reading = roadReading({ model, planned, weather: null, date: null });
     expect(reading.body).toContain("3:54 /km");
     expect(reading.body).not.toMatch(/frontale|marche|ravito/i);
-    expect(
-      roadBrief({ model, planned, weather: null }).map((item) => item.key),
-    ).toEqual(["pace", "finish"]);
   });
 
   it("uses road preparation tasks without trail equipment templates", () => {

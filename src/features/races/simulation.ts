@@ -70,9 +70,62 @@ export function fadeFor(distanceM: number) {
   return Math.max(0, Math.min(1, (km - 10) / 90)) * 0.25;
 }
 
-function stopSeconds(waypoint: Waypoint, settings: SimulationSettings) {
+type StopSettings = Pick<
+  SimulationSettings,
+  "aidStopSeconds" | "waterStopSeconds"
+>;
+
+function stopSeconds(waypoint: Waypoint, settings: StopSettings) {
   if (waypoint.kind === "water") return settings.waterStopSeconds;
   return isStation(waypoint.kind) ? settings.aidStopSeconds : 0;
+}
+
+function stopsOf(
+  waypoints: Waypoint[],
+  distanceM: number,
+  settings: StopSettings,
+) {
+  return waypoints
+    .filter(
+      (waypoint) =>
+        isStation(waypoint.kind) &&
+        waypoint.distanceM > 0 &&
+        waypoint.distanceM < distanceM,
+    )
+    .map((waypoint) => ({
+      distanceM: waypoint.distanceM,
+      seconds: stopSeconds(waypoint, settings),
+    }));
+}
+
+export function stopTotalSeconds(
+  waypoints: Waypoint[],
+  distanceM: number,
+  settings: StopSettings,
+) {
+  return stopsOf(waypoints, distanceM, settings).reduce(
+    (sum, stop) => sum + stop.seconds,
+    0,
+  );
+}
+
+export function targetPace({
+  targetSeconds,
+  distanceM,
+  stopSeconds,
+}: {
+  targetSeconds: number | null;
+  distanceM: number | null;
+  stopSeconds: number;
+}) {
+  if (!targetSeconds || targetSeconds <= 0 || !distanceM || distanceM <= 0)
+    return null;
+  const km = distanceM / 1000;
+  const moving = targetSeconds - Math.max(0, stopSeconds);
+  return {
+    overall: targetSeconds / km,
+    moving: moving > 0 ? moving / km : null,
+  };
 }
 
 export function simulate(
@@ -117,16 +170,7 @@ export function simulate(
       cost += segmentCost;
     }
   }
-  const stations = waypoints.filter(
-    (waypoint) =>
-      isStation(waypoint.kind) &&
-      waypoint.distanceM > 0 &&
-      waypoint.distanceM < course.distanceM,
-  );
-  const stops = stations.map((waypoint) => ({
-    distanceM: waypoint.distanceM,
-    seconds: stopSeconds(waypoint, settings),
-  }));
+  const stops = stopsOf(waypoints, course.distanceM, settings);
   const stopTotal = stops.reduce((sum, stop) => sum + stop.seconds, 0);
   const runSeconds = settings.targetSeconds - walkSeconds - stopTotal;
   const secondsPerCost = cost > 0 ? Math.max(0, runSeconds) / cost : 0;
