@@ -78,6 +78,11 @@ test("the plan shows the stored program with the current week selected", async (
     page.getByText(/^Fait/).filter({ visible: true }).first(),
   ).toBeVisible();
   await expect(page.getByText("Repères du programme")).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: /^\d+ % du temps de course en facile, cible 80 %$/,
+    }),
+  ).toBeVisible();
 
   const sidebar = page.getByRole("link", { name: /^Programme complet/ });
   await expect(sidebar).toHaveAttribute("aria-current", "page");

@@ -7,7 +7,12 @@ import { SessionShape } from "@/components/stride/session-shape";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { cn } from "@/lib/utils";
 import { formatDuration, formatElevation } from "@/features/plans/view/format";
-import type { ProgramDay, ProgramWeek } from "@/features/plans/view/program";
+import {
+  easyTargetPct,
+  weekSplit,
+  type ProgramDay,
+  type ProgramWeek,
+} from "@/features/plans/view/program";
 import { formatInteger } from "@/features/progress/format";
 import { markSessionOpened } from "./session-sheet";
 
@@ -210,6 +215,117 @@ function WeekStatus({ week }: { week: ProgramWeek }) {
   return null;
 }
 
+type Split = NonNullable<ReturnType<typeof weekSplit>>;
+
+const splitTitle =
+  "Part du temps de course passé en endurance fondamentale (sous le 1er seuil). Calculé sur le temps, pas sur les km. Le renfo ne compte pas.";
+
+function SplitBar({ split }: { split: Split }) {
+  return (
+    <span
+      role="img"
+      aria-label={`${split.easyPct} % du temps de course en facile, cible ${easyTargetPct} %`}
+      className="relative flex h-1.5 gap-0.5"
+    >
+      <span
+        className="rounded-l-mark bg-provider"
+        style={{ width: `${split.easyPct}%` }}
+      />
+      {split.qualitySeconds > 0 && (
+        <span className="flex-1 rounded-r-mark bg-accent/70" />
+      )}
+      <span
+        aria-hidden="true"
+        className="absolute -top-1 -bottom-1 -ml-px w-0.5 rounded-full bg-foreground"
+        style={{ left: `${easyTargetPct}%` }}
+      />
+    </span>
+  );
+}
+
+function SplitState({ split, long }: { split: Split; long: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 whitespace-nowrap",
+        split.met ? "text-success" : "text-warning",
+      )}
+    >
+      {split.met && (
+        <CheckIcon aria-hidden="true" className="size-2.5" strokeWidth={3} />
+      )}
+      {split.met
+        ? long
+          ? "Cible 80/20 tenue"
+          : "80/20"
+        : long
+          ? "Sous la cible 80/20"
+          : "Sous 80/20"}
+    </span>
+  );
+}
+
+function WeekSplitCell({ split }: { split: Split }) {
+  return (
+    <div
+      title={splitTitle}
+      className="grid w-37.5 grid-cols-[auto_auto_1fr] items-baseline gap-x-1.5 gap-y-1.5 border-l border-border pl-4.5 max-sm:hidden"
+    >
+      <dt className="col-start-2 row-start-1 text-xs text-muted">facile</dt>
+      <dd className="col-start-1 row-start-1 font-metric text-[26px] leading-none font-semibold whitespace-nowrap tabular-nums">
+        {split.easyPct} %
+      </dd>
+      <dd className="col-start-3 row-start-1 justify-self-end text-[11px]">
+        <SplitState split={split} long={false} />
+      </dd>
+      <dd className="col-span-3">
+        <SplitBar split={split} />
+      </dd>
+      <dd className="col-span-3 text-[11px] text-muted-foreground">
+        {formatDuration(split.easySeconds)} facile ·{" "}
+        {formatDuration(split.qualitySeconds)} de qualité
+      </dd>
+    </div>
+  );
+}
+
+function WeekSplitCard({ split }: { split: Split }) {
+  return (
+    <div
+      title={splitTitle}
+      className="flex flex-col gap-2 rounded-card border border-border bg-surface-panel px-3.5 py-3 sm:hidden"
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="font-metric text-[22px] leading-none font-semibold tabular-nums">
+          {split.easyPct} %
+        </span>
+        <span className="text-[13px] text-muted">en facile</span>
+        <span className="ml-auto text-xs">
+          <SplitState split={split} long />
+        </span>
+      </div>
+      <SplitBar split={split} />
+      <div className="flex gap-3.5 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.25">
+          <span
+            aria-hidden="true"
+            className="size-1.5 rounded-full bg-provider"
+          />
+          Facile {formatDuration(split.easySeconds)}
+        </span>
+        <span className="inline-flex items-center gap-1.25">
+          <span
+            aria-hidden="true"
+            className="size-1.5 rounded-full bg-accent/70"
+          />
+          Qualité {formatDuration(split.qualitySeconds)}
+        </span>
+        <span className="ml-auto">en temps</span>
+      </div>
+    </div>
+  );
+}
+
 function kilometers(meters: number, estimated: boolean) {
   return `${estimated ? "≈ " : ""}${formatInteger(meters / 1000)} km`;
 }
@@ -269,6 +385,7 @@ export function ProgramWeekPanel({
   sessionHref: (sessionKey: string) => string;
 }) {
   const subtitle = [week.blockName, week.label].filter(Boolean).join(" · ");
+  const split = weekSplit(week);
   return (
     <section
       aria-labelledby="program-week-title"
@@ -307,6 +424,7 @@ export function ProgramWeekPanel({
                 </dd>
               </div>
             ))}
+            {split && <WeekSplitCell split={split} />}
           </dl>
           {week.status !== "future" && (
             <span
@@ -319,6 +437,7 @@ export function ProgramWeekPanel({
               />
             </span>
           )}
+          {split && <WeekSplitCard split={split} />}
         </div>
         {week.note && <WeekNote note={week.note} />}
       </div>

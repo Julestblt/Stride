@@ -1,7 +1,6 @@
 import type { SessionBlock } from "@/components/stride/session-blocks";
 import { formatPace } from "@/features/progress/format";
-import { addDays } from "../model/dates";
-import type { PlanSession, PlanState } from "../model/plan";
+import type { PlanSession } from "../model/plan";
 import {
   structureTotals,
   type Intensity,
@@ -22,16 +21,6 @@ import {
   intensityZone,
   terrainLabels,
 } from "./format";
-
-const sessionsOf = (state: PlanState, weekStart: string) =>
-  state.sessions.filter(
-    (session) =>
-      session.scheduledOn >= weekStart &&
-      session.scheduledOn <= addDays(weekStart, 6),
-  );
-
-const training = (sessions: PlanSession[]) =>
-  sessions.filter((session) => session.kind !== "race");
 
 function flattenSteps(structure: StructureStep[]): SimpleStep[] {
   return structure.flatMap((step) =>
@@ -82,37 +71,6 @@ function mainWork(session: PlanSession) {
           : best;
     }, null) ?? null
   );
-}
-
-const easyIntensities = new Set<Intensity>(["recovery", "easy"]);
-
-export function weekStats(state: PlanState, weekStart: string) {
-  const sessions = training(sessionsOf(state, weekStart));
-  let easy = 0;
-  let total = 0;
-  for (const session of sessions) {
-    const { secondsByIntensity } = structureTotals(session.structure);
-    for (const [intensity, seconds] of Object.entries(secondsByIntensity)) {
-      total += seconds;
-      if (easyIntensities.has(intensity as Intensity)) easy += seconds;
-    }
-  }
-  const elevations = sessions
-    .map((session) => session.targets.elevationGainMeters)
-    .filter((value): value is number => value !== null);
-  const easyPct = total > 0 ? Math.round((easy / total) * 100) : 100;
-  return {
-    durationSeconds: sessions.reduce(
-      (sum, session) => sum + session.targets.durationSeconds,
-      0,
-    ),
-    elevationGainMeters:
-      elevations.length > 0
-        ? elevations.reduce((sum, value) => sum + value, 0)
-        : null,
-    easyPct,
-    hardPct: 100 - easyPct,
-  };
 }
 
 const stepNames: Record<SimpleStep["type"], string> = {
