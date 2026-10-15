@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { resolveRaceSnapshots } from "@/features/onboarding/goals";
 import { localToday } from "@/features/plans/constraints";
 import {
   buildDeterministicPlan,
@@ -23,6 +24,7 @@ import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { readProfile } from "@/server/onboarding/profile";
 import { loadProgressHistory } from "@/server/progress/history";
+import { readRaceCourses } from "@/server/races/courses";
 import { readPlanningConstraints } from "./constraints";
 
 export type PlanDraft = { today: string; plan: DeterministicPlan };
@@ -84,14 +86,20 @@ export const loadPlanningInput = cache(
       await readPlanningConstraints(context);
     const constraints = { timeZone, maxWeeklyMinutes, unavailablePeriods };
     const today = localToday(constraints.timeZone, now);
-    const [profile, goals, history, zones, garmin] = await Promise.all([
-      readProfile(context),
-      readGoals(context),
-      loadProgressHistory(context, today),
-      loadHeartRateZones(context, now),
-      readGarminThreshold(context),
-    ]);
-    const races: ObjectiveRace[] = goals.races.flatMap(({ id, values }) =>
+    const [profile, goals, courses, history, zones, garmin] = await Promise.all(
+      [
+        readProfile(context),
+        readGoals(context),
+        readRaceCourses(context),
+        loadProgressHistory(context, today),
+        loadHeartRateZones(context, now),
+        readGarminThreshold(context),
+      ],
+    );
+    const races: ObjectiveRace[] = resolveRaceSnapshots(
+      goals.races,
+      courses,
+    ).flatMap(({ id, values }) =>
       values.race_date && values.distance_km
         ? [
             {

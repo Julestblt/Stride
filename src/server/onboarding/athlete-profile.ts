@@ -3,6 +3,8 @@ import {
   buildAthleteProfile,
   type AthleteProfileView,
 } from "@/features/onboarding/athlete-profile";
+import { resolveRaceSnapshots } from "@/features/onboarding/goals";
+import { readRaceCourses } from "@/server/races/courses";
 import type { OnboardingContext } from "./context";
 import { readGoals } from "./goals";
 import { loadGarminSignals } from "./known-values";
@@ -21,10 +23,11 @@ export async function loadAthleteProfile(
   const nights = new Date(today.getTime() - 90 * 86_400_000)
     .toISOString()
     .slice(0, 10);
-  const [profile, goals, signals, count, first, observations] =
+  const [profile, goals, courses, signals, count, first, observations] =
     await Promise.all([
       readProfile(context),
       readGoals(context),
+      readRaceCourses(context),
       loadGarminSignals(context, today),
       context.client
         .from("provider_activities")
@@ -52,7 +55,9 @@ export async function loadAthleteProfile(
     today,
     profile: profile.values,
     goal: goals.goal.values,
-    races: goals.races.map((race) => race.values),
+    races: resolveRaceSnapshots(goals.races, courses).map(
+      (race) => race.values,
+    ),
     activityCount: count.count ?? 0,
     firstActivityAt: first.data?.started_at ?? null,
     activities: signals.activities,

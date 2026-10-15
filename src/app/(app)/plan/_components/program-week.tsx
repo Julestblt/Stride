@@ -106,8 +106,8 @@ function DayCard({
   );
   return day.sessionKey ? (
     <Link
-      href={sessionHref(day.sessionKey)}
-      onClick={markSessionOpened}
+      href={day.raceId ? `/races/${day.raceId}` : sessionHref(day.sessionKey)}
+      onClick={day.raceId ? undefined : markSessionOpened}
       data-session-key={day.sessionKey}
       aria-current={day.isToday ? "date" : undefined}
       className={className}
@@ -163,8 +163,8 @@ function DayRow({
   );
   return day.sessionKey ? (
     <Link
-      href={sessionHref(day.sessionKey)}
-      onClick={markSessionOpened}
+      href={day.raceId ? `/races/${day.raceId}` : sessionHref(day.sessionKey)}
+      onClick={day.raceId ? undefined : markSessionOpened}
       data-session-key={day.sessionKey}
       aria-current={day.isToday ? "date" : undefined}
       className={className}

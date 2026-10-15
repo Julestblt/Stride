@@ -8,6 +8,8 @@ import {
   missingRaceFields,
   parseDuration,
   raceSaveSchema,
+  resolveRaceSnapshots,
+  type RaceValues,
 } from "../../src/features/onboarding/goals";
 import {
   createRace,
@@ -15,6 +17,7 @@ import {
   saveGoal,
   saveRace,
 } from "../../src/server/onboarding/goals";
+import { readRaceCourses } from "../../src/server/races/courses";
 
 const userId = "53d17ee9-4940-4be0-8bbe-6c35703a963d";
 const raceId = "8e0d2b3c-7c1a-4e4b-9a55-0c1f0f8d3b21";
@@ -269,5 +272,81 @@ describe("race saves", () => {
     expect(
       await deleteRaces({ context: deleting.context }, { ids: ["nope"] }),
     ).toEqual({ status: "invalid" });
+  });
+});
+
+describe("race course resolution", () => {
+  const typed: RaceValues = {
+    race_kind: "trail",
+    name: "EcoTrail Paris",
+    race_date: "2027-03-20",
+    distance_km: 50,
+    elevation_gain_m: 900,
+    priority: "A",
+    target_duration_seconds: null,
+  };
+  const race = { id: raceId, revision: 1, values: typed };
+
+  it("prefers the imported course distance and elevation", () => {
+    const [resolved] = resolveRaceSnapshots(
+      [race],
+      new Map([[raceId, { distanceM: 48_912, elevationGainM: 1_210 }]]),
+    );
+    expect(resolved).toEqual({
+      ...race,
+      values: { ...typed, distance_km: 48.91, elevation_gain_m: 1_210 },
+    });
+  });
+
+  it("keeps the typed elevation when the course has none", () => {
+    const [resolved] = resolveRaceSnapshots(
+      [race],
+      new Map([[raceId, { distanceM: 48_900, elevationGainM: null }]]),
+    );
+    expect(resolved.values).toMatchObject({
+      distance_km: 48.9,
+      elevation_gain_m: 900,
+    });
+  });
+
+  it("keeps the typed values without a course", () => {
+    expect(resolveRaceSnapshots([race], new Map())).toEqual([race]);
+  });
+
+  it("reads no course when the courses query fails", async () => {
+    const client = {
+      from: () => ({
+        select: () => ({
+          eq: async () => ({ data: null, error: { message: "boom" } }),
+        }),
+      }),
+    } as unknown as SupabaseClient<Database>;
+    await expect(
+      readRaceCourses({ client, userId, email: null, accessToken: "token" }),
+    ).resolves.toEqual(new Map());
+  });
+
+  it("maps course rows by race", async () => {
+    const client = {
+      from: () => ({
+        select: () => ({
+          eq: async () => ({
+            data: [
+              {
+                race_id: raceId,
+                distance_m: "48900.0",
+                elevation_gain_m: 1210,
+              },
+            ],
+            error: null,
+          }),
+        }),
+      }),
+    } as unknown as SupabaseClient<Database>;
+    await expect(
+      readRaceCourses({ client, userId, email: null, accessToken: "token" }),
+    ).resolves.toEqual(
+      new Map([[raceId, { distanceM: 48_900, elevationGainM: 1_210 }]]),
+    );
   });
 });

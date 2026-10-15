@@ -70,6 +70,8 @@ export type ProgramRace = {
   date: string | null;
   priority: "A" | "B" | "C" | null;
   targetSeconds: number | null;
+  distanceKm: number | null;
+  elevationGainM: number | null;
 };
 
 export type ProgramMatch = {
@@ -98,6 +100,7 @@ export type ProgramDay = {
   weekday: string;
   dayNumber: number;
   sessionKey: string | null;
+  raceId: string | null;
   family: SessionFamily;
   title: string;
   summary: string | null;
@@ -286,6 +289,44 @@ function ratio(value: number | null) {
   return value === null ? 1 : Math.min(value, 1.5);
 }
 
+function planRaceIdsOf(state: PlanState) {
+  return new Set([
+    state.plan.primaryRaceId,
+    ...state.plan.raceRoles.map((role) => role.raceId),
+  ]);
+}
+
+export function withRaceValues(
+  state: PlanState,
+  races: ProgramRace[],
+): PlanState {
+  const planRaceIds = planRaceIdsOf(state);
+  const planRaces = races.filter(
+    (race) => planRaceIds.has(race.id) && race.date !== null,
+  );
+  if (planRaces.length === 0) return state;
+  return {
+    ...state,
+    sessions: state.sessions.map((session) => {
+      if (session.kind !== "race") return session;
+      const race = planRaces.find((item) => item.date === session.scheduledOn);
+      if (!race) return session;
+      return {
+        ...session,
+        targets: {
+          ...session.targets,
+          distanceMeters:
+            race.distanceKm !== null
+              ? Math.round(race.distanceKm * 1000)
+              : session.targets.distanceMeters,
+          elevationGainMeters:
+            race.elevationGainM ?? session.targets.elevationGainMeters,
+        },
+      };
+    }),
+  };
+}
+
 export function buildProgram(input: ProgramInput): ProgramOverview {
   const { state, today } = input;
   const paces = input.paces ?? null;
@@ -294,12 +335,13 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
     input.matches.map((match) => [match.sessionKey, match.compliance]),
   );
   const proposalKeys = new Set(input.proposalKeys);
-  const planRaceIds = new Set([
-    state.plan.primaryRaceId,
-    ...state.plan.raceRoles.map((role) => role.raceId),
-  ]);
+  const planRaceIds = planRaceIdsOf(state);
   const raceOn = (date: string) =>
-    input.races.find((race) => race.date === date) ?? null;
+    input.races.find(
+      (race) => race.date === date && planRaceIds.has(race.id),
+    ) ??
+    input.races.find((race) => race.date === date) ??
+    null;
   const planRaceIn = (start: string, end: string) =>
     input.races.find(
       (race) =>
@@ -429,6 +471,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
         return {
           ...base,
           sessionKey: null,
+          raceId: null,
           family: "rest",
           title: familyLabels.rest,
           summary: null,
@@ -460,6 +503,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
       return {
         ...base,
         sessionKey: main.sessionKey,
+        raceId: main.kind === "race" ? (raceOn(date)?.id ?? null) : null,
         family: sessionFamilyOf(main),
         title:
           daySessions.length > 1

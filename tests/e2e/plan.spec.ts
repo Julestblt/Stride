@@ -202,6 +202,30 @@ test("the program is reachable with the keyboard", async ({ page }) => {
   expect(await outline(milestone)).not.toBe("none");
 });
 
+test("a race day opens its race page", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page, "plan@example.com");
+  await page.goto("/plan");
+  await page
+    .getByRole("group", { name: /^Volume hebdomadaire/ })
+    .getByRole("button", { name: /^Semaine \d+, / })
+    .last()
+    .click();
+  const raceDay = page
+    .locator(
+      'a[data-session-key][href="/races/cccccccc-cccc-4ccc-8ccc-cccccccccccc"]',
+    )
+    .filter({ visible: true })
+    .first();
+  await expect(raceDay).toContainText("Marathon de Paris");
+  await raceDay.click();
+  await expect(page).toHaveURL(
+    /\/races\/cccccccc-cccc-4ccc-8ccc-cccccccccccc$/,
+    { timeout: 20_000 },
+  );
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("an unknown session leaves Plan without a panel", async ({ page }) => {
   await signIn(page, "plan@example.com");
   const response = await page.goto("/plan?seance=s-2000-01-01-1");

@@ -5,6 +5,7 @@ import {
   chartDescription,
   programNavigation,
   sessionFamilyOf,
+  withRaceValues,
   type ProgramInput,
 } from "@/features/plans/view/program";
 import { easyRun, planState, thresholdSession } from "./plan-fixture";
@@ -23,6 +24,8 @@ function input(overrides: Partial<ProgramInput> = {}): ProgramInput {
         date: "2026-11-08",
         priority: "A",
         targetSeconds: null,
+        distanceKm: null,
+        elevationGainM: null,
       },
     ],
     ...overrides,
@@ -192,6 +195,8 @@ describe("program overview", () => {
             date: "2026-11-08",
             priority: "A",
             targetSeconds: 11_400,
+            distanceKm: null,
+            elevationGainM: null,
           },
         ],
       }),
@@ -250,6 +255,8 @@ const nestedRaces: ProgramInput["races"] = [
     date: "2026-11-08",
     priority: "A",
     targetSeconds: null,
+    distanceKm: null,
+    elevationGainM: null,
   },
   {
     id: "race-c",
@@ -257,8 +264,89 @@ const nestedRaces: ProgramInput["races"] = [
     date: "2026-11-01",
     priority: "C",
     targetSeconds: 2_670,
+    distanceKm: null,
+    elevationGainM: null,
   },
 ];
+
+describe("race values", () => {
+  const races = (
+    distanceKm: number | null,
+    elevationGainM: number | null,
+  ): ProgramInput["races"] => [
+    {
+      id: "race-a",
+      name: "Marathon de Paris",
+      date: "2026-11-08",
+      priority: "A",
+      targetSeconds: null,
+      distanceKm,
+      elevationGainM,
+    },
+  ];
+  const raceSession = (state: PlanState) =>
+    state.sessions.find((session) => session.kind === "race")!;
+
+  it("applies the resolved race distance and elevation to its race session", () => {
+    const state = withRaceValues(withRace(planState()), races(48.9, 1_210));
+    expect(raceSession(state).targets).toEqual({
+      durationSeconds: 10_800,
+      distanceMeters: 48_900,
+      elevationGainMeters: 1_210,
+    });
+    const week = buildProgram(input({ state, races: races(48.9, 1_210) }))
+      .weeks[3];
+    const day = week.days.find((item) => item.date === "2026-11-08")!;
+    expect(day.summary).toBe("48,9 km");
+    expect(day.elevation).toBe("1\u202f210 m D+");
+    expect(week.totals.distanceEstimated).toBe(false);
+  });
+
+  it("keeps stored targets for missing values and unmatched sessions", () => {
+    const base = withRace(planState());
+    expect(
+      raceSession(withRaceValues(base, races(null, null))).targets,
+    ).toEqual(raceSession(base).targets);
+    expect(withRaceValues(base, [])).toBe(base);
+    const elsewhere = races(48.9, 1_210).map((race) => ({
+      ...race,
+      date: "2026-11-15",
+    }));
+    expect(raceSession(withRaceValues(base, elsewhere)).targets).toEqual(
+      raceSession(base).targets,
+    );
+  });
+
+  it("links a race day to the plan race before another race that day", () => {
+    const other = {
+      ...races(null, null)[0],
+      id: "race-other",
+      name: "Course du même jour",
+      priority: "C" as const,
+    };
+    const week = buildProgram(
+      input({
+        state: withRace(planState()),
+        races: [other, ...races(null, null)],
+      }),
+    ).weeks[3];
+    expect(week.days.find((day) => day.date === "2026-11-08")!.raceId).toBe(
+      "race-a",
+    );
+  });
+
+  it("links race days to their race and leaves other days to the panel", () => {
+    const week = buildProgram(input({ state: withRace(planState()) })).weeks[3];
+    const raceDay = week.days.find((day) => day.date === "2026-11-08")!;
+    expect(raceDay.raceId).toBe("race-a");
+    expect(week.days.filter((day) => day.raceId !== null)).toHaveLength(1);
+    const unmatched = buildProgram(
+      input({ state: withRace(planState()), races: [] }),
+    ).weeks[3].days.find((day) => day.date === "2026-11-08")!;
+    expect(unmatched.raceId).toBeNull();
+    expect(unmatched.sessionKey).toBe("s-2026-11-08-1");
+  });
+});
 
 describe("race programs", () => {
   it("adds a tab and a nested program for a race attached to blocks", () => {

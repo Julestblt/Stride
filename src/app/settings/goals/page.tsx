@@ -6,6 +6,7 @@ import { localToday } from "@/features/app-shell/shell";
 import {
   goalFocuses,
   racePriorities,
+  resolveRaceSnapshots,
   type GoalFocus,
   type RacePriority,
 } from "@/features/onboarding/goals";
@@ -22,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { requireAthlete } from "@/server/app/session";
 import { readGoals } from "@/server/onboarding/goals";
+import { readRaceCourses } from "@/server/races/courses";
 import { saveSettingsGoal } from "@/server/settings/actions";
 
 const focusLabels: Record<GoalFocus, string> = {
@@ -78,14 +80,20 @@ export default async function GoalsSettingsPage({
   }>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const goals = await readGoals(context);
+  const [goals, courses] = await Promise.all([
+    readGoals(context),
+    readRaceCourses(context),
+  ]);
   const today = localToday(new Date());
   const races = goals.races.map((race) => ({
     id: race.id,
     revision: race.revision,
     values: race.values,
   }));
-  const { upcoming, past, primary, missing } = splitRaces(races, today);
+  const { upcoming, past, primary, missing } = splitRaces(
+    resolveRaceSnapshots(races, courses),
+    today,
+  );
   const editing =
     query.course && query.course !== "nouvelle"
       ? (races.find((race) => race.id === query.course) ?? null)
