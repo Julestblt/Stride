@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 108,
-    "html_exports": 109,
-    "matched": 109,
-    "exact": 109,
+    "screenshots": 110,
+    "html_exports": 111,
+    "matched": 111,
+    "exact": 111,
     "high": 0,
     "uncertain": 0
   },
@@ -1430,6 +1430,32 @@
       "original_export_name": "App · Progress · Records · Mobile-html.zip",
       "matched_confidence": "exact",
       "notes": "Approved Records reference; PNG is interpreted visually only; original paths are preserved."
+    },
+    {
+      "id": "app/plan-program/desktop",
+      "area": "app",
+      "screen": "plan-program",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/plan-program/screenshots/desktop.png",
+      "html_reference_path": "design/references/app/plan-program/source/desktop.zip",
+      "original_screenshot_name": "App · Plan · Programme complet · Desktop@2x.png",
+      "original_export_name": "App · Plan · Programme complet · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Full program view: blocks, weekly volume chart, week rows with the current week expanded. Added 2026-10-15."
+    },
+    {
+      "id": "app/plan-program/mobile",
+      "area": "app",
+      "screen": "plan-program",
+      "state": "default",
+      "device": "mobile",
+      "screenshot_path": "design/references/app/plan-program/screenshots/mobile.png",
+      "html_reference_path": "design/references/app/plan-program/source/mobile.zip",
+      "original_screenshot_name": "App · Plan · Programme complet · Mobile@2x.png",
+      "original_export_name": "App · Plan · Programme complet · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Full program view: blocks, weekly volume chart, week rows with the current week expanded. Added 2026-10-15."
     }
   ],
   "unresolved": []
