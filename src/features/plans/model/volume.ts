@@ -19,6 +19,7 @@ export function sessionDistance(
   session: PlanSession,
   paces: IntensityPaces | null = null,
 ): SessionDistance | null {
+  if (!isRunningSession(session)) return null;
   if (session.targets.distanceMeters !== null)
     return { meters: session.targets.distanceMeters, estimated: false };
   const totals = structureTotals(session.structure, paces);

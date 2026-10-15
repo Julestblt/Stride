@@ -41,6 +41,16 @@ const thresholdMeters =
   Math.round((600 / 360) * 1000);
 
 describe("session distance", () => {
+  it("gives strength and mobility sessions no distance", () => {
+    const run = heartRateEasyRun(20);
+    for (const [sport, kind] of [
+      ["strength", "strength"],
+      ["strength", "mobility"],
+      ["run", "mobility"],
+    ] as const)
+      expect(sessionDistance({ ...run, sport, kind }, paces)).toBeNull();
+  });
+
   it("estimates a heart-rate-targeted step from the athlete's pace", () => {
     expect(sessionDistance(heartRateEasyRun(30), paces)).toEqual({
       meters: 5_000,
