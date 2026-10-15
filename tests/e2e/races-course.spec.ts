@@ -29,6 +29,24 @@ test("a populated race opens every workspace section on desktop and mobile", asy
     await expect(
       page.getByText("parcours-test.gpx").nth(viewport.width < 500 ? 1 : 0),
     ).toBeVisible();
+    const pace = page.locator("dl > div", { hasText: "Allure moy" });
+    await expect(pace).toContainText("12:00 /km");
+    if (viewport.width > 500)
+      await expect(pace).toContainText("11:46 hors ravitos");
+    const reading = page.locator("details", { hasText: "Lecture de Stride" });
+    const summary = reading.locator("summary");
+    await expect(summary.getByText("Lire l’analyse")).toBeVisible();
+    await expect(reading).not.toHaveAttribute("open");
+    await summary.focus();
+    await summary.press("Enter");
+    await expect(reading).toHaveAttribute("open");
+    await expect(summary.getByText("Réduire")).toBeVisible();
+    await summary.click();
+    await expect(reading).not.toHaveAttribute("open");
+    await expect(
+      page.getByRole("link", { name: "Stratégie ↓" }),
+    ).toHaveAttribute("href", "#strategie");
+    await expect(summary.getByRole("link")).toHaveCount(0);
     const chart = page
       .locator('svg[aria-label^="Profil altimétrique"]:visible')
       .first();
@@ -111,6 +129,14 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
   );
   await expect(page.getByText("Simulation par tronçon")).toHaveCount(0);
   await expect(page.getByText("Marche en pente")).toHaveCount(0);
+  await expect(
+    page.locator("dl > div", { hasText: "Allure moy" }),
+  ).toContainText("3:54 /km");
+  await expect(page.getByText("sur l’objectif")).toBeVisible();
+  const reading = page.locator("details", { hasText: "Repères de course" });
+  await expect(page.getByRole("link", { name: "Stratégie ↓" })).toHaveCount(0);
+  await reading.locator("summary").click();
+  await expect(reading).toHaveAttribute("open");
   await page.screenshot({
     path: "test-results/race-road-1440.png",
     fullPage: true,

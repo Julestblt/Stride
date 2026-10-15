@@ -1,7 +1,8 @@
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
+import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MonoLabel } from "@/components/stride/mono-label";
-import { PulseDot } from "@/components/stride/marks";
+import { StrideMark } from "@/components/stride/stride-mark";
 import {
   formatClock,
   formatDecimal,
@@ -13,7 +14,7 @@ import {
 } from "../format";
 import type { ProfileData } from "../profile";
 import { formatShortDate, type RaceSummary } from "../race";
-import type { BriefItem, Reading, StrategyItem } from "../reading";
+import type { Reading, StrategyItem } from "../reading";
 import { glyphFor, type RaceWeather } from "../weather";
 import type { CourseModel, RacePlanModel, Scenario } from "../workspace";
 import { segmentNight } from "../workspace";
@@ -21,70 +22,59 @@ import { ProfileChart } from "./profile-chart";
 import { CardLabel, Figure, LegendItem, RaceCard, StatusPill } from "./race-ui";
 import { WeatherIcon } from "./weather-icon";
 
-const briefTones: Record<
-  BriefItem["key"],
-  "provider" | "night" | "accent" | "success"
-> = {
-  weather: "provider",
-  night: "night",
-  walk: "accent",
-  finish: "success",
-  pace: "accent",
-};
-
 export function ReadingCard({
   reading,
-  brief,
-  source,
   road = false,
+  strategy = false,
 }: {
   reading: Reading;
-  brief: BriefItem[];
-  source: string;
   road?: boolean;
+  strategy?: boolean;
 }) {
   return (
-    <RaceCard className="gap-8 px-5 py-6 sm:flex-row sm:flex-wrap sm:px-7 sm:py-6.5">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-[1.5_1_460px]">
-        <CardLabel coach>
-          <span className="max-sm:hidden">
-            {road ? "Repères de course" : "Lecture de Stride"} · {source}
+    <div className="relative">
+      <details className="group rounded-panel border border-border bg-surface">
+        <summary
+          className={cn(
+            "flex cursor-pointer list-none flex-col gap-2 rounded-panel px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-14 sm:flex-row sm:items-center sm:gap-3.5 sm:px-5 [&::-webkit-details-marker]:hidden",
+            strategy && "sm:pr-31",
+          )}
+        >
+          <MonoLabel className="flex shrink-0 items-center gap-2 whitespace-nowrap max-sm:text-nano">
+            <StrideMark className="size-3.5 shrink-0" />
+            {road ? "Repères de course" : "Lecture de Stride"}
+          </MonoLabel>
+          <span
+            aria-hidden="true"
+            className="h-4.5 w-px shrink-0 bg-border-strong max-sm:hidden"
+          />
+          <span className="min-w-0 text-base leading-[1.35] font-semibold tracking-[-0.01em] sm:flex-1 sm:truncate">
+            {reading.title}
           </span>
-          <span className="sm:hidden">Le jour J en bref</span>
-        </CardLabel>
-        <p className="text-[1.375rem] leading-[1.15] font-semibold tracking-[-0.02em] text-balance sm:text-headline">
-          {reading.title}
-        </p>
-        <p className="max-w-180 text-body leading-[1.65] text-muted">
-          {reading.body}
-        </p>
-      </div>
-      <div className="flex min-w-0 flex-col sm:flex-[1_1_280px]">
-        <MonoLabel className="pb-2.5 max-sm:hidden">
-          Le jour J en bref
-        </MonoLabel>
-        <dl className="grid grid-cols-2 gap-x-4 sm:grid-cols-1">
-          {brief.map((item) => (
-            <div
-              key={item.key}
-              className="flex flex-col gap-1 border-t border-border py-3.5"
-            >
-              <MonoLabel
-                size="micro"
-                asChild
-                className="flex items-center gap-2 sm:text-label"
-              >
-                <dt>
-                  <PulseDot tone={briefTones[item.key]} breathing={false} />
-                  {item.label}
-                </dt>
-              </MonoLabel>
-              <dd className="text-body font-medium">{item.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </RaceCard>
+          <span className="flex min-h-7 items-center gap-1.5 text-meta whitespace-nowrap text-muted sm:min-h-0 sm:border-l sm:border-border sm:pl-3.5">
+            <span className="group-open:hidden">Lire l’analyse</span>
+            <span className="hidden group-open:inline">Réduire</span>
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="size-3 shrink-0 group-open:rotate-180 motion-safe:transition-transform motion-safe:duration-150"
+            />
+          </span>
+        </summary>
+        <div className="px-4 pb-4 sm:mx-5 sm:border-t sm:border-border sm:px-0 sm:pt-3.5 sm:pb-5.5 sm:pl-5.5">
+          <p className="max-w-205 border-t border-border pt-3.5 text-sm leading-[1.65] text-muted sm:border-t-0 sm:pt-0 sm:text-body sm:leading-[1.65]">
+            {reading.body}
+          </p>
+        </div>
+      </details>
+      {strategy && (
+        <a
+          href="#strategie"
+          className="absolute top-3 right-4 rounded-tag text-meta whitespace-nowrap text-accent hover:underline focus-visible:outline-2 focus-visible:outline-ring sm:top-4.5 sm:right-5"
+        >
+          Stratégie ↓
+        </a>
+      )}
+    </div>
   );
 }
 
@@ -748,7 +738,7 @@ export function SimulationCard({
 
 export function StrategyCard({ items }: { items: StrategyItem[] }) {
   return (
-    <RaceCard className="lg:flex-1">
+    <RaceCard id="strategie" className="scroll-mt-6 lg:flex-1">
       <CardLabel coach>Stratégie de course</CardLabel>
       <ol>
         {items.map((item, index) => (

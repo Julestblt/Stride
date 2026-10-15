@@ -9,6 +9,7 @@ import {
   formatDuration,
   formatInteger,
   formatKm,
+  formatPace,
 } from "../format";
 import {
   daysUntil,
@@ -20,6 +21,8 @@ import {
   type RaceSummary,
   type StoredCourse,
 } from "../race";
+import { stopTotalSeconds, targetPace } from "../simulation";
+import type { Waypoint } from "../waypoints";
 import { RaceSettingsDialog } from "./race-settings-dialog";
 
 function Countdown({
@@ -116,19 +119,72 @@ function CourseStatus({
 
 type Stat = {
   key: string;
-  value: string;
-  label: string;
+  value: React.ReactNode;
+  label: React.ReactNode;
   detail: React.ReactNode;
   edit?: boolean;
 };
+
+function paceStat(
+  race: RaceSummary,
+  plan: RacePlan,
+  course: StoredCourse | null,
+  waypoints: Waypoint[],
+): Stat {
+  const distanceM =
+    course?.distanceM ?? (race.distanceKm ? race.distanceKm * 1000 : null);
+  const stopSeconds =
+    course && race.kind !== "road"
+      ? stopTotalSeconds(waypoints, course.distanceM, plan)
+      : 0;
+  const pace = targetPace({
+    targetSeconds: race.targetSeconds,
+    distanceM,
+    stopSeconds,
+  });
+  return {
+    key: "pace",
+    value: pace ? (
+      <>
+        {formatPace(pace.overall)}
+        <span className="text-meta leading-none font-normal text-muted-foreground sm:text-base">
+          {" "}
+          /km
+        </span>
+      </>
+    ) : (
+      "—"
+    ),
+    label: (
+      <>
+        <span className="sm:hidden">Allure moy.</span>
+        <span className="max-sm:hidden">Allure moyenne</span>
+      </>
+    ),
+    detail: !race.targetSeconds
+      ? "avec un objectif"
+      : !pace
+        ? "avec la distance"
+        : stopSeconds === 0
+          ? "sur l’objectif"
+          : pace.moving !== null
+            ? `${formatPace(pace.moving)} hors ravitos`
+            : "ravitos plus longs que l’objectif",
+  };
+}
 
 function stats(
   race: RaceSummary,
   plan: RacePlan,
   course: StoredCourse | null,
+  waypoints: Waypoint[],
 ): Stat[] {
   const announcedKm = race.distanceKm;
   const announcedGain = race.elevationGainM;
+  const loss =
+    course?.elevationLossM != null
+      ? `D− ${formatInteger(course.elevationLossM)}`
+      : null;
   const start = plan.startMinutes ?? defaultStartMinutes;
   const scenarios = [
     plan.ambitiousSeconds &&
@@ -156,20 +212,20 @@ function stats(
           : announcedGain !== null
             ? `${formatInteger(announcedGain)} m`
             : "—",
-      label: "D+",
-      detail:
+      label: (
+        <>
+          D+
+          {loss && <span className="sm:hidden"> · {loss}</span>}
+        </>
+      ),
+      detail: [
+        loss && `${loss} m`,
         course?.elevationGainM != null
           ? `GPX${announcedGain !== null ? ` · annoncé ${formatInteger(announcedGain)} m` : ""}`
           : "annoncé",
-    },
-    {
-      key: "loss",
-      value:
-        course?.elevationLossM != null
-          ? `${formatInteger(course.elevationLossM)} m`
-          : "—",
-      label: "D−",
-      detail: course ? "GPX" : "avec le GPX",
+      ]
+        .filter(Boolean)
+        .join(" · "),
     },
     {
       key: "start",
@@ -194,6 +250,7 @@ function stats(
           : "à définir",
       edit: true,
     },
+    paceStat(race, plan, course, waypoints),
     {
       key: "cutoff",
       value: plan.cutoffSeconds ? formatDuration(plan.cutoffSeconds) : "—",
@@ -210,15 +267,16 @@ export function RaceHeader({
   race,
   plan,
   course,
-  waypointCount,
+  waypoints,
   today,
 }: {
   race: RaceSummary;
   plan: RacePlan;
   course: StoredCourse | null;
-  waypointCount: number;
+  waypoints: Waypoint[];
   today: string;
 }) {
+  const waypointCount = waypoints.length;
   const base = `/races/${race.id}`;
   const meta = [
     `Course ${race.priority}`,
@@ -308,7 +366,7 @@ export function RaceHeader({
         )}
       </section>
       <dl className="grid grid-cols-3 overflow-hidden rounded-panel border border-border bg-surface sm:grid-cols-[repeat(auto-fit,minmax(150px,1fr))]">
-        {stats(race, plan, course).map((stat, index) => (
+        {stats(race, plan, course, waypoints).map((stat, index) => (
           <div
             key={stat.key}
             className={cn(

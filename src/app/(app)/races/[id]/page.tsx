@@ -2,9 +2,7 @@ import { z } from "zod";
 import { walkPortions, walkSummary } from "@/features/races/grade";
 import {
   courseReading,
-  dayBrief,
   raceStrategy,
-  roadBrief,
   roadReading,
 } from "@/features/races/reading";
 import { MapCard } from "@/features/races/components/map-card";
@@ -28,15 +26,6 @@ import { listCourseActivities } from "@/server/races/activities";
 const scenarioSchema = z
   .enum(["ambitious", "target", "cautious"])
   .catch("target");
-
-const forecastStamp = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "numeric",
-  month: "long",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Paris",
-});
 
 export default async function RaceCoursePage({
   params,
@@ -90,10 +79,6 @@ export default async function RaceCoursePage({
       ...walkSummary(walkPortions(model.course, threshold, model.grades)),
     }),
   );
-  const source =
-    weather?.mode === "forecast"
-      ? `prévisions du ${forecastStamp.format(new Date()).replace(".", "")}`
-      : "sur ton GPX et ton objectif";
   return (
     <>
       {planned ? (
@@ -109,18 +94,8 @@ export default async function RaceCoursePage({
                   date: data.race.date,
                 })
           }
-          brief={
-            road
-              ? roadBrief({ model, planned, weather })
-              : dayBrief({
-                  model,
-                  planned,
-                  weather,
-                  walkGrade: data.plan.walkGradePercent,
-                })
-          }
-          source={source}
           road={road}
+          strategy={!road}
         />
       ) : (
         <TargetMissing race={data.race} plan={data.plan} />

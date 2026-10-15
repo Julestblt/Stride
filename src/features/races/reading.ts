@@ -18,12 +18,6 @@ import {
 import { isStation } from "./waypoints";
 import type { CourseModel, RacePlanModel } from "./workspace";
 
-export type BriefItem = {
-  key: "weather" | "night" | "walk" | "finish" | "pace";
-  label: string;
-  value: string;
-};
-
 export type Reading = { title: string; body: string };
 export type StrategyItem = { title: string; body: string };
 
@@ -56,42 +50,6 @@ export function roadReading({
     title: `${formatDecimal(distanceKm)} km sur route · ${formatPace(pace)} /km visés.`,
     body: sentences.join(" "),
   };
-}
-
-export function roadBrief({
-  model,
-  planned,
-  weather,
-}: {
-  model: CourseModel;
-  planned: RacePlanModel;
-  weather: RaceWeather | null;
-}): BriefItem[] {
-  const pace = planned.scenario.seconds / (model.course.distanceM / 1000);
-  const items: BriefItem[] = [
-    { key: "pace", label: "Allure visée", value: `${formatPace(pace)} /km` },
-  ];
-  if (weather) {
-    const { min, max } = temperatureRange(weather.slots);
-    items.push({
-      key: "weather",
-      label: "Météo",
-      value:
-        weather.mode === "normals"
-          ? `Normales · ${min === max ? `${min} °C` : `${min} → ${max} °C`}`
-          : min === max
-            ? `${min} °C`
-            : `${min} → ${max} °C`,
-    });
-  }
-  const finish = planned.simulation.passages.at(-1);
-  if (finish)
-    items.push({
-      key: "finish",
-      label: "Arrivée prévue",
-      value: formatClock(finish.clockMinutes),
-    });
-  return items;
 }
 
 function kmText(meters: number) {
@@ -220,62 +178,6 @@ function forecastTitle(weather: RaceWeather, finishesInDark: boolean) {
     `arrivée ${finishesInDark ? "de nuit" : "de jour"}${last.precipitationProbability < 30 ? " au sec" : ""}`,
   ];
   return `${parts.join(", ")}.`;
-}
-
-export function dayBrief({
-  model,
-  planned,
-  weather,
-  walkGrade,
-}: {
-  model: CourseModel;
-  planned: RacePlanModel;
-  weather: RaceWeather | null;
-  walkGrade: number;
-}): BriefItem[] {
-  const walk = model.walkByThreshold.find(
-    (item) => item.threshold === walkGrade,
-  );
-  const finish =
-    planned.simulation.passages[planned.simulation.passages.length - 1];
-  const items: BriefItem[] = [];
-  if (weather) {
-    const { min, max } = temperatureRange(weather.slots);
-    const windows = rainWindows(weather.slots);
-    items.push({
-      key: "weather",
-      label: "Météo",
-      value:
-        weather.mode === "normals"
-          ? `Normales · ${min} → ${max} °C`
-          : `${min} → ${max} °C${windows[0] ? ` · ${rainName(windows[0].from.code).toLowerCase()} ${hourText(windows[0].from.clockMinutes)}–${hourText(windows[0].to.clockMinutes + 60)}` : ""}`,
-    });
-  }
-  if (planned.night && planned.night.totalSeconds > 0) {
-    const evening = planned.night.windows.findIndex(
-      (window) => window.fromSeconds > 0,
-    );
-    items.push({
-      key: "night",
-      label: "Nuit",
-      value:
-        weather?.mode === "forecast" && evening >= 0
-          ? `Dès ${formatClock(planned.simulation.passages[0].clockMinutes + planned.night.windows[evening].fromSeconds / 60)} · ${kmText(planned.nightKm[evening].fromM)} → arrivée`
-          : `${formatDuration(planned.night.totalSeconds)} à la frontale`,
-    });
-  }
-  if (walk)
-    items.push({
-      key: "walk",
-      label: "Marche",
-      value: `${plural(walk.count, "portion")} ≥ ${walkGrade} % · ${formatDecimal(walk.distanceM / 1000)} km`,
-    });
-  items.push({
-    key: "finish",
-    label: "Arrivée prévue",
-    value: `${formatClock(finish.clockMinutes)}${planned.finishMarginSeconds !== null ? ` · marge ${formatDuration(Math.max(0, planned.finishMarginSeconds))}` : ""}`,
-  });
-  return items;
 }
 
 export function raceStrategy({
