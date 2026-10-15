@@ -4,8 +4,8 @@ import { mondayOf } from "@/features/plans/model/dates";
 import { formatLongDay } from "@/features/plans/view/format";
 import { weekPosition } from "@/features/plans/view/plan-view";
 import { requireAthlete } from "@/server/app/session";
-import { loadPlanDraft } from "@/server/plans/draft";
-import { DraftBanner, PlanFrame } from "../../_components/plan-frame";
+import { loadPlanOverview } from "@/server/plans/overview";
+import { PlanFrame } from "../../_components/plan-frame";
 import {
   SessionDetail,
   WeekSessionsAside,
@@ -20,12 +20,13 @@ export default async function PlanSessionPage({
   params: Promise<{ key: string }>;
 }) {
   const [context, { key }] = await Promise.all([requireAthlete(), params]);
-  const { plan } = await loadPlanDraft(context);
-  if (plan.status !== "ready") notFound();
-  const session = plan.state.sessions.find((item) => item.sessionKey === key);
+  const overview = await loadPlanOverview(context);
+  if (!overview) notFound();
+  const { state } = overview.plan;
+  const session = state.sessions.find((item) => item.sessionKey === key);
   if (!session) notFound();
   const weekStart = mondayOf(session.scheduledOn);
-  const position = weekPosition(plan.state, weekStart);
+  const position = weekPosition(state, weekStart);
   return (
     <PlanFrame
       crumbs={[
@@ -34,12 +35,10 @@ export default async function PlanSessionPage({
         { label: `${formatLongDay(session.scheduledOn)} · ${session.title}` },
       ]}
     >
-      <DraftBanner />
       <div className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
         <WeekSessionsAside
-          state={plan.state}
+          state={state}
           weekStart={weekStart}
-          report={plan.report}
           selected={key}
           className="max-lg:hidden lg:sticky lg:top-0 lg:self-start"
         />
@@ -48,7 +47,6 @@ export default async function PlanSessionPage({
           block={position.block}
           weekNumber={position.number}
           weekStart={weekStart}
-          targets={plan.targets}
         />
       </div>
     </PlanFrame>

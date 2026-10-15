@@ -10,27 +10,22 @@ export default function Loading() {
         className="flex flex-col gap-7 sm:gap-9"
       >
         <div aria-hidden="true" className="flex flex-col gap-3">
-          <Skeleton className="h-12 w-3/4" />
-          <Skeleton className="h-6 w-1/2" />
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-11 w-3/4" />
+          <Skeleton className="h-5 w-1/2 max-sm:hidden" />
         </div>
-        <Skeleton aria-hidden="true" className="h-14 w-full rounded-card" />
-        <div
+        <Skeleton
           aria-hidden="true"
-          className="grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]"
-        >
-          <div className="flex flex-col gap-2 max-lg:hidden">
-            {Array.from({ length: 8 }, (_, index) => (
-              <Skeleton key={index} className="h-9 w-full" />
-            ))}
-          </div>
-          <div className="flex flex-col gap-8">
-            <Skeleton className="h-40 w-full max-sm:hidden" />
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: 5 }, (_, index) => (
-                <Skeleton key={index} className="h-16 w-full" />
-              ))}
-            </div>
-          </div>
+          className="h-31 w-full rounded-card sm:h-17 sm:rounded-panel"
+        />
+        <Skeleton
+          aria-hidden="true"
+          className="h-36 w-full rounded-card sm:h-56 sm:rounded-panel"
+        />
+        <div aria-hidden="true" className="flex flex-col gap-2">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Skeleton key={index} className="h-14 w-full" />
+          ))}
         </div>
       </div>
     </PlanFrame>

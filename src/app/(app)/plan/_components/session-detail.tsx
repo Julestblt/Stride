@@ -10,7 +10,6 @@ import type {
   PlanSession,
   PlanState,
 } from "@/features/plans/model/plan";
-import type { TrainingTargets } from "@/features/plans/targets/targets";
 import {
   formatDuration,
   formatLongDay,
@@ -22,7 +21,6 @@ import {
   sessionStats,
   stepViews,
 } from "@/features/plans/view/plan-view";
-import type { ValidationReport } from "@/features/plans/validation/report";
 import { sessionHref, weekHref } from "./week-view";
 
 function StepChart({ session }: { session: PlanSession }) {
@@ -76,17 +74,15 @@ function StepChart({ session }: { session: PlanSession }) {
 export function WeekSessionsAside({
   state,
   weekStart,
-  report,
   selected,
   className,
 }: {
   state: PlanState;
   weekStart: string;
-  report: ValidationReport;
   selected: string;
   className?: string;
 }) {
-  const rows = sessionRows(state, weekStart, report);
+  const rows = sessionRows(state, weekStart);
   return (
     <nav
       aria-label="Séances de la semaine"
@@ -121,15 +117,13 @@ export function SessionDetail({
   block,
   weekNumber,
   weekStart,
-  targets,
 }: {
   session: PlanSession;
   block: PlanBlock;
   weekNumber: number;
   weekStart: string;
-  targets: TrainingTargets;
 }) {
-  const stats = sessionStats(session, targets);
+  const stats = sessionStats(session);
   const steps = stepViews(session);
   const statItems = [
     { label: "Total", value: stats.total },

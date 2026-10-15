@@ -114,3 +114,33 @@ export const terrainLabels: Record<string, string> = {
   treadmill: "Tapis",
   mixed: "Mixte",
 };
+
+const fullDate = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const shortMonth = new Intl.DateTimeFormat("fr-FR", {
+  month: "short",
+  timeZone: "UTC",
+});
+
+export function formatFullDate(iso: string) {
+  return fullDate.format(date(iso));
+}
+
+export function formatDateSpan(start: string, end: string) {
+  return `${dayMonth.format(date(start))} → ${dayMonth.format(date(end))}`;
+}
+
+export function formatMonthSpan(start: string, end: string) {
+  const first = shortMonth.format(date(start));
+  const last = shortMonth.format(date(end));
+  return first === last ? first : `${first}–${last}`;
+}
+
+export function formatTotalHours(seconds: number) {
+  return `${formatInteger(seconds / 3600)} h`;
+}

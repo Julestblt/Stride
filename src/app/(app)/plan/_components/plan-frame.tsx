@@ -5,15 +5,17 @@ import {
 } from "@/features/data-activity/components/status";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { StrideMark } from "@/components/stride/stride-mark";
+import { cn } from "@/lib/utils";
 
 export type Crumb = { label: string; href?: string };
 
 export function PlanFrame({
   crumbs,
+  className,
   children,
 }: {
   crumbs: Crumb[];
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -65,23 +67,15 @@ export function PlanFrame({
         <DataActivityThread />
       </header>
       <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
-        <main className="mx-auto flex w-full max-w-360 flex-col gap-7 px-5 pt-6 pb-18 sm:gap-9 sm:px-[clamp(20px,4vw,56px)] sm:pt-10">
+        <main
+          className={cn(
+            "mx-auto flex w-full max-w-360 flex-col gap-7 px-5 pt-6 pb-18 sm:gap-9 sm:px-[clamp(20px,4vw,56px)] sm:pt-10",
+            className,
+          )}
+        >
           {children}
         </main>
       </div>
     </>
-  );
-}
-
-export function DraftBanner() {
-  return (
-    <div className="flex items-start gap-3 rounded-card border border-warning-border bg-surface-inset px-4 py-3">
-      <StrideMark className="mt-0.5 size-3.5 shrink-0" />
-      <p className="text-meta text-muted">
-        <span className="font-semibold text-foreground">Brouillon</span> calculé
-        par Stride à partir de tes données. Il n’est pas encore enregistré ni
-        revu par le coach.
-      </p>
-    </div>
   );
 }

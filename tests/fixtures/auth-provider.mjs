@@ -438,6 +438,342 @@ tables.athlete_goals.push({
   user_id: planUser.id,
   focus: "half_marathon_marathon",
 });
+const planId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const isoDay = (time) => new Date(time).toISOString().slice(0, 10);
+const shiftDay = (iso, days) =>
+  isoDay(Date.parse(`${iso}T00:00:00Z`) + days * day);
+const mondayOf = (iso) =>
+  shiftDay(iso, -((new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7));
+const planToday = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Europe/Paris",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
+const planRaceDay = tables.athlete_races.find(
+  (race) => race.user_id === planUser.id,
+).race_date;
+const planStart = shiftDay(mondayOf(planToday), -7);
+const planWeekCount =
+  (Date.parse(mondayOf(planRaceDay)) - Date.parse(planStart)) / (7 * day) + 1;
+const planSecondaryRaceId = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+tables.athlete_races.push({
+  id: planSecondaryRaceId,
+  user_id: planUser.id,
+  name: "10K Vincennes",
+  race_kind: "road",
+  race_date: shiftDay(planStart, 7 * 7 + 6),
+  distance_km: 10,
+  elevation_gain_m: null,
+  priority: "C",
+  target_duration_seconds: 2_670,
+  revision: 1,
+  updated_at: "2026-01-01T00:00:00Z",
+});
+const step = (seconds, intensity, type = "work") => ({
+  type,
+  end: { kind: "time", seconds },
+  target: { kind: "rpe", min: 3, max: 4 },
+  intensity,
+});
+const planSessionTemplates = {
+  easy: (minutes) => ({
+    sport: "run",
+    kind: "easy",
+    title: "Footing",
+    purpose: "Endurance fondamentale en aisance respiratoire.",
+    terrain: "road",
+    durationSeconds: minutes * 60,
+    distanceMeters: Math.round(minutes * 166),
+    elevationGainMeters: null,
+    structure: [step(minutes * 60, "easy")],
+  }),
+  threshold: () => ({
+    sport: "run",
+    kind: "threshold",
+    title: "Seuil · 4 × 6’",
+    purpose: "Développer l’allure seuil sans se mettre dans le rouge.",
+    terrain: "road",
+    durationSeconds: 3_300,
+    distanceMeters: 9_600,
+    elevationGainMeters: null,
+    structure: [
+      step(900, "easy", "warmup"),
+      {
+        type: "repeat",
+        count: 4,
+        steps: [step(360, "threshold"), step(90, "recovery", "recovery")],
+      },
+      step(600, "easy", "cooldown"),
+    ],
+  }),
+  strength: () => ({
+    sport: "strength",
+    kind: "strength",
+    title: "Renfo haut du corps",
+    purpose: "Gainage et haut du corps pour tenir la posture.",
+    terrain: null,
+    durationSeconds: 1_800,
+    distanceMeters: null,
+    elevationGainMeters: null,
+    structure: [step(1_800, "easy")],
+  }),
+  hills: () => ({
+    sport: "run",
+    kind: "hills",
+    title: "Côtes · 8 × 3’",
+    purpose: "Force spécifique en montée.",
+    terrain: "trail",
+    durationSeconds: 4_200,
+    distanceMeters: 9_000,
+    elevationGainMeters: 450,
+    structure: [
+      step(1_200, "easy", "warmup"),
+      {
+        type: "repeat",
+        count: 8,
+        steps: [step(180, "marathon"), step(120, "recovery", "recovery")],
+      },
+      step(600, "easy", "cooldown"),
+    ],
+  }),
+  long: (minutes) => ({
+    sport: "trail",
+    kind: "long",
+    title: "Sortie longue trail",
+    purpose: "Temps sur les pieds en terrain varié.",
+    terrain: "trail",
+    durationSeconds: minutes * 60,
+    distanceMeters: Math.round(minutes * 157),
+    elevationGainMeters: minutes * 5,
+    structure: [step(minutes * 60, "easy")],
+  }),
+  race: () => ({
+    sport: "run",
+    kind: "race",
+    title: "Marathon de Paris",
+    purpose: "Course objectif.",
+    terrain: "road",
+    durationSeconds: 12_600,
+    distanceMeters: 42_195,
+    elevationGainMeters: null,
+    structure: [step(12_600, "marathon")],
+  }),
+};
+const planBlockSizes = [4, planWeekCount - 13, 6, 3];
+const planBlockDefinitions = [
+  [
+    "b-reconstruction",
+    "build",
+    "Reconstruction",
+    "Reprendre du volume sans casse, réintroduire le seuil et les côtes.",
+  ],
+  [
+    "b-volume",
+    "base",
+    "Volume",
+    "Monter le temps hebdomadaire et la sortie longue.",
+  ],
+  [
+    "b-specifique",
+    "specific",
+    "Spécifique",
+    "Allure marathon et sorties longues spécifiques.",
+  ],
+  [
+    "b-affutage",
+    "taper",
+    "Affûtage",
+    "−30 % puis −50 % de volume, l’intensité reste.",
+  ],
+];
+const planWeeks = [];
+const planSessions = [];
+let planWeekIndex = 0;
+planBlockDefinitions.forEach(([blockKey], blockIndex) => {
+  for (let inBlock = 0; inBlock < planBlockSizes[blockIndex]; inBlock++) {
+    const weekStart = shiftDay(planStart, planWeekIndex * 7);
+    const weekType =
+      blockIndex === 3
+        ? ["taper", "taper", "race"][inBlock]
+        : (inBlock + 1) % 4 === 0
+          ? "recovery"
+          : "build";
+    const longMinutes = 90 + planWeekIndex * 5;
+    const plan =
+      weekType === "race"
+        ? [
+            [1, planSessionTemplates.easy(40)],
+            [3, planSessionTemplates.easy(30)],
+          ]
+        : weekType === "recovery" || weekType === "taper"
+          ? [
+              [1, planSessionTemplates.easy(40)],
+              [2, planSessionTemplates.threshold()],
+              [3, planSessionTemplates.easy(40)],
+              [6, planSessionTemplates.long(75)],
+            ]
+          : [
+              [1, planSessionTemplates.easy(50)],
+              [2, planSessionTemplates.threshold()],
+              [3, planSessionTemplates.easy(45)],
+              [4, planSessionTemplates.strength()],
+              [5, planSessionTemplates.hills()],
+              [6, planSessionTemplates.long(longMinutes)],
+            ];
+    if (weekType === "race")
+      plan.push([
+        (Date.parse(planRaceDay) - Date.parse(weekStart)) / day,
+        planSessionTemplates.race(),
+      ]);
+    const scheduled = plan
+      .map(([offset, content]) => ({
+        date: shiftDay(weekStart, offset),
+        content,
+      }))
+      .filter(({ date }) => date <= planRaceDay);
+    for (const { date, content } of scheduled)
+      planSessions.push({
+        plan_id: planId,
+        user_id: planUser.id,
+        valid_from_version: 1,
+        valid_to_version: null,
+        session_key: `s-${date}-1`,
+        scheduled_on: date,
+        sport: content.sport,
+        kind: content.kind,
+        title: content.title,
+        purpose: content.purpose,
+        is_key: ["threshold", "long", "race"].includes(content.kind),
+        priority: content.kind === "race" ? "high" : "normal",
+        targets: {
+          durationSeconds: content.durationSeconds,
+          distanceMeters: content.distanceMeters,
+          elevationGainMeters: content.elevationGainMeters,
+        },
+        structure: content.structure,
+        terrain: content.terrain,
+        origin: "coach",
+        contingencies: [],
+      });
+    const current =
+      weekStart <= planToday && planToday <= shiftDay(weekStart, 6);
+    planWeeks.push({
+      plan_id: planId,
+      user_id: planUser.id,
+      valid_from_version: 1,
+      valid_to_version: null,
+      week_key: `w-${weekStart}`,
+      week_start: weekStart,
+      block_key: blockKey,
+      week_type: weekType,
+      target_duration_s: scheduled.reduce(
+        (total, { content }) => total + content.durationSeconds,
+        0,
+      ),
+      target_distance_m: null,
+      target_elevation_m: null,
+      quality_sessions: 1,
+      long_run_target_s: longMinutes * 60,
+      intensity_split: { easyPct: 85, moderatePct: 5, hardPct: 10 },
+      notes: current
+        ? "Une séance de qualité, une de côtes, une sortie longue trail. Garde le footing de jeudi vraiment facile."
+        : null,
+    });
+    planWeekIndex += 1;
+  }
+});
+let planWeekCursor = 0;
+const planBlocks = planBlockDefinitions.map(
+  ([blockKey, kind, name, objective], blockIndex) => {
+    const startsOn = shiftDay(planStart, planWeekCursor * 7);
+    planWeekCursor += planBlockSizes[blockIndex];
+    return {
+      plan_id: planId,
+      user_id: planUser.id,
+      valid_from_version: 1,
+      valid_to_version: null,
+      block_key: blockKey,
+      kind,
+      name,
+      starts_on: startsOn,
+      ends_on:
+        blockIndex === 3
+          ? planRaceDay
+          : shiftDay(planStart, planWeekCursor * 7 - 1),
+      objective,
+      race_id: blockIndex === 1 ? planSecondaryRaceId : null,
+    };
+  },
+);
+const pastPlanSessions = planSessions.filter(
+  (session) => session.scheduled_on < planToday,
+);
+const nextPlanSession = planSessions.find(
+  (session) => session.scheduled_on > planToday && session.kind !== "race",
+);
+Object.assign(tables, {
+  training_plans: [
+    {
+      id: planId,
+      user_id: planUser.id,
+      status: "active",
+      title: "Marathon de Paris",
+      starts_on: planStart,
+      ends_on: planRaceDay,
+      time_zone: "Europe/Paris",
+      primary_race_id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      active_version: 3,
+    },
+  ],
+  plan_versions: [
+    {
+      plan_id: planId,
+      user_id: planUser.id,
+      version: 3,
+      race_roles: [
+        { raceId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", role: "primary" },
+        { raceId: planSecondaryRaceId, role: "secondary" },
+      ],
+      confidence: {
+        level: "low",
+        reasons: ["Peu de sorties au-delà de 30 km"],
+      },
+      summary:
+        "Quatre blocs jusqu’au marathon. Je l’ajuste chaque semaine selon ta récupération, avec ton accord.",
+      created_at: `${shiftDay(planToday, -3)}T08:00:00Z`,
+    },
+  ],
+  plan_blocks: planBlocks,
+  plan_weeks: planWeeks,
+  plan_sessions: planSessions,
+  session_activity_matches: pastPlanSessions
+    .filter((session, index) => index !== 2)
+    .map((session, index) => ({
+      user_id: planUser.id,
+      plan_id: planId,
+      session_key: session.session_key,
+      activity_id: null,
+      method: "auto",
+      status: "completed",
+      confidence: 0.9,
+      compliance: { duration: [0.98, 1, 0.94, 1.02][index % 4] },
+      algorithm_version: "match-v1",
+    })),
+  plan_proposals: nextPlanSession
+    ? [
+        {
+          id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+          user_id: planUser.id,
+          plan_id: planId,
+          status: "ready",
+          title: "Raccourcir la séance",
+          target_keys: [`session:${nextPlanSession.session_key}`],
+          created_at: `${planToday}T06:00:00Z`,
+        },
+      ]
+    : [],
+});
 function nameMatcher(filter) {
   if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
   const pattern = filter.slice(6).replaceAll("*", "%");

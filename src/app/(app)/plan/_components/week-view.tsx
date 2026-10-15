@@ -5,7 +5,6 @@ import { MonoLabel } from "@/components/stride/mono-label";
 import { SessionShape, zoneFills } from "@/components/stride/session-shape";
 import { cn } from "@/lib/utils";
 import type { PlanState } from "@/features/plans/model/plan";
-import type { ValidationReport } from "@/features/plans/validation/report";
 import {
   formatDuration,
   formatElevation,
@@ -19,11 +18,10 @@ import {
   weekPosition,
   weekStats,
   weekSummary,
-  type PlanAlert,
 } from "@/features/plans/view/plan-view";
 import { addDays } from "@/features/plans/model/dates";
 
-export const weekHref = (weekStart: string) => `/plan?week=${weekStart}`;
+export const weekHref = (weekStart: string) => `/plan/week?week=${weekStart}`;
 export const sessionHref = (key: string) => `/plan/sessions/${key}`;
 
 export function BlockNavigation({
@@ -265,14 +263,12 @@ export function WeekSessions({
   state,
   weekStart,
   today,
-  report,
 }: {
   state: PlanState;
   weekStart: string;
   today: string;
-  report: ValidationReport;
 }) {
-  const rows = sessionRows(state, weekStart, report);
+  const rows = sessionRows(state, weekStart);
   const rest = restDays(state, weekStart);
   return (
     <div className="flex flex-col gap-6">
@@ -338,33 +334,5 @@ export function WeekSessions({
         )}
       </div>
     </div>
-  );
-}
-
-export function PlanAlerts({ alerts }: { alerts: PlanAlert[] }) {
-  if (alerts.length === 0) return null;
-  return (
-    <section aria-labelledby="plan-alerts" className="flex flex-col gap-3">
-      <h2 id="plan-alerts" className="text-title font-semibold">
-        Points d’attention
-      </h2>
-      <ul className="flex flex-col border-t border-border">
-        {alerts.map((alert) => (
-          <li
-            key={alert.text}
-            className="flex gap-3 border-b border-border py-3 text-meta"
-          >
-            <span
-              aria-hidden="true"
-              className={cn(
-                "mt-1.5 size-1.5 shrink-0 rounded-full",
-                alert.tone === "warning" ? "bg-warning" : "bg-muted-foreground",
-              )}
-            />
-            <span className="text-muted">{alert.text}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

@@ -78,6 +78,10 @@ import {
   RecommendationSignals,
   RecommendationTitle,
 } from "@/components/stride/recommendation";
+import {
+  SessionKindTile,
+  type SessionTileKind,
+} from "@/components/stride/session-kind-tile";
 import { SessionShape } from "@/components/stride/session-shape";
 import { SignalChip } from "@/components/stride/signal-chip";
 import {
@@ -90,11 +94,29 @@ import { SyncStatus } from "@/components/stride/sync-status";
 import { VerdictList, VerdictRow } from "@/components/stride/verdict-row";
 import { GallerySection, Specimen } from "./_components/specimen";
 
+const sessionTileKinds: SessionTileKind[] = [
+  "easy",
+  "long",
+  "long_trail",
+  "tempo",
+  "threshold",
+  "intervals",
+  "hills",
+  "race_specific",
+  "strength",
+  "mobility",
+  "cross",
+  "race",
+  "rest",
+];
+
 const surfaces = [
   ["Shell", "bg-background", "background"],
   ["Inset", "bg-surface-inset", "surface-inset"],
   ["Surface", "bg-surface", "surface"],
   ["Raised", "bg-surface-raised", "surface-raised"],
+  ["Panel", "bg-surface-panel", "surface-panel"],
+  ["Current", "bg-surface-current", "surface-current"],
   ["Chalk", "bg-foreground", "foreground"],
   ["Volt", "bg-accent", "accent"],
 ] as const;
@@ -104,6 +126,7 @@ const states = [
   ["Warning", "bg-warning", "warning"],
   ["Danger", "bg-danger", "danger"],
   ["Provider", "bg-provider", "provider"],
+  ["Provider past", "bg-provider-muted", "provider-muted"],
   ["Dim", "bg-dim", "dim"],
 ] as const;
 
@@ -721,6 +744,29 @@ export default function DesignSystemPage() {
             <SessionShape blocks={session} className="mt-2" />
             <p className="text-xs text-muted-foreground">
               Session shape: intensity × time, removed rep dashed.
+            </p>
+          </Specimen>
+          <Specimen title="Session kind tile" meta="SessionKindTile">
+            <ul className="flex flex-wrap gap-2">
+              {sessionTileKinds.map((kind) => (
+                <li key={kind}>
+                  <SessionKindTile kind={kind} label={kind} size="md" />
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-end gap-3">
+              {(["xs", "sm", "md", "lg"] as const).map((size) => (
+                <span key={size} className="flex flex-col items-center gap-1.5">
+                  <SessionKindTile kind="threshold" size={size} />
+                  <MonoLabel size="nano">{size}</MonoLabel>
+                </span>
+              ))}
+              <SessionKindTile kind="rest" size="lg" />
+              <SessionKindTile kind="race" size="lg" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Easy and long on provider blue, quality on zone 4, hills and trail
+              on zone 3, support work muted, race in Volt, rest dashed.
             </p>
           </Specimen>
           <Specimen title="Recommendation" meta="Card · Badge · Button">

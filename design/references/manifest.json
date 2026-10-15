@@ -1,10 +1,10 @@
 {
   "version": 1,
   "counts": {
-    "screenshots": 108,
-    "html_exports": 109,
-    "matched": 109,
-    "exact": 109,
+    "screenshots": 110,
+    "html_exports": 111,
+    "matched": 111,
+    "exact": 111,
     "high": 0,
     "uncertain": 0
   },
@@ -1430,6 +1430,32 @@
       "original_export_name": "App · Progress · Records · Mobile-html.zip",
       "matched_confidence": "exact",
       "notes": "Approved Records reference; PNG is interpreted visually only; original paths are preserved."
+    },
+    {
+      "id": "app/plan-program/desktop",
+      "area": "app",
+      "screen": "plan-program",
+      "state": "default",
+      "device": "desktop",
+      "screenshot_path": "design/references/app/plan-program/screenshots/desktop.png",
+      "html_reference_path": "design/references/app/plan-program/source/desktop.zip",
+      "original_screenshot_name": "App · Plan · Proposition 2 · nouvelle version · Desktop@2x.png",
+      "original_export_name": "App · Plan · Proposition 2 · nouvelle version · Desktop-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Programme complet, proposition 2: objective tabs, weekly volume chart with selectable week, selected week detail, program milestones. Replaced the first version on 2026-10-15."
+    },
+    {
+      "id": "app/plan-program/race-selected-mobile",
+      "area": "app",
+      "screen": "plan-program",
+      "state": "race-selected",
+      "device": "mobile",
+      "screenshot_path": "design/references/app/plan-program/screenshots/race-selected-mobile.png",
+      "html_reference_path": "design/references/app/plan-program/source/race-selected-mobile.zip",
+      "original_screenshot_name": "App · Plan · Proposition 2 · 10K sélectionné · Mobile@2x.png",
+      "original_export_name": "App · Plan · Proposition 2 · 10K sélectionné · Mobile-html.zip",
+      "matched_confidence": "exact",
+      "notes": "Programme complet, proposition 2, mobile with a secondary race (10K) selected: nested program weeks and the selected week as a day list. No mobile default state exists; derive it from this and the desktop reference."
     }
   ],
   "unresolved": []

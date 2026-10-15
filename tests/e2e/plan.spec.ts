@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 async function signIn(page: Page, email = "athlete@example.com") {
   await page.goto("/sign-in");
@@ -8,12 +8,28 @@ async function signIn(page: Page, email = "athlete@example.com") {
   await expect(page).toHaveURL("/");
 }
 
+async function tabTo(page: Page, target: Locator) {
+  for (let index = 0; index < 80; index++) {
+    await page.keyboard.press("Tab");
+    if (await target.evaluate((element) => element === document.activeElement))
+      return;
+  }
+  throw new Error("Target never received focus");
+}
+
+const outline = (target: Locator, pseudo: string | null = null) =>
+  target.evaluate(
+    (element, pseudoElement) =>
+      getComputedStyle(element, pseudoElement).outlineStyle,
+    pseudo,
+  );
+
 test("signed-out athletes are sent to sign-in", async ({ page }) => {
   await page.goto("/plan");
   await expect(page).toHaveURL(/\/sign-in/);
 });
 
-test("the plan shows a complete draft week and opens a session", async ({
+test("the plan shows the stored program with the current week selected", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -21,80 +37,168 @@ test("the plan shows a complete draft week and opens a session", async ({
   await page.goto("/activities");
   await page.getByRole("link", { name: "Plan", exact: true }).first().click();
   await expect(page).toHaveURL(/\/plan$/);
-  await expect(page.getByText("Brouillon", { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("heading", { level: 1, name: /^Semaine \d+ · / }),
+    page.getByRole("heading", {
+      level: 1,
+      name: /^J-\d+ · Marathon de Paris$/,
+    }),
   ).toBeVisible();
-  const blocks = page.getByRole("navigation", { name: "Blocs du plan" });
-  await expect(blocks.getByRole("link").first()).toBeVisible();
   await expect(
-    page.getByRole("img", { name: /^Charge de la semaine/ }),
+    page.getByText(/^Semaine 2 sur \d+ · Reconstruction$/),
   ).toBeVisible();
-  await page.screenshot({
-    path: "test-results/plan-desktop.png",
-    fullPage: true,
-  });
+  await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
+  for (const label of ["Total prévu", "Plus longue sortie", "Semaine de pic"])
+    await expect(page.getByText(label, { exact: true })).toBeVisible();
 
-  const nextWeek = blocks.getByRole("link").nth(1);
-  await nextWeek.click();
+  const programs = page.getByRole("navigation", { name: "Programmes" });
+  await expect(
+    programs.getByRole("link", { name: /Marathon de Paris/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    programs.getByRole("link", { name: /10K Vincennes/ }),
+  ).toContainText(/débute le/);
+
+  const chart = page.getByRole("group", {
+    name: /^Volume hebdomadaire prévu sur \d+/,
+  });
+  await expect(chart).toBeVisible();
+  const current = chart.getByRole("button", { name: /^Semaine 2, / });
+  await expect(current).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^S2 / }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("En cours").filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/ faites$/)).toBeVisible();
+  await expect(
+    page.getByText("Proposé").filter({ visible: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/^Fait/).filter({ visible: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByText("Repères du programme")).toBeVisible();
+
+  const sidebar = page.getByRole("link", { name: /^Programme complet/ });
+  await expect(sidebar).toHaveAttribute("aria-current", "page");
+
+  await page.screenshot({ path: "test-results/plan-program-desktop.png" });
+
+  await chart.getByRole("button", { name: /^Semaine 3, / }).click();
   await expect(page).toHaveURL(/\/plan\?week=\d{4}-\d{2}-\d{2}$/);
-  await expect(blocks.getByRole("link").nth(1)).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-
-  const sessions = page.locator('a[href^="/plan/sessions/"]');
-  expect(await sessions.count()).toBeGreaterThan(1);
-  const quality = page
-    .locator('a[href^="/plan/sessions/"]')
-    .filter({ hasText: /Seuil|Côtes|Fractionné|Allure/ })
-    .first();
-  const target = (await quality.count()) > 0 ? quality : sessions.first();
-  await target.click();
-  await expect(page).toHaveURL(/\/plan\/sessions\/s-\d{4}-\d{2}-\d{2}-/);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Étapes" })).toBeVisible();
   await expect(
-    page.getByRole("img", { name: /^Déroulé de la séance/ }),
+    page.getByRole("heading", { level: 2, name: /^S3 / }),
   ).toBeVisible();
-  await expect(page.getByText("Pourquoi cette séance")).toBeVisible();
-  await expect(page.getByText("Envoyer sur Garmin")).toHaveCount(0);
-  await page.screenshot({
-    path: "test-results/plan-session-desktop.png",
-    fullPage: true,
-  });
+  await page.keyboard.press("ArrowLeft");
+  await expect(current).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^S4 / }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Aujourd’hui" }).click();
+  await expect(current).toHaveAttribute("aria-pressed", "true");
+
+  await page
+    .locator('a[href^="/plan/sessions/"]')
+    .filter({ hasText: /Seuil/ })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/plan\/sessions\/s-\d{4}-\d{2}-\d{2}-/);
+  await expect(page.getByRole("heading", { name: "Étapes" })).toBeVisible();
+  await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
 });
 
-test("the plan fits a phone and navigates weeks with the keyboard", async ({
+test("a nested race opens its own program", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page, "plan@example.com");
+  await page.goto("/plan");
+  await page.getByRole("link", { name: /Programme 10K Vincennes/ }).click();
+  await expect(page).toHaveURL(/\/plan\?race=/);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "10K Vincennes · cible 44:30",
+    }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Programmes" })
+      .getByRole("link", { name: /10K Vincennes/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page
+      .getByRole("group", { name: /^Volume hebdomadaire/ })
+      .getByRole("button", {
+        name: /^Semaine 1, /,
+      }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(/^dans \d+ j$/)).toBeVisible();
+});
+
+test("the program fits a phone and shows the selected week", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page, "plan@example.com");
   await page.goto("/plan");
   await expect(
-    page.getByRole("heading", { level: 1, name: "Plan" }),
+    page.getByRole("heading", { level: 1, name: /Marathon de Paris$/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^S2 / }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
   await page.screenshot({
-    path: "test-results/plan-mobile.png",
+    path: "test-results/plan-program-mobile.png",
     fullPage: true,
   });
-  const next = page.getByRole("link", { name: "Semaine suivante" });
-  await next.focus();
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/plan\?week=/);
-  await page.locator('a[href^="/plan/sessions/"]').first().click();
-  await expect(page).toHaveURL(/\/plan\/sessions\//);
-  await expect(page.getByRole("heading", { name: "Étapes" })).toBeVisible();
+  await page.goto("/plan?race=ffffffff-ffff-4fff-8fff-ffffffffffff");
+  await expect(
+    page.getByRole("heading", { level: 1, name: /^10K Vincennes/ }),
+  ).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
   await page.screenshot({
-    path: "test-results/plan-session-mobile.png",
+    path: "test-results/plan-program-race-mobile.png",
     fullPage: true,
   });
+  await page
+    .locator('a[href^="/plan/sessions/"]')
+    .filter({ visible: true })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/plan\/sessions\//);
+});
+
+test("the program is reachable with the keyboard", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page, "plan@example.com");
+  await page.goto("/plan");
+  const chart = page.getByRole("group", { name: /^Volume hebdomadaire/ });
+  await chart.waitFor();
+  await page.getByRole("heading", { level: 1 }).evaluate((element) => {
+    element.setAttribute("tabindex", "-1");
+    (element as HTMLElement).focus();
+  });
+  const first = chart.getByRole("button", { name: /^Semaine 1, / });
+  await tabTo(page, first);
+  expect(await outline(first)).not.toBe("none");
+  await page.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^S1 / }),
+  ).toBeVisible();
+
+  const milestone = page
+    .getByRole("region", { name: "Repères du programme" })
+    .getByRole("button")
+    .first();
+  await tabTo(page, milestone);
+  expect(await outline(milestone)).not.toBe("none");
 });
 
 test("an unknown session is not found", async ({ page }) => {
@@ -103,17 +207,19 @@ test("an unknown session is not found", async ({ page }) => {
   expect(response?.status()).toBe(404);
 });
 
-test("an athlete without recent runs learns why the plan is missing", async ({
+test("an athlete without a stored plan is invited to ask the coach", async ({
   page,
 }) => {
   await signIn(page);
   await page.goto("/plan");
   await expect(
-    page.getByRole("heading", {
-      level: 1,
-      name: "Pas encore assez de données pour construire ton plan",
-    }),
+    page.getByRole("heading", { level: 1, name: "Pas encore de programme" }),
   ).toBeVisible();
+  await expect(page.getByText(/Demande au Coach/)).toBeVisible();
+  await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "Programme complet" }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "Mes disponibilités" }),
   ).toHaveAttribute("href", "/settings/training");

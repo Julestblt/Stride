@@ -1,6 +1,5 @@
 import type { SessionBlock } from "@/components/stride/session-blocks";
 import { formatPace } from "@/features/progress/format";
-import type { Feasibility } from "../feasibility/feasibility";
 import { addDays } from "../model/dates";
 import type { PlanSession, PlanState, PlanWeek } from "../model/plan";
 import {
@@ -203,7 +202,7 @@ export type SessionRowView = {
 export function sessionRows(
   state: PlanState,
   weekStart: string,
-  report: ValidationReport,
+  report: ValidationReport | null = null,
 ): SessionRowView[] {
   return sessionsOf(state, weekStart).map((session) => ({
     key: session.sessionKey,
@@ -213,7 +212,7 @@ export function sessionRows(
     summary: sessionSummary(session),
     blocks: sessionBlocks(session),
     isRace: session.kind === "race",
-    warnings: sessionWarnings(report, session.sessionKey),
+    warnings: report ? sessionWarnings(report, session.sessionKey) : [],
   }));
 }
 
@@ -391,7 +390,10 @@ export function chartSegments(session: PlanSession): ChartSegment[] {
   }));
 }
 
-export function sessionStats(session: PlanSession, targets: TrainingTargets) {
+export function sessionStats(
+  session: PlanSession,
+  targets: TrainingTargets | null = null,
+) {
   const totals = structureTotals(session.structure);
   const work = mainWork(session);
   const hard = work && work.intensity !== "easy" ? work.intensity : null;
@@ -399,9 +401,10 @@ export function sessionStats(session: PlanSession, targets: TrainingTargets) {
     work?.target.kind === "pace_range"
       ? `${formatPace(work.target.fastSecondsPerKm)}–${formatPace(work.target.slowSecondsPerKm)}`
       : null;
-  const heartRate = work
-    ? (targets.intensities[work.intensity].heartRateRange ?? null)
-    : null;
+  const heartRate =
+    work && targets
+      ? (targets.intensities[work.intensity].heartRateRange ?? null)
+      : null;
   return {
     total: formatDuration(session.targets.durationSeconds),
     distance:
@@ -425,41 +428,3 @@ export function sessionStats(session: PlanSession, targets: TrainingTargets) {
     terrain: session.terrain ? (terrainLabels[session.terrain] ?? null) : null,
   };
 }
-
-const planRuleMessages: Partial<Record<RuleId, string>> = {
-  P1: "Le volume de certaines semaines monte de plus de 10 % par rapport aux quatre précédentes.",
-  P2: "Le dénivelé de certaines semaines monte de plus de 15 %.",
-  P5: "Certaines semaines dépassent 25 % de temps en intensité élevée.",
-  P6: "L’affûtage sort de la réduction habituelle de 40 à 60 % du volume.",
-  P8: "Ton ratio de charge Garmin sort de la zone 0,8–1,5 (information seulement).",
-  D1: "Le plan construit moins de 70 % de ce que demande la course.",
-};
-
-export type PlanAlert = { tone: "warning" | "info"; text: string };
-
-export function planAlerts(
-  report: ValidationReport,
-  feasibility: Feasibility,
-  confidenceReasons: string[],
-): PlanAlert[] {
-  const alerts: PlanAlert[] = [];
-  if (feasibility.verdict === "ambitious")
-    for (const reason of feasibility.reasons)
-      alerts.push({ tone: "warning", text: reason });
-  for (const reason of confidenceReasons)
-    alerts.push({ tone: "info", text: reason });
-  for (const result of report.results)
-    if (result.outcome === "fail" && planRuleMessages[result.ruleId])
-      alerts.push({
-        tone: result.severity === "info" ? "info" : "warning",
-        text: planRuleMessages[result.ruleId]!,
-      });
-  return alerts;
-}
-
-export const verdictLabels: Record<Feasibility["verdict"], string> = {
-  realistic: "Réaliste",
-  ambitious: "Ambitieux",
-  too_short: "Trop court",
-  no_history: "Historique insuffisant",
-};
