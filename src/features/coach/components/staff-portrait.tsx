@@ -6,7 +6,7 @@ import claire from "../portraits/claire.webp";
 import ines from "../portraits/ines.webp";
 import karim from "../portraits/karim.webp";
 import thomas from "../portraits/thomas.webp";
-import { portraitCrop, portraitSourceSize } from "../portrait-crop";
+import { portraitFrame, portraitSourceSize } from "../portrait-crop";
 import { staffMember, type StaffAgent, type StaffFace } from "../staff";
 import { useStaff } from "./staff-context";
 
@@ -45,7 +45,7 @@ export function StaffPortrait({
 }) {
   const current = useStaff()[agent];
   const member = face ? staffMember(agent, face) : current;
-  const crop = fill ? null : portraitCrop(size);
+  const frame = fill ? null : portraitFrame(size);
   const source = fill ? size : portraitSourceSize(size);
   return (
     <span
@@ -63,15 +63,11 @@ export function StaffPortrait({
         {...(fill ? { fill: true } : { width: source, height: source })}
         sizes={`${source}px`}
         quality={portraitQuality}
-        className="block size-full object-cover"
-        style={
-          crop
-            ? {
-                transform: `scale(${crop.scale})`,
-                transformOrigin: `50% ${crop.originY}`,
-              }
-            : undefined
-        }
+        className={cn(
+          "block max-w-none object-cover",
+          frame ? "absolute" : "size-full",
+        )}
+        style={frame ?? undefined}
       />
     </span>
   );

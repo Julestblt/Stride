@@ -19,6 +19,7 @@ import {
 } from "../../src/features/coach/items";
 import {
   portraitCrop,
+  portraitFrame,
   portraitSourceSize,
 } from "../../src/features/coach/portrait-crop";
 import { readLabel } from "../../src/features/coach/reads";
@@ -529,12 +530,25 @@ describe("staff and reads", () => {
   });
 
   it("crops small portraits on the face", () => {
-    expect(portraitCrop(36)).toEqual({ scale: 1.8, originY: "7.3%" });
-    expect(portraitCrop(96)).toEqual({ scale: 1.3, originY: "0%" });
+    expect(portraitCrop(36)).toEqual({ scale: 1.8, originY: 0.073 });
+    expect(portraitCrop(96)).toEqual({ scale: 1.3, originY: 0 });
     expect(portraitCrop(168)).toBeNull();
     expect(portraitSourceSize(36)).toBe(65);
     expect(portraitSourceSize(96)).toBe(125);
     expect(portraitSourceSize(168)).toBe(168);
+    expect(portraitFrame(50)).toEqual({
+      width: 90,
+      height: 90,
+      left: -20,
+      top: -2.92,
+    });
+    expect(portraitFrame(100)).toEqual({
+      width: 130,
+      height: 130,
+      left: -15,
+      top: -0,
+    });
+    expect(portraitFrame(168)).toBeNull();
   });
 });
 
