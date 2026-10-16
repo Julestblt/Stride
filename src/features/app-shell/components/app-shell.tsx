@@ -35,7 +35,12 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
+import {
+  NavBadge,
+  NavGoalSwitcher,
+  NavUser,
+} from "@/components/stride/navigation";
+import { StrideMark } from "@/components/stride/stride-mark";
 import {
   shellRaceDate,
   type ShellAccount,
@@ -43,6 +48,7 @@ import {
   type ShellGoal,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
+import { CoachSidebarGroup } from "./coach-nav";
 import { PlanSidebarGroup } from "./plan-nav";
 import type { ProgramNav } from "@/features/plans/view/program";
 import { ProgressSidebarGroup } from "@/features/progress/components/progress-nav";
@@ -67,6 +73,7 @@ export function AppShell({
   initialActivity,
   planNav = null,
   planHistoryCount = null,
+  coachAttention = null,
   children,
 }: {
   athlete: ShellAthlete;
@@ -77,9 +84,13 @@ export function AppShell({
   initialActivity?: DataActivityObservation | null;
   planNav?: ProgramNav | null;
   planHistoryCount?: number | null;
+  coachAttention?: { questions: number; proposals: number } | null;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
+  const coachWaiting = coachAttention
+    ? coachAttention.questions + coachAttention.proposals
+    : 0;
   return (
     <DataActivityProvider initial={initialActivity}>
       <SidebarProvider
@@ -111,6 +122,23 @@ export function AppShell({
                   label="Aujourd’hui"
                 />
                 <ShellNavItem
+                  href="/coach"
+                  icon={<StrideMark className="stroke-current" />}
+                  label="Coach"
+                  attention={coachWaiting > 0}
+                  badge={
+                    coachWaiting > 0 ? (
+                      <NavBadge kind="count">
+                        {coachWaiting}
+                        <span className="sr-only">
+                          {" "}
+                          en attente : {coachAttentionLabel(coachAttention)}
+                        </span>
+                      </NavBadge>
+                    ) : undefined
+                  }
+                />
+                <ShellNavItem
                   href="/plan"
                   icon={<ChartColumnIcon />}
                   label="Plan"
@@ -132,6 +160,7 @@ export function AppShell({
                 />
               </SidebarMenu>
             </SidebarGroup>
+            <CoachSidebarGroup />
             <PlanSidebarGroup nav={planNav} historyCount={planHistoryCount} />
             <ProgressSidebarGroup />
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -263,4 +292,23 @@ export function AppShell({
       </SidebarProvider>
     </DataActivityProvider>
   );
+}
+
+function coachAttentionLabel(
+  attention: { questions: number; proposals: number } | null,
+) {
+  if (!attention) return "";
+  const parts = [
+    attention.questions === 1
+      ? "1 question"
+      : attention.questions > 1
+        ? `${attention.questions} questions`
+        : null,
+    attention.proposals === 1
+      ? "1 proposition"
+      : attention.proposals > 1
+        ? `${attention.proposals} propositions`
+        : null,
+  ].filter(Boolean);
+  return parts.join(" et ");
 }

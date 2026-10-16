@@ -1,0 +1,279 @@
+{
+  "plan": {
+    "id": "plan-1",
+    "title": "Marathon de Paris",
+    "startsOn": "2026-10-12",
+    "endsOn": "2026-11-08",
+    "timeZone": "Europe/Paris",
+    "primaryRaceId": "race-a",
+    "raceRoles": [{ "raceId": "race-a", "role": "primary" }],
+    "confidence": { "level": "normal", "reasons": [] }
+  },
+  "blocks": [
+    {
+      "blockKey": "b-base-1",
+      "kind": "base",
+      "name": "Base",
+      "startsOn": "2026-10-12",
+      "endsOn": "2026-11-08",
+      "objective": "Construire l'endurance",
+      "raceId": null
+    }
+  ],
+  "weeks": [
+    {
+      "weekKey": "w-2026-10-12",
+      "weekStart": "2026-10-12",
+      "blockKey": "b-base-1",
+      "weekType": "build",
+      "targets": {
+        "durationSeconds": 14400,
+        "distanceMeters": null,
+        "elevationGainMeters": null,
+        "qualitySessions": 1,
+        "longRunSeconds": 5400,
+        "intensitySplit": { "easyPct": 85, "moderatePct": 5, "hardPct": 10 }
+      },
+      "notes": null
+    },
+    {
+      "weekKey": "w-2026-10-19",
+      "weekStart": "2026-10-19",
+      "blockKey": "b-base-1",
+      "weekType": "build",
+      "targets": {
+        "durationSeconds": 14400,
+        "distanceMeters": null,
+        "elevationGainMeters": null,
+        "qualitySessions": 1,
+        "longRunSeconds": 5400,
+        "intensitySplit": { "easyPct": 85, "moderatePct": 5, "hardPct": 10 }
+      },
+      "notes": null
+    },
+    {
+      "weekKey": "w-2026-10-26",
+      "weekStart": "2026-10-26",
+      "blockKey": "b-base-1",
+      "weekType": "build",
+      "targets": {
+        "durationSeconds": 14400,
+        "distanceMeters": null,
+        "elevationGainMeters": null,
+        "qualitySessions": 1,
+        "longRunSeconds": 5400,
+        "intensitySplit": { "easyPct": 85, "moderatePct": 5, "hardPct": 10 }
+      },
+      "notes": null
+    },
+    {
+      "weekKey": "w-2026-11-02",
+      "weekStart": "2026-11-02",
+      "blockKey": "b-base-1",
+      "weekType": "build",
+      "targets": {
+        "durationSeconds": 14400,
+        "distanceMeters": null,
+        "elevationGainMeters": null,
+        "qualitySessions": 1,
+        "longRunSeconds": 5400,
+        "intensitySplit": { "easyPct": 85, "moderatePct": 5, "hardPct": 10 }
+      },
+      "notes": null
+    }
+  ],
+  "sessions": [
+    {
+      "sport": "run",
+      "kind": "easy",
+      "title": "Footing",
+      "purpose": "Endurance fondamentale",
+      "isKey": false,
+      "priority": "normal",
+      "targets": {
+        "durationSeconds": 2700,
+        "distanceMeters": null,
+        "elevationGainMeters": null
+      },
+      "structure": [
+        {
+          "type": "work",
+          "end": { "kind": "time", "seconds": 2700 },
+          "target": { "kind": "rpe", "min": 3, "max": 4 },
+          "intensity": "easy"
+        }
+      ],
+      "terrain": "road",
+      "origin": "template",
+      "contingencies": [],
+      "sessionKey": "s-2026-10-13-1",
+      "scheduledOn": "2026-10-13"
+    },
+    {
+      "sport": "run",
+      "kind": "threshold",
+      "title": "Seuil · 4 × 6'",
+      "purpose": "Développer l'allure seuil",
+      "isKey": true,
+      "priority": "high",
+      "targets": {
+        "durationSeconds": 3000,
+        "distanceMeters": null,
+        "elevationGainMeters": null
+      },
+      "structure": [
+        {
+          "type": "warmup",
+          "end": { "kind": "time", "seconds": 900 },
+          "target": { "kind": "rpe", "min": 2, "max": 3 },
+          "intensity": "easy"
+        },
+        {
+          "type": "repeat",
+          "count": 4,
+          "steps": [
+            {
+              "type": "work",
+              "end": { "kind": "time", "seconds": 360 },
+              "target": {
+                "kind": "pace_range",
+                "fastSecondsPerKm": 270,
+                "slowSecondsPerKm": 280
+              },
+              "intensity": "threshold",
+              "cue": "Respiration contrôlée"
+            },
+            {
+              "type": "recovery",
+              "end": { "kind": "time", "seconds": 90 },
+              "target": { "kind": "rpe", "min": 2, "max": 3 },
+              "intensity": "recovery"
+            }
+          ]
+        },
+        {
+          "type": "cooldown",
+          "end": { "kind": "time", "seconds": 600 },
+          "target": { "kind": "none" },
+          "intensity": "easy"
+        }
+      ],
+      "terrain": "road",
+      "origin": "template",
+      "contingencies": [
+        "Arrête après la 3e répétition si la FC dépasse la plage"
+      ],
+      "sessionKey": "s-2026-10-15-1",
+      "scheduledOn": "2026-10-15"
+    },
+    {
+      "sport": "run",
+      "kind": "easy",
+      "title": "Footing",
+      "purpose": "Endurance fondamentale",
+      "isKey": false,
+      "priority": "normal",
+      "targets": {
+        "durationSeconds": 3000,
+        "distanceMeters": null,
+        "elevationGainMeters": null
+      },
+      "structure": [
+        {
+          "type": "work",
+          "end": { "kind": "time", "seconds": 3000 },
+          "target": { "kind": "rpe", "min": 3, "max": 4 },
+          "intensity": "easy"
+        }
+      ],
+      "terrain": "road",
+      "origin": "template",
+      "contingencies": [],
+      "sessionKey": "s-2026-10-20-1",
+      "scheduledOn": "2026-10-20"
+    },
+    {
+      "sport": "run",
+      "kind": "threshold",
+      "title": "Seuil · 4 × 6'",
+      "purpose": "Développer l'allure seuil",
+      "isKey": true,
+      "priority": "high",
+      "targets": {
+        "durationSeconds": 3000,
+        "distanceMeters": null,
+        "elevationGainMeters": null
+      },
+      "structure": [
+        {
+          "type": "warmup",
+          "end": { "kind": "time", "seconds": 900 },
+          "target": { "kind": "rpe", "min": 2, "max": 3 },
+          "intensity": "easy"
+        },
+        {
+          "type": "repeat",
+          "count": 4,
+          "steps": [
+            {
+              "type": "work",
+              "end": { "kind": "time", "seconds": 360 },
+              "target": {
+                "kind": "pace_range",
+                "fastSecondsPerKm": 270,
+                "slowSecondsPerKm": 280
+              },
+              "intensity": "threshold",
+              "cue": "Respiration contrôlée"
+            },
+            {
+              "type": "recovery",
+              "end": { "kind": "time", "seconds": 90 },
+              "target": { "kind": "rpe", "min": 2, "max": 3 },
+              "intensity": "recovery"
+            }
+          ]
+        },
+        {
+          "type": "cooldown",
+          "end": { "kind": "time", "seconds": 600 },
+          "target": { "kind": "none" },
+          "intensity": "easy"
+        }
+      ],
+      "terrain": "road",
+      "origin": "template",
+      "contingencies": [
+        "Arrête après la 3e répétition si la FC dépasse la plage"
+      ],
+      "sessionKey": "s-2026-10-22-1",
+      "scheduledOn": "2026-10-22"
+    },
+    {
+      "sport": "run",
+      "kind": "easy",
+      "title": "Footing",
+      "purpose": "Endurance fondamentale",
+      "isKey": false,
+      "priority": "normal",
+      "targets": {
+        "durationSeconds": 5400,
+        "distanceMeters": null,
+        "elevationGainMeters": null
+      },
+      "structure": [
+        {
+          "type": "work",
+          "end": { "kind": "time", "seconds": 5400 },
+          "target": { "kind": "rpe", "min": 3, "max": 4 },
+          "intensity": "easy"
+        }
+      ],
+      "terrain": "road",
+      "origin": "template",
+      "contingencies": [],
+      "sessionKey": "s-2026-10-25-1",
+      "scheduledOn": "2026-10-25"
+    }
+  ]
+}
