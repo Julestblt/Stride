@@ -31,6 +31,7 @@ const bodies = {
   question: z.object({
     toolUseId: z.string(),
     question: text,
+    options: z.array(z.string().max(80)).max(5).default([]).catch([]),
     askedFor: agent,
   }),
   proposal: z.object({

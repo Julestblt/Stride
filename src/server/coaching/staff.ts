@@ -1,7 +1,9 @@
 import "server-only";
 import { z } from "zod";
 import {
+  groupLine,
   staffFacesOf,
+  staffOf,
   type StaffFaceChoice,
   type StaffFaces,
 } from "@/features/coach/staff";
@@ -19,6 +21,22 @@ export async function readStaffFaces(
     .maybeSingle();
   if (error) return staffFacesOf(null);
   return staffFacesOf(data);
+}
+
+export async function readGroupLine(context: OnboardingContext) {
+  try {
+    const { data } = await context.client
+      .from("athlete_profiles")
+      .select("coach_face, medical_face, first_name")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    return groupLine(
+      staffOf(staffFacesOf(data)),
+      data?.first_name?.trim() || null,
+    );
+  } catch {
+    return groupLine(staffOf(staffFacesOf(null)), null);
+  }
 }
 
 export async function saveStaffFace(

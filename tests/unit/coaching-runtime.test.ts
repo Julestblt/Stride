@@ -300,7 +300,7 @@ describe("coach turn stream", () => {
           type: "agent.custom_tool_use",
           id: "sevt_ask",
           name: "ask_athlete",
-          input: { question: "Depuis quand ?" },
+          input: { question: "Depuis quand ?", options: ["Hier"] },
         },
         { type: "session.status_idle", stop_reason: { type: "end_turn" } },
       ]),
@@ -352,13 +352,6 @@ describe("coach turn stream", () => {
           input: {},
           session_thread_id: "sthr_medical",
         },
-        {
-          type: "agent.custom_tool_use",
-          id: "sevt_ask",
-          name: "ask_athlete",
-          input: { question: "Depuis quand ?", asked_for: "medical" },
-          session_thread_id: "sthr_medical",
-        },
         { type: "session.status_idle", stop_reason: { type: "end_turn" } },
       ]),
     );
@@ -368,7 +361,7 @@ describe("coach turn stream", () => {
     );
 
     expect(runCustomTool).not.toHaveBeenCalled();
-    for (const id of ["sevt_unknown", "sevt_proposal", "sevt_ask"])
+    for (const id of ["sevt_unknown", "sevt_proposal"])
       expect(managed.send).toHaveBeenCalledWith("sesn_01A", {
         events: [
           expect.objectContaining({
@@ -390,7 +383,6 @@ describe("coach turn stream", () => {
     ).toEqual([
       ["read_file_placeholder", false],
       ["create_plan_proposal", false],
-      ["ask_athlete", false],
     ]);
     expect(events.map((event) => event.type)).not.toContain("question");
     expect(events.at(-1)).toMatchObject({ status: "idle" });
@@ -449,7 +441,7 @@ describe("coach turn stream", () => {
           type: "agent.custom_tool_use",
           id: "sevt_ask",
           name: "ask_athlete",
-          input: { question: "Depuis quand ?", asked_for: "medical" },
+          input: { question: "Depuis quand ?" },
         },
         {
           type: "session.status_idle",
@@ -642,36 +634,20 @@ describe("coach turn stream", () => {
           session_thread_id: "sthr_medical",
         },
         {
-          type: "session.thread_status_idle",
-          session_thread_id: "sthr_medical",
-          agent_name: "Stride Medical",
-          stop_reason: { type: "requires_action" },
-        },
-        {
-          type: "agent.thread_message_received",
-          from_agent_name: "Stride Medical",
-          from_session_thread_id: "sthr_medical",
-          content: [{ type: "text", text: "Ask about downhill pain." }],
-        },
-        {
-          type: "session.thread_status_idle",
-          session_thread_id: "sthr_medical",
-          agent_name: "Stride Medical",
-          stop_reason: { type: "end_turn" },
-        },
-        {
-          type: "session.thread_status_terminated",
-          session_thread_id: "sthr_medical",
-          agent_name: "Stride Medical",
-        },
-        {
           type: "agent.custom_tool_use",
           id: "sevt_ask",
           name: "ask_athlete",
           input: {
-            question: "Ton genou te gêne-t-il en descente ?",
-            asked_for: "medical",
+            question: "Comment réagit ton genou en descente ?",
+            options: ["Aucune gêne", "Gêne légère"],
           },
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "session.thread_status_idle",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+          stop_reason: { type: "requires_action" },
         },
         {
           type: "session.status_idle",
@@ -697,6 +673,10 @@ describe("coach turn stream", () => {
     });
     expect(managed.send.mock.calls[0][1].events[0].content).toEqual([
       { type: "text", text: "J'ai mal au genou" },
+      {
+        type: "text",
+        text: "Noms dans ce groupe : coach Claire, médecin Inès.",
+      },
       { type: "text", text: expect.stringContaining("Stride Medical") },
     ]);
     expect(persistedKinds()).toEqual([
@@ -704,8 +684,6 @@ describe("coach turn stream", () => {
       "consult_request",
       "read",
       "read",
-      "consult_reply",
-      "consult_end",
       "question",
     ]);
     for (const [, threadId] of store.appendThreadItem.mock.calls)
@@ -720,15 +698,76 @@ describe("coach turn stream", () => {
       label: "Signalements · 14 jours",
     });
     expect(items[3]).toMatchObject({ agent: "medical", label: "Garmin · VFC" });
-    expect(items[6]).toMatchObject({
+    expect(items[4]).toMatchObject({
       toolUseId: "sevt_ask",
       askedFor: "medical",
+      options: ["Aucune gêne", "Gêne légère"],
+    });
+    expect(events).toContainEqual({
+      type: "question",
+      question: {
+        toolUseId: "sevt_ask",
+        question: "Comment réagit ton genou en descente ?",
+        options: ["Aucune gêne", "Gêne légère"],
+        askedFor: "medical",
+      },
     });
     expect(
       events
         .filter((event) => event.type === "item")
         .map((event) => event.item),
     ).toEqual(items);
+  });
+
+  it("sends the answer to the asking specialist and records its reply under its name", async () => {
+    store.findOwnSession.mockResolvedValue(
+      record({ status: "awaiting_athlete", pendingToolUseId: "sevt_ask" }),
+    );
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.thread_status_running",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.thread_message_received",
+          from_agent_name: "Stride Medical",
+          from_session_thread_id: "sthr_medical",
+          content: [{ type: "text", text: "@Jules Alors c’est compatible." }],
+        },
+        {
+          type: "session.thread_status_idle",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+          stop_reason: { type: "end_turn" },
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    await collect(
+      streamCoachTurn(contextFor(athleteA), {
+        ...request,
+        input: { kind: "answer", toolUseId: "sevt_ask", text: "Aucune gêne" },
+      }),
+    );
+
+    expect(managed.send.mock.calls[0][1].events[0]).toEqual({
+      type: "user.custom_tool_result",
+      custom_tool_use_id: "sevt_ask",
+      content: [{ type: "text", text: "Aucune gêne" }],
+    });
+    const items = store.appendThreadItem.mock.calls.map(([, , item]) => item);
+    expect(items.map((item) => item.kind)).toEqual([
+      "answer",
+      "consult_reply",
+      "consult_end",
+    ]);
+    expect(items[1]).toMatchObject({
+      agent: "medical",
+      text: "@Jules Alors c’est compatible.",
+    });
   });
 
   it("records a proposal card with its attributed reasons", async () => {

@@ -39,7 +39,7 @@ export const agentTools = {
     "ask_athlete",
     "create_plan_proposal",
   ],
-  medical: ["read_athlete_context", "read_health_reports"],
+  medical: ["read_athlete_context", "read_health_reports", "ask_athlete"],
 } as const satisfies Record<string, readonly CoachingToolName[]>;
 
 export type AgentName = keyof typeof agentTools;

@@ -170,6 +170,7 @@ describe("tool registry", () => {
     expect(agentTools.medical).toEqual([
       "read_athlete_context",
       "read_health_reports",
+      "ask_athlete",
     ]);
   });
 
@@ -204,17 +205,31 @@ describe("tool registry", () => {
 
   it("validates ask_athlete input while the session keeps answering it", async () => {
     expect(() =>
-      parseToolInput(askAthleteTool, { question: "Douleur ?" }),
-    ).toThrow();
-    expect(
       parseToolInput(askAthleteTool, {
-        question: "As-tu mal au genou ?",
+        question: "Douleur ?",
         asked_for: "medical",
       }),
-    ).toEqual({ question: "As-tu mal au genou ?", asked_for: "medical" });
+    ).toThrow();
+    expect(() =>
+      parseToolInput(askAthleteTool, {
+        question: "Douleur ?",
+        options: ["Oui"],
+      }),
+    ).toThrow();
+    expect(
+      parseToolInput(askAthleteTool, { question: " As-tu mal au genou ? " }),
+    ).toEqual({ question: "As-tu mal au genou ?" });
+    expect(
+      parseToolInput(askAthleteTool, {
+        question: "Où as-tu mal ?",
+        options: ["Sur l’os", "Le long du tibia"],
+      }),
+    ).toEqual({
+      question: "Où as-tu mal ?",
+      options: ["Sur l’os", "Le long du tibia"],
+    });
     const outcome = await runCustomTool(contextWith({}), "ask_athlete", {
       question: "As-tu mal au genou ?",
-      asked_for: "medical",
     });
     expect(outcome.content).toMatchObject({ code: "tool_unavailable" });
   });
