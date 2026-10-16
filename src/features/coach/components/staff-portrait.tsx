@@ -15,8 +15,6 @@ const portraits = { claire, thomas, ines, karim } as const satisfies Record<
   unknown
 >;
 
-const portraitQuality = 90;
-
 function radius(size: number) {
   if (size <= 22) return "rounded-mark";
   if (size <= 30) return "rounded-[4px]";
@@ -61,8 +59,7 @@ export function StaffPortrait({
         src={portraits[member.face]}
         alt={decorative ? "" : member.alt}
         {...(fill ? { fill: true } : { width: source, height: source })}
-        sizes={`${source}px`}
-        quality={portraitQuality}
+        unoptimized
         className={cn(
           "block max-w-none object-cover",
           frame ? "absolute" : "size-full",

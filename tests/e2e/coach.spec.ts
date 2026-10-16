@@ -440,7 +440,7 @@ test("the thread menu offers deletion on mobile", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("portraits load a sharp file on a retina screen", async ({ browser }) => {
+test("portraits load the full source file", async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
@@ -459,9 +459,10 @@ test("portraits load a sharp file on a retina screen", async ({ browser }) => {
       source: image.currentSrc,
     }),
   );
-  expect(source).toContain("q=90");
-  expect(new URL(source).searchParams.get("w")).toBe("256");
-  expect(width).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
+  expect(new URL(source).pathname).toMatch(
+    /^\/_next\/static\/media\/claire\..+\.webp$/,
+  );
+  expect(width).toBe(768);
   await context.close();
 });
 
