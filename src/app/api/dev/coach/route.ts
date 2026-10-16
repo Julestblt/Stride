@@ -5,9 +5,9 @@ import {
   SessionAccessError,
 } from "@/server/coaching/managed/session";
 import {
-  applyAcceptedProposal,
-  deleteActivePlan,
-} from "@/server/coaching/worker";
+  requestPlanReset,
+  requestProposalApply,
+} from "@/server/coaching/worker-client";
 import { getOnboardingContext } from "@/server/onboarding/context";
 
 export const maxDuration = 900;
@@ -57,15 +57,12 @@ export async function POST(request: Request) {
     return Response.json(await proposeDraftAsPlan(context), { headers });
 
   if (body.action === "apply")
-    return Response.json(
-      await applyAcceptedProposal(context, body.proposalId),
-      {
-        headers,
-      },
-    );
+    return Response.json(await requestProposalApply(context, body.proposalId), {
+      headers,
+    });
 
   if (body.action === "delete-plan")
-    return Response.json(await deleteActivePlan(context), { headers });
+    return Response.json(await requestPlanReset(context), { headers });
 
   if (body.action === "decide") {
     const { error } = await context.client.rpc(

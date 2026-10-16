@@ -49,3 +49,12 @@ Open points, carried into Phase 2:
 - The spike applies proposals from a development-only route in the web process with the worker database URL. Production moves that credential out of the internet-facing process, into a small worker or a server-only job, as this ADR requires.
 - A custom login role through the Supabase pooler is still unverified.
 - Runs without the athlete online (weekly reviews, monitors) need a credential other than the athlete's session token; this stays with the worker impersonation spike.
+
+## Amendment (2026-10-16, #136)
+
+The runtime foundations close the spike's open points for interactive runs.
+
+- **Session lifecycle.** `POST /api/coach/turns` starts or resumes the signed-in athlete's Managed Agents session and streams the turn as server-sent events. A resume is accepted only when the session is one of the athlete's own `coach_sessions` rows under RLS **and** its `stride_user_id` metadata matches; otherwise the API answers 404 before any event is sent or read. Each session has a budget cap ($1 conversation, $2 plan design), one turn at a time, an `ask_athlete` pause stored as `awaiting_athlete`, and a 15-minute turn timeout that sends `user.interrupt` and shows a French message.
+- **Worker credential.** The web process no longer holds `COACH_WORKER_DATABASE_URL`. A small `stride-coach-worker` Node service (`src/server/coaching/worker/main.ts`, bundled to `build/coach-worker.mjs` by `npm run worker:build`) listens on the internal network only, with no public route. The web process forwards apply and reset requests with the athlete's access token (`COACH_WORKER_URL`); the worker verifies the token with Supabase Auth, recomputes and revalidates the changeset under the athlete's RLS, then calls `private.apply_plan_proposal`, `private.delete_plan` or `private.clear_new_plan_proposals` with its own database role.
+- **Scope of the worker.** It serves athlete-initiated actions only, so it never needs to impersonate an athlete. Background runs (weekly reviews, monitors) still need the impersonation design in the Decision above and stay out of scope.
+- **Database login.** `stride_coach_worker` stays the `NOLOGIN` privilege role. A separate login role that is a member of it holds the password, which is set by hand on the hosted project and never committed. The worker connects through the Supavisor pooler in session mode, as `<login role>.<project ref>`.

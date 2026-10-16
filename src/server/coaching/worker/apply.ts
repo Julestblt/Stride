@@ -91,12 +91,15 @@ export async function applyAcceptedProposal(
   }
 }
 
-export async function deleteActivePlan(
+export async function resetPlan(
   context: OnboardingContext,
 ): Promise<WorkerResult> {
   const stored = await readActivePlan(context);
-  if (!stored) return { ok: false, reason: "no_active_plan" };
-  await workerSql()`
-    select private.delete_plan(${context.userId}::uuid, ${stored.planId}::uuid)`;
+  if (stored)
+    await workerSql()`
+      select private.delete_plan(${context.userId}::uuid, ${stored.planId}::uuid)`;
+  else
+    await workerSql()`
+      select private.clear_new_plan_proposals(${context.userId}::uuid)`;
   return { ok: true };
 }
