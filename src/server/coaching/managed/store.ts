@@ -266,22 +266,42 @@ export async function readThreadProposalStatuses(
 }
 
 export async function countCoachAttention(context: OnboardingContext) {
-  const [questions, proposals] = await Promise.all([
-    context.client
-      .from("coach_sessions")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", context.userId)
-      .eq("status", "awaiting_athlete"),
-    context.client
-      .from("plan_proposals")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", context.userId)
-      .eq("status", "ready")
-      .not("coach_session_id", "is", null),
-  ]);
-  if (questions.error || proposals.error) return null;
+  const sessions = await context.client
+    .from("coach_sessions")
+    .select("id, status")
+    .eq("user_id", context.userId)
+    .not("title", "is", null);
+  if (sessions.error) return null;
+  const rows = z
+    .array(z.object({ id: z.uuid(), status: z.string() }))
+    .parse(sessions.data ?? []);
+  if (!rows.length) return { questions: 0, proposals: 0 };
+  const proposals = await context.client
+    .from("plan_proposals")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", context.userId)
+    .eq("status", "ready")
+    .in(
+      "coach_session_id",
+      rows.map((row) => row.id),
+    );
+  if (proposals.error) return null;
   return {
-    questions: questions.count ?? 0,
+    questions: rows.filter((row) => row.status === "awaiting_athlete").length,
     proposals: proposals.count ?? 0,
   };
+}
+
+export async function deleteOwnThread(
+  context: OnboardingContext,
+  threadId: string,
+) {
+  const { data, error } = await context.client
+    .from("coach_sessions")
+    .delete()
+    .eq("user_id", context.userId)
+    .eq("id", threadId)
+    .select("id");
+  if (error) throw new Error("Unable to delete the coach thread");
+  return (data ?? []).length > 0;
 }
