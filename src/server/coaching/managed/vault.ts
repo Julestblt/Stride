@@ -11,7 +11,10 @@ async function findAthleteVault(userId: string) {
   return null;
 }
 
-export async function syncAthleteVault(userId: string, accessToken: string) {
+export async function syncAthleteVault(
+  userId: string,
+  accessToken: string | null,
+) {
   const client = managedClient();
   const vaultId =
     (await findAthleteVault(userId)) ??
@@ -30,6 +33,14 @@ export async function syncAthleteVault(userId: string, accessToken: string) {
       credential.auth.mcp_server_url === managedResources.garminMcpUrl
     )
       credentialId = credential.id;
+  }
+
+  if (!accessToken) {
+    if (credentialId)
+      await client.beta.vaults.credentials.archive(credentialId, {
+        vault_id: vaultId,
+      });
+    return vaultId;
   }
 
   if (credentialId)
