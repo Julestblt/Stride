@@ -73,8 +73,9 @@ Excluded: every write tool, `get_lactate_threshold` (it misreads Garmin's speed 
 
 ### Token
 
-- Stride writes the athlete's current Supabase access token as a `static_bearer` credential in a per-athlete vault before every turn, both new messages and `ask_athlete` answers (`syncAthleteVault` in `src/server/coaching/managed/session.ts`). `mcp_oauth` is not pursued.
-- Expiry: a turn can last up to 15 minutes, so a token close to expiry can lapse mid-turn. The runtime foundations issue under #131 must refresh the Supabase session before syncing the vault whenever the token expires within the turn timeout. garmin_mcp then rejects the token and the call fails; the failure is reported as data unavailable (by the Coach to the athlete).
+- Stride writes the athlete's Supabase access token as a `static_bearer` credential in a per-athlete vault before every turn, both new messages and `ask_athlete` answers (`syncAthleteVault` in `src/server/coaching/managed/vault.ts`). `mcp_oauth` is not pursued.
+- Expiry (#136): a turn lasts at most 15 minutes. Before syncing the vault, Stride refreshes the Supabase session whenever the access token expires within that timeout (`turnAccessToken` in `src/server/coaching/managed/token.ts`), and the route persists the rotated cookies. A token that outlives the turn is used as is.
+- Unavailable token: when the refresh fails or returns another user, Stride archives the vault's garmin_mcp credential instead of leaving a stale token, and the turn continues. garmin_mcp then rejects the MCP call and the agents report Garmin data as unavailable; the turn's `done` event reports `garmin: "unavailable"`.
 - Accepted risk: the token is a general Supabase user token, not one issued for garmin_mcp. G9, filed as [Julestblt/garmin_mcp#14](https://github.com/Julestblt/garmin_mcp/issues/14), adds audience-bound credentials on `/mcp`.
 
 ### Isolation
@@ -82,7 +83,7 @@ Excluded: every write tool, `get_lactate_threshold` (it misreads Garmin's speed 
 - garmin_mcp derives the user from the verified token subject (`UserScopedGarminProxy`), never from tool input.
 - One vault per athlete, keyed by `stride_user_id` metadata (`src/server/coaching/managed/vault.ts`).
 - Stride rejects a session whose `stride_user_id` metadata does not match the current user before running a turn.
-- Verification with a second athlete account is still open from #128.
+- Stride also requires the session to be one of the athlete's own `coach_sessions` rows under RLS; see the two-account verification in [ADR 0009](0009-coach-worker-runtime-on-postgres.md#verification-2026-10-16-136).
 
 ### Live calls
 
