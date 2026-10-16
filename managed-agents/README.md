@@ -41,7 +41,7 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 
 - a new session gets the athlete's vault, `stride_user_id` metadata and a budget cap ($1 for a conversation, $2 for a plan design), and a `coach_sessions` row under row-level security;
 - a resumed session must exist in the athlete's own `coach_sessions` rows **and** carry the athlete's `stride_user_id` metadata, otherwise the API answers 404;
-- custom tool calls run under the athlete's row-level security; `ask_athlete` pauses the session (`awaiting_athlete`) until the athlete answers;
+- custom tool calls run under the athlete's row-level security, only when the calling agent's thread is allowed the tool in `agentTools`; any other name, including one the model invents, is answered with `unknown_tool` without running anything. `ask_athlete` pauses the session (`awaiting_athlete`) until the athlete answers;
 - a turn stops after 15 minutes: Stride sends `user.interrupt` and shows a French message; a session that reaches its budget is closed.
 
 Accepted proposals are applied by the `stride-coach-worker` service, not by the web process. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md).

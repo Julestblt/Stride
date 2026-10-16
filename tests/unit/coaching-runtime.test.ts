@@ -322,6 +322,102 @@ describe("coach turn stream", () => {
     expect(events.at(-1)).toMatchObject({ status: "idle" });
   });
 
+  it("refuses tools outside the calling agent's allowlist without running them", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_unknown",
+          name: "read_file_placeholder",
+          input: {},
+        },
+        {
+          type: "session.thread_created",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_proposal",
+          name: "create_plan_proposal",
+          input: {},
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_ask",
+          name: "ask_athlete",
+          input: { question: "Depuis quand ?", asked_for: "medical" },
+          session_thread_id: "sthr_medical",
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+
+    expect(runCustomTool).not.toHaveBeenCalled();
+    for (const id of ["sevt_unknown", "sevt_proposal", "sevt_ask"])
+      expect(managed.send).toHaveBeenCalledWith("sesn_01A", {
+        events: [
+          expect.objectContaining({
+            custom_tool_use_id: id,
+            is_error: true,
+            content: [
+              {
+                type: "text",
+                text: expect.stringContaining('"code":"unknown_tool"'),
+              },
+            ],
+          }),
+        ],
+      });
+    expect(
+      events.flatMap((event) =>
+        event.type === "tool" ? [[event.name, event.ok]] : [],
+      ),
+    ).toEqual([
+      ["read_file_placeholder", false],
+      ["create_plan_proposal", false],
+      ["ask_athlete", false],
+    ]);
+    expect(events.map((event) => event.type)).not.toContain("question");
+    expect(events.at(-1)).toMatchObject({ status: "idle" });
+  });
+
+  it("runs a tool the calling specialist is allowed to use", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    runCustomTool.mockResolvedValue({ ok: true, content: { days: [] } });
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.thread_status_running",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_reports",
+          name: "read_health_reports",
+          input: { days: 7 },
+          session_thread_id: "sthr_medical",
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+
+    expect(runCustomTool).toHaveBeenCalledWith(
+      expect.anything(),
+      "read_health_reports",
+      { days: 7 },
+    );
+  });
+
   it("streams a turn, answers custom tools and pauses on ask_athlete", async () => {
     store.findOwnSession.mockResolvedValue(record());
     runCustomTool.mockResolvedValue({ ok: true, content: { today: "x" } });
