@@ -32,5 +32,6 @@ export async function saveCheckin(input: unknown): Promise<CheckinResult> {
     .single();
   if (error) return { status: "error" };
   revalidatePath("/progress/recovery");
+  revalidatePath("/today");
   return { status: "saved", updatedAt: data?.updated_at ?? null };
 }
