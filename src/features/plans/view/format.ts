@@ -65,10 +65,17 @@ export function formatDistance(meters: number) {
   return `${formatDecimal(meters / 1000)} km`;
 }
 
+export function formatPaceRange(range: {
+  fastSecondsPerKm: number;
+  slowSecondsPerKm: number;
+}) {
+  return `${formatPace(range.fastSecondsPerKm)}–${formatPace(range.slowSecondsPerKm)}/km`;
+}
+
 export function formatTarget(target: SimpleStep["target"]) {
   switch (target.kind) {
     case "pace_range":
-      return `${formatPace(target.fastSecondsPerKm)}–${formatPace(target.slowSecondsPerKm)}/km`;
+      return formatPaceRange(target);
     case "heart_rate_range":
       return `FC ${target.minBpm}–${target.maxBpm}`;
     case "rpe":

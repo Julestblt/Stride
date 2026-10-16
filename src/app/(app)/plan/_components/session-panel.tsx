@@ -185,6 +185,12 @@ function Steps({ panel }: { panel: SessionPanel }) {
               </span>
               <span className="text-[11.5px] whitespace-nowrap text-muted">
                 {step.target}
+                {step.pace && (
+                  <>
+                    {" · "}
+                    <span className="text-muted-foreground">{step.pace}</span>
+                  </>
+                )}
               </span>
             </span>
           </li>

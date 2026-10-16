@@ -3,15 +3,15 @@ import { buildSessionPanel } from "@/features/plans/view/session-panel";
 import { readActivityDetail } from "@/server/activities/activities";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { loadPlanOverview } from "./overview";
-import { loadIntensityPaces } from "./paces";
+import { loadIntensityPaceRanges } from "./paces";
 
 export async function loadSessionPanel(
   context: OnboardingContext,
   sessionKey: string,
 ) {
-  const [overview, paces] = await Promise.all([
+  const [overview, paceRanges] = await Promise.all([
     loadPlanOverview(context),
-    loadIntensityPaces(context),
+    loadIntensityPaceRanges(context),
   ]);
   if (!overview) return null;
   const match = overview.matches.find((item) => item.sessionKey === sessionKey);
@@ -27,6 +27,6 @@ export async function loadSessionPanel(
     activity: detail?.activity ?? null,
     laps: (detail?.segments ?? []).filter((segment) => segment.type === "lap"),
     series: detail?.track?.series ?? null,
-    paces,
+    paceRanges,
   });
 }

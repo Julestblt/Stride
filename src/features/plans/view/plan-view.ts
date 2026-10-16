@@ -8,12 +8,17 @@ import {
   type SimpleStep,
   type StructureStep,
 } from "../model/structure";
-import { sessionDistance } from "../model/volume";
-import { intensityPaces, type TrainingTargets } from "../targets/targets";
+import { isRunningSession, sessionDistance } from "../model/volume";
+import {
+  intensityPaces,
+  type IntensityPaceRanges,
+  type TrainingTargets,
+} from "../targets/targets";
 import {
   formatDistance,
   formatDuration,
   formatElevation,
+  formatPaceRange,
   formatStepDuration,
   formatTarget,
   intensityLabels,
@@ -86,10 +91,24 @@ export type StepView = {
   cue: string | null;
   duration: string;
   target: string;
+  pace: string | null;
   zone: 1 | 2 | 3 | 4 | 5;
 };
 
-export function stepViews(session: PlanSession): StepView[] {
+function expectedPace(
+  step: SimpleStep,
+  ranges: IntensityPaceRanges | null,
+): string | null {
+  if (step.target.kind === "pace_range") return null;
+  const range = ranges?.[step.intensity];
+  return range ? `≈ ${formatPaceRange(range)}` : null;
+}
+
+export function stepViews(
+  session: PlanSession,
+  paceRanges: IntensityPaceRanges | null = null,
+): StepView[] {
+  const ranges = isRunningSession(session) ? paceRanges : null;
   return session.structure.flatMap((step, index): StepView[] => {
     if (step.type !== "repeat")
       return [
@@ -102,6 +121,7 @@ export function stepViews(session: PlanSession): StepView[] {
           cue: step.cue ?? null,
           duration: formatStepDuration(stepSeconds(step)),
           target: formatTarget(step.target),
+          pace: expectedPace(step, ranges),
           zone: intensityZone[step.intensity],
         },
       ];
@@ -114,6 +134,7 @@ export function stepViews(session: PlanSession): StepView[] {
       cue: inner.cue ?? null,
       duration: `${step.count} × ${formatStepDuration(stepSeconds(inner))}`,
       target: formatTarget(inner.target),
+      pace: expectedPace(inner, ranges),
       zone: intensityZone[inner.intensity],
     }));
   });
