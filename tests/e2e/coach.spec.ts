@@ -94,27 +94,36 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
   await expect(page).toHaveURL(`/coach/${kneeThread}`, { timeout: 20_000 });
 
   const log = page.getByRole("log", { name: "Messages" });
-  await expect(log.getByText("Avis demandé à Inès")).toBeVisible();
-  const consult = log.getByRole("group", { name: "Concertation du staff" });
-  await expect(consult).toContainText("Inès · Question pour toi");
-  await consult.getByRole("button", { expanded: false }).click();
-  const exchange = consult.getByText("Le genou réagit-il en descente ?");
-  await expect(exchange).toBeVisible();
+  await expect(log.getByText("@Inès", { exact: true })).toHaveCount(2);
   expect(
-    await exchange.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return [style.fontSize, style.lineHeight, style.color];
-    }),
-  ).toEqual(["14px", "21px", "rgb(179, 178, 170)"]);
-  await expect(consult.getByText("Signalements · 14 jours")).toBeVisible();
-  await expect(log.getByText("Question d’Inès")).toBeVisible();
-  await expect(log.getByText("Demandée par Inès")).toBeVisible();
+    await log
+      .locator("span", { hasText: /^@Inès$/ })
+      .last()
+      .evaluate((element) => getComputedStyle(element).color),
+  ).toBe("rgb(213, 255, 63)");
+  await expect(log).not.toContainText("Vérifie s’il peut courir");
+  await expect(log).not.toContainText("Concertation");
+  const question = log.getByRole("group", {
+    name: "Comment réagit ton genou en descente ?",
+  });
+  await expect(question).toContainText("Question d’Inès");
+  for (const option of [
+    "Aucune gêne",
+    "Gêne légère, qui passe",
+    "Douleur qui m’oblige à ralentir",
+    "Autre…",
+  ])
+    await expect(
+      question.getByRole("button", { name: option, exact: true }),
+    ).toBeEnabled();
+  await expect(log.getByText("A lu")).toBeVisible();
+  await expect(log.getByText("Signalements · 14 jours")).toBeVisible();
 
   const suivi = page.getByRole("complementary", {
     name: "Suivi de la conversation",
   });
   await expect(suivi.getByText("Question pour toi")).toBeVisible();
-  await expect(suivi.getByText("Médecin · consultée")).toBeVisible();
+  await expect(suivi.getByText("Médecin · mentionnée")).toBeVisible();
   await expect(suivi.getByText("Signalements · 14 jours")).toBeVisible();
   await expect(suivi.locator('[aria-current="step"]')).toHaveText(
     /Question d’Inès/,
@@ -131,25 +140,38 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
         threadId: kneeThread,
         consoleUrl: "https://console.test",
       },
-      item("answer", { toolUseId: "sevt_knee", text: "Non" }),
+      item("answer", { toolUseId: "sevt_knee", text: "Aucune gêne" }),
+      item("consult_reply", {
+        thread: "sthr_knee",
+        agent: "medical",
+        text: "@Jules Alors tu peux courir, en gardant les descentes faciles.",
+      }),
+      item("consult_end", { thread: "sthr_knee", agent: "medical" }),
       item("coach", { text: "Parfait, on garde la sortie longue." }),
       { type: "done", status: "idle" },
     ])(route);
   });
-  await log.getByRole("button", { name: "Non", exact: true }).click();
+  await question.getByRole("button", { name: "Aucune gêne" }).click();
   await expect(
     log.getByText("Parfait, on garde la sortie longue."),
   ).toBeVisible();
-  await expect(log.getByText("Question répondue")).toBeVisible();
+  await expect(log.getByText("En réponse à Inès")).toBeVisible();
+  await expect(log.getByText("Alors tu peux courir")).toBeVisible();
+  await expect(question).toContainText("Répondue");
+  await expect(
+    question.getByRole("button", { name: "Aucune gêne" }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(suivi.locator('[aria-current="step"]')).toHaveCount(1);
   await expect(suivi.locator('[aria-current="step"]')).toContainText(
     "Dernière étape",
   );
-  await expect(suivi.getByText("Ta réponse", { exact: true })).toBeVisible();
+  await expect(
+    suivi.getByText("Ta réponse à Inès", { exact: true }),
+  ).toBeVisible();
   expect(posted).toEqual({
     sessionId: "sesn_01Genou",
     mode: "conversation",
-    input: { kind: "answer", toolUseId: "sevt_knee", text: "Non" },
+    input: { kind: "answer", toolUseId: "sevt_knee", text: "Aucune gêne" },
   });
 });
 
@@ -170,7 +192,7 @@ test("a new conversation asks Inès and keeps the thread after the turn", async 
         consoleUrl: "https://console.test",
       },
       item("athlete", { text: "Mon mollet est tendu", consult: "medical" }),
-      item("coach", { text: "Je demande à Inès." }),
+      item("coach", { text: "@Inès, tu peux regarder ton mollet ?" }),
       item("consult_request", {
         thread: "sthr_calf",
         agent: "medical",
@@ -185,7 +207,7 @@ test("a new conversation asks Inès and keeps the thread after the turn", async 
       item("consult_reply", {
         thread: "sthr_calf",
         agent: "medical",
-        text: "Low risk, keep it easy.",
+        text: "@Jules Risque faible, reste en facile.",
       }),
       item("consult_end", { thread: "sthr_calf", agent: "medical" }),
       item("coach", {
@@ -194,9 +216,9 @@ test("a new conversation asks Inès and keeps the thread after the turn", async 
       { type: "done", status: "idle" },
     ])(route);
   });
-  const composer = page.getByRole("textbox", { name: "Écrire à Claire" });
+  const composer = page.getByRole("textbox", { name: "Écrire au staff" });
   await composer.fill("Mon mollet est tendu");
-  await page.getByRole("button", { name: "Demander l’avis d’Inès" }).click();
+  await page.getByRole("button", { name: "Mentionner Inès" }).click();
   await page.getByRole("button", { name: "Envoyer" }).click();
 
   await expect(page).toHaveURL(`/coach/${newThread}`);
@@ -208,9 +230,9 @@ test("a new conversation asks Inès and keeps the thread after the turn", async 
     log.getByRole("listitem").filter({ hasText: "footing" }),
   ).toBeVisible();
   await expect(log).not.toContainText("**");
-  await expect(
-    log.getByRole("group", { name: "Concertation du staff" }),
-  ).toContainText("Inès · Avis rendu");
+  await expect(log.getByText("Risque faible, reste en facile.")).toBeVisible();
+  await expect(log.getByText("Garmin · VFC")).toBeVisible();
+  await expect(log).not.toContainText("Calf tightness");
   expect(posted).toEqual({
     mode: "conversation",
     input: {
@@ -240,7 +262,7 @@ test("a refused turn shows a French message and keeps the draft", async ({
   await page.route("**/api/coach/turns", (route) =>
     route.fulfill({ status: 409, json: { code: "turn_in_progress" } }),
   );
-  const composer = page.getByRole("textbox", { name: "Écrire à Claire" });
+  const composer = page.getByRole("textbox", { name: "Écrire au staff" });
   await composer.fill("Et la semaine prochaine ?");
   await composer.press("Enter");
   await expect(
@@ -293,7 +315,7 @@ test("a reload keeps the list and the thread", async ({ page }) => {
     list,
   );
   await expect(
-    log.getByRole("button", { name: "Oui", exact: true }),
+    log.getByRole("button", { name: "Aucune gêne", exact: true }),
   ).toBeEnabled();
 });
 
@@ -319,7 +341,7 @@ test("the Plan empty state asks the Coach for a plan", async ({ page }) => {
     page.getByRole("heading", { name: "Demande ton plan à Claire" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("textbox", { name: "Écrire à Claire" }),
+    page.getByRole("textbox", { name: "Écrire au staff" }),
   ).toHaveValue("Construis-moi un plan d’entraînement pour mon objectif.");
 });
 
@@ -352,18 +374,15 @@ test("mobile shows the list, the thread and the Suivi sheet at 390", async ({
     page.getByRole("link", { name: "Retour aux conversations" }),
   ).toBeVisible();
   const log = page.getByRole("log", { name: "Messages" });
-  await expect(
-    log.getByRole("group", { name: "Concertation du staff" }),
-  ).toContainText("Inès · Question pour toi");
   await expect(log.getByText("Question d’Inès")).toBeVisible();
   await expect(
-    log.getByRole("button", { name: "Non", exact: true }),
+    log.getByRole("button", { name: "Aucune gêne", exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "test-results/coach-mobile.png" });
   await page.getByRole("button", { name: "Suivi de la conversation" }).click();
   const sheet = page.getByRole("dialog");
   await expect(sheet.getByText("Participants")).toBeVisible();
-  await expect(sheet.getByText("Médecin · consultée")).toBeVisible();
+  await expect(sheet.getByText("Médecin · mentionnée")).toBeVisible();
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(width).toBeLessThanOrEqual(390);
   await page.keyboard.press("Escape");
@@ -483,12 +502,12 @@ test("the team page shows the Coach and Medical and changes faces everywhere", a
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Une équipe autour de toi, une seule voix pour te parler.",
+      name: "Une équipe autour de toi, dans une seule conversation.",
     }),
   ).toBeVisible();
   await expect(page.getByText("Ton staff · 2 agents IA")).toBeVisible();
   const coach = page.getByRole("region", { name: "Claire" });
-  await expect(coach).toContainText("Ta seule interlocutrice.");
+  await expect(coach).toContainText("Ta première interlocutrice.");
   await expect(coach).toContainText("2 conversations ce mois");
   const specialists = page.getByRole("region", { name: "Les spécialistes" });
   await expect(specialists.getByRole("article")).toHaveCount(1);
@@ -516,7 +535,7 @@ test("the team page shows the Coach and Medical and changes faces everywhere", a
     .getByRole("button", { name: "Karim" })
     .click();
   await expect(page.getByRole("region", { name: "Thomas" })).toContainText(
-    "Ton seul interlocuteur. Il construit",
+    "Ton premier interlocuteur. Il construit",
   );
   await expect(
     specialists.getByRole("article", { name: "Karim" }),
@@ -564,7 +583,7 @@ test("mobile reaches the team page from the conversations list at 390", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Une équipe autour de toi, une seule voix.",
+      name: "Une équipe autour de toi, une seule conversation.",
     }),
   ).toBeVisible();
   await expect(page.getByText("Rien ne change sans ton accord")).toBeVisible();

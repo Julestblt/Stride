@@ -1124,12 +1124,12 @@ tables.coach_thread_items = [
     consult: "medical",
   }),
   coachItem(coachKneeThread, "08:01:00", "coach", {
-    text: "Je demande à Inès de regarder ça avec moi.",
+    text: "@Inès, tu peux regarder ton genou avec Jules ?",
   }),
   coachItem(coachKneeThread, "08:01:00", "consult_request", {
     thread: "sthr_knee",
     agent: "medical",
-    text: "Le genou réagit-il en descente ?",
+    text: "Jules a mal au genou depuis dimanche. Vérifie s’il peut courir.",
   }),
   coachItem(coachKneeThread, "08:02:00", "read", {
     thread: "sthr_knee",
@@ -1137,18 +1137,14 @@ tables.coach_thread_items = [
     tool: "read_health_reports",
     label: "Signalements · 14 jours",
   }),
-  coachItem(coachKneeThread, "08:03:00", "consult_reply", {
-    thread: "sthr_knee",
-    agent: "medical",
-    text: "Je dois savoir si la douleur apparaît en descente.",
-  }),
-  coachItem(coachKneeThread, "08:03:00", "consult_end", {
-    thread: "sthr_knee",
-    agent: "medical",
-  }),
   coachItem(coachKneeThread, "08:04:00", "question", {
     toolUseId: "sevt_knee",
-    question: "Ton genou te gêne-t-il en descente ?",
+    question: "Comment réagit ton genou en descente ?",
+    options: [
+      "Aucune gêne",
+      "Gêne légère, qui passe",
+      "Douleur qui m’oblige à ralentir",
+    ],
     askedFor: "medical",
   }),
   coachItem(coachPlanThread, "06:00:00", "athlete", {

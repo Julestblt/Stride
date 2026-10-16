@@ -33,6 +33,9 @@ import {
 import {
   buildThread,
   questionAttribution,
+  replyToLabel,
+  splitMentions,
+  typingLabel,
 } from "../../src/features/coach/thread";
 
 const at = (minute: number) =>
@@ -68,34 +71,48 @@ const consultTurn: ThreadItem[] = [
   },
 ];
 
+const options = ["Aucune gêne", "Gêne légère", "Douleur qui m’arrête"];
+
 const consultDone: ThreadItem[] = [
   ...consultTurn,
   {
-    kind: "consult_reply",
-    at: at(3),
-    thread: "sthr_m",
-    agent: "medical",
-    text: "Ask about downhill.",
-  },
-  { kind: "consult_end", at: at(3), thread: "sthr_m", agent: "medical" },
-  {
     kind: "question",
-    at: at(4),
+    at: at(3),
     toolUseId: "sevt_ask",
-    question: "Ton genou te gêne-t-il en descente ?",
+    question: "Comment réagit ton genou en descente ?",
+    options,
     askedFor: "medical",
   },
 ];
 
-function coachEntry(
+const answered: ThreadItem[] = [
+  ...consultDone,
+  { kind: "answer", at: at(5), toolUseId: "sevt_ask", text: "Aucune gêne" },
+  {
+    kind: "read",
+    at: at(5),
+    thread: "sthr_m",
+    agent: "medical",
+    tool: "read_athlete_context",
+    label: "Profil et contexte",
+  },
+  {
+    kind: "consult_reply",
+    at: at(6),
+    thread: "sthr_m",
+    agent: "medical",
+    text: "@Jules Alors c’est compatible.",
+  },
+  { kind: "consult_end", at: at(6), thread: "sthr_m", agent: "medical" },
+  { kind: "coach", at: at(7), text: "On garde le plan." },
+];
+
+function view(
   items: ThreadItem[],
   live = false,
-  pending = null as string | null,
+  pending: string | null = null,
 ) {
-  const entries = buildThread({ items, live, pendingToolUseId: pending });
-  const entry = entries.at(-1);
-  if (entry?.type !== "coach") throw new Error("expected a coach entry");
-  return entry;
+  return buildThread({ items, live, pendingToolUseId: pending });
 }
 
 describe("thread items", () => {
@@ -118,146 +135,130 @@ describe("thread items", () => {
 });
 
 describe("thread view model", () => {
-  it("shows a live Concertation while the specialist works", () => {
-    const entry = coachEntry(consultTurn, true);
-    expect(entry.blocks[0]).toEqual({
-      type: "text",
-      text: "Je demande à Inès.",
-    });
-    const consult = entry.blocks[1];
-    expect(consult).toMatchObject({ type: "consult", live: true });
-    if (consult.type !== "consult") throw new Error();
-    expect(consult.consults).toEqual([
-      expect.objectContaining({
-        agent: "medical",
-        state: "working",
-        reads: ["Signalements · 14 jours"],
-        summary: "Lit signalements · 14 jours…",
-        steps: [{ from: "coach", to: "medical", text: "Knee pain?" }],
-      }),
+  it("shows the Coach hand-off and the specialist typing while it works", () => {
+    const entries = view(consultTurn, true);
+    expect(entries.map((entry) => entry.type)).toEqual([
+      "athlete",
+      "staff",
+      "typing",
     ]);
+    expect(entries[1]).toMatchObject({
+      agent: "coach",
+      blocks: [{ type: "text", text: "Je demande à Inès." }],
+    });
+    expect(entries[2]).toMatchObject({
+      agent: "medical",
+      read: "Signalements · 14 jours",
+    });
+    expect(typingLabel(defaultStaff.medical, "Signalements · 14 jours")).toBe(
+      "Inès lit signalements · 14 jours…",
+    );
+    expect(typingLabel(defaultStaff.medical, null)).toBe("Inès écrit…");
   });
 
-  it("folds the consult once the specialist is done and attributes the question", () => {
-    const entry = coachEntry(consultDone, true, "sevt_ask");
-    const [, consult, question] = entry.blocks;
-    expect(consult).toMatchObject({ type: "consult", live: false });
-    if (consult.type !== "consult") throw new Error();
-    expect(consult.consults[0]).toMatchObject({
-      state: "asked",
-      summary: "Question pour toi",
-      steps: [
-        { from: "coach", to: "medical", text: "Knee pain?" },
-        { from: "medical", to: "coach", text: "Ask about downhill." },
+  it("never shows the brief between agents or a typing entry once reloaded", () => {
+    const entries = view(consultTurn);
+    expect(entries.map((entry) => entry.type)).toEqual(["athlete", "staff"]);
+    expect(JSON.stringify(entries)).not.toContain("Knee pain?");
+  });
+
+  it("shows a specialist question with its options under the specialist’s name", () => {
+    const entries = view(consultDone, true, "sevt_ask");
+    expect(entries.map((entry) => entry.type)).toEqual([
+      "athlete",
+      "staff",
+      "staff",
+    ]);
+    expect(entries[2]).toMatchObject({
+      agent: "medical",
+      reads: ["Signalements · 14 jours"],
+      blocks: [
+        {
+          type: "question",
+          options,
+          askedFor: "medical",
+          state: "pending",
+          answer: null,
+        },
       ],
-    });
-    expect(question).toMatchObject({
-      type: "question",
-      askedFor: "medical",
-      state: "pending",
     });
     expect(questionAttribution(defaultStaff.medical)).toBe("Question d’Inès");
     expect(questionAttribution(defaultStaff.coach)).toBe("Question de Claire");
   });
 
-  it("links a question to its consult when the Coach wrote in between", () => {
-    const [question] = consultDone.slice(-1);
-    const entry = coachEntry(
-      [
-        ...consultDone.slice(0, -1),
-        { kind: "coach", at: at(4), text: "Inès a une question pour toi." },
-        question,
-      ],
-      true,
-      "sevt_ask",
-    );
-    expect(entry.blocks.map((block) => block.type)).toEqual([
-      "text",
-      "consult",
-      "text",
-      "question",
-    ]);
-    expect(entry.blocks[1]).toMatchObject({
-      live: false,
-      consults: [{ state: "asked", summary: "Question pour toi" }],
-    });
-  });
-
-  it("keeps one Concertation per consult despite interleaved text and duplicate ends", () => {
-    const end = {
-      kind: "consult_end",
-      at: at(2),
-      thread: "sthr_m",
-      agent: "medical",
-    } as const;
-    const entry = coachEntry([
-      ...consultTurn.slice(0, 3),
-      end,
-      { kind: "coach", at: at(2), text: "Inès regarde tes données." },
-      end,
-      { ...consultTurn[3] },
-      {
-        kind: "consult_reply",
-        at: at(3),
-        thread: "sthr_m",
-        agent: "medical",
-        text: "Ask about downhill.",
-      },
-      end,
-      end,
-    ]);
-    const consults = entry.blocks.filter((block) => block.type === "consult");
-    expect(consults).toHaveLength(1);
-    expect(entry.blocks.map((block) => block.type)).toEqual([
-      "text",
-      "consult",
-      "text",
-    ]);
-    if (consults[0].type !== "consult") throw new Error();
-    expect(consults[0].consults).toHaveLength(1);
-    expect(consults[0].consults[0]).toMatchObject({
-      state: "replied",
-      reads: ["Signalements · 14 jours"],
-    });
-  });
-
-  it("marks an answered question and starts a new athlete entry", () => {
-    const entries = buildThread({
-      items: [
-        ...consultDone,
-        { kind: "answer", at: at(5), toolUseId: "sevt_ask", text: "Non" },
-        { kind: "coach", at: at(6), text: "Parfait." },
-      ],
-      live: false,
-      pendingToolUseId: null,
-    });
+  it("routes the answer to the specialist and shows its reply as its own message", () => {
+    const entries = view(answered);
     expect(entries.map((entry) => entry.type)).toEqual([
       "athlete",
-      "coach",
+      "staff",
+      "staff",
       "athlete",
-      "coach",
+      "staff",
+      "staff",
     ]);
-    expect(entries[0]).toMatchObject({ consult: "medical", answer: false });
-    expect(entries[2]).toMatchObject({ answer: true, text: "Non" });
-    const coach = entries[1];
-    if (coach.type !== "coach") throw new Error();
-    expect(coach.blocks.at(-1)).toMatchObject({
-      state: "answered",
-      answeredAt: at(5),
+    expect(entries[0]).toMatchObject({ consult: "medical", replyTo: null });
+    expect(entries[2]).toMatchObject({
+      blocks: [{ state: "answered", answer: "Aucune gêne", answeredAt: at(5) }],
     });
+    expect(entries[3]).toMatchObject({
+      replyTo: "medical",
+      text: "Aucune gêne",
+    });
+    expect(replyToLabel(defaultStaff.medical)).toBe("En réponse à Inès");
+    expect(entries[4]).toMatchObject({
+      agent: "medical",
+      reads: ["Profil et contexte"],
+      blocks: [{ type: "text", text: "@Jules Alors c’est compatible." }],
+    });
+    expect(entries[5]).toMatchObject({
+      agent: "coach",
+      blocks: [{ type: "text", text: "On garde le plan." }],
+    });
+  });
+
+  it("keeps old stored questions without options readable", () => {
+    const parsed = parseThreadItem({
+      kind: "question",
+      body: {
+        toolUseId: "sevt_old",
+        question: "Tu as mal ?",
+        askedFor: "coach",
+      },
+      created_at: at(0),
+    });
+    expect(parsed).toMatchObject({ options: [] });
+  });
+
+  it("does not answer for the Coach when the Coach asked", () => {
+    const entries = view([
+      { kind: "athlete", at: at(0), text: "Plan ?", consult: null },
+      {
+        kind: "question",
+        at: at(1),
+        toolUseId: "sevt_c",
+        question: "Combien de séances ?",
+        options: [],
+        askedFor: "coach",
+      },
+      { kind: "answer", at: at(2), toolUseId: "sevt_c", text: "Quatre" },
+    ]);
+    expect(entries[2]).toMatchObject({ type: "athlete", replyTo: null });
   });
 
   it("closes an unanswered question that is no longer pending", () => {
-    expect(coachEntry(consultDone).blocks.at(-1)).toMatchObject({
-      state: "closed",
+    expect(view(consultDone).at(-1)).toMatchObject({
+      blocks: [{ state: "closed" }],
     });
   });
 
-  it("folds a reloaded consult even without its end event", () => {
-    const consult = coachEntry(consultTurn).blocks[1];
-    expect(consult).toMatchObject({ type: "consult", live: false });
-    if (consult.type !== "consult") throw new Error();
-    expect(consult.consults[0].state).toBe("replied");
+  it("splits mentions out of message text", () => {
+    expect(splitMentions("@Inès, tu vois avec @Jules ?")).toEqual([
+      "",
+      "@Inès",
+      ", tu vois avec ",
+      "@Jules",
+      " ?",
+    ]);
   });
 
   it("shows a proposal card with its stored status", () => {
@@ -288,12 +289,15 @@ describe("thread view model", () => {
     expect(card("stale")).toMatchObject({ blocks: [{ status: "closed" }] });
   });
 
-  it("shows a turn error inside the coach entry", () => {
-    const entry = coachEntry([
+  it("shows a turn error inside a Coach message", () => {
+    const entries = view([
       { kind: "athlete", at: at(0), text: "Salut", consult: null },
       { kind: "error", at: at(1), code: "timeout", text: "Trop long" },
     ]);
-    expect(entry.blocks).toEqual([{ type: "error", text: "Trop long" }]);
+    expect(entries[1]).toMatchObject({
+      agent: "coach",
+      blocks: [{ type: "error", text: "Trop long" }],
+    });
   });
 });
 
@@ -410,11 +414,14 @@ describe("conversations", () => {
       "Profil et contexte",
     ]);
     expect(threadPreview(defaultStaff, consultDone)).toBe(
-      "Ton genou te gêne-t-il en descente ?",
+      "Comment réagit ton genou en descente ?",
     );
-    expect(suiviParticipants(defaultStaff, consultDone)).toEqual([
+    expect(threadPreview(defaultStaff, answered.slice(0, -1))).toBe(
+      "Inès : @Jules Alors c’est compatible.",
+    );
+    expect(suiviParticipants(defaultStaff, answered)).toEqual([
       { agent: "coach", role: "Coach · mène", messages: 0 },
-      { agent: "medical", role: "Médecin · consultée", messages: 1 },
+      { agent: "medical", role: "Médecin · mentionnée", messages: 2 },
     ]);
     const steps = suiviTimeline({
       staff: defaultStaff,
@@ -427,10 +434,9 @@ describe("conversations", () => {
     expect(steps.map((step) => [step.label, step.state])).toEqual([
       ["Ta demande", "done"],
       ["Réponse de Claire", "done"],
-      ["Claire consulte Inès", "done"],
-      ["Avis d’Inès", "done"],
+      ["Claire passe la main à Inès", "done"],
       ["Question d’Inès", "current"],
-      ["Réponse de Claire", "upcoming"],
+      ["Réponse d’Inès", "upcoming"],
     ]);
   });
 
@@ -479,12 +485,11 @@ describe("conversations", () => {
     expect(timeline("proposal")).toEqual([
       ["Ta demande", "done"],
       ["Réponse de Claire", "done"],
-      ["Claire consulte Inès", "done"],
-      ["Avis d’Inès", "done"],
+      ["Claire passe la main à Inès", "done"],
       ["Question d’Inès", "done"],
-      ["Ta réponse", "done"],
-      ["Claire consulte Inès", "done"],
-      ["Avis d’Inès", "done"],
+      ["Ta réponse à Inès", "done"],
+      ["Claire passe la main à Inès", "done"],
+      ["Réponse d’Inès", "done"],
       ["Réponse de Claire", "done"],
       ["Proposition du staff", "done"],
       ["À toi de décider", "current"],

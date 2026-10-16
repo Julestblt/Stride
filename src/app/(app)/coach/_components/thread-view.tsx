@@ -1,32 +1,27 @@
 "use client";
 
-import { useId, useState } from "react";
-import { ArrowRightIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
+import { useId } from "react";
+import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
 import { cn } from "@/lib/utils";
 import { dayLabel, sameDay, timeLabel } from "@/features/coach/conversations";
-import {
-  StaffPortrait,
-  StaffStack,
-} from "@/features/coach/components/staff-portrait";
+import { StaffPortrait } from "@/features/coach/components/staff-portrait";
 import { Markdown } from "@/features/coach/components/markdown";
 import { useStaff } from "@/features/coach/components/staff-context";
+import type { StaffAgent } from "@/features/coach/staff";
 import {
-  askedByLabel,
-  consultHeadline,
   questionAttribution,
-  type CoachBlock,
-  type ConsultView,
+  replyToLabel,
+  typingLabel,
   type ProposalCardStatus,
+  type StaffBlock,
   type ThreadEntry,
 } from "@/features/coach/thread";
 import { ProposalLink } from "../../plan/_components/proposal-sheet";
 
-export const quickAnswers = ["Oui", "Non", "Je ne sais pas"] as const;
-
-function StaffName({ agent }: { agent: ConsultView["agent"] }) {
+function StaffName({ agent }: { agent: StaffAgent }) {
   const staff = useStaff();
   return (
     <span className="inline-flex items-center gap-1.5 text-meta font-semibold text-foreground">
@@ -38,174 +33,28 @@ function StaffName({ agent }: { agent: ConsultView["agent"] }) {
   );
 }
 
-function ConsultSteps({ consult }: { consult: ConsultView }) {
-  const staff = useStaff();
-  return (
-    <>
-      {consult.steps.map((step, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 px-3 py-2.5 sm:px-4"
-        >
-          <StaffPortrait agent={step.from} size={28} decorative />
-          <div className="flex min-w-0 flex-col gap-1.25">
-            <span className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {staff[step.from].name}
-              </span>
-              {step.from !== "coach" && (
-                <MonoLabel size="nano">{staff[step.from].role}</MonoLabel>
-              )}
-              {step.to && (
-                <>
-                  <ArrowRightIcon aria-hidden="true" className="size-3" />
-                  <span className="sr-only">à</span>
-                  <span>{staff[step.to].name}</span>
-                </>
-              )}
-            </span>
-            <Markdown
-              text={step.text}
-              className="gap-2.5 text-sm leading-normal text-muted"
-            />
-          </div>
-        </div>
-      ))}
-      {consult.reads.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pr-3 pb-2.5 pl-15.5 sm:pr-4">
-          {consult.reads.map((read) => (
-            <span
-              key={read}
-              className="inline-flex items-center rounded-control border border-border-strong px-1.75 py-0.5 text-[11px] text-muted"
-            >
-              {read}
-            </span>
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-function LiveConsult({ consults }: { consults: ConsultView[] }) {
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      aria-label="Le staff travaille"
-      className="flex flex-col rounded-panel border border-border bg-surface-panel"
-    >
-      <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2.5 sm:px-4">
-        <PulseDot />
-        <MonoLabel size="micro" tone="foreground">
-          Le staff travaille
-        </MonoLabel>
-      </div>
-      {consults.map((consult) => (
-        <div key={consult.thread} className="flex flex-col py-0.5">
-          <ConsultSteps consult={consult} />
-          {consult.state === "working" && (
-            <div className="grid grid-cols-[28px_minmax(0,1fr)] gap-2.5 px-3 pb-3 sm:px-4">
-              <StaffPortrait agent={consult.agent} size={28} decorative />
-              <div className="flex min-w-0 flex-col gap-2">
-                <StaffName agent={consult.agent} />
-                <span className="text-meta text-muted">{consult.summary}</span>
-                <span
-                  aria-hidden="true"
-                  className="relative h-0.5 overflow-hidden rounded-full bg-border"
-                >
-                  <span className="absolute inset-y-0 left-0 w-[30%] bg-linear-to-r from-transparent via-accent to-transparent motion-safe:animate-trace motion-reduce:hidden" />
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FoldedConsult({ consults }: { consults: ConsultView[] }) {
-  const staff = useStaff();
-  const [open, setOpen] = useState(false);
-  const id = useId();
-  return (
-    <div
-      role="group"
-      aria-label="Concertation du staff"
-      className="flex flex-col rounded-card border border-border bg-surface-panel"
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={id}
-        onClick={() => setOpen((value) => !value)}
-        className="flex flex-col gap-2 rounded-card px-3 py-2.5 text-left text-meta text-muted focus-visible:outline-2 focus-visible:outline-ring sm:px-3.5"
-      >
-        <span className="flex w-full items-center gap-2.5">
-          <MonoLabel size="micro" tone="foreground">
-            Concertation
-          </MonoLabel>
-          <span className="text-xs text-muted-foreground">
-            {consultHeadline(consults)}
-          </span>
-          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            {open ? "Masquer" : "Voir le détail"}
-            <ChevronDownIcon
-              aria-hidden="true"
-              className={cn(
-                "size-3 transition-transform duration-200 ease-stride",
-                open && "rotate-180",
-              )}
-            />
-          </span>
-        </span>
-        {!open &&
-          consults.map((consult) => (
-            <span
-              key={consult.thread}
-              className="grid grid-cols-[20px_minmax(0,1fr)] items-center gap-2"
-            >
-              <StaffPortrait agent={consult.agent} size={20} decorative />
-              <span>
-                <b className="font-semibold text-foreground">
-                  {staff[consult.agent].name}
-                </b>{" "}
-                · {consult.summary}
-              </span>
-            </span>
-          ))}
-      </button>
-      <div
-        id={id}
-        hidden={!open}
-        className="border-t border-border-subtle py-1"
-      >
-        {consults.map((consult) => (
-          <ConsultSteps key={consult.thread} consult={consult} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function QuestionCard({
   block,
   timeZone,
   onAnswer,
+  onOther,
   disabled,
 }: {
-  block: Extract<CoachBlock, { type: "question" }>;
+  block: Extract<StaffBlock, { type: "question" }>;
   timeZone: string;
   onAnswer: (text: string) => void;
+  onOther: () => void;
   disabled: boolean;
 }) {
   const staff = useStaff();
+  const titleId = useId();
   const pending = block.state === "pending";
   return (
     <div
+      role="group"
+      aria-labelledby={titleId}
       className={cn(
-        "flex flex-col gap-2.5 rounded-panel border px-3.5 py-3 sm:px-4 sm:py-3.5",
+        "flex flex-col gap-2.5 rounded-panel border bg-surface-panel px-3.5 py-3 sm:px-4 sm:py-3.5",
         pending ? "border-warning-border" : "border-border",
       )}
     >
@@ -215,36 +64,63 @@ function QuestionCard({
             <PulseDot tone="warning" breathing={false} />
             {questionAttribution(staff[block.askedFor])}
           </span>
-        ) : block.state === "answered" ? (
-          <span className="inline-flex items-center gap-1.5">
-            <CheckIcon aria-hidden="true" className="size-3 text-success" />
-            Question répondue
-            {block.answeredAt && ` · ${timeLabel(block.answeredAt, timeZone)}`}
-          </span>
         ) : (
-          <span>Question restée sans réponse</span>
+          <MonoLabel size="nano">
+            {questionAttribution(staff[block.askedFor])}
+          </MonoLabel>
         )}
         <span className="ml-auto inline-flex items-center gap-1.5">
-          <StaffPortrait agent={block.askedFor} size={16} decorative />
-          {askedByLabel(staff[block.askedFor])}
+          {block.state === "answered" ? (
+            <>
+              <CheckIcon aria-hidden="true" className="size-3 text-success" />
+              Répondue
+              {block.answeredAt &&
+                ` · ${timeLabel(block.answeredAt, timeZone)}`}
+            </>
+          ) : block.state === "closed" ? (
+            "Restée sans réponse"
+          ) : null}
         </span>
       </div>
-      <p className="text-body leading-snug font-medium">{block.question}</p>
-      {pending && (
+      <p id={titleId} className="text-body leading-snug font-medium">
+        {block.question}
+      </p>
+      {block.options.length > 0 && (pending || block.answer) && (
         <div className="flex flex-wrap gap-1.5">
-          {quickAnswers.map((answer) => (
+          {block.options.map((option) => {
+            const chosen = block.answer === option;
+            return (
+              <Button
+                key={option}
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-pressed={chosen}
+                disabled={!pending || disabled}
+                onClick={() => onAnswer(option)}
+                className={cn(
+                  "h-auto min-h-9 rounded-full px-3 py-1.5 text-left text-meta font-normal whitespace-normal text-muted",
+                  chosen &&
+                    "border-staff-medical bg-surface-raised text-foreground disabled:opacity-100",
+                )}
+              >
+                {chosen && <CheckIcon aria-hidden="true" className="size-3" />}
+                {option}
+              </Button>
+            );
+          })}
+          {pending && (
             <Button
-              key={answer}
               type="button"
               variant="outline"
               size="sm"
               disabled={disabled}
-              onClick={() => onAnswer(answer)}
-              className="h-9 rounded-full px-3 text-meta font-normal text-muted"
+              onClick={onOther}
+              className="min-h-9 rounded-full px-3 text-meta font-normal text-muted"
             >
-              {answer}
+              Autre…
             </Button>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -265,7 +141,7 @@ const proposalStatus: Record<
 function ProposalCard({
   block,
 }: {
-  block: Extract<CoachBlock, { type: "proposal" }>;
+  block: Extract<StaffBlock, { type: "proposal" }>;
 }) {
   const staff = useStaff();
   const status = proposalStatus[block.status];
@@ -329,28 +205,30 @@ function ProposalCard({
   );
 }
 
-function CoachMessage({
+function StaffMessage({
   entry,
   timeZone,
   onAnswer,
+  onOther,
   busy,
 }: {
-  entry: Extract<ThreadEntry, { type: "coach" }>;
+  entry: Extract<ThreadEntry, { type: "staff" }>;
   timeZone: string;
   onAnswer: (text: string) => void;
+  onOther: () => void;
   busy: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-[36px_minmax(0,1fr)] sm:items-start sm:gap-3">
+    <div className="flex flex-col gap-2 sm:grid sm:grid-cols-[36px_minmax(0,1fr)] sm:items-start sm:gap-3">
       <span className="max-sm:hidden">
-        <StaffPortrait agent="coach" size={36} decorative />
+        <StaffPortrait agent={entry.agent} size={36} decorative />
       </span>
-      <div className="flex min-w-0 flex-col gap-2.5 sm:gap-3">
+      <div className="flex min-w-0 flex-col gap-2">
         <div className="flex items-center gap-2">
           <span className="sm:hidden">
-            <StaffPortrait agent="coach" size={28} decorative />
+            <StaffPortrait agent={entry.agent} size={28} decorative />
           </span>
-          <StaffName agent="coach" />
+          <StaffName agent={entry.agent} />
           <MonoLabel size="nano">{timeLabel(entry.at, timeZone)}</MonoLabel>
         </div>
         {entry.blocks.map((block, index) => {
@@ -362,12 +240,6 @@ function CoachMessage({
                 className="text-body leading-[1.55]"
               />
             );
-          if (block.type === "consult")
-            return block.live ? (
-              <LiveConsult key={block.key} consults={block.consults} />
-            ) : (
-              <FoldedConsult key={block.key} consults={block.consults} />
-            );
           if (block.type === "question")
             return (
               <QuestionCard
@@ -375,6 +247,7 @@ function CoachMessage({
                 block={block}
                 timeZone={timeZone}
                 onAnswer={onAnswer}
+                onOther={onOther}
                 disabled={busy}
               />
             );
@@ -386,6 +259,58 @@ function CoachMessage({
             </p>
           );
         })}
+        {entry.reads.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <MonoLabel size="nano">A lu</MonoLabel>
+            {entry.reads.map((read) => (
+              <span
+                key={read}
+                className="inline-flex items-center rounded-control border border-border-strong px-1.75 py-0.5 text-[11px] text-muted"
+              >
+                {read}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TypingMessage({
+  entry,
+}: {
+  entry: Extract<ThreadEntry, { type: "typing" }>;
+}) {
+  const staff = useStaff();
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-col gap-2 sm:grid sm:grid-cols-[36px_minmax(0,1fr)] sm:items-start sm:gap-3"
+    >
+      <span className="max-sm:hidden">
+        <StaffPortrait agent={entry.agent} size={36} decorative />
+      </span>
+      <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="sm:hidden">
+            <StaffPortrait agent={entry.agent} size={28} decorative />
+          </span>
+          <StaffName agent={entry.agent} />
+        </div>
+        <span className="inline-flex items-center gap-2.5 self-start rounded-[4px_16px_16px_16px] border border-border bg-surface px-3.5 py-2.5 text-meta text-muted">
+          <span aria-hidden="true" className="inline-flex gap-1">
+            {[0, 1, 2].map((dot) => (
+              <span
+                key={dot}
+                className="size-1.25 rounded-full bg-staff-medical motion-safe:animate-pulse"
+                style={{ animationDelay: `${dot * 300}ms` }}
+              />
+            ))}
+          </span>
+          {typingLabel(staff[entry.agent], entry.read)}
+        </span>
       </div>
     </div>
   );
@@ -399,12 +324,15 @@ function AthleteMessage({
   timeZone: string;
 }) {
   const staff = useStaff();
+  const target = entry.replyTo ?? entry.consult;
   return (
-    <div className="flex max-w-[84%] flex-col gap-1.5 self-end">
-      {entry.consult && (
-        <span className="inline-flex items-center gap-1.5 self-end text-xs text-muted-foreground">
-          <StaffStack agents={[entry.consult]} size={16} />
-          Avis demandé à {staff[entry.consult].name}
+    <div className="flex max-w-[84%] flex-col items-end gap-1 self-end sm:max-w-[72%]">
+      {target && (
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <StaffPortrait agent={target} size={16} decorative />
+          {entry.replyTo
+            ? replyToLabel(staff[target])
+            : `@${staff[target].name}`}
         </span>
       )}
       <div className="rounded-[16px_16px_4px_16px] bg-surface-raised px-3.25 py-2.75 text-body leading-[1.45] whitespace-pre-wrap">
@@ -424,6 +352,7 @@ export function ThreadLog({
   now,
   busy,
   onAnswer,
+  onOther,
 }: {
   entries: ThreadEntry[];
   pending: string | null;
@@ -431,6 +360,7 @@ export function ThreadLog({
   now: Date;
   busy: boolean;
   onAnswer: (text: string) => void;
+  onOther: () => void;
 }) {
   return (
     <div
@@ -455,11 +385,14 @@ export function ThreadLog({
             )}
             {entry.type === "athlete" ? (
               <AthleteMessage entry={entry} timeZone={timeZone} />
+            ) : entry.type === "typing" ? (
+              <TypingMessage entry={entry} />
             ) : (
-              <CoachMessage
+              <StaffMessage
                 entry={entry}
                 timeZone={timeZone}
                 onAnswer={onAnswer}
+                onOther={onOther}
                 busy={busy}
               />
             )}

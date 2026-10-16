@@ -319,8 +319,8 @@ function HowItWorks({ initials }: { initials: string }) {
         </Step>
         <Step
           index={2}
-          title={`${coach.name} consulte`}
-          text="Seulement les spécialistes utiles, deux au plus. Tu vois chaque échange dans la conversation."
+          title={`${coach.name} passe la main`}
+          text="Au spécialiste utile, deux au plus. Il te parle directement et te pose ses questions dans la conversation."
         >
           <StaffPortrait agent="coach" size={36} decorative />
           <Arrow />
@@ -346,7 +346,7 @@ function HowItWorks({ initials }: { initials: string }) {
         </li>
         <li className="inline-flex items-center gap-2">
           <Dot className="bg-accent" />
-          Une seule voix, celle de {coach.name}
+          {coach.name} mène la conversation
         </li>
         <li className="inline-flex items-center gap-2">
           <Dot className="bg-muted" />
@@ -428,15 +428,15 @@ export function TeamScreen({
             </MonoLabel>
             <h1 className="max-w-180 text-[28px] leading-[1.1] font-semibold tracking-[-0.03em] md:text-[40px] md:leading-[1.05]">
               <span className="md:hidden">
-                Une équipe autour de toi, une seule voix.
+                Une équipe autour de toi, une seule conversation.
               </span>
               <span className="max-md:hidden">
-                Une équipe autour de toi, une seule voix pour te parler.
+                Une équipe autour de toi, dans une seule conversation.
               </span>
             </h1>
             <p className="text-sm leading-normal text-muted md:hidden">
-              {coach.name} mène. Les spécialistes donnent leur avis quand ta
-              demande touche leur domaine, et tu valides chaque changement.
+              {coach.name} mène. Les spécialistes te parlent directement quand
+              ta demande touche leur domaine, et tu valides chaque changement.
             </p>
             <p className="max-w-170 text-base leading-[1.55] text-muted max-md:hidden">
               Comme le staff d’un athlète pro : {coach.name} mène, et chaque
