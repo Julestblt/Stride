@@ -1,6 +1,6 @@
-# Managed Agents spike resources
+# Managed Agents coaching resources
 
-Claude Managed Agents definitions for the coaching runtime spike ([#128](https://github.com/Julestblt/Stride/issues/128)). They live in the dedicated `Stride` workspace of the Anthropic organization.
+Claude Managed Agents definitions for the coaching runtime, chosen by the [#128](https://github.com/Julestblt/Stride/issues/128) spike and made production-grade by [#136](https://github.com/Julestblt/Stride/issues/136). They live in the dedicated `Stride` workspace of the Anthropic organization.
 
 | Path                         | Resource                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------ |
@@ -32,17 +32,37 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 
 `status-reports`, `explain-decision` and `garmin-data-access` are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and lists the planned `read_plan_progress` and `read_plan_history` tools.
 
+## Runtime
+
+`POST /api/coach/turns` starts or resumes the signed-in athlete's session and streams the turn as server-sent events (`src/server/coaching/managed/session.ts`):
+
+- a new session gets the athlete's vault, `stride_user_id` metadata and a budget cap ($1 for a conversation, $2 for a plan design), and a `coach_sessions` row under row-level security;
+- a resumed session must exist in the athlete's own `coach_sessions` rows **and** carry the athlete's `stride_user_id` metadata, otherwise the API answers 404;
+- custom tool calls run under the athlete's row-level security; `ask_athlete` pauses the session (`awaiting_athlete`) until the athlete answers;
+- a turn stops after 15 minutes: Stride sends `user.interrupt` and shows a French message; a session that reaches its budget is closed.
+
+Accepted proposals are applied by the `stride-coach-worker` service, not by the web process. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md).
+
 ## Development page
 
-`/coach` (development only) starts a conversation session ($1 cap) or a plan design session ($2 cap) after confirmation, shows the transcript with latency and cost, and lets the athlete approve, apply or delete plans. Applying and deleting use the `stride_coach_worker` role and need `COACH_WORKER_DATABASE_URL` in `.env.local`.
+`/coach` (development only) starts a conversation or plan design session after confirmation, streams the transcript with latency and cost, and lets the athlete approve, apply or reset plans. Applying and resetting go through the worker: run `npm run worker:build && npm run worker:start` with `COACH_WORKER_DATABASE_URL` in the worker's environment, and set `COACH_WORKER_URL` for the web process.
 
-## Sync
+## Release procedure
 
 Run from this directory, never from a parent directory, with a profile bound to the `Stride` workspace:
 
-```sh
-ant --profile Stride apply --dry-run agents/coach.md agents/medical.md environments/coaching.yaml
-ant --profile Stride apply agents/coach.md agents/medical.md environments/coaching.yaml
-```
+1. Dry run and read the plan. It must only change the files you edited:
 
-Edit a file and apply again to create a new agent version. Commit `claude-lock.json` with the change.
+   ```sh
+   ant --profile Stride apply --dry-run agents/coach.md agents/medical.md environments/coaching.yaml
+   ```
+
+2. Apply after the owner approves the plan:
+
+   ```sh
+   ant --profile Stride apply agents/coach.md agents/medical.md environments/coaching.yaml
+   ```
+
+3. Commit `claude-lock.json` with the change, then run the dry run again: it must report everything up to date.
+
+Editing an agent file creates a new agent version. New sessions use the latest version; running sessions keep theirs. Never pass `--force` or `--prune` without the owner's approval.
