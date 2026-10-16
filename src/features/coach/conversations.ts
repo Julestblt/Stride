@@ -1,6 +1,6 @@
 import type { ThreadItem } from "./items";
 import { markdownPlainText } from "./markdown";
-import { staff, staffJoin, type StaffAgent } from "./staff";
+import { staffJoin, type Staff, type StaffAgent } from "./staff";
 import { ofName, proposalCardStatus } from "./thread";
 
 export const turnStaleMs = 15 * 60 * 1000;
@@ -78,14 +78,14 @@ export function threadParticipants(items: readonly ThreadItem[]) {
   return agents;
 }
 
-export function participantsLine(agents: readonly StaffAgent[]) {
+export function participantsLine(staff: Staff, agents: readonly StaffAgent[]) {
   const others = agents.filter((agent) => agent !== "coach");
   return others.length
-    ? `${staff.coach.name}, avec ${staffJoin(others)}`
+    ? `${staff.coach.name}, avec ${staffJoin(staff, others)}`
     : staff.coach.name;
 }
 
-export function threadPreview(items: readonly ThreadItem[]) {
+export function threadPreview(staff: Staff, items: readonly ThreadItem[]) {
   for (const item of [...items].reverse()) {
     if (item.kind === "coach" && item.text.trim())
       return `${staff.coach.name} : ${markdownPlainText(item.text)}`;
@@ -234,7 +234,7 @@ export type SuiviCard = {
   detail: string;
 };
 
-export function suiviCard(status: ThreadStatus): SuiviCard {
+export function suiviCard(staff: Staff, status: ThreadStatus): SuiviCard {
   switch (status) {
     case "working":
       return {
@@ -282,6 +282,7 @@ export type SuiviParticipant = {
 };
 
 export function suiviParticipants(
+  staff: Staff,
   items: readonly ThreadItem[],
 ): SuiviParticipant[] {
   return threadParticipants(items).map((agent) => {
@@ -317,6 +318,7 @@ export type TimelineStep = {
 };
 
 export function suiviTimeline(input: {
+  staff: Staff;
   items: readonly ThreadItem[];
   status: ThreadStatus;
   pendingToolUseId: string | null;
@@ -378,15 +380,15 @@ export function suiviTimeline(input: {
         consulted.add(item.thread);
         done(
           key,
-          `${staff.coach.name} consulte ${staff[item.agent].name}`,
+          `${input.staff.coach.name} consulte ${input.staff[item.agent].name}`,
           item.at,
-          staff[item.agent].role,
+          input.staff[item.agent].role,
         );
         break;
       case "consult_reply":
         if (replied.has(item.thread)) break;
         replied.add(item.thread);
-        done(key, `Avis ${ofName(item.agent)}`, item.at);
+        done(key, `Avis ${ofName(input.staff[item.agent])}`, item.at);
         break;
       case "question": {
         const current =
@@ -395,7 +397,7 @@ export function suiviTimeline(input: {
         if (current) awaitingAnswer = true;
         steps.push({
           key,
-          label: `Question ${ofName(item.askedFor)}`,
+          label: `Question ${ofName(input.staff[item.askedFor])}`,
           detail: current ? item.question : null,
           at: at(item.at),
           state: current ? "current" : "done",
@@ -406,7 +408,7 @@ export function suiviTimeline(input: {
       }
       case "coach":
         if (lastCoach.has(index))
-          done(key, `Réponse ${ofName("coach")}`, item.at);
+          done(key, `Réponse ${ofName(input.staff.coach)}`, item.at);
         break;
       case "proposal": {
         const card = proposalCardStatus(
@@ -455,7 +457,7 @@ export function suiviTimeline(input: {
   if (input.status === "working" || awaitingAnswer)
     steps.push({
       key: "upcoming-answer",
-      label: `Réponse ${ofName("coach")}`,
+      label: `Réponse ${ofName(input.staff.coach)}`,
       detail: null,
       at: null,
       state: "upcoming",

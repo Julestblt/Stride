@@ -22,7 +22,13 @@ import {
   portraitSourceSize,
 } from "../../src/features/coach/portrait-crop";
 import { readLabel } from "../../src/features/coach/reads";
-import { agentOfManagedName } from "../../src/features/coach/staff";
+import {
+  agentOfManagedName,
+  defaultStaff,
+  staffFaceChoiceSchema,
+  staffFacesOf,
+  staffOf,
+} from "../../src/features/coach/staff";
 import {
   buildThread,
   questionAttribution,
@@ -149,8 +155,8 @@ describe("thread view model", () => {
       askedFor: "medical",
       state: "pending",
     });
-    expect(questionAttribution("medical")).toBe("Question d’Inès");
-    expect(questionAttribution("coach")).toBe("Question de Claire");
+    expect(questionAttribution(defaultStaff.medical)).toBe("Question d’Inès");
+    expect(questionAttribution(defaultStaff.coach)).toBe("Question de Claire");
   });
 
   it("links a question to its consult when the Coach wrote in between", () => {
@@ -395,19 +401,22 @@ describe("conversations", () => {
 
   it("summarizes participants, reads, preview and timeline for Suivi", () => {
     expect(threadParticipants(consultDone)).toEqual(["coach", "medical"]);
-    expect(participantsLine(["coach", "medical"])).toBe("Claire, avec Inès");
+    expect(participantsLine(defaultStaff, ["coach", "medical"])).toBe(
+      "Claire, avec Inès",
+    );
     expect(staffReads(consultDone)).toEqual([
       "Signalements · 14 jours",
       "Profil et contexte",
     ]);
-    expect(threadPreview(consultDone)).toBe(
+    expect(threadPreview(defaultStaff, consultDone)).toBe(
       "Ton genou te gêne-t-il en descente ?",
     );
-    expect(suiviParticipants(consultDone)).toEqual([
+    expect(suiviParticipants(defaultStaff, consultDone)).toEqual([
       { agent: "coach", role: "Coach · mène", messages: 0 },
       { agent: "medical", role: "Médecin · consultée", messages: 1 },
     ]);
     const steps = suiviTimeline({
+      staff: defaultStaff,
       items: consultDone,
       status: "question",
       pendingToolUseId: "sevt_ask",
@@ -459,6 +468,7 @@ describe("conversations", () => {
       decided?: string,
     ) =>
       suiviTimeline({
+        staff: defaultStaff,
         items,
         status,
         pendingToolUseId: null,
@@ -483,6 +493,7 @@ describe("conversations", () => {
       "current",
     ]);
     const last = suiviTimeline({
+      staff: defaultStaff,
       items,
       status: null,
       pendingToolUseId: null,
@@ -497,7 +508,7 @@ describe("conversations", () => {
       ["Réponse de Claire", "upcoming"],
     ]);
     expect(working.filter(([, state]) => state === "current")).toHaveLength(1);
-    expect(threadPreview(items.slice(0, -1))).toBe(
+    expect(threadPreview(defaultStaff, items.slice(0, -1))).toBe(
       "Claire : Verdict : on continue.",
     );
   });
@@ -524,5 +535,45 @@ describe("staff and reads", () => {
     expect(portraitSourceSize(36)).toBe(65);
     expect(portraitSourceSize(96)).toBe(125);
     expect(portraitSourceSize(168)).toBe(168);
+  });
+});
+
+describe("staff faces", () => {
+  const swapped = staffOf({ coach: "thomas", medical: "karim" });
+
+  it("defaults to Claire and Inès and ignores unknown stored faces", () => {
+    expect(staffFacesOf(null)).toEqual({ coach: "claire", medical: "ines" });
+    expect(staffFacesOf({ coach_face: "marc", medical_face: "karim" })).toEqual(
+      { coach: "claire", medical: "karim" },
+    );
+  });
+
+  it("changes names, alt text and grammar but never the role", () => {
+    expect(swapped.coach).toMatchObject({
+      name: "Thomas",
+      role: "Coach",
+      alt: "Thomas, coach",
+      pronoun: "Il",
+    });
+    expect(swapped.medical).toMatchObject({
+      name: "Karim",
+      role: "Médecin",
+      consulted: "consulté",
+    });
+    expect(questionAttribution(swapped.medical)).toBe("Question de Karim");
+    expect(participantsLine(swapped, ["coach", "medical"])).toBe(
+      "Thomas, avec Karim",
+    );
+  });
+
+  it("only accepts a face that belongs to the role", () => {
+    expect(
+      staffFaceChoiceSchema.safeParse({ agent: "coach", face: "thomas" })
+        .success,
+    ).toBe(true);
+    expect(
+      staffFaceChoiceSchema.safeParse({ agent: "coach", face: "karim" })
+        .success,
+    ).toBe(false);
   });
 });

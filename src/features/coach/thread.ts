@@ -1,5 +1,5 @@
 import type { ItemOf, ProposalOpinion, ThreadItem } from "./items";
-import { staff, type StaffAgent } from "./staff";
+import type { StaffAgent, StaffMember } from "./staff";
 
 export type ConsultStep = {
   from: StaffAgent;
@@ -277,15 +277,14 @@ export function consultHeadline(consults: readonly ConsultView[]) {
   return count === 1 ? "1 avis" : `${count} avis`;
 }
 
-export function ofName(agent: StaffAgent) {
-  const name = staff[agent].name;
+export function ofName({ name }: StaffMember) {
   return /^[aeiouyàâéèêëîïôûùh]/i.test(name) ? `d’${name}` : `de ${name}`;
 }
 
-export function questionAttribution(agent: StaffAgent) {
-  return `Question ${ofName(agent)}`;
+export function questionAttribution(member: StaffMember) {
+  return `Question ${ofName(member)}`;
 }
 
-export function askedByLabel(agent: StaffAgent) {
-  return `Demandée par ${staff[agent].name}`;
+export function askedByLabel(member: StaffMember) {
+  return `Demandée par ${member.name}`;
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowUpIcon,
   ChevronLeftIcon,
+  ChevronRightIcon,
   ListIcon,
   PlusIcon,
   SquareIcon,
@@ -45,9 +46,9 @@ import {
   StaffPortrait,
   StaffStack,
 } from "@/features/coach/components/staff-portrait";
-import { staff } from "@/features/coach/staff";
+import { useStaff } from "@/features/coach/components/staff-context";
 import { refusalText, splitFrames, turnFailure } from "@/features/coach/stream";
-import { buildThread } from "@/features/coach/thread";
+import { buildThread, ofName } from "@/features/coach/thread";
 import { markCoachThreadRead } from "@/server/coaching/actions";
 import { ConversationList } from "./conversation-list";
 import { SuiviPanel } from "./suivi-panel";
@@ -99,6 +100,7 @@ function Composer({
   onSend: (text: string, consult: boolean) => Promise<boolean>;
   onStop: () => void;
 }) {
+  const staff = useStaff();
   const [text, setText] = useState(initialText);
   const [consult, setConsult] = useState(false);
 
@@ -160,7 +162,7 @@ function Composer({
               variant="choice"
               pressed={consult}
               onPressedChange={setConsult}
-              aria-label={`Demander l’avis d’${staff.medical.name}`}
+              aria-label={`Demander l’avis ${ofName(staff.medical)}`}
               disabled={busy}
               className="min-h-9 gap-1.5 rounded-control border-border bg-transparent pr-2 pl-1.5 text-meta font-normal data-[state=on]:border-foreground data-[state=on]:bg-surface-raised data-[state=on]:font-semibold data-[state=on]:text-foreground"
             >
@@ -196,8 +198,8 @@ function Composer({
         </InputGroupAddon>
       </InputGroup>
       <p className="text-xs text-muted-foreground max-sm:hidden">
-        {staff.coach.name} te répond toujours. Elle consulte au plus deux
-        spécialistes par demande, et rien ne change sans ton accord.
+        {staff.coach.name} te répond toujours. {staff.coach.pronoun} consulte au
+        plus deux spécialistes par demande, et rien ne change sans ton accord.
       </p>
     </form>
   );
@@ -218,6 +220,7 @@ export function CoachScreen({
   now: string;
   timeZone: string;
 }) {
+  const staff = useStaff();
   const router = useRouter();
   const now = useMemo(() => new Date(nowIso), [nowIso]);
   const baseItems = useMemo(() => thread?.items ?? [], [thread]);
@@ -300,13 +303,14 @@ export function CoachScreen({
         readAt: items.at(-1)?.at ?? nowIso,
         state: busy ? "running" : state,
         lastTurnAt: busy ? nowIso : lastTurnAt,
-        preview: threadPreview(items),
+        preview: threadPreview(staff, items),
         participants,
         proposalStatuses: original?.proposalStatuses ?? [],
       });
     return conversationSections(merged, now, timeZone);
   }, [
     conversations,
+    staff,
     ids.threadId,
     state,
     title,
@@ -513,16 +517,30 @@ export function CoachScreen({
                   aria-label="Ton staff"
                   className="flex flex-col gap-2.5"
                 >
-                  <MonoLabel size="nano">Ton staff</MonoLabel>
+                  <div className="flex items-baseline">
+                    <MonoLabel size="nano">Ton staff</MonoLabel>
+                    <Link
+                      href="/coach/equipe"
+                      className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground"
+                    >
+                      Voir l’équipe
+                      <ChevronRightIcon
+                        aria-hidden="true"
+                        className="size-2.5"
+                      />
+                    </Link>
+                  </div>
                   <div className="flex gap-3">
                     {(["coach", "medical"] as const).map((agent) => (
-                      <span
+                      <Link
                         key={agent}
-                        className="flex w-15.5 flex-col items-center gap-1.5 text-xs text-muted"
+                        href="/coach/equipe"
+                        aria-label={`${staff[agent].alt}, voir l’équipe`}
+                        className="flex w-15.5 flex-col items-center gap-1.5 text-xs text-muted hover:text-foreground"
                       >
-                        <StaffPortrait agent={agent} size={56} />
+                        <StaffPortrait agent={agent} size={56} decorative />
                         <span aria-hidden="true">{staff[agent].name}</span>
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </section>
@@ -554,7 +572,7 @@ export function CoachScreen({
                 {empty && !thread ? "Nouvelle conversation" : title}
               </h1>
               <span className="truncate text-xs text-muted-foreground">
-                {participantsLine(participants)}
+                {participantsLine(staff, participants)}
                 {startedAt &&
                   !empty &&
                   ` · commencé à ${timeLabel(startedAt, timeZone)}`}
