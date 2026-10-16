@@ -24,8 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { loadHeartRateZones } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
-import { readSessionMatches } from "@/server/plans/matches";
-import { readActivePlan } from "@/server/plans/stored";
+import { loadPlanOverview } from "@/server/plans/overview";
 import { loadProgressHistory } from "@/server/progress/history";
 
 export const metadata: Metadata = { title: "Forme · Progression" };
@@ -42,14 +41,9 @@ export default async function ProgressFitnessPage({
   const [history, zones, plan] = await Promise.all([
     loadProgressHistory(context, today),
     loadHeartRateZones(context, now),
-    readActivePlan(context)
-      .then(async (stored) =>
-        stored
-          ? {
-              stored,
-              matches: await readSessionMatches(context, stored.planId),
-            }
-          : null,
+    loadPlanOverview(context)
+      .then((overview) =>
+        overview ? { stored: overview.plan, matches: overview.matches } : null,
       )
       .catch(() => null),
   ]);

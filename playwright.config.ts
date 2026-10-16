@@ -29,6 +29,7 @@ export default defineConfig({
       testIgnore: [
         "onboarding.spec.ts",
         "races-course.spec.ts",
+        "session-matching.spec.ts",
         ...developmentSpecs,
       ],
       use: { ...devices["Desktop Chrome"] },
@@ -40,7 +41,7 @@ export default defineConfig({
     },
     {
       name: "chromium-race-course",
-      testMatch: "races-course.spec.ts",
+      testMatch: ["races-course.spec.ts", "session-matching.spec.ts"],
       dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] },
     },

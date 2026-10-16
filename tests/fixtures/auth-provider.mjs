@@ -731,6 +731,8 @@ const planDoneSession = planMatchedSessions.findLast(
   (session) => session.kind === "easy",
 );
 const planDoneActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005000";
+const planMissedSession = pastPlanSessions[2];
+const planImportedActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005001";
 const planDoneStart = Date.parse(`${planDoneSession.scheduled_on}T17:12:00Z`);
 tables.provider_activities.push({
   ...activity(5000, 0, {
@@ -780,6 +782,9 @@ Object.assign(tables, {
       time_zone: "Europe/Paris",
       primary_race_id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
       active_version: 3,
+      matches_computed_at: new Date().toISOString(),
+      matches_version: 3,
+      matches_activities_through: null,
     },
   ],
   plan_versions: [
@@ -902,7 +907,9 @@ function selectRows(table, params) {
     rows = [...rows].sort((a, b) =>
       params.get("order")?.startsWith("max_heart_rate")
         ? (b.max_heart_rate ?? 0) - (a.max_heart_rate ?? 0)
-        : b.started_at.localeCompare(a.started_at),
+        : params.get("order")?.startsWith("updated_at")
+          ? (b.updated_at ?? "").localeCompare(a.updated_at ?? "")
+          : b.started_at.localeCompare(a.started_at),
     );
   if (table === "provider_activity_segments")
     rows = [...rows].sort((a, b) => a.segment_index - b.segment_index);
@@ -929,6 +936,15 @@ const links = new Map();
 const challenges = new Map();
 const requests = new Map();
 const port = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+const planMatchesSnapshot = {
+  matches: structuredClone(tables.session_activity_matches),
+  marker: {
+    matches_computed_at: tables.training_plans[0].matches_computed_at,
+    matches_version: tables.training_plans[0].matches_version,
+    matches_activities_through: null,
+  },
+};
+
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://127.0.0.1:${port}`);
   const chunks = [];
@@ -981,6 +997,40 @@ createServer(async (request, response) => {
       access_token: accessToken(Math.floor(Date.now() / 1000) - 60),
       expires_at: Math.floor(Date.now() / 1000) - 60,
     });
+  if (url.pathname === "/__test__/plan-import" && request.method === "POST") {
+    if (
+      !tables.provider_activities.some(
+        (row) => row.id === planImportedActivityId,
+      )
+    )
+      tables.provider_activities.push({
+        ...activity(5001, 0, {
+          activity_name: "Footing importé",
+          distance_meters: 8100,
+          duration_seconds: 2760,
+          average_heart_rate: 141,
+        }),
+        user_id: planUser.id,
+        started_at: `${planMissedSession.scheduled_on}T05:40:00Z`,
+        local_started_at: `${planMissedSession.scheduled_on} 07:40:00`,
+        imported_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    return send(200, { sessionKey: planMissedSession.session_key });
+  }
+  if (url.pathname === "/__test__/plan-import" && request.method === "DELETE") {
+    tables.provider_activities = tables.provider_activities.filter(
+      (row) => row.id !== planImportedActivityId,
+    );
+    tables.session_activity_matches = structuredClone(
+      planMatchesSnapshot.matches,
+    );
+    Object.assign(
+      tables.training_plans.find((row) => row.id === planId),
+      planMatchesSnapshot.marker,
+    );
+    return send(200, { reset: true });
+  }
   if (
     ["/__test__/race-course", "/__test__/race-road"].includes(url.pathname) &&
     request.method === "POST"
@@ -1179,6 +1229,61 @@ createServer(async (request, response) => {
       url.pathname === "/rest/v1/provider_activity_tracks"
     )
       return send(503, { message: "Records fixture read failure" });
+    if (
+      request.method === "POST" &&
+      url.pathname === "/rest/v1/rpc/refresh_session_matches"
+    ) {
+      const plan = tables.training_plans.find(
+        (item) =>
+          item.id === body.p_plan_id &&
+          item.user_id === (recordsSession?.user.id ?? user.id) &&
+          item.status === "active",
+      );
+      if (!plan) return send(404, { code: "PT404", message: "not_found" });
+      if (plan.active_version !== body.p_version)
+        return send(409, { code: "PT409", message: "stale_version" });
+      const athlete = tables.session_activity_matches.filter(
+        (row) => row.plan_id === plan.id && row.method === "athlete",
+      );
+      const recorded = body.p_matches.filter(
+        (match) =>
+          !athlete.some(
+            (row) =>
+              row.session_key === match.sessionKey ||
+              row.activity_id === match.activityId,
+          ),
+      );
+      tables.session_activity_matches = tables.session_activity_matches
+        .filter(
+          (row) =>
+            row.plan_id !== plan.id ||
+            row.method !== "auto" ||
+            !recorded.some(
+              (match) =>
+                match.sessionKey === row.session_key ||
+                match.activityId === row.activity_id,
+            ),
+        )
+        .concat(
+          recorded.map((match) => ({
+            user_id: plan.user_id,
+            plan_id: plan.id,
+            session_key: match.sessionKey,
+            activity_id: match.activityId,
+            method: "auto",
+            status: match.status,
+            confidence: match.confidence,
+            compliance: match.compliance,
+            algorithm_version: body.p_algorithm_version,
+          })),
+        );
+      Object.assign(plan, {
+        matches_computed_at: new Date().toISOString(),
+        matches_version: plan.active_version,
+        matches_activities_through: body.p_activities_through ?? null,
+      });
+      return send(200, recorded.length);
+    }
     if (
       request.method === "PATCH" &&
       url.pathname === "/rest/v1/athlete_profiles"
