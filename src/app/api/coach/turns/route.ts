@@ -22,6 +22,7 @@ const requestSchema = z.strictObject({
     z.strictObject({
       kind: z.literal("message"),
       text: z.string().trim().min(1).max(2000),
+      consult: z.literal("medical").optional(),
     }),
     z.strictObject({
       kind: z.literal("answer"),

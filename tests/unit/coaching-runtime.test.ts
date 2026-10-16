@@ -6,6 +6,7 @@ const store = vi.hoisted(() => ({
   findOwnSession: vi.fn(),
   recordSession: vi.fn(),
   updateSession: vi.fn(),
+  appendThreadItem: vi.fn(),
 }));
 const managed = vi.hoisted(() => ({
   retrieve: vi.fn(),
@@ -97,6 +98,10 @@ function record(overrides: Partial<CoachSessionRecord> = {}) {
     budgetCents: 100,
     listCostCents: 0,
     lastTurnAt: null,
+    title: "Ma semaine",
+    lastActivityAt: "2026-10-16T09:00:00Z",
+    readAt: null,
+    createdAt: "2026-10-16T09:00:00Z",
     ...overrides,
   } satisfies CoachSessionRecord;
 }
@@ -221,6 +226,7 @@ describe("coach turn stream", () => {
     vi.resetAllMocks();
     syncAthleteVault.mockResolvedValue("vlt_test");
     store.updateSession.mockResolvedValue(undefined);
+    store.appendThreadItem.mockResolvedValue(undefined);
     managed.send.mockResolvedValue({});
     managed.retrieve.mockResolvedValue({
       id: "sesn_01A",
@@ -282,6 +288,7 @@ describe("coach turn stream", () => {
       managedSessionId: "sesn_01A",
       mode: "conversation",
       budgetCents: 100,
+      title: "Comment se passe ma semaine",
     });
   });
 
@@ -474,13 +481,9 @@ describe("coach turn stream", () => {
         }),
       ],
     });
-    expect(events.map((event) => event.type)).toEqual([
-      "session",
-      "tool",
-      "delegation",
-      "question",
-      "done",
-    ]);
+    expect(
+      events.flatMap((event) => (event.type === "item" ? [] : [event.type])),
+    ).toEqual(["session", "tool", "delegation", "question", "done"]);
     expect(events.at(-1)).toMatchObject({
       status: "awaiting_athlete",
       listCostCents: 37,
@@ -603,5 +606,314 @@ describe("coach turn stream", () => {
     );
     expect(syncAthleteVault).toHaveBeenCalledWith(athleteA, null);
     expect(events.at(-1)).toMatchObject({ garmin: "unavailable" });
+  });
+
+  function persistedKinds() {
+    return store.appendThreadItem.mock.calls.map((call) => call[2].kind);
+  }
+
+  it("persists the athlete-visible items of a medical consult under the thread", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    runCustomTool.mockResolvedValue({ ok: true, content: { checkins: [] } });
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.thread_message_sent",
+          to_agent_name: "Stride Medical",
+          to_session_thread_id: "sthr_medical",
+          content: [{ type: "text", text: "Knee pain, can he run?" }],
+        },
+        {
+          type: "session.thread_created",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_reports",
+          name: "read_health_reports",
+          input: { days: 14 },
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "agent.mcp_tool_use",
+          name: "get_hrv_data",
+          input: {},
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "agent.thread_message_received",
+          from_agent_name: "Stride Medical",
+          from_session_thread_id: "sthr_medical",
+          content: [{ type: "text", text: "Ask about downhill pain." }],
+        },
+        {
+          type: "session.thread_status_idle",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+          stop_reason: { type: "end_turn" },
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_ask",
+          name: "ask_athlete",
+          input: {
+            question: "Ton genou te gêne-t-il en descente ?",
+            asked_for: "medical",
+          },
+        },
+        {
+          type: "session.status_idle",
+          stop_reason: { type: "requires_action" },
+        },
+      ]),
+    );
+
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), {
+        ...request,
+        input: {
+          kind: "message",
+          text: "J'ai mal au genou",
+          consult: "medical",
+        },
+      }),
+    );
+
+    expect(events[0]).toMatchObject({
+      type: "session",
+      threadId: "c0000000-0000-4000-8000-00000000000c",
+    });
+    expect(managed.send.mock.calls[0][1].events[0].content).toEqual([
+      { type: "text", text: "J'ai mal au genou" },
+      { type: "text", text: expect.stringContaining("Stride Medical") },
+    ]);
+    expect(persistedKinds()).toEqual([
+      "athlete",
+      "consult_request",
+      "read",
+      "read",
+      "consult_reply",
+      "consult_end",
+      "question",
+    ]);
+    for (const [, threadId] of store.appendThreadItem.mock.calls)
+      expect(threadId).toBe("c0000000-0000-4000-8000-00000000000c");
+    const items = store.appendThreadItem.mock.calls.map(([, , item]) => item);
+    expect(items[0]).toMatchObject({
+      text: "J'ai mal au genou",
+      consult: "medical",
+    });
+    expect(items[2]).toMatchObject({
+      agent: "medical",
+      label: "Signalements · 14 jours",
+    });
+    expect(items[3]).toMatchObject({ agent: "medical", label: "Garmin · VFC" });
+    expect(items[6]).toMatchObject({
+      toolUseId: "sevt_ask",
+      askedFor: "medical",
+    });
+    expect(
+      events
+        .filter((event) => event.type === "item")
+        .map((event) => event.item),
+    ).toEqual(items);
+  });
+
+  it("records a proposal card with its attributed reasons", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    const proposalId = "d0000000-0000-4000-8000-00000000000d";
+    runCustomTool.mockResolvedValue({
+      ok: true,
+      content: { proposalId, status: "ready", note: "x" },
+    });
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_proposal",
+          name: "create_plan_proposal",
+          input: {
+            title: "Seuil décalé",
+            summary: "Le seuil passe à jeudi.",
+            specialist_opinions: [
+              { specialist: "medical", verdict: "ok", summary: "Genou calme." },
+            ],
+          },
+        },
+        {
+          type: "agent.message",
+          content: [{ type: "text", text: "Voici ma proposition." }],
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+
+    const items = store.appendThreadItem.mock.calls.map(([, , item]) => item);
+    expect(items.map((item) => item.kind)).toEqual([
+      "athlete",
+      "proposal",
+      "coach",
+    ]);
+    expect(items[1]).toMatchObject({
+      proposalId,
+      scope: "session",
+      title: "Seuil décalé",
+      opinions: [{ agent: "medical", verdict: "ok", summary: "Genou calme." }],
+    });
+  });
+
+  it("records a new-plan proposal from submit_plan", async () => {
+    store.findOwnSession.mockResolvedValue(record({ mode: "plan" }));
+    const proposalId = "e0000000-0000-4000-8000-00000000000e";
+    runCustomTool.mockResolvedValue({
+      ok: true,
+      content: { proposalId, weeks: 12, sessions: 40, warnings: [], note: "x" },
+    });
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_submit",
+          name: "submit_plan",
+          input: { plan: { title: "Marathon 2027", summary: "12 semaines" } },
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    await collect(
+      streamCoachTurn(contextFor(athleteA), { ...request, mode: "plan" }),
+    );
+
+    expect(store.appendThreadItem.mock.calls[1][2]).toMatchObject({
+      kind: "proposal",
+      proposalId,
+      scope: "new_plan",
+      title: "Marathon 2027",
+    });
+  });
+
+  it("records the answer and a closing error in the thread", async () => {
+    store.findOwnSession.mockResolvedValue(
+      record({ status: "awaiting_athlete", pendingToolUseId: "sevt_ask" }),
+    );
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.status_idle",
+          stop_reason: { type: "budget_reached" },
+        },
+      ]),
+    );
+    await collect(
+      streamCoachTurn(contextFor(athleteA), {
+        ...request,
+        input: { kind: "answer", toolUseId: "sevt_ask", text: "Non" },
+      }),
+    );
+    const items = store.appendThreadItem.mock.calls.map(([, , item]) => item);
+    expect(items).toMatchObject([
+      { kind: "answer", toolUseId: "sevt_ask", text: "Non" },
+      { kind: "error", code: "budget_reached", text: turnMessages.budget },
+    ]);
+  });
+
+  it("keeps streaming when an item cannot be recorded", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    store.appendThreadItem.mockRejectedValue(new Error("rls"));
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.message",
+          content: [{ type: "text", text: "Salut" }],
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+    expect(events.at(-1)).toMatchObject({ type: "done", status: "idle" });
+  });
+
+  it("attributes messages to the Coach unless they come from a known specialist thread", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.thread_created",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.message",
+          session_thread_id: "sthr_medical",
+          content: [{ type: "text", text: "Reading the check-ins." }],
+        },
+        {
+          type: "agent.message",
+          session_thread_id: "sthr_primary",
+          content: [{ type: "text", text: "Voici mon avis." }],
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+    const items = store.appendThreadItem.mock.calls.map((call) => call[2]);
+    expect(items.slice(1)).toMatchObject([
+      { kind: "consult_note", agent: "medical", thread: "sthr_medical" },
+      { kind: "coach", text: "Voici mon avis." },
+    ]);
+  });
+
+  it("records a failed turn when the stream throws mid-turn", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    managed.stream.mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield {
+          type: "agent.message",
+          content: [{ type: "text", text: "Je regarde." }],
+        };
+        throw new Error("socket closed");
+      },
+    });
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+    expect(events).toContainEqual({
+      type: "error",
+      code: "failed",
+      text: turnMessages.failed,
+    });
+    expect(store.appendThreadItem.mock.calls.at(-1)?.[2]).toMatchObject({
+      kind: "error",
+      code: "failed",
+    });
+    expect(store.updateSession).toHaveBeenLastCalledWith(
+      expect.anything(),
+      "sesn_01A",
+      expect.objectContaining({ status: "failed" }),
+    );
+    expect(events.at(-1)).toMatchObject({ type: "done", status: "failed" });
+  });
+
+  it("clamps long texts instead of dropping the item", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.message",
+          content: [{ type: "text", text: "a".repeat(30_000) }],
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+    expect(store.appendThreadItem.mock.calls[1][2].text).toHaveLength(7000);
   });
 });

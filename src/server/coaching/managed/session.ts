@@ -1,4 +1,9 @@
 import "server-only";
+import { z } from "zod";
+import { threadTitle } from "@/features/coach/conversations";
+import { clampItem, type ThreadItem } from "@/features/coach/items";
+import { readLabel } from "@/features/coach/reads";
+import { agentOfManagedName, type StaffAgent } from "@/features/coach/staff";
 import { askAthleteTool } from "@/server/coaching/tools/ask-athlete";
 import { ToolError, toolError } from "@/server/coaching/tools/errors";
 import {
@@ -15,6 +20,7 @@ import {
   managedResources,
 } from "./resources";
 import {
+  appendThreadItem,
   findOwnSession,
   recordSession,
   updateSession,
@@ -42,7 +48,7 @@ export const turnMessages = {
 } as const;
 
 export type TurnInput =
-  | { kind: "message"; text: string }
+  | { kind: "message"; text: string; consult?: "medical" }
   | { kind: "answer"; toolUseId: string; text: string };
 
 export type TurnRequest = {
@@ -58,7 +64,13 @@ export type PendingQuestion = {
 };
 
 export type TurnEvent =
-  | { type: "session"; sessionId: string; consoleUrl: string }
+  | {
+      type: "session";
+      sessionId: string;
+      threadId: string;
+      consoleUrl: string;
+    }
+  | { type: "item"; item: ThreadItem }
   | { type: "coach"; text: string }
   | { type: "delegation"; from: string; to: string; text: string }
   | { type: "tool"; thread: string; name: string; ok: boolean; ms: number }
@@ -204,7 +216,85 @@ async function openSession(
     managedSessionId: session.id,
     mode: request.mode,
     budgetCents,
+    title: threadTitle(request.input.text),
   });
+}
+
+const consultInstruction: Record<"medical", string> = {
+  medical:
+    "The athlete asks you to consult Stride Medical on this request before you answer. You still make the decision.",
+};
+
+const proposalTools = new Set(["submit_plan", "create_plan_proposal"]);
+
+const proposalInputSchema = z.object({
+  title: z.string().catch(""),
+  summary: z.string().nullable().catch(null),
+  specialist_opinions: z
+    .array(
+      z.object({
+        specialist: z.literal("medical"),
+        verdict: z.string(),
+        summary: z.string(),
+      }),
+    )
+    .catch([]),
+});
+
+const submitPlanInputSchema = z.object({
+  plan: z
+    .object({
+      title: z.string().catch(""),
+      summary: z.string().nullable().catch(null),
+    })
+    .catch({ title: "", summary: null }),
+});
+
+const proposalIdSchema = z.object({ proposalId: z.uuid() });
+
+function proposalItem(
+  name: string,
+  input: unknown,
+  outcome: ToolOutcome,
+): ThreadItem | null {
+  if (!outcome.ok || !proposalTools.has(name)) return null;
+  const id = proposalIdSchema.safeParse(outcome.content);
+  if (!id.success) return null;
+  const at = new Date().toISOString();
+  if (name === "submit_plan") {
+    const { plan } = submitPlanInputSchema.parse(input ?? {});
+    return {
+      kind: "proposal",
+      at,
+      proposalId: id.data.proposalId,
+      scope: "new_plan",
+      title: plan.title || "Nouveau plan",
+      summary: plan.summary,
+      opinions: [],
+    };
+  }
+  const proposal = proposalInputSchema.safeParse(input ?? {});
+  const value = proposal.success
+    ? proposal.data
+    : { title: "", summary: null, specialist_opinions: [] };
+  return {
+    kind: "proposal",
+    at,
+    proposalId: id.data.proposalId,
+    scope: "session",
+    title: value.title || "Changement du plan",
+    summary: value.summary,
+    opinions: value.specialist_opinions.map((opinion) => ({
+      agent: opinion.specialist,
+      verdict: opinion.verdict,
+      summary: opinion.summary,
+    })),
+  };
+}
+
+function threadOf(event: object) {
+  const thread = (event as { session_thread_id?: unknown }).session_thread_id;
+  return typeof thread === "string" ? thread : null;
 }
 
 export async function* streamCoachTurn(
@@ -223,7 +313,42 @@ export async function* streamCoachTurn(
     status: "running",
     lastTurnAt: new Date().toISOString(),
   });
-  yield { type: "session", sessionId: id, consoleUrl: consoleSessionUrl(id) };
+  yield {
+    type: "session",
+    sessionId: id,
+    threadId: record.id,
+    consoleUrl: consoleSessionUrl(id),
+  };
+
+  let persisted = Promise.resolve();
+  const persist = (raw: ThreadItem) => {
+    const item = clampItem(raw);
+    persisted = persisted
+      .then(() => appendThreadItem(context, record.id, item))
+      .catch((error: unknown) => {
+        console.error("Coach thread item was not recorded", {
+          kind: item.kind,
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      });
+    return { type: "item", item } as const;
+  };
+  const now = () => new Date().toISOString();
+  yield persist(
+    request.input.kind === "message"
+      ? {
+          kind: "athlete",
+          at: now(),
+          text: request.input.text,
+          consult: request.input.consult ?? null,
+        }
+      : {
+          kind: "answer",
+          at: now(),
+          toolUseId: request.input.toolUseId,
+          text: request.input.text,
+        },
+  );
 
   const controller = new AbortController();
   let timedOut = false;
@@ -236,7 +361,10 @@ export async function* streamCoachTurn(
 
   let pendingQuestion: PendingQuestion | null = null;
   const threadAgents = new Map<string, string>();
+  const speakerOf = (thread: string | null | undefined): StaffAgent =>
+    (thread ? agentOfManagedName(threadAgents.get(thread)) : null) ?? "coach";
   let stopReason = "interrupted";
+  let crashed = false;
   let firstEventMs: number | null = null;
   const turnStarted = Date.now();
 
@@ -251,7 +379,17 @@ export async function* streamCoachTurn(
         request.input.kind === "message"
           ? {
               type: "user.message",
-              content: [{ type: "text", text: request.input.text }],
+              content: [
+                { type: "text", text: request.input.text },
+                ...(request.input.consult
+                  ? [
+                      {
+                        type: "text" as const,
+                        text: consultInstruction[request.input.consult],
+                      },
+                    ]
+                  : []),
+              ],
             }
           : {
               type: "user.custom_tool_result",
@@ -264,32 +402,78 @@ export async function* streamCoachTurn(
     loop: for await (const event of stream) {
       firstEventMs ??= Date.now() - turnStarted;
       switch (event.type) {
-        case "agent.message":
-          yield { type: "coach", text: textOf(event.content) };
+        case "agent.message": {
+          const text = textOf(event.content);
+          const thread = threadOf(event);
+          const speaker = speakerOf(thread);
+          if (speaker === "coach") {
+            yield { type: "coach", text };
+            if (text.trim()) yield persist({ kind: "coach", at: now(), text });
+          } else if (thread && text.trim())
+            yield persist({
+              kind: "consult_note",
+              at: now(),
+              thread,
+              agent: speaker,
+              text,
+            });
           break;
-        case "agent.thread_message_sent":
+        }
+        case "agent.thread_message_sent": {
+          const text = textOf(event.content);
           yield {
             type: "delegation",
             from: "Stride Coach",
             to: event.to_agent_name ?? "agent",
-            text: textOf(event.content),
+            text,
           };
+          const agent = agentOfManagedName(event.to_agent_name);
+          if (agent && agent !== "coach") {
+            threadAgents.set(event.to_session_thread_id, event.to_agent_name!);
+            yield persist({
+              kind: "consult_request",
+              at: now(),
+              thread: event.to_session_thread_id,
+              agent,
+              text,
+            });
+          }
           break;
-        case "agent.thread_message_received":
+        }
+        case "agent.thread_message_received": {
+          const text = textOf(event.content);
           yield {
             type: "delegation",
             from: event.from_agent_name ?? "agent",
             to: "Stride Coach",
-            text: textOf(event.content),
+            text,
           };
+          const agent = agentOfManagedName(event.from_agent_name);
+          if (agent && agent !== "coach")
+            yield persist({
+              kind: "consult_reply",
+              at: now(),
+              thread: event.from_session_thread_id,
+              agent,
+              text,
+            });
           break;
-        case "agent.mcp_tool_use":
-          yield {
-            type: "mcp",
-            thread: event.session_thread_id ?? "primary",
-            name: event.name,
-          };
+        }
+        case "agent.mcp_tool_use": {
+          const thread = event.session_thread_id ?? "primary";
+          yield { type: "mcp", thread, name: event.name };
+          const label = readLabel("garmin", event.name, event.input);
+          if (label)
+            yield persist({
+              kind: "read",
+              at: now(),
+              thread,
+              agent: speakerOf(event.session_thread_id),
+              tool: event.name,
+              label,
+            });
           break;
+        }
         case "agent.custom_tool_use": {
           const toolStarted = Date.now();
           let outcome: ToolOutcome;
@@ -324,6 +508,20 @@ export async function* streamCoachTurn(
             ok: outcome.ok,
             ms: Date.now() - toolStarted,
           };
+          const label = outcome.ok
+            ? readLabel("custom", event.name, event.input)
+            : null;
+          if (label)
+            yield persist({
+              kind: "read",
+              at: now(),
+              thread: event.session_thread_id ?? "primary",
+              agent: speakerOf(event.session_thread_id),
+              tool: event.name,
+              label,
+            });
+          const proposal = proposalItem(event.name, event.input, outcome);
+          if (proposal) yield persist(proposal);
           await client.beta.sessions.events.send(id, {
             events: [
               {
@@ -342,6 +540,18 @@ export async function* streamCoachTurn(
         case "session.thread_status_running":
           threadAgents.set(event.session_thread_id, event.agent_name);
           break;
+        case "session.thread_status_idle":
+        case "session.thread_status_terminated": {
+          const agent = agentOfManagedName(event.agent_name);
+          if (agent && agent !== "coach")
+            yield persist({
+              kind: "consult_end",
+              at: now(),
+              thread: event.session_thread_id,
+              agent,
+            });
+          break;
+        }
         case "session.status_idle":
           stopReason = event.stop_reason.type;
           if (event.stop_reason.type !== "requires_action" || pendingQuestion)
@@ -353,7 +563,12 @@ export async function* streamCoachTurn(
       }
     }
   } catch (error) {
-    if (!controller.signal.aborted) throw error;
+    if (!controller.signal.aborted) {
+      crashed = true;
+      console.error("Coach turn failed", {
+        error: error instanceof Error ? error.message : "unknown",
+      });
+    }
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener("abort", onAbort);
@@ -365,27 +580,53 @@ export async function* streamCoachTurn(
       .catch(() => undefined);
 
   let status: SessionStatus;
+  let failure: Extract<TurnEvent, { type: "error" }> | null = null;
   if (pendingQuestion) {
     status = "awaiting_athlete";
     yield { type: "question", question: pendingQuestion };
+    yield persist({
+      kind: "question",
+      at: now(),
+      toolUseId: pendingQuestion.toolUseId,
+      question: pendingQuestion.question,
+      askedFor: pendingQuestion.askedFor === "medical" ? "medical" : "coach",
+    });
+  } else if (crashed) {
+    status = "failed";
+    stopReason = "failed";
+    failure = { type: "error", code: "failed", text: turnMessages.failed };
   } else if (timedOut) {
     status = "timed_out";
     stopReason = "timeout";
-    yield { type: "error", code: "timeout", text: turnMessages.timeout };
+    failure = { type: "error", code: "timeout", text: turnMessages.timeout };
   } else if (controller.signal.aborted) {
     status = "idle";
   } else if (stopReason === "budget_reached") {
     status = "budget_reached";
-    yield { type: "error", code: "budget_reached", text: turnMessages.budget };
+    failure = {
+      type: "error",
+      code: "budget_reached",
+      text: turnMessages.budget,
+    };
   } else if (stopReason === "terminated") {
     status = "terminated";
-    yield { type: "error", code: "failed", text: turnMessages.failed };
+    failure = { type: "error", code: "failed", text: turnMessages.failed };
   } else if (stopReason === "retries_exhausted") {
     status = "failed";
-    yield { type: "error", code: "failed", text: turnMessages.failed };
+    failure = { type: "error", code: "failed", text: turnMessages.failed };
   } else {
     status = "idle";
   }
+  if (failure) {
+    yield failure;
+    yield persist({
+      kind: "error",
+      at: now(),
+      code: failure.code,
+      text: failure.text,
+    });
+  }
+  await persisted;
 
   const session = await client.beta.sessions.retrieve(id).catch(() => null);
   const listCostCents = costCents(session?.usage?.list_cost?.amount);
@@ -393,6 +634,9 @@ export async function* streamCoachTurn(
     status,
     pendingToolUseId: pendingQuestion?.toolUseId ?? null,
     ...(listCostCents === null ? {} : { listCostCents }),
+    ...(signal?.aborted && !timedOut
+      ? { readAt: new Date().toISOString() }
+      : {}),
   });
   yield {
     type: "done",

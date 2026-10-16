@@ -279,12 +279,15 @@ export type Database = {
           budget_cents: number;
           created_at: string;
           id: string;
+          last_activity_at: string;
           last_turn_at: string | null;
           list_cost_cents: number;
           managed_session_id: string;
           mode: string;
           pending_tool_use_id: string | null;
+          read_at: string | null;
           status: string;
+          title: string | null;
           updated_at: string;
           user_id: string;
         };
@@ -293,12 +296,15 @@ export type Database = {
           budget_cents: number;
           created_at?: string;
           id?: string;
+          last_activity_at?: string;
           last_turn_at?: string | null;
           list_cost_cents?: number;
           managed_session_id: string;
           mode: string;
           pending_tool_use_id?: string | null;
+          read_at?: string | null;
           status?: string;
+          title?: string | null;
           updated_at?: string;
           user_id: string;
         };
@@ -306,16 +312,55 @@ export type Database = {
           budget_cents?: number;
           created_at?: string;
           id?: string;
+          last_activity_at?: string;
           last_turn_at?: string | null;
           list_cost_cents?: number;
           managed_session_id?: string;
           mode?: string;
           pending_tool_use_id?: string | null;
+          read_at?: string | null;
           status?: string;
+          title?: string | null;
           updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
+      };
+      coach_thread_items: {
+        Row: {
+          body: NonNullable<Json>;
+          coach_session_id: string;
+          created_at: string;
+          id: number;
+          kind: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: NonNullable<Json>;
+          coach_session_id: string;
+          created_at?: string;
+          id?: never;
+          kind: string;
+          user_id: string;
+        };
+        Update: {
+          body?: NonNullable<Json>;
+          coach_session_id?: string;
+          created_at?: string;
+          id?: never;
+          kind?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_thread_items_coach_session_id_fkey";
+            columns: ["coach_session_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_sessions";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       onboarding_progress: {
         Row: {
