@@ -11,6 +11,7 @@ import {
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
 import { buildProgram, programNavigation } from "@/features/plans/view/program";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
+import { staffFacesOf } from "@/features/coach/staff";
 import { countCoachAttention } from "@/server/coaching/managed/store";
 import { countPlanProposals } from "@/server/plans/proposals";
 import { readDataActivity } from "./data-activity";
@@ -69,6 +70,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     planNav: plan ? programNavigation(buildProgram(programInput(plan))) : null,
     planHistoryCount,
     coachAttention,
+    staffFaces: staffFacesOf(profile.data),
   };
 }
 

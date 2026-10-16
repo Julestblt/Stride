@@ -12,7 +12,7 @@ import {
 } from "@/features/coach/conversations";
 import type { ThreadItem } from "@/features/coach/items";
 import { StaffPortrait } from "@/features/coach/components/staff-portrait";
-import { staff } from "@/features/coach/staff";
+import { useStaff } from "@/features/coach/components/staff-context";
 
 const cardTone = {
   accent: "border-border bg-surface",
@@ -41,8 +41,10 @@ export function SuiviPanel({
   proposalStatuses: Readonly<Record<string, string>>;
   timeZone: string;
 }) {
-  const card = suiviCard(status);
+  const staff = useStaff();
+  const card = suiviCard(staff, status);
   const steps = suiviTimeline({
+    staff,
     items,
     status,
     pendingToolUseId,
@@ -73,7 +75,7 @@ export function SuiviPanel({
       </section>
       <section className="flex flex-col gap-1">
         <h2 className="pb-1.5 text-sm font-semibold">Participants</h2>
-        {suiviParticipants(items).map((participant) => (
+        {suiviParticipants(staff, items).map((participant) => (
           <div
             key={participant.agent}
             className="grid grid-cols-[36px_minmax(0,1fr)_auto] items-center gap-2.5 border-t border-border-subtle py-2"

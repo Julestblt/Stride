@@ -38,11 +38,13 @@ export type Database = {
         Row: {
           available_weekdays: number[] | null;
           birth_date: string | null;
+          coach_face: string;
           created_at: string;
           first_name: string | null;
           height_cm: number | null;
           long_run_day: string | null;
           max_weekly_minutes: number | null;
+          medical_face: string;
           primary_terrain: string | null;
           profile_photo_path: string | null;
           revision: number;
@@ -62,11 +64,13 @@ export type Database = {
         Insert: {
           available_weekdays?: number[] | null;
           birth_date?: string | null;
+          coach_face?: string;
           created_at?: string;
           first_name?: string | null;
           height_cm?: number | null;
           long_run_day?: string | null;
           max_weekly_minutes?: number | null;
+          medical_face?: string;
           primary_terrain?: string | null;
           profile_photo_path?: string | null;
           revision?: number;
@@ -85,11 +89,13 @@ export type Database = {
         Update: {
           available_weekdays?: number[] | null;
           birth_date?: string | null;
+          coach_face?: string;
           created_at?: string;
           first_name?: string | null;
           height_cm?: number | null;
           long_run_day?: string | null;
           max_weekly_minutes?: number | null;
+          medical_face?: string;
           primary_terrain?: string | null;
           profile_photo_path?: string | null;
           revision?: number;

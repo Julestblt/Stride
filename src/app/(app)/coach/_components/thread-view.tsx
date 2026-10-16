@@ -12,7 +12,7 @@ import {
   StaffStack,
 } from "@/features/coach/components/staff-portrait";
 import { Markdown } from "@/features/coach/components/markdown";
-import { staff } from "@/features/coach/staff";
+import { useStaff } from "@/features/coach/components/staff-context";
 import {
   askedByLabel,
   consultHeadline,
@@ -27,6 +27,7 @@ import { ProposalLink } from "../../plan/_components/proposal-sheet";
 export const quickAnswers = ["Oui", "Non", "Je ne sais pas"] as const;
 
 function StaffName({ agent }: { agent: ConsultView["agent"] }) {
+  const staff = useStaff();
   return (
     <span className="inline-flex items-center gap-1.5 text-meta font-semibold text-foreground">
       {staff[agent].name}
@@ -38,6 +39,7 @@ function StaffName({ agent }: { agent: ConsultView["agent"] }) {
 }
 
 function ConsultSteps({ consult }: { consult: ConsultView }) {
+  const staff = useStaff();
   return (
     <>
       {consult.steps.map((step, index) => (
@@ -124,6 +126,7 @@ function LiveConsult({ consults }: { consults: ConsultView[] }) {
 }
 
 function FoldedConsult({ consults }: { consults: ConsultView[] }) {
+  const staff = useStaff();
   const [open, setOpen] = useState(false);
   const id = useId();
   return (
@@ -197,6 +200,7 @@ function QuestionCard({
   onAnswer: (text: string) => void;
   disabled: boolean;
 }) {
+  const staff = useStaff();
   const pending = block.state === "pending";
   return (
     <div
@@ -209,7 +213,7 @@ function QuestionCard({
         {pending ? (
           <span className="inline-flex items-center gap-1.5 text-warning">
             <PulseDot tone="warning" breathing={false} />
-            {questionAttribution(block.askedFor)}
+            {questionAttribution(staff[block.askedFor])}
           </span>
         ) : block.state === "answered" ? (
           <span className="inline-flex items-center gap-1.5">
@@ -222,7 +226,7 @@ function QuestionCard({
         )}
         <span className="ml-auto inline-flex items-center gap-1.5">
           <StaffPortrait agent={block.askedFor} size={16} decorative />
-          {askedByLabel(block.askedFor)}
+          {askedByLabel(staff[block.askedFor])}
         </span>
       </div>
       <p className="text-body leading-snug font-medium">{block.question}</p>
@@ -263,6 +267,7 @@ function ProposalCard({
 }: {
   block: Extract<CoachBlock, { type: "proposal" }>;
 }) {
+  const staff = useStaff();
   const status = proposalStatus[block.status];
   return (
     <div className="flex flex-col gap-3.5 rounded-panel border border-border bg-surface p-4 sm:p-4.5">
@@ -393,6 +398,7 @@ function AthleteMessage({
   entry: Extract<ThreadEntry, { type: "athlete" }>;
   timeZone: string;
 }) {
+  const staff = useStaff();
   return (
     <div className="flex max-w-[84%] flex-col gap-1.5 self-end">
       {entry.consult && (
@@ -471,6 +477,7 @@ export function ThreadLog({
 }
 
 export function StaffWorking() {
+  const staff = useStaff();
   return (
     <div
       role="status"

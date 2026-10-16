@@ -30,6 +30,7 @@
   --provider: #5e8fb8;
   --provider-muted: #3a5068;
   --night: #8fa3d9;
+  --staff-medical: #62d2c8;
   --zone-1: #3d4238;
   --zone-2: var(--provider);
   --zone-3: #a9c94a;
@@ -93,6 +94,7 @@
   --color-provider: var(--provider);
   --color-provider-muted: var(--provider-muted);
   --color-night: var(--night);
+  --color-staff-medical: var(--staff-medical);
   --color-zone-1: var(--zone-1);
   --color-zone-2: var(--zone-2);
   --color-zone-3: var(--zone-3);
