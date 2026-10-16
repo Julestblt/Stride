@@ -9,6 +9,7 @@ import Link from "next/link";
 import {
   ActivityIcon,
   ChartColumnIcon,
+  CircleDotIcon,
   FlagIcon,
   PlusIcon,
   TrendingUpIcon,
@@ -102,6 +103,11 @@ export function AppShell({
             <SidebarGroup>
               <SidebarGroupLabel>Entraînement</SidebarGroupLabel>
               <SidebarMenu>
+                <ShellNavItem
+                  href="/today"
+                  icon={<CircleDotIcon />}
+                  label="Aujourd’hui"
+                />
                 <ShellNavItem
                   href="/plan"
                   icon={<ChartColumnIcon />}

@@ -11,7 +11,7 @@ export default async function Home() {
   const user = await getCurrentUser();
   if (user && onboardingEnabled()) {
     await requireAthlete();
-    redirect("/activities");
+    redirect("/today");
   }
   return (
     <main className="flex min-h-svh flex-col px-5 sm:px-10 lg:px-24">

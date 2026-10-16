@@ -34,7 +34,9 @@ const raceSchema = z.object({
   elevation_gain_m: z.number().int().min(0).nullable().catch(null),
 });
 
-async function readRaces(context: OnboardingContext): Promise<ProgramRace[]> {
+export async function readPlanRaces(
+  context: OnboardingContext,
+): Promise<ProgramRace[]> {
   const [{ data, error }, courses] = await Promise.all([
     context.client
       .from("athlete_races")
@@ -67,7 +69,7 @@ export const loadPlanOverview = cache(
   async (context: OnboardingContext): Promise<PlanOverview | null> => {
     const [plan, races] = await Promise.all([
       readActivePlan(context),
-      readRaces(context),
+      readPlanRaces(context),
     ]);
     if (!plan) return null;
     const [matches, proposals] = await Promise.all([

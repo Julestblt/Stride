@@ -35,7 +35,7 @@ async function signIn(page: Page, email: string, destination = "welcome") {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(
     destination === "application"
-      ? "http://127.0.0.1:3110/activities"
+      ? "http://127.0.0.1:3110/today"
       : new RegExp(`/onboarding/${destination}$`),
   );
 }
@@ -259,9 +259,9 @@ test("completed athletes reach the application and second athletes cannot read p
   });
   expect(completed.error).toBeNull();
   await page.goto("/onboarding/garmin");
-  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/today");
   await page.reload();
-  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/today");
 });
 test("real sync count continues across navigation, shell geometry and keyboard are accessible", async ({
   page,
@@ -1170,10 +1170,10 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
   });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole("button", { name: "Entrer dans Stride" }).click();
-  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/today");
   expect((await read(user.id)).completed_at).not.toBeNull();
   await page.goto("/onboarding/about");
-  await expect(page).toHaveURL("http://127.0.0.1:3110/activities");
+  await expect(page).toHaveURL("http://127.0.0.1:3110/today");
 });
 
 test("unseeded six-screen journey survives refresh, another device, Back edits and real sign-out", async ({
@@ -1324,7 +1324,7 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
       device.getByRole("region", { name: "Import depuis Garmin" }),
     ).toContainText(/\d+ activités/);
     await device.getByRole("button", { name: "Entrer dans Stride" }).click();
-    await expect(device).toHaveURL("http://127.0.0.1:3110/activities");
+    await expect(device).toHaveURL("http://127.0.0.1:3110/today");
     const final = await read(user.id);
     for (const step of [
       "welcome",
