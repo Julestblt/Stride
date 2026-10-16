@@ -9,16 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "7",
-      "hash": "ca1f15ce111be8ace6fcbfc3eddb65b3",
-      "remote_hash": "b87fc908bbf6d97b9eb07ff47a992d01"
+      "version": "8",
+      "hash": "ba9c302b98ad63f48ceb82149020b528",
+      "remote_hash": "44e584e61e78a4cb899058da07954612"
     },
     "./agents/medical.md": {
       "kind": "agent",
       "id": "agent_011dYKZ33Wq7xwdNR3SqpugL",
-      "version": "6",
-      "hash": "6d4ceefd3cd0e6398f55fbb20469012d",
-      "remote_hash": "8acf42c5350983055a76eb980f9a8d61"
+      "version": "7",
+      "hash": "4f26ff8d5c0cea2a764548a657e3d01e",
+      "remote_hash": "b003ab1f180994f5019912f1ec213b7b"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
@@ -29,8 +29,8 @@
     "./skills/explain-decision": {
       "kind": "skill",
       "id": "skill_01PeEfH9uW4FuyNL7tERZsMn",
-      "version": "skver_01XtMAu2AtxddEw8XhhskRzE",
-      "hash": "709a9e6f7431dfabc812de2a7434697b"
+      "version": "skver_016wHx1YB5EdwvdjWMDEWmm8",
+      "hash": "d8d83ef2c26c88bc8a23f677337d71ec"
     },
     "./skills/fueling": {
       "kind": "skill",
@@ -77,8 +77,8 @@
     "./skills/status-reports": {
       "kind": "skill",
       "id": "skill_016RBxwbMwvtMjh1XnsutLF5",
-      "version": "skver_01FXWX1DCGpj3H1mkdnJXyok",
-      "hash": "9573e6d1d1b18bb7c85acd5d20b6bc04"
+      "version": "skver_017Ab7GaJvcpxRVEWxUd5gNU",
+      "hash": "a33dde57c87f8a2c09b1c542922d8f2b"
     }
   }
 }
