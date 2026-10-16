@@ -7,10 +7,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
-import { MonoLabel } from "@/components/stride/mono-label";
 import { NavBadge, NavItem } from "@/components/stride/navigation";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { StaffStack } from "@/features/coach/components/staff-portrait";
+
+const subClass =
+  "min-h-7.5 pl-4 text-meta text-muted-foreground data-[active=true]:bg-transparent data-[active=true]:text-foreground";
 
 export type CoachAttention = { questions: number; proposals: number };
 
@@ -34,6 +36,7 @@ export function CoachNavItem({
 }) {
   const pathname = usePathname();
   const active = pathname === "/coach" || pathname.startsWith("/coach/");
+  const team = pathname === "/coach/equipe";
   const waiting = attention ? attention.questions + attention.proposals : 0;
   return (
     <NavItem
@@ -54,32 +57,25 @@ export function CoachNavItem({
       {active && (
         <SidebarMenuSub className="mx-0 ml-5 gap-px border-l-0 px-0 py-0.5">
           <SidebarMenuSubItem>
-            <SidebarMenuSubButton
-              asChild
-              isActive
-              className="min-h-7.5 pl-4 text-meta text-muted-foreground data-[active=true]:bg-transparent data-[active=true]:text-foreground"
-            >
-              <Link href="/coach" aria-current="page">
+            <SidebarMenuSubButton asChild isActive={!team} className={subClass}>
+              <Link href="/coach" aria-current={team ? undefined : "page"}>
                 Conversations
               </Link>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
           <SidebarMenuSubItem>
-            <SidebarMenuSubButton
-              asChild
-              className="min-h-7.5 cursor-default pl-4 text-meta text-muted-foreground hover:bg-transparent hover:text-muted-foreground"
-            >
-              <span aria-disabled="true">
+            <SidebarMenuSubButton asChild isActive={team} className={subClass}>
+              <Link
+                href="/coach/equipe"
+                aria-current={team ? "page" : undefined}
+              >
                 L’équipe
-                <MonoLabel size="nano" className="ml-1">
-                  Bientôt
-                </MonoLabel>
                 <StaffStack
                   agents={["coach", "medical"]}
                   size={16}
                   className="ml-auto"
                 />
-              </span>
+              </Link>
             </SidebarMenuSubButton>
           </SidebarMenuSubItem>
         </SidebarMenuSub>

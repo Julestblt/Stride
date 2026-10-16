@@ -62,10 +62,9 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
     name: "Conversations",
   });
   await expect(sidebarConversations).toHaveAttribute("aria-current", "page");
-  const team = coachItem.locator('[aria-disabled="true"]');
-  await expect(team).toContainText("L’équipe");
-  await expect(team).toContainText("Bientôt");
-  await expect(coachItem.getByRole("link", { name: /équipe/ })).toHaveCount(0);
+  await expect(
+    coachItem.getByRole("link", { name: "L’équipe" }),
+  ).not.toHaveAttribute("aria-current");
 
   const filters = page.getByRole("group", { name: "Filtrer" });
   const all = filters.getByRole("button", { name: "Toutes" });
@@ -336,7 +335,8 @@ test("mobile shows the list, the thread and the Suivi sheet at 390", async ({
   await expect(page.getByRole("log")).toBeHidden();
   const portraitWidth = await page
     .getByRole("region", { name: "Ton staff" })
-    .getByRole("img", { name: "Claire, coach" })
+    .getByRole("link", { name: "Claire, coach, voir l’équipe" })
+    .locator("img")
     .evaluate((image: HTMLImageElement) => image.naturalWidth);
   expect(portraitWidth).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
   await page.screenshot({ path: "test-results/coach-mobile-list.png" });
@@ -450,7 +450,8 @@ test("portraits load a sharp file on a retina screen", async ({ browser }) => {
   await page.goto("/coach");
   const portrait = page
     .getByRole("region", { name: "Ton staff" })
-    .getByRole("img", { name: "Claire, coach" });
+    .getByRole("link", { name: "Claire, coach, voir l’équipe" })
+    .locator("img");
   await expect(portrait).toBeVisible();
   const { width, source } = await portrait.evaluate(
     (image: HTMLImageElement) => ({
@@ -462,4 +463,122 @@ test("portraits load a sharp file on a retina screen", async ({ browser }) => {
   expect(new URL(source).searchParams.get("w")).toBe("256");
   expect(width).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
   await context.close();
+});
+
+test("the team page shows the Coach and Medical and changes faces everywhere", async ({
+  page,
+}) => {
+  await resetCoach();
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/coach");
+  const coachLink = page.getByRole("link", { name: "Coach", exact: true });
+  const coachItem = page.locator("li", { has: coachLink }).first();
+  await coachItem.getByRole("link", { name: "L’équipe" }).click();
+  await expect(page).toHaveURL("/coach/equipe", { timeout: 20_000 });
+  await expect(
+    coachItem.getByRole("link", { name: "L’équipe" }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Une équipe autour de toi, une seule voix pour te parler.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Ton staff · 2 agents IA")).toBeVisible();
+  const coach = page.getByRole("region", { name: "Claire" });
+  await expect(coach).toContainText("Ta seule interlocutrice.");
+  await expect(coach).toContainText("2 conversations ce mois");
+  const specialists = page.getByRole("region", { name: "Les spécialistes" });
+  await expect(specialists.getByRole("article")).toHaveCount(1);
+  const medical = specialists.getByRole("article", { name: "Inès" });
+  await expect(medical).toContainText("1 avis ce mois");
+  for (const name of ["Marc", "Hugo", "Léa", "Sophie", "Nadia", "Yanis"])
+    await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Comment le staff travaille" }),
+  ).toBeVisible();
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(1440);
+  await page.screenshot({
+    path: "test-results/coach-team.png",
+    fullPage: true,
+  });
+
+  const coachFaces = page.getByRole("group", { name: "Visage de coach" });
+  await expect(
+    coachFaces.getByRole("button", { name: "Claire" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await coachFaces.getByRole("button", { name: "Thomas" }).click();
+  await page
+    .getByRole("group", { name: "Visage de médecin" })
+    .getByRole("button", { name: "Karim" })
+    .click();
+  await expect(page.getByRole("region", { name: "Thomas" })).toContainText(
+    "Ton seul interlocuteur. Il construit",
+  );
+  await expect(
+    specialists.getByRole("article", { name: "Karim" }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page
+      .getByRole("group", { name: "Visage de coach" })
+      .getByRole("button", { name: "Thomas" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("link", { name: "Écrire à Thomas" }),
+  ).toBeVisible();
+
+  await page.goto(`/coach/${kneeThread}`);
+  await expect(page.getByText("Thomas, avec Karim")).toBeVisible();
+  await expect(
+    page.getByRole("log", { name: "Messages" }).getByText("Question de Karim"),
+  ).toBeVisible();
+  await expect(page.locator('img[src*="karim"]').first()).toBeAttached();
+
+  await page.goto("/coach/equipe");
+  await page
+    .getByRole("group", { name: "Visage de coach" })
+    .getByRole("button", { name: "Claire" })
+    .click();
+  await page
+    .getByRole("group", { name: "Visage de médecin" })
+    .getByRole("button", { name: "Inès" })
+    .click();
+  await expect(page.getByRole("region", { name: "Claire" })).toBeVisible();
+  await expect(
+    specialists.getByRole("article", { name: "Inès" }),
+  ).toBeVisible();
+});
+
+test("mobile reaches the team page from the conversations list at 390", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/coach");
+  await page.getByRole("link", { name: "Voir l’équipe", exact: true }).click();
+  await expect(page).toHaveURL("/coach/equipe", { timeout: 20_000 });
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Une équipe autour de toi, une seule voix.",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Rien ne change sans ton accord")).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Comment le staff travaille" }),
+  ).toBeHidden();
+  await expect(
+    page.getByRole("group", { name: "Visage de médecin" }),
+  ).toBeVisible();
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: "test-results/coach-team-mobile.png",
+    fullPage: true,
+  });
+  await page.getByRole("link", { name: "Retour aux conversations" }).click();
+  await expect(page).toHaveURL("/coach", { timeout: 20_000 });
 });

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { staffFaceChoiceSchema } from "@/features/coach/staff";
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { managedClient } from "./managed/resources";
 import {
@@ -10,6 +11,7 @@ import {
   markThreadRead,
 } from "./managed/store";
 import { turnTimeoutMs } from "./managed/token";
+import { saveStaffFace } from "./staff";
 
 const inputSchema = z.strictObject({ threadId: z.uuid() });
 
@@ -64,4 +66,15 @@ export async function deleteCoachThread(
   }
   revalidatePath("/coach", "layout");
   return { status: "deleted" };
+}
+
+export async function chooseStaffFace(input: unknown) {
+  const parsed = staffFaceChoiceSchema.safeParse(input);
+  if (!parsed.success) return { ok: false } as const;
+  const context = await getOnboardingContext({ writable: true });
+  if (!context) return { ok: false } as const;
+  const saved = await saveStaffFace(context, parsed.data).catch(() => false);
+  if (!saved) return { ok: false } as const;
+  revalidatePath("/", "layout");
+  return { ok: true } as const;
 }

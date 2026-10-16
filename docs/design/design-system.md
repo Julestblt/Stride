@@ -25,6 +25,7 @@ Stride's approved visual direction is **Night Track**. The `Foundations` artboar
 | Investigate | `danger` (+ `-surface`, `-border`)  | `#FF6A3D` | Failed, expired or investigate state                                                  |
 | Garmin      | `provider` (+ `-muted`)             | `#5E8FB8` | Provider provenance and easy volume; `provider-muted` is past or light volume         |
 | Zones       | `zone-1` … `zone-5`                 | see CSS   | Training intensity; zone 2 is the provider blue and zone 5 the danger orange          |
+| Medical     | `staff-medical`                     | `#62D2C8` | Medical specialist identity on the staff team page and its role marks                 |
 
 Values live once in `src/app/globals.css` and are exposed through `@theme inline`. Use Volt sparingly. Success, warning, danger, provider, and training-zone states have distinct semantic tokens; do not conflate status meaning with the brand accent. Do not scatter raw color values through components. Add or adjust semantic tokens only when a reference or actual state requires them.
 

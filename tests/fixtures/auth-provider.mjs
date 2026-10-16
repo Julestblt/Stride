@@ -398,6 +398,8 @@ const tables = {
       training_access: ["hills", "gym"],
       running_max_heart_rate_override: null,
       threshold_heart_rate_override: null,
+      coach_face: "claire",
+      medical_face: "ines",
       threshold_heart_rate_source: null,
       profile_photo_path: null,
       time_zone: "Europe/Paris",
@@ -1201,7 +1203,12 @@ function coachNewPlanState() {
     text.replace(/\d{4}-\d{2}-\d{2}/g, (iso) => shiftDay(iso, shift)),
   );
 }
+tables.athlete_profiles.push({
+  ...tables.athlete_profiles[0],
+  user_id: coachUser.id,
+});
 const coachTables = [
+  "athlete_profiles",
   "coach_sessions",
   "coach_thread_items",
   "plan_proposals",
@@ -1861,6 +1868,13 @@ createServer(async (request, response) => {
       request.method === "PATCH" &&
       url.pathname === "/rest/v1/athlete_profiles"
     ) {
+      if (Object.keys(body).every((key) => key.endsWith("_face"))) {
+        const owner = tables.athlete_profiles.find(
+          (row) => url.searchParams.get("user_id") === `eq.${row.user_id}`,
+        );
+        if (owner) Object.assign(owner, body);
+        return send(200, owner ? [{ user_id: owner.user_id }] : []);
+      }
       const profile = tables.athlete_profiles[0];
       if (
         url.searchParams.get("user_id") !== `eq.${user.id}` ||
