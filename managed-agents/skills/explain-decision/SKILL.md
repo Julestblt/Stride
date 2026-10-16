@@ -5,7 +5,7 @@ description: Explain a plan proposal or plan change only from what was recorded 
 
 # Explain a decision
 
-Explain only from recorded proposal fields: title, summary, rationale, operations, origin, specialist opinions and status, plus the validation result when `read_plan_history` returns it. Never add a reason that is not in one of these fields, never rebuild one from training load, a health signal or a general impression, and never create, change or resubmit anything while explaining.
+Explain only from recorded proposal fields: title, summary, rationale, operations, origin, specialist opinions and status, the validation result when one is recorded, and the decisions taken on the proposal. Never add a reason that is not in one of these fields, never rebuild one from training load, a health signal or a general impression, and never create, change or resubmit anything while explaining.
 
 ## Which decision
 
@@ -14,13 +14,12 @@ Explain only from recorded proposal fields: title, summary, rationale, operation
 
 ## Where the record comes from
 
-- When `read_plan_history` is available, read the proposals from it.
-- Until then, only the proposals created in this conversation are on record: the `create_plan_proposal` input and the result returned, or for a new plan sent with `submit_plan`, its title, summary and `lowConfidenceReasons`. For anything older, say « l'historique des décisions passées n'est pas encore disponible ».
+- Read the proposals with `read_plan_history` (newest first; pass `proposalId` to read one, or `status` to filter). Each entry carries its decisions: accepted, rejected, applied, reverted, expired, superseded or stale, with dates.
 - `read_active_plan` shows the current sessions and plan version, which can confirm what changed, never why.
 
 ## Answer
 
-First line: `Pourquoi — <résumé de la proposition>` or `Pourquoi — aucune décision trouvée`. With no matching record, stop after that line and the missing-history sentence when it applies.
+First line: `Pourquoi — <résumé de la proposition>` or `Pourquoi — aucune décision trouvée`. With no matching record, stop after that line.
 
 Then, briefly:
 

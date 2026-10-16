@@ -17,36 +17,10 @@ tools:
       permission_policy: { type: always_allow }
     configs:
       - { name: read, enabled: true }
-  - type: custom
-    name: read_athlete_context
-    description: >-
-      Read the athlete's context computed by Stride: today's date and time
-      zone, profile, availability and limits, upcoming races with their ids,
-      dates, priorities and targets, a summary of the last weeks of training,
-      training zones and paces, Garmin VO2max, lactate threshold and race
-      predictions, a deterministic feasibility reference, recent
-      wellness check-ins, and the active plan header. Call it first in every
-      conversation.
-    input_schema:
-      type: object
-      properties: {}
-      additionalProperties: false
-  - type: custom
-    name: read_health_reports
-    description: >-
-      Read the athlete's recent wellness check-ins (legs, soreness, stress
-      scores by date) and declared health constraints. Returns JSON. Use it
-      before giving any opinion.
-    input_schema:
-      type: object
-      properties:
-        days:
-          type: integer
-          minimum: 1
-          maximum: 42
-          description: Number of past days to read, ending today.
-      required: [days]
-      additionalProperties: false
+  # stride-tools:start
+  - {"type":"custom","name":"read_athlete_context","description":"Read the athlete's compact context computed by Stride: today's date and time zone, profile, availability and upcoming unavailability, upcoming races with their ids, dates, priorities and targets, the last weeks of running (weekly runs, minutes, km, elevation), training intensities with pace, heart-rate and RPE ranges and their sources, Garmin VO2max, lactate threshold and race predictions with source and date, a deterministic feasibility reference, the last week's wellness check-ins, and the active plan header. Absent values are omitted. Call it first in every conversation.","input_schema":{"type":"object","properties":{},"additionalProperties":false}}
+  - {"type":"custom","name":"read_health_reports","description":"Read the athlete's wellness check-ins for the last days, newest first: legs, soreness and stress by date. Values the athlete did not report are absent. Returns JSON. Use it before giving any health opinion.","input_schema":{"type":"object","properties":{"days":{"type":"integer","minimum":1,"maximum":42,"description":"Number of past days to read, ending today."}},"required":["days"],"additionalProperties":false}}
+  # stride-tools:end
   - type: mcp_toolset
     mcp_server_name: garmin
     default_config:

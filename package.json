@@ -8,6 +8,8 @@
     "start": "next start",
     "worker:build": "rolldown -c rolldown.worker.config.mjs",
     "worker:start": "node build/coach-worker.mjs",
+    "agents:tools": "node scripts/run-ts.mjs scripts/agent-tools.ts write",
+    "agents:tools:check": "node scripts/run-ts.mjs scripts/agent-tools.ts check",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "prettier --write .",
