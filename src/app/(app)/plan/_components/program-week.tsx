@@ -1,4 +1,5 @@
 import { CheckIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
@@ -13,7 +14,9 @@ import {
   type ProgramDay,
   type ProgramWeek,
 } from "@/features/plans/view/program";
+import type { WeekProposal } from "@/features/plans/review/proposal";
 import { formatInteger } from "@/features/progress/format";
+import { markProposalOpened } from "./proposal-sheet";
 import { markSessionOpened } from "./session-sheet";
 
 function DayState({ day }: { day: ProgramDay }) {
@@ -187,6 +190,50 @@ function WeekNote({ note }: { note: string }) {
       <StrideMark className="mt-0.75 size-3.5 shrink-0" />
       <p className="text-[13px] leading-normal text-muted">{note}</p>
     </div>
+  );
+}
+
+function WeekProposals({
+  proposals,
+  reviewHref,
+}: {
+  proposals: WeekProposal[];
+  reviewHref: (proposalId: string) => string;
+}) {
+  return (
+    <section
+      aria-label="Changements proposés cette semaine"
+      className="flex flex-col divide-y divide-warning-border rounded-card border border-warning-border bg-warning/4"
+    >
+      {proposals.map((proposal) => (
+        <div
+          key={proposal.id}
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-3"
+        >
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex items-center gap-2 text-xs text-warning">
+              <PulseDot tone="warning" breathing={false} />
+              Changement proposé
+            </span>
+            <span className="text-sm font-semibold">{proposal.title}</span>
+            {proposal.summary && (
+              <span className="text-[13px] leading-normal text-muted">
+                {proposal.summary}
+              </span>
+            )}
+          </span>
+          <Button asChild size="md" className="max-sm:h-11 max-sm:w-full">
+            <Link
+              href={reviewHref(proposal.id)}
+              onClick={markProposalOpened}
+              data-proposal-id={proposal.id}
+            >
+              Examiner
+            </Link>
+          </Button>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -379,10 +426,14 @@ export function ProgramWeekPanel({
   week,
   navigation,
   sessionHref,
+  proposals = [],
+  reviewHref,
 }: {
   week: ProgramWeek;
   navigation: React.ReactNode;
   sessionHref: (sessionKey: string) => string;
+  proposals?: WeekProposal[];
+  reviewHref: (proposalId: string) => string;
 }) {
   const subtitle = [week.blockName, week.label].filter(Boolean).join(" · ");
   const split = weekSplit(week);
@@ -441,6 +492,9 @@ export function ProgramWeekPanel({
         </div>
         {week.note && <WeekNote note={week.note} />}
       </div>
+      {proposals.length > 0 && (
+        <WeekProposals proposals={proposals} reviewHref={reviewHref} />
+      )}
       <div className="grid grid-cols-7 gap-2 max-lg:hidden">
         {week.days.map((day) => (
           <DayCard key={day.date} day={day} sessionHref={sessionHref} />

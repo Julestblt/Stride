@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { CheckIcon, ChevronRightIcon, ListIcon } from "lucide-react";
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  HistoryIcon,
+  ListIcon,
+} from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import {
   SidebarGroup,
@@ -128,7 +133,13 @@ function BlockItem({
   );
 }
 
-export function PlanSidebarGroup({ nav }: { nav: ProgramNav | null }) {
+export function PlanSidebarGroup({
+  nav,
+  historyCount = null,
+}: {
+  nav: ProgramNav | null;
+  historyCount?: number | null;
+}) {
   const pathname = usePathname();
   const params = useSearchParams();
   if (!nav || (pathname !== "/plan" && !pathname.startsWith("/plan/")))
@@ -136,6 +147,7 @@ export function PlanSidebarGroup({ nav }: { nav: ProgramNav | null }) {
   const week = params.get("week");
   const overview = pathname === "/plan" && !week && !params.get("race");
   const selected = pathname === "/plan" ? week : null;
+  const history = pathname === "/plan/historique";
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Blocs</SidebarGroupLabel>
@@ -160,6 +172,28 @@ export function PlanSidebarGroup({ nav }: { nav: ProgramNav | null }) {
         {nav.blocks.map((block) => (
           <BlockItem key={block.blockKey} block={block} selected={selected} />
         ))}
+        <SidebarMenuItem className="mt-1.5">
+          <SidebarMenuButton
+            asChild
+            size="sm"
+            isActive={history}
+            className="min-h-7.5 gap-2 text-meta data-[active=true]:font-semibold"
+          >
+            <Link
+              href="/plan/historique"
+              aria-current={history ? "page" : undefined}
+            >
+              <HistoryIcon aria-hidden="true" className="size-3.5" />
+              <span className="flex-1">Historique</span>
+              {historyCount !== null && historyCount > 0 && (
+                <span className="font-metric text-sm font-normal text-muted-foreground tabular-nums">
+                  {historyCount}
+                  <span className="sr-only"> propositions</span>
+                </span>
+              )}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   );

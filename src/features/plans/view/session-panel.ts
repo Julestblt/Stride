@@ -30,6 +30,7 @@ export type PanelMatch = {
 };
 
 export type PanelProposal = {
+  id: string;
   title: string;
   summary: string | null;
   targetKeys: string[];
@@ -102,7 +103,7 @@ export type SessionPanel = {
   status: PanelStatus;
   title: string;
   purpose: string;
-  proposal: { when: string; text: string } | null;
+  proposal: { id: string; when: string; text: string } | null;
   stats: PanelStat[];
   segments: ChartSegment[];
   structureLabel: string;
@@ -417,6 +418,7 @@ export function buildSessionPanel(
     purpose: session.purpose,
     proposal: proposal
       ? {
+          id: proposal.id,
           when: proposalWhen(proposal.createdAt, today, state.plan.timeZone),
           text: proposal.summary ?? proposal.title,
         }
