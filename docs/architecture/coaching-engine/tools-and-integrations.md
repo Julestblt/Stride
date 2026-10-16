@@ -55,6 +55,34 @@ Every tool is declared once:
 
 The runtime builds the tool list per workflow, executes calls with the run's `AthleteScope`, validates inputs and outputs, truncates or paginates oversized results with an explicit `truncated` flag, and returns structured errors (`not_found`, `out_of_scope`, `stale_version`, `validation_failed`, `budget_exhausted`) the model can act on.
 
+### Registry as built (#137)
+
+The Managed Agents runtime uses a first slice of this contract in `src/server/coaching/tools`:
+
+- One module per tool declares `name`, `description` (English), `class`, `dataClasses`, a strict Zod `input`, a Zod `output` and its handler (`defineTool` in `define.ts`). `registry.ts` lists the tools and which agent gets which (`agentTools`).
+- `runCustomTool` parses the input, runs the handler with the session's athlete (`OnboardingContext` user client plus `.eq("user_id")`), and parses the output before it reaches the agent. A result that fails its schema is logged server-side and returned as `tool_unavailable`.
+- Errors are `{ code, message }` with a French `message`; `invalid_input`, `invalid_plan`, `validation_failed` and `not_found` add structured `details` produced by Stride's own validators so the agent can correct its call. Codes come from `toolErrorCodes` in `errors.ts`: `invalid_input`, `not_found`, `no_active_plan`, `range_too_large`, `validation_failed`, `invalid_plan`, `unknown_tool`, `tool_unavailable`. Database and unexpected errors never expose their message.
+- Absent values are omitted rather than sent as `null` or `0`, except inside session content from `read_active_plan`, whose shape is the operation contract for `replace_session`. Garmin-derived values carry `source` and `asOf`.
+- The agents' custom tool blocks in `managed-agents/agents/*.md` are generated between `# stride-tools:start` and `# stride-tools:end` from `z.toJSONSchema` (`npm run agents:tools`). `npm run agents:tools:check` and the unit suite fail on drift and name the agent file and tool.
+- `tests/integration/coaching-tools.test.ts` seeds two athletes on the CI-local Supabase and runs every tool as the first athlete: no row of the second appears, and the second athlete's proposal id or session key returns `not_found` (`npm run test:integration`, CI only).
+
+| Tool                   | Class   | Data classes     | Agents         |
+| ---------------------- | ------- | ---------------- | -------------- |
+| `read_athlete_context` | read    | training, health | Coach, Medical |
+| `read_active_plan`     | read    | plan             | Coach          |
+| `read_plan_progress`   | read    | plan, training   | Coach          |
+| `read_plan_history`    | read    | plan             | Coach          |
+| `read_health_reports`  | read    | health           | Coach, Medical |
+| `submit_plan`          | propose | plan             | Coach          |
+| `create_plan_proposal` | propose | plan             | Coach          |
+| `ask_athlete`          | propose | plan             | Coach          |
+
+`ask_athlete` has no server handler: the session validates its input through the registry and pauses the turn until the athlete answers.
+
+Context packet: `read_athlete_context` keeps eight weeks of running history, the last seven days of check-ins, upcoming races and unavailability only, and pace, heart-rate and RPE ranges without the talk-test copy. On the unit-test fixture (`tests/unit/coaching-tools-fixture.ts`) the packet went from 7,212 bytes to 3,429 bytes; the test enforces a 4,096-byte budget.
+
+Not built yet: `scope`, `costUnits`, run budgets, truncation flags and the `out_of_scope`, `stale_version` and `budget_exhausted` codes, which belong to the Postgres worker runtime. A stale base version is returned as `validation_failed` with `details.reason = "stale_version"`.
+
 ### Catalogue
 
 | Tool                     | Class   | Returns or does                                                                                                                         |

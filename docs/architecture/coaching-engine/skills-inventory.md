@@ -9,7 +9,7 @@
 - The reference ships 22 skills. Stride adapts 5 of them into 3 skills, defers 6 and drops 11.
 - Most reference skills are integration plumbing for a single-athlete Markdown workspace: file contracts, sync, installers, Garmin and Intervals.icu writes. Stride owns that work in code, in the database or in garmin_mcp.
 - Most coaching substance lives in the reference's agent files, not in its skills. The [agent knowledge map](#agent-knowledge-map) shows where each part lands in Stride.
-- Two tools are needed to finish the ported skills: `read_plan_progress` and `read_plan_history`. Until they exist, the skills answer from the current tools and say what is not available yet.
+- The ported skills read plan progress and decisions through `read_plan_progress` and `read_plan_history`, built in #137.
 
 ## Inventory
 
@@ -102,11 +102,11 @@ The reference's coaching substance is mostly in `agents/*.md`. Each section land
 | Nutritionist, nutrition and weight strategy, energy model, Garmin push     | Later Nutritionist issue with the deterministic calculator; `fueling` meanwhile; Garmin food log push dropped (D5) |
 | All agents, configuration, data source, language and data management       | Dropped: Stride code, RLS-scoped tools and the agents' language rules replace them                                 |
 
-## Planned tools
+## Plan progress and history tools
 
-Requested for the Phase 2 tool registry (`src/server/coaching/managed/tools.ts`). The ported skills already name them and fall back to the current tools until they exist.
+Built in #137 in the typed tool registry (`src/server/coaching/tools`); the ported skills use them without fallbacks.
 
-| Tool                 | Returns                                                                                                                                                  | Source in Stride                                                  | Used by            |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------ |
-| `read_plan_progress` | Planned sessions for a date range with their completion status (completed, missed, upcoming) and the matched activity's duration, distance and elevation | Planned-versus-completed matching (`src/server/plans/matches.ts`) | `status-reports`   |
-| `read_plan_history`  | Plan proposals with title, summary, rationale, operations, origin, status, dates, validation result and specialist opinions                              | `plan_proposals` and plan versions                                | `explain-decision` |
+| Tool                 | Returns                                                                                                                                                                                                             | Source in Stride                                                                               | Used by            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------ |
+| `read_plan_progress` | Planned sessions for a date range of at most 42 days with their status (completed, partial, substituted, missed, dismissed, upcoming, rest) and the matched activities' duration, distance and elevation            | Stored planned-versus-completed matches (`src/server/plans/matches.ts`), `provider_activities` | `status-reports`   |
+| `read_plan_history`  | Plan proposals newest first with title, summary, rationale, operations, origin, scope, status, dates, validation result when recorded, specialist opinions and decisions; one proposal by id; no active plan needed | `plan_proposals`, `plan_decisions`                                                             | `explain-decision` |
