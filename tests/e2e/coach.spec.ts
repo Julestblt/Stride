@@ -1,0 +1,465 @@
+import { expect, test, type Page, type Route } from "@playwright/test";
+
+const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+const kneeThread = "c0c0c0c0-0000-4000-8000-000000000001";
+const planThread = "c0c0c0c0-0000-4000-8000-000000000002";
+const spikeThread = "c0c0c0c0-0000-4000-8000-000000000003";
+const newThread = "c0c0c0c0-0000-4000-8000-0000000000aa";
+const newPlanProposal = "eeeeeeee-eeee-4eee-8eee-900000000001";
+
+test.describe.configure({ mode: "serial" });
+
+async function resetCoach() {
+  await fetch(`http://127.0.0.1:${authPort}/__test__/coach`, {
+    method: "DELETE",
+  });
+}
+
+test.beforeAll(resetCoach);
+test.afterAll(resetCoach);
+
+async function signIn(page: Page, email = "coach@example.com") {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email", { exact: true }).fill(email);
+  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL("/");
+}
+
+const at = () => new Date().toISOString();
+
+function stream(events: unknown[]) {
+  return async (route: Route) => {
+    await route.fulfill({
+      status: 200,
+      headers: { "Content-Type": "text/event-stream; charset=utf-8" },
+      body: events
+        .map((event) => `data: ${JSON.stringify(event)}\n\n`)
+        .join(""),
+    });
+  };
+}
+
+function item(kind: string, body: Record<string, unknown>) {
+  return { type: "item", item: { kind, at: at(), ...body } };
+}
+
+test("the conversations list, consult, question and Suivi at 1440", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/today");
+  const coachLink = page.getByRole("link", { name: "Coach", exact: true });
+  const coachItem = page.locator("li", { has: coachLink }).first();
+  await expect(coachItem).toContainText(
+    "1 question et 1 proposition en attente",
+  );
+  await expect(coachItem.getByText("Conversations")).toHaveCount(0);
+  await coachLink.click();
+  await expect(page).toHaveURL("/coach", { timeout: 20_000 });
+  const sidebarConversations = coachItem.getByRole("link", {
+    name: "Conversations",
+  });
+  await expect(sidebarConversations).toHaveAttribute("aria-current", "page");
+  const team = coachItem.locator('[aria-disabled="true"]');
+  await expect(team).toContainText("L’équipe");
+  await expect(team).toContainText("Bientôt");
+  await expect(coachItem.getByRole("link", { name: /équipe/ })).toHaveCount(0);
+
+  const filters = page.getByRole("group", { name: "Filtrer" });
+  const all = filters.getByRole("button", { name: "Toutes" });
+  const mine = filters.getByRole("button", { name: "À toi · 2" });
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  const filterStyle = await mine.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return [style.minHeight, style.fontSize, style.borderTopWidth];
+  });
+  expect(filterStyle).toEqual(["30px", "12px", "1px"]);
+  await mine.click();
+  await expect(mine).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await all.click();
+
+  const list = page.getByRole("region", { name: "Conversations" });
+  await expect(list.getByText("En cours")).toBeVisible();
+  await expect(
+    list.getByRole("link", { name: /Genou en descente/ }),
+  ).toContainText("Question pour toi");
+  await expect(
+    list.getByRole("link", { name: /Mon premier plan/ }),
+  ).toContainText("Proposition à valider");
+  await expect(list.getByRole("link")).toHaveCount(3);
+  await expect(list.getByText("Conversation", { exact: true })).toHaveCount(0);
+  await list.getByRole("link", { name: /Genou en descente/ }).click();
+  await expect(page).toHaveURL(`/coach/${kneeThread}`, { timeout: 20_000 });
+
+  const log = page.getByRole("log", { name: "Messages" });
+  await expect(log.getByText("Avis demandé à Inès")).toBeVisible();
+  const consult = log.getByRole("group", { name: "Concertation du staff" });
+  await expect(consult).toContainText("Inès · Question pour toi");
+  await consult.getByRole("button", { expanded: false }).click();
+  const exchange = consult.getByText("Le genou réagit-il en descente ?");
+  await expect(exchange).toBeVisible();
+  expect(
+    await exchange.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return [style.fontSize, style.lineHeight, style.color];
+    }),
+  ).toEqual(["14px", "21px", "rgb(179, 178, 170)"]);
+  await expect(consult.getByText("Signalements · 14 jours")).toBeVisible();
+  await expect(log.getByText("Question d’Inès")).toBeVisible();
+  await expect(log.getByText("Demandée par Inès")).toBeVisible();
+
+  const suivi = page.getByRole("complementary", {
+    name: "Suivi de la conversation",
+  });
+  await expect(suivi.getByText("Question pour toi")).toBeVisible();
+  await expect(suivi.getByText("Médecin · consultée")).toBeVisible();
+  await expect(suivi.getByText("Signalements · 14 jours")).toBeVisible();
+  await expect(suivi.locator('[aria-current="step"]')).toHaveText(
+    /Question d’Inès/,
+  );
+  await page.screenshot({ path: "test-results/coach-desktop.png" });
+
+  let posted: unknown = null;
+  await page.route("**/api/coach/turns", async (route) => {
+    posted = route.request().postDataJSON();
+    await stream([
+      {
+        type: "session",
+        sessionId: "sesn_01Genou",
+        threadId: kneeThread,
+        consoleUrl: "https://console.test",
+      },
+      item("answer", { toolUseId: "sevt_knee", text: "Non" }),
+      item("coach", { text: "Parfait, on garde la sortie longue." }),
+      { type: "done", status: "idle" },
+    ])(route);
+  });
+  await log.getByRole("button", { name: "Non", exact: true }).click();
+  await expect(
+    log.getByText("Parfait, on garde la sortie longue."),
+  ).toBeVisible();
+  await expect(log.getByText("Question répondue")).toBeVisible();
+  await expect(suivi.locator('[aria-current="step"]')).toHaveCount(1);
+  await expect(suivi.locator('[aria-current="step"]')).toContainText(
+    "Dernière étape",
+  );
+  await expect(suivi.getByText("Ta réponse", { exact: true })).toBeVisible();
+  expect(posted).toEqual({
+    sessionId: "sesn_01Genou",
+    mode: "conversation",
+    input: { kind: "answer", toolUseId: "sevt_knee", text: "Non" },
+  });
+});
+
+test("a new conversation asks Inès and keeps the thread after the turn", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/coach/nouvelle");
+  let posted: unknown = null;
+  await page.route("**/api/coach/turns", async (route) => {
+    posted = route.request().postDataJSON();
+    await stream([
+      {
+        type: "session",
+        sessionId: "sesn_01Nouveau",
+        threadId: newThread,
+        consoleUrl: "https://console.test",
+      },
+      item("athlete", { text: "Mon mollet est tendu", consult: "medical" }),
+      item("coach", { text: "Je demande à Inès." }),
+      item("consult_request", {
+        thread: "sthr_calf",
+        agent: "medical",
+        text: "Calf tightness, any risk?",
+      }),
+      item("read", {
+        thread: "sthr_calf",
+        agent: "medical",
+        tool: "get_hrv_data",
+        label: "Garmin · VFC",
+      }),
+      item("consult_reply", {
+        thread: "sthr_calf",
+        agent: "medical",
+        text: "Low risk, keep it easy.",
+      }),
+      item("consult_end", { thread: "sthr_calf", agent: "medical" }),
+      item("coach", {
+        text: "**Inès est rassurante** : on reste en facile.\n\n- footing\n- étirements",
+      }),
+      { type: "done", status: "idle" },
+    ])(route);
+  });
+  const composer = page.getByRole("textbox", { name: "Écrire à Claire" });
+  await composer.fill("Mon mollet est tendu");
+  await page.getByRole("button", { name: "Demander l’avis d’Inès" }).click();
+  await page.getByRole("button", { name: "Envoyer" }).click();
+
+  await expect(page).toHaveURL(`/coach/${newThread}`);
+  const log = page.getByRole("log", { name: "Messages" });
+  await expect(
+    log.locator("strong", { hasText: "Inès est rassurante" }),
+  ).toBeVisible();
+  await expect(
+    log.getByRole("listitem").filter({ hasText: "footing" }),
+  ).toBeVisible();
+  await expect(log).not.toContainText("**");
+  await expect(
+    log.getByRole("group", { name: "Concertation du staff" }),
+  ).toContainText("Inès · Avis rendu");
+  expect(posted).toEqual({
+    mode: "conversation",
+    input: {
+      kind: "message",
+      text: "Mon mollet est tendu",
+      consult: "medical",
+    },
+  });
+  await expect(
+    page
+      .getByRole("region", { name: "Conversations" })
+      .getByRole("link", { name: /Mon mollet est tendu/ }),
+  ).toContainText(
+    "Claire : Inès est rassurante : on reste en facile. footing étirements",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Mon mollet est tendu" }),
+  ).toBeVisible();
+});
+
+test("a refused turn shows a French message and keeps the draft", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${planThread}`);
+  await page.route("**/api/coach/turns", (route) =>
+    route.fulfill({ status: 409, json: { code: "turn_in_progress" } }),
+  );
+  const composer = page.getByRole("textbox", { name: "Écrire à Claire" });
+  await composer.fill("Et la semaine prochaine ?");
+  await composer.press("Enter");
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "Le staff travaille déjà sur ta demande." }),
+  ).toBeVisible();
+  await expect(composer).toHaveValue("Et la semaine prochaine ?");
+});
+
+test("a new-plan proposal opens the review sheet and activates without an active plan", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${planThread}`);
+  const card = page.getByRole("log", { name: "Messages" });
+  await expect(card.getByText("Proposition · Nouveau plan")).toBeVisible();
+  await expect(card.getByText("À toi de décider")).toBeVisible();
+  await card.getByRole("link", { name: "Examiner" }).click();
+  await expect(page).toHaveURL(new RegExp(`proposition=${newPlanProposal}`), {
+    timeout: 20_000,
+  });
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByText("Premier plan")).toBeVisible();
+  await sheet.getByRole("button", { name: "Activer ce plan" }).click();
+  await expect(
+    sheet.getByText("Appliquée · ton nouveau plan est actif"),
+  ).toBeVisible({ timeout: 20_000 });
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(`/coach/${planThread}`);
+  await page.reload();
+  await expect(
+    page.getByRole("log", { name: "Messages" }).getByText("Appliquée"),
+  ).toBeVisible();
+});
+
+test("a reload keeps the list and the thread", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${kneeThread}`);
+  const log = page.getByRole("log", { name: "Messages" });
+  const before = (await log.textContent()) ?? "";
+  const list =
+    (await page.getByRole("region", { name: "Conversations" }).textContent()) ??
+    "";
+  await page.reload();
+  await expect(log).toHaveText(before);
+  await expect(page.getByRole("region", { name: "Conversations" })).toHaveText(
+    list,
+  );
+  await expect(
+    log.getByRole("button", { name: "Oui", exact: true }),
+  ).toBeEnabled();
+});
+
+test("another athlete's thread returns 404", async ({ page }) => {
+  await signIn(page, "plan-review@example.com");
+  const response = await page.goto(`/coach/${kneeThread}`);
+  expect(response?.status()).toBe(404);
+});
+
+test("an untitled empty legacy session is never shown", async ({ page }) => {
+  await signIn(page);
+  const response = await page.goto(`/coach/${spikeThread}`);
+  expect(response?.status()).toBe(404);
+});
+
+test("the Plan empty state asks the Coach for a plan", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/plan");
+  await page.getByRole("link", { name: "Demander un plan" }).click();
+  await expect(page).toHaveURL("/coach/nouvelle?demande=plan");
+  await expect(
+    page.getByRole("heading", { name: "Demande ton plan à Claire" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Écrire à Claire" }),
+  ).toHaveValue("Construis-moi un plan d’entraînement pour mon objectif.");
+});
+
+test("mobile shows the list, the thread and the Suivi sheet at 390", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/coach");
+  await expect(
+    page.getByRole("heading", { name: "Coach", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByRole("log")).toBeHidden();
+  const portraitWidth = await page
+    .getByRole("region", { name: "Ton staff" })
+    .getByRole("img", { name: "Claire, coach" })
+    .evaluate((image: HTMLImageElement) => image.naturalWidth);
+  expect(portraitWidth).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
+  await page.screenshot({ path: "test-results/coach-mobile-list.png" });
+  await page
+    .getByRole("region", { name: "Conversations" })
+    .getByRole("link", { name: /Genou en descente/ })
+    .click();
+  await expect(page).toHaveURL(`/coach/${kneeThread}`, { timeout: 20_000 });
+  await expect(
+    page.getByRole("region", { name: "Conversations" }),
+  ).toBeHidden();
+  await expect(
+    page.getByRole("link", { name: "Retour aux conversations" }),
+  ).toBeVisible();
+  const log = page.getByRole("log", { name: "Messages" });
+  await expect(
+    log.getByRole("group", { name: "Concertation du staff" }),
+  ).toContainText("Inès · Question pour toi");
+  await expect(log.getByText("Question d’Inès")).toBeVisible();
+  await expect(
+    log.getByRole("button", { name: "Non", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({ path: "test-results/coach-mobile.png" });
+  await page.getByRole("button", { name: "Suivi de la conversation" }).click();
+  const sheet = page.getByRole("dialog");
+  await expect(sheet.getByText("Participants")).toBeVisible();
+  await expect(sheet.getByText("Médecin · consultée")).toBeVisible();
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(390);
+  await page.keyboard.press("Escape");
+  await page.goto(`/coach/${planThread}`);
+  const card = page.getByRole("log", { name: "Messages" });
+  await expect(card.getByText("Proposition · Nouveau plan")).toBeVisible();
+  await expect(
+    card.getByRole("link", { name: /^(Examiner|Voir la proposition)$/ }),
+  ).toBeVisible();
+  const cardWidth = await page.evaluate(
+    () => document.documentElement.scrollWidth,
+  );
+  expect(cardWidth).toBeLessThanOrEqual(390);
+});
+
+test("reduced motion stops the live indicators", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${kneeThread}`);
+  const animated = await page.evaluate(
+    () =>
+      [...document.querySelectorAll("main, [role=log], aside, body *")].filter(
+        (element) => getComputedStyle(element).animationName !== "none",
+      ).length,
+  );
+  expect(animated).toBe(0);
+});
+
+test("deleting a conversation asks for confirmation and refreshes the badge", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${kneeThread}`);
+  await page.getByRole("button", { name: "Plus d’options" }).click();
+  await page
+    .getByRole("menuitem", { name: "Supprimer la conversation" })
+    .click();
+  const dialog = page.getByRole("alertdialog");
+  await expect(dialog).toContainText("Supprimer la conversation ?");
+  await dialog.getByRole("button", { name: "Annuler" }).click();
+  await expect(page).toHaveURL(`/coach/${kneeThread}`);
+
+  await page.getByRole("button", { name: "Plus d’options" }).click();
+  await page
+    .getByRole("menuitem", { name: "Supprimer la conversation" })
+    .click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(page).toHaveURL("/coach", { timeout: 20_000 });
+  await expect(
+    page
+      .getByRole("region", { name: "Conversations" })
+      .getByRole("link", { name: /Genou en descente/ }),
+  ).toHaveCount(0);
+  const coachLink = page.getByRole("link", { name: "Coach", exact: true });
+  await expect(
+    page.locator("li", { has: coachLink }).first(),
+  ).not.toContainText("en attente");
+  const response = await page.goto(`/coach/${kneeThread}`);
+  expect(response?.status()).toBe(404);
+});
+
+test("the thread menu offers deletion on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto(`/coach/${planThread}`);
+  await page.getByRole("button", { name: "Plus d’options" }).click();
+  await expect(
+    page.getByRole("menuitem", { name: "Supprimer la conversation" }),
+  ).toBeVisible();
+});
+
+test("portraits load a sharp file on a retina screen", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+  });
+  const page = await context.newPage();
+  await signIn(page);
+  await page.goto("/coach");
+  const portrait = page
+    .getByRole("region", { name: "Ton staff" })
+    .getByRole("img", { name: "Claire, coach" });
+  await expect(portrait).toBeVisible();
+  const { width, source } = await portrait.evaluate(
+    (image: HTMLImageElement) => ({
+      width: image.naturalWidth,
+      source: image.currentSrc,
+    }),
+  );
+  expect(source).toContain("q=90");
+  expect(new URL(source).searchParams.get("w")).toBe("256");
+  expect(width).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
+  await context.close();
+});

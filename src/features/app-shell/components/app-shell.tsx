@@ -43,6 +43,7 @@ import {
   type ShellGoal,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
+import { CoachNavItem } from "./coach-nav";
 import { PlanSidebarGroup } from "./plan-nav";
 import type { ProgramNav } from "@/features/plans/view/program";
 import { ProgressSidebarGroup } from "@/features/progress/components/progress-nav";
@@ -67,6 +68,7 @@ export function AppShell({
   initialActivity,
   planNav = null,
   planHistoryCount = null,
+  coachAttention = null,
   children,
 }: {
   athlete: ShellAthlete;
@@ -77,6 +79,7 @@ export function AppShell({
   initialActivity?: DataActivityObservation | null;
   planNav?: ProgramNav | null;
   planHistoryCount?: number | null;
+  coachAttention?: { questions: number; proposals: number } | null;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
@@ -110,6 +113,7 @@ export function AppShell({
                   icon={<CircleDotIcon />}
                   label="Aujourd’hui"
                 />
+                <CoachNavItem attention={coachAttention} />
                 <ShellNavItem
                   href="/plan"
                   icon={<ChartColumnIcon />}

@@ -11,6 +11,7 @@ import {
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
 import { buildProgram, programNavigation } from "@/features/plans/view/program";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
+import { countCoachAttention } from "@/server/coaching/managed/store";
 import { countPlanProposals } from "@/server/plans/proposals";
 import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
@@ -18,17 +19,19 @@ import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "./session";
 
 export async function loadShell(context: OnboardingContext, now: Date) {
-  const [profile, goals, activity, plan, planHistoryCount] = await Promise.all([
-    context.client
-      .from("athlete_profiles")
-      .select("*")
-      .eq("user_id", context.userId)
-      .maybeSingle(),
-    readGoals(context).catch(() => null),
-    readDataActivity({ accessToken: context.accessToken }),
-    loadPlanOverview(context).catch(() => null),
-    countPlanProposals(context).catch(() => null),
-  ]);
+  const [profile, goals, activity, plan, planHistoryCount, coachAttention] =
+    await Promise.all([
+      context.client
+        .from("athlete_profiles")
+        .select("*")
+        .eq("user_id", context.userId)
+        .maybeSingle(),
+      readGoals(context).catch(() => null),
+      readDataActivity({ accessToken: context.accessToken }),
+      loadPlanOverview(context).catch(() => null),
+      countPlanProposals(context).catch(() => null),
+      countCoachAttention(context).catch(() => null),
+    ]);
   const parsed = profileRowSchema.safeParse(profile.data);
   const values = profileValues(parsed.success ? parsed.data : null);
   return {
@@ -65,6 +68,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     initialActivity: activity.ok ? activity.value : null,
     planNav: plan ? programNavigation(buildProgram(programInput(plan))) : null,
     planHistoryCount,
+    coachAttention,
   };
 }
 

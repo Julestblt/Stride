@@ -63,6 +63,7 @@ type TurnDone = {
 type TurnEvent =
   | TranscriptItem
   | { type: "session"; sessionId: string; consoleUrl: string }
+  | { type: "item" }
   | { type: "question"; question: PendingQuestion }
   | ({ type: "done" } & TurnDone);
 
@@ -93,6 +94,7 @@ const refusals: Record<string, string> = {
 };
 
 function reduceTurn(turn: Turn, event: TurnEvent): Turn {
+  if (event.type === "item") return turn;
   if (event.type === "session")
     return {
       ...turn,

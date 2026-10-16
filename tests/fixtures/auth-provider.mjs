@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { createHmac, createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 const user = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -61,7 +62,13 @@ const planHistoryUser = {
   id: "88888888-8888-4888-8888-888888888888",
   email: "plan-history@example.com",
 };
+const coachUser = {
+  ...user,
+  id: "99999999-9999-4999-8999-999999999999",
+  email: "coach@example.com",
+};
 const recordsSessions = [
+  coachUser,
   recordsEmptyUser,
   recordsFailureUser,
   recordsGoalFailureUser,
@@ -1048,6 +1055,166 @@ function twinPlanAthlete(owner, ownerPlanId, prefix) {
   tables.plan_proposals.push(...history.proposals);
   tables.plan_decisions.push(...history.decisions);
 }
+const coachKneeThread = "c0c0c0c0-0000-4000-8000-000000000001";
+const coachPlanThread = "c0c0c0c0-0000-4000-8000-000000000002";
+const coachSpikeThread = "c0c0c0c0-0000-4000-8000-000000000003";
+const coachNewPlanProposal = "eeeeeeee-eeee-4eee-8eee-900000000001";
+const coachToday = new Date().toISOString().slice(0, 10);
+const coachAt = (time) => `${coachToday}T${time}Z`;
+const coachSession = (values) => ({
+  user_id: coachUser.id,
+  mode: "conversation",
+  status: "idle",
+  pending_tool_use_id: null,
+  budget_cents: 100,
+  list_cost_cents: 12,
+  last_turn_at: null,
+  read_at: null,
+  ...values,
+});
+let coachItemId = 0;
+const coachItem = (threadId, time, kind, body) => ({
+  id: ++coachItemId,
+  user_id: coachUser.id,
+  coach_session_id: threadId,
+  kind,
+  body,
+  created_at: coachAt(time),
+});
+tables.coach_sessions = [
+  coachSession({
+    id: coachKneeThread,
+    managed_session_id: "sesn_01Genou",
+    title: "Genou en descente",
+    status: "awaiting_athlete",
+    pending_tool_use_id: "sevt_knee",
+    last_turn_at: coachAt("08:02:00"),
+    last_activity_at: coachAt("08:04:00"),
+    created_at: coachAt("08:00:00"),
+  }),
+  coachSession({
+    id: coachPlanThread,
+    managed_session_id: "sesn_01Plan",
+    mode: "plan",
+    budget_cents: 200,
+    title: "Mon premier plan",
+    last_turn_at: coachAt("06:00:00"),
+    last_activity_at: coachAt("06:10:00"),
+    read_at: coachAt("06:20:00"),
+    created_at: coachAt("06:00:00"),
+  }),
+];
+tables.coach_sessions.push(
+  coachSession({
+    id: coachSpikeThread,
+    managed_session_id: "sesn_01Spike",
+    title: null,
+    status: "awaiting_athlete",
+    pending_tool_use_id: "sevt_spike",
+    last_turn_at: coachAt("09:00:00"),
+    last_activity_at: coachAt("09:00:00"),
+    created_at: coachAt("09:00:00"),
+  }),
+);
+tables.coach_thread_items = [
+  coachItem(coachKneeThread, "08:00:00", "athlete", {
+    text: "J’ai une douleur au genou depuis la sortie de dimanche.",
+    consult: "medical",
+  }),
+  coachItem(coachKneeThread, "08:01:00", "coach", {
+    text: "Je demande à Inès de regarder ça avec moi.",
+  }),
+  coachItem(coachKneeThread, "08:01:00", "consult_request", {
+    thread: "sthr_knee",
+    agent: "medical",
+    text: "Le genou réagit-il en descente ?",
+  }),
+  coachItem(coachKneeThread, "08:02:00", "read", {
+    thread: "sthr_knee",
+    agent: "medical",
+    tool: "read_health_reports",
+    label: "Signalements · 14 jours",
+  }),
+  coachItem(coachKneeThread, "08:03:00", "consult_reply", {
+    thread: "sthr_knee",
+    agent: "medical",
+    text: "Je dois savoir si la douleur apparaît en descente.",
+  }),
+  coachItem(coachKneeThread, "08:03:00", "consult_end", {
+    thread: "sthr_knee",
+    agent: "medical",
+  }),
+  coachItem(coachKneeThread, "08:04:00", "question", {
+    toolUseId: "sevt_knee",
+    question: "Ton genou te gêne-t-il en descente ?",
+    askedFor: "medical",
+  }),
+  coachItem(coachPlanThread, "06:00:00", "athlete", {
+    text: "Construis-moi un plan d’entraînement pour mon objectif.",
+    consult: null,
+  }),
+  coachItem(coachPlanThread, "06:09:00", "coach", {
+    text: "Voici mon plan pour les quatre prochaines semaines.",
+  }),
+  coachItem(coachPlanThread, "06:10:00", "proposal", {
+    proposalId: coachNewPlanProposal,
+    scope: "new_plan",
+    title: "Marathon de Paris",
+    summary: "Quatre semaines de base.",
+    opinions: [],
+  }),
+];
+tables.plan_proposals.push({
+  id: coachNewPlanProposal,
+  user_id: coachUser.id,
+  plan_id: null,
+  base_version: null,
+  scope: "new_plan",
+  origin: "training",
+  requested_by: "athlete",
+  status: "ready",
+  title: "Marathon de Paris",
+  summary: "Quatre semaines de base.",
+  rationale: null,
+  operations: [
+    {
+      op: "create_plan",
+      state: coachNewPlanState(),
+    },
+  ],
+  applied_version: null,
+  validation: null,
+  specialist_opinions: [],
+  target_keys: ["plan"],
+  coach_session_id: coachPlanThread,
+  created_at: coachAt("06:10:00"),
+  updated_at: coachAt("06:10:00"),
+});
+function coachNewPlanState() {
+  const text = readFileSync(
+    new URL("./coach-new-plan.json", import.meta.url),
+    "utf8",
+  );
+  const start = new Date(`${shiftDay(mondayOf(planToday), 7)}T00:00:00Z`);
+  const shift = Math.round((start - Date.parse("2026-10-12T00:00:00Z")) / day);
+  return JSON.parse(
+    text.replace(/\d{4}-\d{2}-\d{2}/g, (iso) => shiftDay(iso, shift)),
+  );
+}
+const coachTables = [
+  "coach_sessions",
+  "coach_thread_items",
+  "plan_proposals",
+  "plan_decisions",
+];
+const coachSnapshot = structuredClone(
+  Object.fromEntries(
+    coachTables.map((table) => [
+      table,
+      tables[table].filter((row) => row.user_id === coachUser.id),
+    ]),
+  ),
+);
 const planReviewPlanId = "dddddddd-dddd-4ddd-8ddd-777777777777";
 twinPlanAthlete(planReviewUser, planReviewPlanId, "7777");
 twinPlanAthlete(
@@ -1125,6 +1292,33 @@ function selectRows(table, params) {
         rows = rows.filter((row) => String(row[key]) === filter.slice(3));
     }
   }
+  if (table === "coach_sessions") {
+    const status = params.get("status");
+    if (status?.startsWith("eq."))
+      rows = rows.filter((row) => row.status === status.slice(3));
+  }
+  const sessions = params.get("coach_session_id")?.match(/^in\.\((.*)\)$/);
+  if (sessions) {
+    const allowed = sessions[1]
+      .split(",")
+      .map((item) => item.replace(/"/g, ""));
+    rows = rows.filter((row) => allowed.includes(row.coach_session_id));
+  }
+  if (table === "coach_thread_items") {
+    const kind = params.get("kind");
+    if (kind?.startsWith("eq."))
+      rows = rows.filter((row) => row.kind === kind.slice(3));
+    const threadId = params.get("coach_session_id");
+    if (threadId?.startsWith("eq."))
+      rows = rows.filter((row) => row.coach_session_id === threadId.slice(3));
+    rows = [...rows].sort((a, b) =>
+      params.get("order")?.startsWith("id.desc") ? b.id - a.id : a.id - b.id,
+    );
+  }
+  if (table === "coach_sessions")
+    rows = [...rows].sort((a, b) =>
+      b.last_activity_at.localeCompare(a.last_activity_at),
+    );
   if (table === "plan_proposals" || table === "plan_decisions") {
     for (const key of ["status"]) {
       const filter = params.get(key);
@@ -1234,6 +1428,21 @@ function applyPlanProposal(request, proposalId) {
   if (!proposal) return [409, { ok: false, reason: "not_found" }];
   if (proposal.status !== "accepted")
     return [409, { ok: false, reason: "not_accepted" }];
+  if (proposal.scope === "new_plan") {
+    proposal.status = "applied";
+    proposal.applied_version = 1;
+    tables.plan_decisions.push({
+      id: randomUUID(),
+      user_id: owner.id,
+      proposal_id: proposal.id,
+      decision: "applied",
+      actor: "system",
+      note: null,
+      resulting_version: 1,
+      created_at: new Date().toISOString(),
+    });
+    return [200, { ok: true, version: 1 }];
+  }
   const plan = tables.training_plans.find(
     (item) => item.id === proposal.plan_id,
   );
@@ -1331,6 +1540,14 @@ createServer(async (request, response) => {
     for (const table of reviewTables)
       tables[table] = tables[table]
         .filter((row) => row.user_id !== planReviewUser.id)
+        .concat(snapshot[table]);
+    return send(200, { reset: true });
+  }
+  if (url.pathname === "/__test__/coach" && request.method === "DELETE") {
+    const snapshot = structuredClone(coachSnapshot);
+    for (const table of coachTables)
+      tables[table] = tables[table]
+        .filter((row) => row.user_id !== coachUser.id)
         .concat(snapshot[table]);
     return send(200, { reset: true });
   }
@@ -1720,6 +1937,30 @@ createServer(async (request, response) => {
         );
         return send(204, undefined);
       }
+    }
+    if (
+      url.pathname === "/rest/v1/coach_sessions" &&
+      request.method === "DELETE"
+    ) {
+      const owner = url.searchParams.get("user_id");
+      const id = url.searchParams.get("id");
+      const deleted = tables.coach_sessions.filter(
+        (row) => `eq.${row.user_id}` === owner && `eq.${row.id}` === id,
+      );
+      const ids = deleted.map((row) => row.id);
+      tables.coach_sessions = tables.coach_sessions.filter(
+        (row) => !ids.includes(row.id),
+      );
+      tables.coach_thread_items = tables.coach_thread_items.filter(
+        (row) => !ids.includes(row.coach_session_id),
+      );
+      for (const proposal of tables.plan_proposals)
+        if (ids.includes(proposal.coach_session_id))
+          proposal.coach_session_id = null;
+      return send(
+        200,
+        deleted.map((row) => ({ id: row.id })),
+      );
     }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {
