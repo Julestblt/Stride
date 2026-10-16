@@ -274,6 +274,49 @@ export type Database = {
         };
         Relationships: [];
       };
+      coach_sessions: {
+        Row: {
+          budget_cents: number;
+          created_at: string;
+          id: string;
+          last_turn_at: string | null;
+          list_cost_cents: number;
+          managed_session_id: string;
+          mode: string;
+          pending_tool_use_id: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          budget_cents: number;
+          created_at?: string;
+          id?: string;
+          last_turn_at?: string | null;
+          list_cost_cents?: number;
+          managed_session_id: string;
+          mode: string;
+          pending_tool_use_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          budget_cents?: number;
+          created_at?: string;
+          id?: string;
+          last_turn_at?: string | null;
+          list_cost_cents?: number;
+          managed_session_id?: string;
+          mode?: string;
+          pending_tool_use_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       onboarding_progress: {
         Row: {
           about_completed_at: string | null;
