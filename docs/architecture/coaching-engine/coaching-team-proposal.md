@@ -1,6 +1,6 @@
 # Proposal: a coaching team for conversations, a single Coach for plans
 
-- Status: Proposal from the product owner (2026-10-14). Direction accepted in decision D10; the detailed design is to be confirmed through Phase 2 issues. It amends [ADR 0007](../../adr/0007-coaching-engine-paradigm-and-agent-topology.md) and [ADR 0010](../../adr/0010-internal-tools-and-garmin-normalized-data.md).
+- Status: Proposal from the product owner (2026-10-14). Direction accepted in decision D10; the detailed design is to be confirmed through Phase 2 issues. It amends [ADR 0007](../../adr/0007-coaching-engine-paradigm-and-agent-topology.md) and [ADR 0010](../../adr/0010-internal-tools-and-garmin-normalized-data.md). D10 amended on 2026-10-16 (#171): specialists speak to the athlete directly inside a Coach-led thread (see [Amendment](#amendment-2026-10-16-171-a-group-conversation)).
 - Inputs: the partial [topology benchmark](topology-benchmark.md) run (34 of 48 plans, no judging), the [reference audit](reference-audit.md) of ai-running-coach, and the current [agents and delegation](agents-and-delegation.md) design.
 
 ## Idea in one paragraph
@@ -10,7 +10,7 @@ Stride works like the staff of a professional athlete. The **Coach** is the only
 ## Decisions taken (2026-10-14)
 
 - Plan generation and adaptation: the single Coach with skills. No multi-agent delegation for plan design.
-- Conversations: Coach as the only entry point and voice, specialists consulted through it, the athlete approves every change.
+- Conversations: Coach as the only entry point, specialists brought in by the Coach, the athlete approves every change. Amended on 2026-10-16 (#171): specialists address the athlete directly; the Coach no longer relays them.
 - Model access: the Anthropic API behind the model gateway (D1). Running the product on a Claude subscription through a containerized Claude Code CLI was considered and rejected: subscription login may not power a product used by other people, the quota is shared with development, and the CLI gives no control over run state, caching or concurrency. Subscription CLIs stay for development and evaluations.
 - Skills: start from ai-running-coach's skills and keep their substance, replacing file and Python-script steps with Stride tools. Copied files keep the MIT copyright and permission notice in a `NOTICE` file next to them.
 - Nutrition: computed targets with a light deficit allowed under guards (see Nutrition method).
@@ -46,11 +46,13 @@ sequenceDiagram
   Athlete->>Coach: Approves or rejects
 ```
 
-The athlete sees one thread, like a staff group chat. Each specialist contribution is shown with its author ("Le médecin recommande…"), but every message to the athlete goes through the Coach.
+The athlete sees one thread, like a staff group chat. This diagram shows the original relay design; since the [2026-10-16 amendment](#amendment-2026-10-16-171-a-group-conversation), specialists ask and answer the athlete themselves and the Coach only routes and concludes.
 
 ## Answers to the open questions
 
 ### Should specialists talk to the athlete directly?
+
+Superseded by the [2026-10-16 amendment](#amendment-2026-10-16-171-a-group-conversation): yes, inside a Coach-led thread. The original answer follows.
 
 No. The Coach stays the only voice, and specialist questions and opinions are relayed with attribution. Reasons:
 
@@ -151,3 +153,27 @@ Each specialist ships only if it beats the Coach with the same skill on its scen
 - ADR 0007 would change from "deterministic specialists with one bounded consult" to "LLM specialists consulted by the Coach in conversation workflows, deterministic modules underneath them".
 - Each specialist ships with its evaluation scenarios (for example: race added mid-season, pain report before a key session, race-week fueling) and is compared with the Coach using the same skill.
 - New epics: conversation thread with attribution and athlete questions; Nutrition page.
+
+## Amendment (2026-10-16, #171): a group conversation
+
+The first live conversations (#139) worked end to end but read as agents talking to each other: the Coach rewrote every specialist exchange, specialists talked to each other in English, answers were long, and an open `ask_athlete` question with several options did not fit « Oui / Non ». The owner wants a staff group chat instead.
+
+**Decision.** Specialists may address the athlete directly inside a thread the Coach leads.
+
+- The Coach reads each athlete message and either answers alone or hands off in one short French line that mentions the specialist (« @Inès, tu peux vérifier le genou avec Jules ? »).
+- The specialist writes to the athlete in its own voice and name, in French, and may ask the athlete one question at a time through `ask_athlete`, preferably with 2 to 5 short answer options plus a free answer. The answer goes back to the specialist that asked, not through the Coach.
+- The Coach does not repeat or rephrase what a specialist said. It adds a short synthesis only when a decision, a proposal or a contradiction between specialists needs one.
+- Every message the athlete can see is in French, including hand-offs between agents.
+- Messages are short by default: verdict first, safety first, no restating of what the athlete already said, details on request.
+
+**What the Coach never delegates.**
+
+- Routing: deciding who speaks, at most two specialists per athlete request, and no specialist-to-specialist chains.
+- Safety ordering: when a specialist advises stopping or seeing a professional, that advice comes first in the specialist's message, and the Coach's synthesis never softens or buries it. Health wins over performance.
+- Plan changes: only the Coach writes plans and proposals (`submit_plan`, `create_plan_proposal`). They stay validated proposals that the athlete accepts; specialists give opinions, which proposals cite.
+- Resolving contradictions between specialists and stating the trade-off.
+- Answering free-text athlete messages: the client can only post to the Coach's thread, so the Coach forwards a free-text follow-up meant for a specialist in one line.
+
+**Unchanged.** The athlete approves every change (D3), the consult cap and deterministic consult triggers stay, and specialists keep read-only tools.
+
+**Runtime.** Recorded with the #171 spike in [ADR 0009](../../adr/0009-coach-worker-runtime-on-postgres.md).
