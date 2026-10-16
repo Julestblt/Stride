@@ -72,3 +72,25 @@ Live checks ran against the hosted project and the `Stride` Managed Agents works
 | Token expiry mid-session                      | A turn when the access token expires within 15 minutes                                           | Not run live, at the owner's request. Refresh decisions and the unavailable path are covered by `coaching-runtime.test.ts`                                                                                                     |
 | Custom login role through the Supabase pooler | Worker connects as a login role member of `stride_coach_worker`                                  | Still open: the login role is not created on the hosted project, so the worker cannot apply or reset plans there yet                                                                                                           |
 | Agents as code                                | `ant apply --dry-run` after archiving the orphaned first agent set (two agents, one environment) | Pass. Everything up to date, 12 resources unchanged                                                                                                                                                                            |
+
+## Amendment (2026-10-16, #171)
+
+The group conversation from the [D10 amendment](../architecture/coaching-engine/coaching-team-proposal.md#amendment-2026-10-16-171-a-group-conversation) runs on the existing coordinator session. A specialist does not need its own session.
+
+**Spike.** Two temporary agents (Coach coordinator and Medical, Claude Sonnet 5.5 at medium effort, French group-chat prompts, Medical owning `ask_athlete` with answer options) ran one pain-report conversation in the `Stride` workspace against fixtures, then were archived. Session `sesn_01RDVvjypSBngaCjayUC4cFk`: 2 turns, 8 s then 5 s, $0.04 list cost, 986 output tokens. It used short prompts with no skills and no athlete context, so its cost is not comparable to the #139 baseline ($0.20); the PR for #171 measures the production agents.
+
+| Question                                                | Result                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Can the Coach hand off in an athlete-visible line?      | Yes. The Coach's `agent.message` on the primary thread (« @Inès, tu peux regarder ton tibia droit avec Jules ? ») came before its `agent.thread_message_sent` to Medical, which was in French.                                                           |
+| Can a specialist ask the athlete directly?              | Yes. Medical's `ask_athlete` call was cross-posted to the primary stream with Medical's `session_thread_id`, and the session went `idle` with `requires_action`. The options came back as a structured list (four choices).                              |
+| Does the answer reach the specialist without the Coach? | Yes. `user.custom_tool_result` with the call's id, sent on a later turn, resumed Medical's thread directly; the Coach thread did not run in between.                                                                                                     |
+| How is the specialist's answer surfaced?                | Medical's reply reaches the primary stream as `agent.thread_message_received`, addressed to the athlete, safety first (« Annule le fractionné… fais voir ce tibia par un médecin »). A specialist's own `agent.message` stays on its thread stream only. |
+| Can the athlete post to a specialist thread?            | No. The client posts `user.message` to the primary thread only, so free-text follow-ups go through the Coach.                                                                                                                                            |
+
+**Runtime consequences.**
+
+- A specialist's reply to the Coach (`agent.thread_message_received`) is stored and shown as that specialist's message; the Coach's instructions forbid restating it.
+- `ask_athlete` moves to each specialist's tool allowlist and gains optional answer options. The pending question keeps the asking thread; the answer is sent by tool id as today.
+- The Coach's hand-off line is a normal Coach message; the agent-to-agent brief stays out of the thread.
+
+**Prompt issues seen in the spike**, to fix in the production agents: Medical ended its reply with a second question in prose instead of a second `ask_athlete` call, and spoke to the Coach inside the athlete's message (« Coach, c'est à toi de voir… »); the Coach added a filler line (« Inès est en train de regarder ça avec toi. ») and a synthesis that partly repeated Medical's advice.
