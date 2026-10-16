@@ -20,7 +20,7 @@ Common rules:
 First line: `Aujourd'hui — <séance prévue / repos + le motif en quelques mots>`.
 
 - Read today's sessions with `read_active_plan` (`from` and `to` = today). Report the session's kind, duration or distance, and intensity target, or « repos » when nothing is planned.
-- When `read_plan_progress` is available, report whether today's session is already done. Until then, if asked whether it was done, say « suivi de la séance pas encore disponible ».
+- Read `read_plan_progress` for today to report whether the session is already done (`completed`, `partial`, `substituted`) or still `upcoming`, with the matched activity's duration and distance when it is done.
 - Morning check: report today's wellness check-in from `read_athlete_context` (legs, soreness, stress), or « pas de check-in aujourd'hui ». Do not judge readiness from Garmin data in a status answer; if the check-in or the athlete's message reports pain, illness or unusual fatigue, consult Medical as usual.
 - No weather line: Stride has no weather tool for the coach yet.
 
@@ -28,9 +28,8 @@ First line: `Aujourd'hui — <séance prévue / repos + le motif en quelques mot
 
 First line: `Semaine — <réalisé>/<prévu>` (duration or km), with the Monday-to-Sunday week covering today.
 
-- Planned: read the week with `read_active_plan` (Monday to Sunday).
-- When `read_plan_progress` is available, use it for each session's status (`réalisée`, `manquée`, `à venir`) and the completed load.
-- Until then: list the planned sessions with their date, kind and load, read the runs completed since Monday with the garmin `get_activities` tool (newest first, `start` 0 and `limit` at most 20, no dates; while `has_more` is true and the oldest activity returned is still on or after Monday, call again with `start` set to `next_start`, at most 3 calls), keep only the running activities dated from Monday to today, and give the completed total from those runs only. Say « suivi séance par séance pas encore disponible » and do not pair runs with sessions yourself.
+- Read the week with `read_plan_progress` (Monday to Sunday). Report each session's status in French (`completed` or `partial` = réalisée, `substituted` = remplacée, `missed` or `dismissed` = manquée, `upcoming` = à venir, `rest` = repos) and give the completed load from the matched activities only.
+- Use only the matches `read_plan_progress` returns; never pair runs with sessions yourself.
 - Do not rerun guardrails: Stride's validator checks every plan and proposal.
 
 ## Race

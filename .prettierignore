@@ -5,3 +5,4 @@ playwright-report
 test-results
 .agents/skills
 evals/topology/results/
+managed-agents/agents/*.md

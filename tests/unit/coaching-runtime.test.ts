@@ -38,7 +38,10 @@ vi.mock("../../src/server/coaching/managed/resources", () => ({
     },
   }),
 }));
-vi.mock("../../src/server/coaching/managed/tools", () => ({ runCustomTool }));
+vi.mock("../../src/server/coaching/tools/registry", async (original) => ({
+  ...(await original<object>()),
+  runCustomTool,
+}));
 vi.mock("../../src/server/coaching/managed/vault", () => ({
   syncAthleteVault,
 }));
@@ -73,7 +76,7 @@ function jwt(expiresAtMs: number) {
 
 function contextFor(
   userId: string,
-  accessToken = jwt(now + 3_600_000),
+  accessToken = jwt(Date.now() + 3_600_000),
   refreshSession = vi.fn(),
 ) {
   return {
@@ -279,6 +282,44 @@ describe("coach turn stream", () => {
       mode: "conversation",
       budgetCents: 100,
     });
+  });
+
+  it("answers an invalid ask_athlete call with an error instead of pausing", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_ask",
+          name: "ask_athlete",
+          input: { question: "Depuis quand ?" },
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+
+    expect(runCustomTool).not.toHaveBeenCalled();
+    expect(managed.send).toHaveBeenCalledWith("sesn_01A", {
+      events: [
+        expect.objectContaining({
+          type: "user.custom_tool_result",
+          custom_tool_use_id: "sevt_ask",
+          is_error: true,
+          content: [
+            {
+              type: "text",
+              text: expect.stringContaining('"code":"invalid_input"'),
+            },
+          ],
+        }),
+      ],
+    });
+    expect(events.map((event) => event.type)).not.toContain("question");
+    expect(events.at(-1)).toMatchObject({ status: "idle" });
   });
 
   it("streams a turn, answers custom tools and pauses on ask_athlete", async () => {
