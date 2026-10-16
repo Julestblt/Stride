@@ -27,6 +27,9 @@ test("a session opens in a side panel and navigates within the week", async ({
   ).toBeVisible();
   await expect(panel.getByText("Structure")).toBeVisible();
   await expect(panel.getByText("Étapes")).toBeVisible();
+  await expect(
+    panel.getByText(/^≈ \d+:\d{2}–\d+:\d{2}\/km$/).first(),
+  ).toBeVisible();
   await expect(page.locator("main h1")).toContainText("Marathon de Paris");
   await page.screenshot({ path: "test-results/plan-session-desktop.png" });
 

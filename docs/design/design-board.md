@@ -24,6 +24,16 @@ File names are not meaningful. Mobile artboards usually start with `M`, and suff
 
 Artboards on the `archive` page (`"page": "archive"` in `canvas.json`) are superseded iterations. Do not implement them unless an issue explicitly asks for it.
 
+## Design first
+
+The board stays the single source of truth, so it changes before the code. For a new screen or a user-visible UI change, start by updating the board:
+
+1. Edit the affected artboards on the board, desktop and mobile, until the render is clean. Follow the board's `SKILL.md` and keep the change consistent with `Foundations · Product system` and `Foundations · Patterns`.
+2. Share the updated artboard titles and the board version with the owner.
+3. Implement from the updated artboards.
+
+Fixes that only bring the code back in line with the board need no board change. When implementation reveals that the board must change, update the board rather than adding a deviation, unless the owner accepts the deviation in `design-adaptations.md`.
+
 ## Implementing from an artboard
 
 Artboard markup is a reference, not production code. Never copy its generated HTML, inline styles, or scripts. Rebuild the screen with Stride's architecture, Tailwind, Night Track tokens, and shadcn primitives, and map raw values such as `#D5FF3F` or `8px` radii to the semantic tokens in [design-system.md](design-system.md).

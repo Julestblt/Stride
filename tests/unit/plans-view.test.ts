@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { easyRun, qualitySession } from "@/features/plans/library/library";
 import type { PlanSession } from "@/features/plans/model/plan";
-import { trainingTargets } from "@/features/plans/targets/targets";
+import {
+  intensityPaceRanges,
+  trainingTargets,
+} from "@/features/plans/targets/targets";
 import {
   formatDayLabel,
   formatDuration,
@@ -66,6 +69,50 @@ describe("sessions", () => {
       ["4 × seuil", "4 × 6:00", "4:25–4:38/km"],
       ["Récupération × 4", "4 × 1:30", "6:05–6:37/km"],
       ["Retour au calme", "10:00", "5:21–6:05/km"],
+    ]);
+  });
+
+  it("shows the expected pace next to heart-rate targets", () => {
+    const trail = qualitySession({ targets, terrain: "trail" }, "threshold", 1);
+    const steps = stepViews(placed(trail), intensityPaceRanges(targets));
+    expect(steps[0]).toMatchObject({
+      name: "Échauffement",
+      target: "FC 114–132",
+      pace: "≈ 5:21–6:05/km",
+    });
+    expect(steps[1]).toMatchObject({
+      target: "FC 152–170",
+      pace: "≈ 4:25–4:38/km",
+    });
+  });
+
+  it("shows an explicit pace target without an approximate pace", () => {
+    const steps = stepViews(
+      placed(qualitySession(road, "threshold", 1)),
+      intensityPaceRanges(targets),
+    );
+    expect(steps[1]).toMatchObject({ target: "4:25–4:38/km", pace: null });
+  });
+
+  it("shows no pace for strength sessions or unknown intensity paces", () => {
+    const trail = placed(
+      qualitySession({ targets, terrain: "trail" }, "threshold", 1),
+    );
+    const strength = { ...trail, kind: "strength" } as PlanSession;
+    expect(
+      stepViews(strength, intensityPaceRanges(targets)).map(
+        (step) => step.pace,
+      ),
+    ).toEqual([null, null, null, null]);
+    expect(
+      stepViews(trail, {
+        threshold: targets.intensities.threshold.paceRange!,
+      }).map((step) => [step.target, step.pace]),
+    ).toEqual([
+      ["FC 114–132", null],
+      ["FC 152–170", "≈ 4:25–4:38/km"],
+      ["FC 95–113", null],
+      ["FC 114–132", null],
     ]);
   });
 

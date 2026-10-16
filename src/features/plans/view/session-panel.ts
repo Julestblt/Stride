@@ -11,6 +11,7 @@ import { addDays, mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
 import type { IntensityPaces } from "../model/structure";
 import { sessionDistance } from "../model/volume";
+import { paceMidpoints, type IntensityPaceRanges } from "../targets/targets";
 import { formatDistance, formatDuration, formatLongDay } from "./format";
 import {
   chartSegments,
@@ -62,7 +63,7 @@ export type SessionPanelInput = {
   activity: PanelActivity | null;
   laps: PanelLap[];
   series: Series | null;
-  paces?: IntensityPaces | null;
+  paceRanges?: IntensityPaceRanges | null;
 };
 
 export type PanelStatus =
@@ -215,12 +216,13 @@ function completion(
   input: SessionPanelInput,
   session: PlanSession,
   match: PanelMatch,
+  paces: IntensityPaces | null,
 ): PanelCompletion | null {
   const { activity } = input;
   if (!activity || !match.activityId) return null;
   const durationRatio = match.compliance.duration;
   const pct = durationRatio !== null ? Math.round(durationRatio * 100) : null;
-  const distance = sessionDistance(session, input.paces ?? null);
+  const distance = sessionDistance(session, paces);
   const planned = distance?.meters ?? null;
   const rows: PanelRow[] = [];
   if (activity.durationSeconds !== null)
@@ -364,7 +366,9 @@ export function buildSessionPanel(
               key === `session:${session.sessionKey}`,
           ),
         ) ?? null);
-  const stats = sessionStats(session, null, input.paces ?? null);
+  const paceRanges = input.paceRanges ?? null;
+  const paces = paceRanges ? paceMidpoints(paceRanges) : null;
+  const stats = sessionStats(session, null, paces);
   const statList: PanelStat[] = [
     {
       key: "duration",
@@ -422,8 +426,8 @@ export function buildSessionPanel(
     structureLabel: `Déroulé de la séance sur ${formatDuration(
       segments.reduce((total, segment) => total + segment.seconds, 0),
     )}`,
-    steps: stepViews(session),
+    steps: stepViews(session, paceRanges),
     contingencies: session.contingencies,
-    completion: match ? completion(input, session, match) : null,
+    completion: match ? completion(input, session, match, paces) : null,
   };
 }

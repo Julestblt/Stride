@@ -48,6 +48,26 @@ describe("session panel", () => {
     expect(panel.contingencies).toHaveLength(1);
   });
 
+  it("shows expected paces and estimates distance from their midpoints", () => {
+    const panel = buildSessionPanel(
+      input({
+        paceRanges: {
+          easy: { fastSecondsPerKm: 300, slowSecondsPerKm: 330 },
+          recovery: { fastSecondsPerKm: 340, slowSecondsPerKm: 370 },
+        },
+      }),
+    )!;
+    expect(panel.steps.map((step) => [step.target, step.pace])).toEqual([
+      ["Effort 2–3/10", "≈ 5:00–5:30/km"],
+      ["4:30–4:40/km", null],
+      ["Effort 2–3/10", "≈ 5:40–6:10/km"],
+      ["Libre", "≈ 5:00–5:30/km"],
+    ]);
+    expect(panel.stats.find((stat) => stat.key === "distance")?.value).toBe(
+      "≈ 11,0 km",
+    );
+  });
+
   it("returns null for an unknown session", () => {
     expect(buildSessionPanel(input({ sessionKey: "s-unknown" }))).toBeNull();
   });
