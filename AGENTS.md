@@ -46,6 +46,7 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 ## Design reference conventions
 
 - The live Claude Design board is the visual source of truth. Read artboards through the claude.ai Artifact tool as described in `docs/design/design-board.md`; never export, commit, or copy board files or their generated markup into the repository.
+- Design first: for a new screen or user-visible UI change, update the affected board artboards before implementing, then build from them.
 - Never generate, transform, or commit derivative images or derive production assets unless explicitly requested.
 - Temporary visual validation artifacts, including rendered artboards, must remain untracked. Store local screenshots in ignored `test-results/` or outside the repository.
 
