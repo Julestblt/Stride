@@ -43,12 +43,15 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 - a resumed session must exist in the athlete's own `coach_sessions` rows **and** carry the athlete's `stride_user_id` metadata, otherwise the API answers 404;
 - custom tool calls run under the athlete's row-level security, only when the calling agent's thread is allowed the tool in `agentTools`; any other name, including one the model invents, is answered with `unknown_tool` without running anything. `ask_athlete` pauses the session (`awaiting_athlete`) until the athlete answers;
 - a turn stops after 15 minutes: Stride sends `user.interrupt` and shows a French message; a session that reaches its budget is closed.
+- every athlete-visible item of the turn (the athlete's message or answer, the Coach's messages, the specialist consult with the data it read, `ask_athlete` questions, proposals and errors) is appended to `coach_thread_items` under row-level security and streamed as an `item` event, so the thread reloads without re-reading Managed Agents events. A message may ask for Medical's opinion (`consult: "medical"`); the Coach still decides.
+
+The athlete reaches the Coach at `/coach` (conversations list, thread with Concertation blocks, question and proposal cards, and the Suivi panel).
 
 Accepted proposals are applied by the `stride-coach-worker` service, not by the web process. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md).
 
 ## Development page
 
-`/coach` (development only) starts a conversation or plan design session after confirmation, streams the transcript with latency and cost, and lets the athlete approve, apply or reset plans. Applying and resetting go through the worker: run `npm run worker:build && npm run worker:start` with `COACH_WORKER_DATABASE_URL` in the worker's environment, and set `COACH_WORKER_URL` for the web process.
+`/coach-spike` (development only) starts a conversation or plan design session after confirmation, streams the transcript with latency and cost, and lets the athlete approve, apply or reset plans. Applying and resetting go through the worker: run `npm run worker:build && npm run worker:start` with `COACH_WORKER_DATABASE_URL` in the worker's environment, and set `COACH_WORKER_URL` for the web process.
 
 ## Release procedure
 
