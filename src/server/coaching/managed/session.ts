@@ -311,7 +311,11 @@ export async function* streamCoachTurn(
             }
             outcome = asked.outcome;
           } else {
-            outcome = await runCustomTool(context, event.name, event.input);
+            outcome = await runCustomTool(
+              { ...context, coachSessionId: record.id },
+              event.name,
+              event.input,
+            );
           }
           yield {
             type: "tool",

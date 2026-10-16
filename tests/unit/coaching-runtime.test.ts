@@ -89,6 +89,7 @@ function contextFor(
 
 function record(overrides: Partial<CoachSessionRecord> = {}) {
   return {
+    id: "c0000000-0000-4000-8000-00000000000c",
     managedSessionId: "sesn_01A",
     mode: "conversation",
     status: "idle",
@@ -412,7 +413,10 @@ describe("coach turn stream", () => {
     await collect(streamCoachTurn(contextFor(athleteA), request));
 
     expect(runCustomTool).toHaveBeenCalledWith(
-      expect.anything(),
+      expect.objectContaining({
+        userId: athleteA,
+        coachSessionId: "c0000000-0000-4000-8000-00000000000c",
+      }),
       "read_health_reports",
       { days: 7 },
     );

@@ -465,6 +465,7 @@ export type Database = {
           applied_version: number | null;
           assumptions: NonNullable<Json>;
           base_version: number | null;
+          coach_session_id: string | null;
           created_at: string;
           evidence: NonNullable<Json>;
           expires_at: string | null;
@@ -493,6 +494,7 @@ export type Database = {
           applied_version?: number | null;
           assumptions?: NonNullable<Json>;
           base_version?: number | null;
+          coach_session_id?: string | null;
           created_at?: string;
           evidence?: NonNullable<Json>;
           expires_at?: string | null;
@@ -520,6 +522,7 @@ export type Database = {
           applied_version?: number | null;
           assumptions?: NonNullable<Json>;
           base_version?: number | null;
+          coach_session_id?: string | null;
           created_at?: string;
           evidence?: NonNullable<Json>;
           expires_at?: string | null;
@@ -543,6 +546,13 @@ export type Database = {
           validation?: Json | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "plan_proposals_coach_session_id_fkey";
+            columns: ["coach_session_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_sessions";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "plan_proposals_plan_id_fkey";
             columns: ["plan_id"];
@@ -1626,6 +1636,7 @@ export type Database = {
           applied_version: number | null;
           assumptions: NonNullable<Json>;
           base_version: number | null;
+          coach_session_id: string | null;
           created_at: string;
           evidence: NonNullable<Json>;
           expires_at: string | null;
@@ -1804,6 +1815,7 @@ export type Database = {
           applied_version: number | null;
           assumptions: NonNullable<Json>;
           base_version: number | null;
+          coach_session_id: string | null;
           created_at: string;
           evidence: NonNullable<Json>;
           expires_at: string | null;
@@ -1928,6 +1940,7 @@ export type Database = {
       submit_plan_proposal: {
         Args: {
           p_base_version?: number;
+          p_coach_session_id?: string;
           p_operations: Json;
           p_origin: string;
           p_plan_id?: string;
@@ -1944,6 +1957,7 @@ export type Database = {
           applied_version: number | null;
           assumptions: NonNullable<Json>;
           base_version: number | null;
+          coach_session_id: string | null;
           created_at: string;
           evidence: NonNullable<Json>;
           expires_at: string | null;

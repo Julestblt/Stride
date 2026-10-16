@@ -1,10 +1,9 @@
 import "server-only";
 import { z } from "zod";
-import type { OnboardingContext } from "@/server/onboarding/context";
 import { readActivePlanTool } from "./active-plan";
 import { askAthleteTool } from "./ask-athlete";
 import { readAthleteContextTool } from "./athlete-context";
-import type { CoachingTool } from "./define";
+import type { CoachingTool, ToolContext } from "./define";
 import { ToolError, toolError, type ToolErrorBody } from "./errors";
 import { readHealthReportsTool } from "./health-reports";
 import { readPlanHistoryTool } from "./plan-history";
@@ -13,7 +12,7 @@ import { createPlanProposalTool } from "./plan-proposal";
 import { submitPlanTool } from "./submit-plan";
 
 export type RegisteredTool = Omit<CoachingTool, "run"> & {
-  run?: (context: OnboardingContext, input: never) => Promise<unknown>;
+  run?: (context: ToolContext, input: never) => Promise<unknown>;
 };
 
 export const coachingTools = [
@@ -80,7 +79,7 @@ function failure(body: ToolErrorBody): ToolOutcome {
 }
 
 export async function runCustomTool(
-  context: OnboardingContext,
+  context: ToolContext,
   name: string,
   input: unknown,
 ): Promise<ToolOutcome> {

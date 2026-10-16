@@ -6,24 +6,25 @@ import {
   planOperationSchema,
   type PlanOperation,
 } from "@/features/plans/operations/operations";
-import type { OnboardingContext } from "@/server/onboarding/context";
 import { readSessionMatches } from "@/server/plans/matches";
 import type { Database } from "@/server/supabase/database.types";
 import { requireActivePlan } from "./active-plan";
-import { defineTool } from "./define";
+import { defineTool, type ToolContext } from "./define";
 import { toolError } from "./errors";
 
 type SubmitArgs =
   Database["public"]["Functions"]["submit_plan_proposal"]["Args"];
 
 export async function submitProposal(
-  context: OnboardingContext,
-  args: SubmitArgs,
+  context: ToolContext,
+  args: Omit<SubmitArgs, "p_coach_session_id">,
 ) {
-  const { data, error } = await context.client.rpc(
-    "submit_plan_proposal",
-    args,
-  );
+  const { data, error } = await context.client.rpc("submit_plan_proposal", {
+    ...args,
+    ...(context.coachSessionId
+      ? { p_coach_session_id: context.coachSessionId }
+      : {}),
+  });
   if (error?.message === "not_found") throw toolError("not_found");
   if (error?.message === "stale_version")
     throw toolError("validation_failed", { reason: "stale_version" });

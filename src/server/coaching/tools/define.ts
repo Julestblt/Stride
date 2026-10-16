@@ -1,6 +1,10 @@
 import type { z } from "zod";
 import type { OnboardingContext } from "@/server/onboarding/context";
 
+export type ToolContext = OnboardingContext & {
+  coachSessionId?: string | null;
+};
+
 export type ToolClass = "read" | "compute" | "propose";
 export type DataClass = "training" | "health" | "plan";
 
@@ -15,7 +19,7 @@ export type CoachingTool<
   input: Input;
   output: Output;
   run?: (
-    context: OnboardingContext,
+    context: ToolContext,
     input: z.output<Input>,
   ) => Promise<z.input<Output>>;
 };
