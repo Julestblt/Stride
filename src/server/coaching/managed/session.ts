@@ -4,6 +4,8 @@ import { ToolError, toolError } from "@/server/coaching/tools/errors";
 import {
   parseToolInput,
   runCustomTool,
+  toolAllowed,
+  type AgentName,
   type ToolOutcome,
 } from "@/server/coaching/tools/registry";
 import type { OnboardingContext } from "@/server/onboarding/context";
@@ -92,6 +94,19 @@ export class SessionStateError extends Error {
   ) {
     super(code);
   }
+}
+
+const agentNames: Record<string, AgentName> = {
+  "Stride Coach": "coach",
+  "Stride Medical": "medical",
+};
+
+function callingAgent(
+  threadAgents: ReadonlyMap<string, string>,
+  threadId: string | null | undefined,
+): AgentName {
+  if (!threadId) return "coach";
+  return agentNames[threadAgents.get(threadId) ?? ""] ?? "medical";
 }
 
 const closedStatuses: SessionStatus[] = [
@@ -220,6 +235,7 @@ export async function* streamCoachTurn(
   signal?.addEventListener("abort", onAbort);
 
   let pendingQuestion: PendingQuestion | null = null;
+  const threadAgents = new Map<string, string>();
   let stopReason = "interrupted";
   let firstEventMs: number | null = null;
   const turnStarted = Date.now();
@@ -277,7 +293,17 @@ export async function* streamCoachTurn(
         case "agent.custom_tool_use": {
           const toolStarted = Date.now();
           let outcome: ToolOutcome;
-          if (event.name === askAthleteTool.name) {
+          if (
+            !toolAllowed(
+              callingAgent(threadAgents, event.session_thread_id),
+              event.name,
+            )
+          ) {
+            outcome = {
+              ok: false,
+              content: toolError("unknown_tool").toBody(),
+            };
+          } else if (event.name === askAthleteTool.name) {
             const asked = questionOf(event.input);
             if (asked.ok) {
               pendingQuestion = { toolUseId: event.id, ...asked.question };
@@ -308,6 +334,10 @@ export async function* streamCoachTurn(
           });
           break;
         }
+        case "session.thread_created":
+        case "session.thread_status_running":
+          threadAgents.set(event.session_thread_id, event.agent_name);
+          break;
         case "session.status_idle":
           stopReason = event.stop_reason.type;
           if (event.stop_reason.type !== "requires_action" || pendingQuestion)

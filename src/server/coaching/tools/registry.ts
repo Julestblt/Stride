@@ -51,6 +51,10 @@ const registry = new Map<string, RegisteredTool>(
   coachingTools.map((tool) => [tool.name, tool]),
 );
 
+export function toolAllowed(agent: AgentName, name: string) {
+  return (agentTools[agent] as readonly string[]).includes(name);
+}
+
 export function findTool(name: string) {
   return registry.get(name);
 }
