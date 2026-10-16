@@ -91,11 +91,11 @@ select throws_ok(
 
 select ok(
   has_function_privilege('authenticated',
-    'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[])', 'execute')
+    'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[], uuid)', 'execute')
     and not has_function_privilege('anon',
-      'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[])', 'execute')
+      'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[], uuid)', 'execute')
     and not has_function_privilege('service_role',
-      'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[])', 'execute'),
+      'public.submit_plan_proposal(text, text, text, text, text, jsonb, jsonb, uuid, integer, jsonb, text[], uuid)', 'execute'),
   'only athletes may submit proposals'
 );
 select is(

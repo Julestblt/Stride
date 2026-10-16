@@ -66,6 +66,7 @@ export function AppShell({
   defaultOpen,
   initialActivity,
   planNav = null,
+  planHistoryCount = null,
   children,
 }: {
   athlete: ShellAthlete;
@@ -75,6 +76,7 @@ export function AppShell({
   sync: string | null;
   initialActivity?: DataActivityObservation | null;
   planNav?: ProgramNav | null;
+  planHistoryCount?: number | null;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
@@ -130,7 +132,7 @@ export function AppShell({
                 />
               </SidebarMenu>
             </SidebarGroup>
-            <PlanSidebarGroup nav={planNav} />
+            <PlanSidebarGroup nav={planNav} historyCount={planHistoryCount} />
             <ProgressSidebarGroup />
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
               <SidebarGroupLabel>Objectifs</SidebarGroupLabel>

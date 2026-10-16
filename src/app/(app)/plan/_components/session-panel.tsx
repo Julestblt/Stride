@@ -1,3 +1,4 @@
+import { useSearchParams } from "next/navigation";
 import { CheckIcon } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { zoneHeights } from "@/components/stride/session-blocks";
 import { SessionKindTile } from "@/components/stride/session-kind-tile";
 import { zoneFills } from "@/components/stride/session-shape";
 import { cn } from "@/lib/utils";
+import { ProposalLink } from "./proposal-sheet";
 import {
   panelStatusLabel,
   type PanelCompletion,
@@ -79,11 +81,22 @@ function Hero({ panel, titleId }: { panel: SessionPanel; titleId: string }) {
   );
 }
 
+function proposalHref(current: URLSearchParams, proposalId: string) {
+  const query = new URLSearchParams();
+  for (const key of ["race", "week"]) {
+    const value = current.get(key);
+    if (value) query.set(key, value);
+  }
+  query.set("proposition", proposalId);
+  return `/plan?${query}`;
+}
+
 function Proposal({
   proposal,
 }: {
   proposal: NonNullable<SessionPanel["proposal"]>;
 }) {
+  const searchParams = useSearchParams();
   return (
     <section
       aria-label="Changement proposé"
@@ -94,6 +107,18 @@ function Proposal({
         Changement proposé {proposal.when}
       </span>
       <p className="text-sm leading-normal">{proposal.text}</p>
+      <Button
+        asChild
+        size="md"
+        className="self-start max-sm:h-11 max-sm:w-full"
+      >
+        <ProposalLink
+          href={proposalHref(searchParams, proposal.id)}
+          data-proposal-id={proposal.id}
+        >
+          Examiner
+        </ProposalLink>
+      </Button>
     </section>
   );
 }

@@ -626,6 +626,26 @@ describe("create_plan_proposal", () => {
     );
   });
 
+  it("links the proposal to the coach session that submitted it", async () => {
+    const { client } = fakeClient(
+      {},
+      { data: { id: proposalId, status: "ready" }, error: null },
+    );
+    const coachSessionId = "c0000000-0000-4000-8000-00000000000c";
+    await runCustomTool(
+      { ...contextWith(client), coachSessionId },
+      "create_plan_proposal",
+      {
+        ...proposal,
+        operations: [{ op: "skip_session", sessionKey: "s-2026-10-20-1" }],
+      },
+    );
+    expect(client.rpc).toHaveBeenCalledWith(
+      "submit_plan_proposal",
+      expect.objectContaining({ p_coach_session_id: coachSessionId }),
+    );
+  });
+
   it("checks replaced session content strictly", async () => {
     const outcome = await runCustomTool(
       contextWith(fakeClient({}).client),

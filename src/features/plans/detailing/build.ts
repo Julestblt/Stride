@@ -103,6 +103,34 @@ export function validateNewPlan(
   input: DeterministicPlanInput,
   candidate: PlanState,
 ): ValidationReport {
+  return validateCandidate(input, candidate, {
+    base: null,
+    versions: null,
+    matchedSessionKeys: new Set(),
+  });
+}
+
+export function validatePlanChange(
+  input: DeterministicPlanInput,
+  base: PlanState,
+  candidate: PlanState,
+  change: {
+    versions: { expected: number; current: number };
+    matchedSessionKeys: ReadonlySet<string>;
+  },
+): ValidationReport {
+  return validateCandidate(input, candidate, { base, ...change });
+}
+
+function validateCandidate(
+  input: DeterministicPlanInput,
+  candidate: PlanState,
+  change: {
+    base: PlanState | null;
+    versions: { expected: number; current: number } | null;
+    matchedSessionKeys: ReadonlySet<string>;
+  },
+): ValidationReport {
   const { today } = input;
   const summary = summarizeHistory(input.activities, today);
   const objective = resolveObjective({
@@ -119,10 +147,10 @@ export function validateNewPlan(
     objective.race;
   return validatePlan({
     candidate,
-    base: null,
-    versions: null,
+    base: change.base,
+    versions: change.versions,
     today,
-    matchedSessionKeys: new Set(),
+    matchedSessionKeys: change.matchedSessionKeys,
     athlete: {
       availableWeekdays: input.availability.availableWeekdays,
       weekdaySessionMinutes: input.availability.weekdaySessionMinutes,

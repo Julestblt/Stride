@@ -51,12 +51,24 @@ const syncUser = {
   id: "66666666-6666-4666-8666-666666666666",
   email: "sync@example.com",
 };
+const planReviewUser = {
+  ...user,
+  id: "77777777-7777-4777-8777-777777777777",
+  email: "plan-review@example.com",
+};
+const planHistoryUser = {
+  ...user,
+  id: "88888888-8888-4888-8888-888888888888",
+  email: "plan-history@example.com",
+};
 const recordsSessions = [
   recordsEmptyUser,
   recordsFailureUser,
   recordsGoalFailureUser,
   planUser,
   syncUser,
+  planReviewUser,
+  planHistoryUser,
 ].map((identity) => ({
   ...session,
   user: identity,
@@ -770,6 +782,185 @@ tables.provider_activity_tracks.push({
 const nextPlanSession = planSessions.find(
   (session) => session.scheduled_on > planToday && session.kind !== "race",
 );
+const placedContent = (content) => ({
+  sport: content.sport,
+  kind: content.kind,
+  title: content.title,
+  purpose: content.purpose,
+  isKey: false,
+  priority: "normal",
+  targets: {
+    durationSeconds: content.durationSeconds,
+    distanceMeters: content.distanceMeters,
+    elevationGainMeters: content.elevationGainMeters,
+  },
+  structure: content.structure,
+  terrain: content.terrain,
+  origin: "coach",
+  contingencies: [],
+});
+const laterPlanSessions = planSessions.filter(
+  (session) =>
+    session.scheduled_on >= shiftDay(planToday, 21) && session.kind !== "race",
+);
+const acceptPlanSession = laterPlanSessions.find(
+  (session) => session.kind === "easy",
+);
+const rejectPlanSession = laterPlanSessions.find(
+  (session) => session.kind === "hills",
+);
+const proposalAt = (days, time) => `${shiftDay(planToday, days)}T${time}Z`;
+const readyPlanProposal = (owner, ownerPlanId, id) => ({
+  id,
+  user_id: owner.id,
+  plan_id: ownerPlanId,
+  base_version: 3,
+  scope: "session",
+  origin: "recovery",
+  requested_by: "athlete",
+  status: "ready",
+  summary: null,
+  rationale: null,
+  operations: [],
+  applied_version: null,
+  validation: null,
+  specialist_opinions: [],
+  target_keys: [],
+  coach_session_id: null,
+  created_at: proposalAt(0, "06:00:00"),
+  updated_at: proposalAt(0, "06:00:00"),
+});
+function shortenProposal(owner, ownerPlanId, id) {
+  return {
+    ...readyPlanProposal(owner, ownerPlanId, id),
+    title: "Raccourcir la séance",
+    summary: "Un footing court à la place de la séance prévue.",
+    rationale:
+      "Ton sommeil baisse depuis trois nuits. Je garde une sortie, plus courte et facile.",
+    operations: [
+      {
+        op: "replace_session",
+        sessionKey: nextPlanSession.session_key,
+        content: {
+          ...placedContent(planSessionTemplates.easy(30)),
+          title: "Footing court",
+        },
+      },
+    ],
+    specialist_opinions: [
+      {
+        specialist: "medical",
+        verdict: "compatible",
+        summary: "Une sortie facile reste possible. Signale toute gêne.",
+      },
+    ],
+    target_keys: [`session:${nextPlanSession.session_key}`],
+  };
+}
+function seedPlanHistory(owner, ownerPlanId, prefix) {
+  const id = (index) => `eeeeeeee-eeee-4eee-8eee-${prefix}0000000000${index}`;
+  const proposal = (index, fields) => ({
+    ...readyPlanProposal(owner, ownerPlanId, id(index)),
+    ...fields,
+  });
+  const decision = (index, kind, days, fields = {}) => ({
+    id: randomUUID(),
+    user_id: owner.id,
+    proposal_id: id(index),
+    decision: kind,
+    actor: "athlete",
+    note: null,
+    resulting_version: null,
+    created_at: proposalAt(days, "20:00:00"),
+    ...fields,
+  });
+  return {
+    proposals: [
+      ...(nextPlanSession ? [shortenProposal(owner, ownerPlanId, id(1))] : []),
+      ...(acceptPlanSession
+        ? [
+            proposal(2, {
+              title: "Retirer un footing",
+              summary: "Un footing en moins pour laisser place au travail.",
+              rationale: "Tu m’as dit avoir une semaine chargée au travail.",
+              origin: "schedule",
+              operations: [
+                {
+                  op: "skip_session",
+                  sessionKey: acceptPlanSession.session_key,
+                },
+              ],
+              target_keys: [`session:${acceptPlanSession.session_key}`],
+              created_at: proposalAt(0, "05:00:00"),
+            }),
+          ]
+        : []),
+      ...(rejectPlanSession
+        ? [
+            proposal(3, {
+              title: "Remplacer les côtes",
+              summary: "Un footing plat à la place des côtes.",
+              rationale: "Ta gêne au genou revient après les côtes.",
+              operations: [
+                {
+                  op: "replace_session",
+                  sessionKey: rejectPlanSession.session_key,
+                  content: {
+                    ...placedContent(planSessionTemplates.easy(40)),
+                    title: "Footing plat",
+                  },
+                },
+              ],
+              target_keys: [`session:${rejectPlanSession.session_key}`],
+              created_at: proposalAt(0, "04:00:00"),
+            }),
+          ]
+        : []),
+      proposal(4, {
+        title: "Repos avancé à mardi",
+        summary: "Le repos de jeudi passe à mardi.",
+        origin: "schedule",
+        status: "applied",
+        base_version: 2,
+        applied_version: 3,
+        created_at: proposalAt(-3, "19:10:00"),
+      }),
+      proposal(5, {
+        title: "Ajouter des côtes courtes",
+        status: "rejected",
+        base_version: 2,
+        created_at: proposalAt(-5, "16:25:00"),
+      }),
+      proposal(6, {
+        title: "Échanger le seuil et la sortie longue",
+        status: "stale",
+        base_version: 2,
+        created_at: proposalAt(-8, "06:05:00"),
+      }),
+      proposal(7, {
+        title: "Nouveau plan · Marathon de Paris",
+        summary: "Quatre blocs jusqu’au marathon.",
+        scope: "new_plan",
+        origin: "training",
+        status: "applied",
+        base_version: null,
+        applied_version: 1,
+        created_at: proposalAt(-40, "17:02:00"),
+      }),
+    ],
+    decisions: [
+      decision(4, "accepted", -3),
+      decision(4, "applied", -3, { actor: "system", resulting_version: 3 }),
+      decision(5, "rejected", -5, { note: "week-end en famille" }),
+      decision(6, "accepted", -8),
+      decision(6, "stale", -8, { actor: "system", note: "stale_version" }),
+    ],
+  };
+}
+const planProposals = nextPlanSession
+  ? [shortenProposal(planUser, planId, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")]
+  : [];
+const planDecisions = [];
 Object.assign(tables, {
   training_plans: [
     {
@@ -819,20 +1010,51 @@ Object.assign(tables, {
     compliance: { duration: [0.98, 1, 0.94, 1.02][index % 4] },
     algorithm_version: "match-v1",
   })),
-  plan_proposals: nextPlanSession
-    ? [
-        {
-          id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
-          user_id: planUser.id,
-          plan_id: planId,
-          status: "ready",
-          title: "Raccourcir la séance",
-          target_keys: [`session:${nextPlanSession.session_key}`],
-          created_at: `${planToday}T06:00:00Z`,
-        },
-      ]
-    : [],
+  plan_proposals: planProposals,
+  plan_decisions: planDecisions,
 });
+const planTables = [
+  "training_plans",
+  "plan_versions",
+  "plan_blocks",
+  "plan_weeks",
+  "plan_sessions",
+];
+function twinPlanAthlete(owner, ownerPlanId, prefix) {
+  const races = tables.athlete_races.filter(
+    (race) => race.user_id === planUser.id,
+  );
+  let text = JSON.stringify({
+    races,
+    ...Object.fromEntries(
+      planTables.map((table) => [
+        table,
+        tables[table].filter((row) => row.user_id === planUser.id),
+      ]),
+    ),
+  })
+    .replaceAll(planUser.id, owner.id)
+    .replaceAll(planId, ownerPlanId);
+  races.forEach((race, index) => {
+    text = text.replaceAll(
+      race.id,
+      `${prefix}${prefix}-0000-4000-8000-00000000000${index}`.slice(0, 36),
+    );
+  });
+  const twin = JSON.parse(text);
+  tables.athlete_races.push(...twin.races);
+  for (const table of planTables) tables[table].push(...twin[table]);
+  const history = seedPlanHistory(owner, ownerPlanId, prefix.slice(0, 1));
+  tables.plan_proposals.push(...history.proposals);
+  tables.plan_decisions.push(...history.decisions);
+}
+const planReviewPlanId = "dddddddd-dddd-4ddd-8ddd-777777777777";
+twinPlanAthlete(planReviewUser, planReviewPlanId, "7777");
+twinPlanAthlete(
+  planHistoryUser,
+  "dddddddd-dddd-4ddd-8ddd-888888888888",
+  "8888",
+);
 function nameMatcher(filter) {
   if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
   const pattern = filter.slice(6).replaceAll("*", "%");
@@ -896,6 +1118,28 @@ function selectRows(table, params) {
   }
   const id = params.get("id");
   if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
+  if (table.startsWith("plan_") || table === "session_activity_matches") {
+    for (const key of ["plan_id", "version"]) {
+      const filter = params.get(key);
+      if (filter?.startsWith("eq."))
+        rows = rows.filter((row) => String(row[key]) === filter.slice(3));
+    }
+  }
+  if (table === "plan_proposals" || table === "plan_decisions") {
+    for (const key of ["status"]) {
+      const filter = params.get(key);
+      if (filter?.startsWith("eq."))
+        rows = rows.filter((row) => String(row[key]) === filter.slice(3));
+    }
+    const proposals = params.get("proposal_id")?.match(/^in\.\((.*)\)$/);
+    if (proposals) {
+      const allowed = proposals[1]
+        .split(",")
+        .map((item) => item.replace(/"/g, ""));
+      rows = rows.filter((row) => allowed.includes(row.proposal_id));
+    }
+    rows = [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
   const owner = params.get("activity_id");
   if (owner) rows = rows.filter((row) => `eq.${row.activity_id}` === owner);
   const types = params.get("activity_type")?.match(/^in\.\((.*)\)$/);
@@ -944,6 +1188,88 @@ const planMatchesSnapshot = {
     matches_activities_through: null,
   },
 };
+
+const reviewTables = [...planTables, "plan_proposals", "plan_decisions"];
+const planReviewSnapshot = structuredClone(
+  Object.fromEntries(
+    reviewTables.map((table) => [
+      table,
+      tables[table].filter((row) => row.user_id === planReviewUser.id),
+    ]),
+  ),
+);
+function currentPlanUser(request) {
+  return recordsSessions.find(
+    (item) => request.headers.authorization === `Bearer ${item.access_token}`,
+  )?.user;
+}
+function decidePlanProposal(request, body, decision) {
+  const owner = currentPlanUser(request);
+  const proposal = tables.plan_proposals.find(
+    (item) => item.id === body.p_proposal_id && item.user_id === owner?.id,
+  );
+  if (!proposal) return [404, { code: "PT404", message: "not_found" }];
+  if (proposal.status !== "ready")
+    return [409, { code: "PT409", message: "invalid_state" }];
+  proposal.status = decision;
+  proposal.updated_at = new Date().toISOString();
+  tables.plan_decisions.push({
+    id: randomUUID(),
+    user_id: owner.id,
+    proposal_id: proposal.id,
+    decision,
+    actor: "athlete",
+    note: null,
+    resulting_version: null,
+    created_at: new Date().toISOString(),
+  });
+  return [200, proposal];
+}
+function applyPlanProposal(request, proposalId) {
+  const owner = currentPlanUser(request);
+  if (!owner) return [401, { ok: false, reason: "unauthorized" }];
+  const proposal = tables.plan_proposals.find(
+    (item) => item.id === proposalId && item.user_id === owner.id,
+  );
+  if (!proposal) return [409, { ok: false, reason: "not_found" }];
+  if (proposal.status !== "accepted")
+    return [409, { ok: false, reason: "not_accepted" }];
+  const plan = tables.training_plans.find(
+    (item) => item.id === proposal.plan_id,
+  );
+  for (const operation of proposal.operations) {
+    if (operation.op === "skip_session")
+      tables.plan_sessions = tables.plan_sessions.filter(
+        (session) =>
+          session.plan_id !== plan.id ||
+          session.session_key !== operation.sessionKey,
+      );
+    if (operation.op === "replace_session") {
+      const session = tables.plan_sessions.find(
+        (item) =>
+          item.plan_id === plan.id && item.session_key === operation.sessionKey,
+      );
+      if (session) session.title = operation.content.title;
+    }
+  }
+  const version = plan.active_version + 1;
+  plan.active_version = version;
+  plan.matches_version = version;
+  tables.plan_versions.find((row) => row.plan_id === plan.id).version = version;
+  proposal.status = "applied";
+  proposal.applied_version = version;
+  tables.plan_decisions.push({
+    id: randomUUID(),
+    user_id: owner.id,
+    proposal_id: proposal.id,
+    decision: "applied",
+    actor: "system",
+    note: null,
+    resulting_version: version,
+    created_at: new Date().toISOString(),
+  });
+  return [200, { ok: true, version }];
+}
 
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://127.0.0.1:${port}`);
@@ -997,6 +1323,22 @@ createServer(async (request, response) => {
       access_token: accessToken(Math.floor(Date.now() / 1000) - 60),
       expires_at: Math.floor(Date.now() / 1000) - 60,
     });
+  if (
+    url.pathname === "/__test__/plan-proposals" &&
+    request.method === "DELETE"
+  ) {
+    const snapshot = structuredClone(planReviewSnapshot);
+    for (const table of reviewTables)
+      tables[table] = tables[table]
+        .filter((row) => row.user_id !== planReviewUser.id)
+        .concat(snapshot[table]);
+    return send(200, { reset: true });
+  }
+  const workerApply = url.pathname.match(/^\/v1\/proposals\/([^/]+)\/apply$/);
+  if (workerApply && request.method === "POST") {
+    const [status, value] = applyPlanProposal(request, workerApply[1]);
+    return send(status, value);
+  }
   if (url.pathname === "/__test__/plan-import" && request.method === "POST") {
     if (
       !tables.provider_activities.some(
@@ -1229,6 +1571,20 @@ createServer(async (request, response) => {
       url.pathname === "/rest/v1/provider_activity_tracks"
     )
       return send(503, { message: "Records fixture read failure" });
+    if (
+      request.method === "POST" &&
+      [
+        "/rest/v1/rpc/accept_plan_proposal",
+        "/rest/v1/rpc/reject_plan_proposal",
+      ].includes(url.pathname)
+    ) {
+      const [status, value] = decidePlanProposal(
+        request,
+        body,
+        url.pathname.endsWith("accept_plan_proposal") ? "accepted" : "rejected",
+      );
+      return send(status, value);
+    }
     if (
       request.method === "POST" &&
       url.pathname === "/rest/v1/rpc/refresh_session_matches"

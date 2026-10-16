@@ -18,6 +18,7 @@ export type SessionStatus = (typeof sessionStatuses)[number];
 
 const rowSchema = z
   .object({
+    id: z.uuid(),
     managed_session_id: z.string(),
     mode: z.enum(sessionModes),
     status: z.enum(sessionStatuses),
@@ -27,6 +28,7 @@ const rowSchema = z
     last_turn_at: z.string().nullable(),
   })
   .transform((row) => ({
+    id: row.id,
     managedSessionId: row.managed_session_id,
     mode: row.mode,
     status: row.status,
@@ -39,7 +41,7 @@ const rowSchema = z
 export type CoachSessionRecord = z.output<typeof rowSchema>;
 
 const columns =
-  "managed_session_id, mode, status, pending_tool_use_id, budget_cents, list_cost_cents, last_turn_at";
+  "id, managed_session_id, mode, status, pending_tool_use_id, budget_cents, list_cost_cents, last_turn_at";
 
 export async function findOwnSession(
   context: OnboardingContext,

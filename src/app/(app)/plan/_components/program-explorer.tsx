@@ -5,6 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
+import type { WeekProposal } from "@/features/plans/review/proposal";
 import {
   weekEyebrow,
   type MilestoneTone,
@@ -77,9 +78,11 @@ function Milestones({
 export function ProgramExplorer({
   program,
   initialWeekKey,
+  proposals = {},
 }: {
   program: RaceProgram;
   initialWeekKey: string | null;
+  proposals?: Record<string, WeekProposal[]>;
 }) {
   const { weeks } = program;
   const [selected, setSelected] = useState(
@@ -196,6 +199,14 @@ export function ProgramExplorer({
             if (program.raceId) query.set("race", program.raceId);
             query.set("week", week.weekStart);
             query.set("seance", sessionKey);
+            return `/plan?${query}`;
+          }}
+          proposals={proposals[week.weekStart]}
+          reviewHref={(proposalId) => {
+            const query = new URLSearchParams();
+            if (program.raceId) query.set("race", program.raceId);
+            query.set("week", week.weekStart);
+            query.set("proposition", proposalId);
             return `/plan?${query}`;
           }}
         />

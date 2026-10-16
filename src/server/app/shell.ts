@@ -11,13 +11,14 @@ import {
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
 import { buildProgram, programNavigation } from "@/features/plans/view/program";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
+import { countPlanProposals } from "@/server/plans/proposals";
 import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "./session";
 
 export async function loadShell(context: OnboardingContext, now: Date) {
-  const [profile, goals, activity, plan] = await Promise.all([
+  const [profile, goals, activity, plan, planHistoryCount] = await Promise.all([
     context.client
       .from("athlete_profiles")
       .select("*")
@@ -26,6 +27,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     readGoals(context).catch(() => null),
     readDataActivity({ accessToken: context.accessToken }),
     loadPlanOverview(context).catch(() => null),
+    countPlanProposals(context).catch(() => null),
   ]);
   const parsed = profileRowSchema.safeParse(profile.data);
   const values = profileValues(parsed.success ? parsed.data : null);
@@ -62,6 +64,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     sync: syncLabel(activity.ok ? activity.value.sync.lastSyncAt : null, now),
     initialActivity: activity.ok ? activity.value : null,
     planNav: plan ? programNavigation(buildProgram(programInput(plan))) : null,
+    planHistoryCount,
   };
 }
 

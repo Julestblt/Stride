@@ -77,6 +77,7 @@ describe("session panel", () => {
       input({
         proposals: [
           {
+            id: "10000000-0000-4000-8000-000000000001",
             title: "Raccourcir la séance",
             summary: "4 × 6’ au lieu de 5 × 6’, même allure.",
             targetKeys: ["session:s-2026-10-22-1"],
@@ -86,6 +87,7 @@ describe("session panel", () => {
       }),
     )!;
     expect(panel.proposal).toEqual({
+      id: "10000000-0000-4000-8000-000000000001",
       when: "ce matin",
       text: "4 × 6’ au lieu de 5 × 6’, même allure.",
     });

@@ -1,21 +1,9 @@
 import "server-only";
 import { z } from "zod";
+import { proposalStatuses } from "@/features/plans/review/proposal";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { defineTool } from "./define";
 import { toolError } from "./errors";
-
-export const proposalStatuses = [
-  "draft",
-  "ready",
-  "accepted",
-  "applied",
-  "rejected",
-  "expired",
-  "superseded",
-  "stale",
-  "invalid",
-  "reverted",
-] as const;
 
 const opinionSchema = z.strictObject({
   specialist: z.string(),
@@ -51,10 +39,10 @@ const historyEntrySchema = z.strictObject({
 
 export type HistoryEntry = z.infer<typeof historyEntrySchema>;
 
-const proposalColumns =
+export const proposalColumns =
   "id, title, summary, rationale, scope, origin, status, operations, base_version, applied_version, created_at, updated_at, validation, specialist_opinions";
 
-const proposalRowSchema = z.object({
+export const proposalRowSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   summary: z.string().nullable(),
@@ -71,7 +59,7 @@ const proposalRowSchema = z.object({
   specialist_opinions: z.array(opinionSchema).catch([]),
 });
 
-const decisionRowSchema = z.object({
+export const decisionRowSchema = z.object({
   proposal_id: z.uuid(),
   decision: z.string(),
   actor: z.string(),
@@ -80,7 +68,7 @@ const decisionRowSchema = z.object({
   created_at: z.string(),
 });
 
-type ProposalRow = z.infer<typeof proposalRowSchema>;
+export type ProposalRow = z.infer<typeof proposalRowSchema>;
 
 const createPlanSchema = z.object({
   op: z.literal("create_plan"),
@@ -108,7 +96,7 @@ export function summarizeOperation(operation: unknown) {
     sessions: sessions.length,
   };
 }
-type DecisionRow = z.infer<typeof decisionRowSchema>;
+export type DecisionRow = z.infer<typeof decisionRowSchema>;
 
 export function toHistoryEntry(
   row: ProposalRow,
@@ -149,7 +137,10 @@ export function toHistoryEntry(
   };
 }
 
-async function readDecisions(context: OnboardingContext, ids: string[]) {
+export async function readDecisions(
+  context: Pick<OnboardingContext, "client" | "userId">,
+  ids: string[],
+) {
   if (!ids.length) return [];
   const { data, error } = await context.client
     .from("plan_decisions")
