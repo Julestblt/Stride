@@ -339,13 +339,28 @@ export function trainingTargets(input: TargetsInput): TrainingTargets {
   };
 }
 
-export function intensityPaces(targets: TrainingTargets): IntensityPaces {
+export type IntensityPaceRanges = Partial<Record<Intensity, PaceRange>>;
+
+export function intensityPaceRanges(
+  targets: TrainingTargets,
+): IntensityPaceRanges {
   return Object.fromEntries(
     intensities.flatMap((intensity) => {
       const range = targets.intensities[intensity].paceRange;
-      return range
-        ? [[intensity, (range.fastSecondsPerKm + range.slowSecondsPerKm) / 2]]
-        : [];
+      return range ? [[intensity, range]] : [];
     }),
   );
+}
+
+export function paceMidpoints(ranges: IntensityPaceRanges): IntensityPaces {
+  return Object.fromEntries(
+    Object.entries(ranges).map(([intensity, range]) => [
+      intensity,
+      (range.fastSecondsPerKm + range.slowSecondsPerKm) / 2,
+    ]),
+  );
+}
+
+export function intensityPaces(targets: TrainingTargets): IntensityPaces {
+  return paceMidpoints(intensityPaceRanges(targets));
 }
