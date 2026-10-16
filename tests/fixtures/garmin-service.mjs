@@ -165,8 +165,40 @@ export function wellnessDay(day) {
   };
 }
 
-function syncFor(connection) {
-  const reads = ++connection.syncReads;
+const manualSyncIntervalMs = 5 * 60_000;
+
+function job(state, updatedAt) {
+  return { state, updated_at: updatedAt, last_error_code: null };
+}
+
+function manualPhases(connection, advance) {
+  const manual = connection.manual;
+  if (!manual) return {};
+  if (advance) manual.reads += 1;
+  const { reads, requestedAt } = manual;
+  const now = new Date().toISOString();
+  const activities =
+    reads >= 2 ? "succeeded" : reads >= 1 ? "running" : "queued";
+  const recovery = reads >= 3 ? "succeeded" : reads >= 2 ? "running" : "queued";
+  if (recovery === "succeeded" && !manual.finished) {
+    manual.finished = true;
+    connection.lastSyncAt = now;
+  }
+  return {
+    activities: {
+      ...job(activities, reads ? now : requestedAt),
+      phase: "activities",
+    },
+    recovery: {
+      ...job(recovery, reads ? now : requestedAt),
+      phase: "recovery",
+    },
+    tracks: { ...job("queued", requestedAt), phase: "tracks" },
+  };
+}
+
+function syncFor(connection, advance = true) {
+  const reads = advance ? ++connection.syncReads : connection.syncReads;
   const limit = connection.syncLimit ?? 4;
   const done = reads >= limit;
   const oldest = `${2026 - reads}-01-01`;
@@ -185,8 +217,10 @@ function syncFor(connection) {
       }),
       patterns: { state: done ? "complete" : "partial" },
     },
-    last_sync_at: connection.connectedAt,
+    last_sync_at: connection.lastSyncAt ?? connection.connectedAt,
     incremental: null,
+    incremental_phases: manualPhases(connection, advance),
+    manual_sync_available_at: connection.manualAvailableAt ?? null,
     updated_at: new Date().toISOString(),
   };
 }
@@ -239,6 +273,41 @@ export function createGarminService() {
       return json(response, 200, { configured: true });
     }
 
+    if (url.pathname === "/__test__/connected" && request.method === "POST") {
+      connect(user);
+      connections.get(user).syncReads = 1000;
+      connections.get(user).lastSyncAt = "2026-10-13T06:12:00Z";
+      return json(response, 200, { connected: true });
+    }
+
+    if (
+      url.pathname === "/v1/connections/garmin/sync" &&
+      request.method === "POST"
+    ) {
+      if (!connection) return failure(response, 409, "disconnected");
+      const now = Date.now();
+      if (
+        connection.manualAvailableAt &&
+        Date.parse(connection.manualAvailableAt) > now
+      )
+        return failure(response, 429, "sync_throttled", {
+          "Retry-After": String(
+            Math.ceil((Date.parse(connection.manualAvailableAt) - now) / 1000),
+          ),
+        });
+      connection.manual = {
+        reads: 0,
+        requestedAt: new Date(now).toISOString(),
+      };
+      connection.manualAvailableAt = new Date(
+        now + manualSyncIntervalMs,
+      ).toISOString();
+      return json(response, 200, {
+        ...syncFor(connection, false),
+        request: "queued",
+      });
+    }
+
     if (url.pathname === "/v1/connections/garmin" && request.method === "GET")
       return json(
         response,
@@ -249,7 +318,7 @@ export function createGarminService() {
               status: "connected",
               connected_at: connection.connectedAt,
               last_authenticated_at: connection.connectedAt,
-              last_sync_at: null,
+              last_sync_at: connection.lastSyncAt ?? null,
               last_error_code: null,
             }
           : { status: "disconnected" },

@@ -5,11 +5,15 @@ import type {
   GarminConnection,
   GarminResult,
 } from "@/features/garmin/connection";
-import type { GarminSyncStatus } from "@/features/garmin/sync";
+import type {
+  GarminSyncRequest,
+  GarminSyncStatus,
+} from "@/features/garmin/sync";
 import {
   authOutcomeSchema,
   connectionSchema,
   parseFailure,
+  syncRequestSchema,
   syncSchema,
   wellnessDaySchema,
 } from "./contract";
@@ -130,6 +134,17 @@ export function createGarminClient({
         "/v1/connections/garmin/sync",
         syncSchema,
         readTimeoutMs,
+      );
+    },
+    requestSync(
+      context: GarminRequestContext,
+    ): Promise<GarminResult<GarminSyncRequest>> {
+      return request(
+        context,
+        "/v1/connections/garmin/sync",
+        syncRequestSchema,
+        readTimeoutMs,
+        {},
       );
     },
     getWellnessDay(

@@ -1,5 +1,10 @@
 import { CheckIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataActivityProvider } from "@/features/data-activity/components/provider";
+import {
+  SyncNowButton,
+  SyncRequestMessage,
+} from "@/features/data-activity/components/sync-request";
 import { garminSyncCategories, syncPhase } from "@/features/garmin/sync";
 import type { GarminConnectionStatus } from "@/features/garmin/connection";
 import {
@@ -246,13 +251,7 @@ export default async function GarminSettingsPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="neutral"
-            disabled
-            title="La synchronisation manuelle n’est pas encore proposée par Garmin"
-          >
-            Synchroniser maintenant
-          </Button>
+          <SyncNowButton />
           <Button
             variant="outline"
             disabled
@@ -268,6 +267,7 @@ export default async function GarminSettingsPage() {
             Déconnecter…
           </Button>
         </div>
+        <SyncRequestMessage className="basis-full text-sm md:text-right" />
       </section>
 
       {reconnect && (
@@ -509,9 +509,11 @@ export default async function GarminSettingsPage() {
     </div>
   );
 
+  const observation = status && sync ? { connection: status, sync } : null;
+
   if (reconnect) {
     return (
-      <>
+      <DataActivityProvider initial={observation}>
         <div className="flex flex-col gap-4.5 md:hidden">
           <div className="flex items-center gap-3.5">
             <span className="grid size-13 place-items-center rounded-surface border border-border-strong bg-surface-raised">
@@ -583,9 +585,11 @@ export default async function GarminSettingsPage() {
           </div>
         </div>
         <div className="max-md:hidden">{desktop}</div>
-      </>
+      </DataActivityProvider>
     );
   }
 
-  return desktop;
+  return (
+    <DataActivityProvider initial={observation}>{desktop}</DataActivityProvider>
+  );
 }

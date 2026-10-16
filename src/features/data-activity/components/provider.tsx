@@ -17,7 +17,25 @@ import {
   threadDelay,
   type DataActivityObservation,
 } from "../model";
-import type { GarminSyncCategory } from "@/features/garmin/sync";
+import {
+  manualSyncAvailableAt,
+  requestedSyncProgress,
+  type GarminSyncCategory,
+  type GarminSyncStatus,
+  type RequestedSyncProgress,
+} from "@/features/garmin/sync";
+import { requestGarminSync } from "@/server/garmin/actions";
+
+export type SyncRequestFailure =
+  "reconnect" | "unavailable" | "session-expired";
+
+export type SyncRequestControl = {
+  pending: boolean;
+  progress: RequestedSyncProgress | null;
+  availableAt: number | null;
+  failure: SyncRequestFailure | null;
+  request: () => void;
+};
 
 type ActivityContext = {
   observation: DataActivityObservation | null;
@@ -26,7 +44,12 @@ type ActivityContext = {
   apply: () => void;
   markLoading: () => () => void;
   thread: boolean;
+  sync: SyncRequestControl;
 };
+
+type RequestedSync = { baseline: GarminSyncStatus; startedAt: number };
+
+const requestedSyncTimeoutMs = 180_000;
 const Context = createContext<ActivityContext | null>(null);
 export function useDataActivity() {
   return useContext(Context);
@@ -46,13 +69,38 @@ export function DataActivityProvider({
   const [loads, setLoads] = useState(0);
   const [thread, setThread] = useState(false);
   const [applying, startTransition] = useTransition();
+  const [requested, setRequested] = useState<RequestedSync | null>(null);
+  const [pending, setPending] = useState(false);
+  const [failure, setFailure] = useState<SyncRequestFailure | null>(null);
+  const [throttledUntil, setThrottledUntil] = useState<number | null>(null);
+  const [clock, setClock] = useState<number | null>(null);
+  const requestedRef = useRef<RequestedSync | null>(null);
+  const pollNow = useRef<() => void>(() => {});
   const applied = useRef(initial ?? null);
   const latest = useRef(initial ?? null);
   const router = useRouter();
   const pathname = usePathname();
   const query = useSearchParams().toString();
   const route = useRef(`${pathname}?${query}`);
-  const state = activityState(observation, offline, unavailable);
+  const progress =
+    requested && observation
+      ? requestedSyncProgress(requested.baseline, observation.sync)
+      : null;
+  const baseState = activityState(observation, offline, unavailable);
+  const state =
+    progress && ["complete", "attention", "waiting"].includes(baseState)
+      ? "syncing"
+      : baseState;
+  const availableAt =
+    clock === null
+      ? null
+      : (() => {
+          const times = [
+            throttledUntil,
+            manualSyncAvailableAt(observation?.sync, clock),
+          ].filter((time): time is number => time !== null && time > clock);
+          return times.length ? Math.max(...times) : null;
+        })();
   const markLoading = useCallback(() => {
     setLoads((count) => count + 1);
     return () => setLoads((count) => Math.max(0, count - 1));
@@ -62,6 +110,36 @@ export function DataActivityProvider({
     applied.current = latest.current;
     setFresh([]);
     startTransition(() => router.refresh());
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setClock(Date.now()),
+      availableAt === null ? 0 : Math.max(0, availableAt - Date.now()) + 250,
+    );
+    return () => clearTimeout(timer);
+  }, [availableAt]);
+
+  const request = () => {
+    if (pending || requestedRef.current || offline) return;
+    setPending(true);
+    setFailure(null);
+    void requestGarminSync()
+      .catch(() => ({ status: "unavailable" as const }))
+      .then((result) => {
+        setPending(false);
+        if (result.status === "requested") {
+          const next = { baseline: result.sync, startedAt: Date.now() };
+          if (requestedSyncProgress(next.baseline, next.baseline).settled)
+            return;
+          requestedRef.current = next;
+          setRequested(next);
+          pollNow.current();
+        } else if (result.status === "throttled") {
+          setThrottledUntil(Date.parse(result.availableAt));
+          setClock(Date.now());
+        } else setFailure(result.status);
+      });
   };
 
   useEffect(() => {
@@ -99,7 +177,19 @@ export function DataActivityProvider({
         latest.current = parsed.data;
         setObservation(parsed.data);
         setUnavailable(false);
-        setFresh(freshCategories(applied.current, parsed.data));
+        const pendingSync = requestedRef.current;
+        if (
+          pendingSync &&
+          (requestedSyncProgress(pendingSync.baseline, parsed.data.sync)
+            .settled ||
+            Date.now() - pendingSync.startedAt > requestedSyncTimeoutMs)
+        ) {
+          requestedRef.current = null;
+          setRequested(null);
+          applied.current = parsed.data;
+          setFresh([]);
+          startTransition(() => router.refresh());
+        } else setFresh(freshCategories(applied.current, parsed.data));
       } catch {
         if (!disposed && !request.signal.aborted) {
           failures += 1;
@@ -112,7 +202,8 @@ export function DataActivityProvider({
             poll,
             failures
               ? Math.min(30_000, 2_000 * 2 ** failures)
-              : activityState(latest.current, false, false) === "syncing"
+              : requestedRef.current ||
+                  activityState(latest.current, false, false) === "syncing"
                 ? 2_000
                 : 30_000,
           );
@@ -128,6 +219,7 @@ export function DataActivityProvider({
       failures = 0;
       void poll();
     };
+    pollNow.current = resume;
     queueMicrotask(resume);
     window.addEventListener("online", resume);
     window.addEventListener("offline", resume);
@@ -140,9 +232,10 @@ export function DataActivityProvider({
       window.removeEventListener("offline", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, []);
+  }, [router]);
 
-  const active = !offline && (state === "syncing" || loads > 0 || applying);
+  const active =
+    !offline && (state === "syncing" || loads > 0 || applying || pending);
   const visibleSince = useRef(0);
   useEffect(() => {
     if (offline) {
@@ -168,7 +261,15 @@ export function DataActivityProvider({
   }, [active, offline]);
   return (
     <Context.Provider
-      value={{ observation, state, fresh, apply, markLoading, thread }}
+      value={{
+        observation,
+        state,
+        fresh,
+        apply,
+        markLoading,
+        thread,
+        sync: { pending, progress, availableAt, failure, request },
+      }}
     >
       {children}
     </Context.Provider>

@@ -8,7 +8,11 @@ import {
 } from "@/features/garmin/connection";
 import { sleepStages, type WellnessDay } from "@/features/garmin/wellness";
 import {
+  garminJobPhases,
+  garminJobStates,
   garminSyncStates,
+  type GarminJobPhase,
+  type GarminJobStatus,
   type GarminSyncCategoryStatus,
   type GarminSyncStatus,
 } from "@/features/garmin/sync";
@@ -57,6 +61,29 @@ const categorySchema = z
     activityCount: value.activity_count ?? null,
   }));
 
+const jobSchema = z
+  .object({
+    state: z.enum(garminJobStates),
+    phase: z.enum(garminJobPhases),
+    updated_at: timestamp,
+  })
+  .transform((value): GarminJobStatus => ({
+    state: value.state,
+    updatedAt: value.updated_at ?? null,
+  }));
+
+const phasesSchema = z
+  .record(z.string(), z.unknown())
+  .optional()
+  .transform((value) => {
+    const phases: Partial<Record<GarminJobPhase, GarminJobStatus>> = {};
+    for (const phase of garminJobPhases) {
+      const parsed = jobSchema.safeParse(value?.[phase]);
+      if (parsed.success) phases[phase] = parsed.data;
+    }
+    return phases;
+  });
+
 export const syncSchema = z
   .object({
     state: z.literal("not_started").optional(),
@@ -69,6 +96,8 @@ export const syncSchema = z
     }),
     last_sync_at: timestamp,
     updated_at: timestamp,
+    incremental_phases: phasesSchema,
+    manual_sync_available_at: timestamp,
   })
   .refine((value) => value.state === "not_started" || value.connection_id, {
     message: "A started sync must identify its connection",
@@ -78,7 +107,13 @@ export const syncSchema = z
     categories: value.categories,
     lastSyncAt: value.last_sync_at ?? null,
     updatedAt: value.updated_at ?? null,
+    phases: value.incremental_phases,
+    manualSyncAvailableAt: value.manual_sync_available_at ?? null,
   }));
+
+export const syncRequestSchema = z
+  .object({ request: z.enum(["queued", "already_running"]) })
+  .and(syncSchema);
 
 const errorSchema = z.object({
   error: z.object({

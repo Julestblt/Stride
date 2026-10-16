@@ -21,9 +21,16 @@ import {
   garminSyncCategories,
   type GarminSyncCategory,
   type GarminSyncState,
+  type GarminSyncStatus,
+  type RequestedSyncPhase,
 } from "@/features/garmin/sync";
-import { activityLabels } from "../model";
+import {
+  activityLabels,
+  requestedSyncLabel,
+  requestedSyncShare,
+} from "../model";
 import { useDataActivity } from "./provider";
+import { SyncNowButton, SyncRequestMessage } from "./sync-request";
 
 const categoryLabels = {
   activities: "Activités",
@@ -43,6 +50,24 @@ const date = new Intl.DateTimeFormat("fr-FR", {
   timeStyle: "short",
   timeZone: "Europe/Paris",
 });
+
+const requestedCategories: Partial<
+  Record<GarminSyncCategory, RequestedSyncPhase>
+> = { activities: "activities", recovery: "recovery" };
+
+function requestedCategory(
+  key: GarminSyncCategory,
+  state: GarminSyncState,
+  requested: boolean,
+  phases: GarminSyncStatus["phases"],
+): { state: GarminSyncState } {
+  const phase = requestedCategories[key];
+  const job = phase ? phases?.[phase] : undefined;
+  if (!requested || !job) return { state };
+  if (job.state === "running") return { state: "running" };
+  if (job.state === "queued") return { state: "pending" };
+  return { state };
+}
 
 function CategoryMark({ state }: { state: GarminSyncState }) {
   if (state === "complete") {
@@ -80,10 +105,12 @@ export function DataActivityStatus({
   const isMobile = useIsMobile();
   if (!activity) return null;
   const { state, observation } = activity;
+  const progress = activity.sync.progress;
   const lastSync = observation?.sync.lastSyncAt;
   const synchronized = lastSync ? syncLabel(lastSync, new Date()) : null;
-  const label =
-    state === "complete" && synchronized
+  const label = progress
+    ? requestedSyncLabel(progress)
+    : state === "complete" && synchronized
       ? `Garmin ${synchronized.toLowerCase()}`
       : state === "syncing"
         ? "Garmin · synchro…"
@@ -170,19 +197,31 @@ export function DataActivityStatus({
               )}
             </div>
             <div aria-hidden="true" className="h-0.5 overflow-hidden bg-border">
-              <div
-                className={cn(
-                  "h-full bg-provider/60",
-                  state === "syncing"
-                    ? "motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent"
-                    : "w-full",
-                )}
-              />
+              {progress ? (
+                <div
+                  className="h-full bg-provider motion-safe:transition-[width] motion-safe:duration-500"
+                  style={{ width: `${requestedSyncShare(progress) * 100}%` }}
+                />
+              ) : (
+                <div
+                  className={cn(
+                    "h-full bg-provider/60",
+                    state === "syncing"
+                      ? "motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent"
+                      : "w-full",
+                  )}
+                />
+              )}
             </div>
             {observation && (
               <ul className="mt-2 divide-y divide-border">
                 {garminSyncCategories.map((key) => {
-                  const category = observation.sync.categories[key];
+                  const category = requestedCategory(
+                    key,
+                    observation.sync.categories[key].state,
+                    progress !== null,
+                    observation.sync.phases,
+                  );
                   return (
                     <li key={key} className="flex items-center gap-3 py-3.5">
                       <span className="flex w-3.5 shrink-0 justify-center">
@@ -249,16 +288,10 @@ export function DataActivityStatus({
             </dl>
           )}
           <div className="flex flex-col gap-3">
-            <Button variant="outline" disabled className="w-full">
-              {state === "syncing"
-                ? "Synchronisation en cours…"
-                : "Synchronisation automatique"}
-            </Button>
+            <SyncNowButton variant="outline" className="w-full" />
+            <SyncRequestMessage />
             <p className="text-xs leading-relaxed text-muted-foreground">
               Stride lit Garmin. Il ne publie jamais sur Garmin.
-            </p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              La synchronisation manuelle n’est pas encore disponible.
             </p>
           </div>
         </div>
@@ -270,6 +303,7 @@ export function DataActivityStatus({
 export function DataActivityThread({ className }: { className?: string }) {
   const activity = useDataActivity();
   if (!activity?.thread) return null;
+  const progress = activity.sync.progress;
   return (
     <div
       data-testid="data-activity-thread"
@@ -280,7 +314,14 @@ export function DataActivityThread({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="h-full w-full bg-provider/60 motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent" />
+      {progress ? (
+        <div
+          className="h-full bg-provider motion-safe:transition-[width] motion-safe:duration-500"
+          style={{ width: `${requestedSyncShare(progress) * 100}%` }}
+        />
+      ) : (
+        <div className="h-full w-full bg-provider/60 motion-safe:w-[28%] motion-safe:animate-trace motion-safe:bg-linear-to-r motion-safe:from-transparent motion-safe:via-provider motion-safe:to-transparent" />
+      )}
     </div>
   );
 }
