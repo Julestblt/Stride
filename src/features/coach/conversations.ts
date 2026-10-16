@@ -311,8 +311,9 @@ export type TimelineStep = {
   label: string;
   detail: string | null;
   at: string | null;
-  state: "done" | "current";
-  tone: "accent" | "warning" | null;
+  state: "done" | "current" | "upcoming";
+  tone: "accent" | "warning" | "neutral" | null;
+  hint: string | null;
 };
 
 export function suiviTimeline(input: {
@@ -353,7 +354,9 @@ export function suiviTimeline(input: {
       at: iso ? at(iso) : null,
       state: "done",
       tone: null,
+      hint: null,
     });
+  let awaitingAnswer = false;
   let consulted = new Set<string>();
   let replied = new Set<string>();
 
@@ -389,6 +392,7 @@ export function suiviTimeline(input: {
         const current =
           item.toolUseId === input.pendingToolUseId &&
           !answered.has(item.toolUseId);
+        if (current) awaitingAnswer = true;
         steps.push({
           key,
           label: `Question ${ofName(item.askedFor)}`,
@@ -396,6 +400,7 @@ export function suiviTimeline(input: {
           at: at(item.at),
           state: current ? "current" : "done",
           tone: current ? "warning" : null,
+          hint: null,
         });
         break;
       }
@@ -416,6 +421,7 @@ export function suiviTimeline(input: {
             at: null,
             state: "current",
             tone: "warning",
+            hint: null,
           });
         else
           done(
@@ -443,7 +449,28 @@ export function suiviTimeline(input: {
       at: null,
       state: "current",
       tone: "accent",
+      hint: null,
     });
+  const current = steps.find((step) => step.state === "current");
+  if (input.status === "working" || awaitingAnswer)
+    steps.push({
+      key: "upcoming-answer",
+      label: `Réponse ${ofName("coach")}`,
+      detail: null,
+      at: null,
+      state: "upcoming",
+      tone: null,
+      hint: null,
+    });
+  else if (!current && steps.length) {
+    const last = steps[steps.length - 1];
+    steps[steps.length - 1] = {
+      ...last,
+      state: "current",
+      tone: "neutral",
+      hint: "Dernière étape",
+    };
+  }
   return steps;
 }
 

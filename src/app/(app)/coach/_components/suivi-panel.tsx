@@ -116,8 +116,15 @@ export function SuiviPanel({
                       "relative z-1 mt-0.5 size-3.25 rounded-full ring-3",
                       step.tone === "accent"
                         ? "bg-accent ring-accent/15 motion-safe:animate-breathe"
-                        : "bg-warning ring-warning/15",
+                        : step.tone === "warning"
+                          ? "bg-warning ring-warning/15"
+                          : "bg-muted ring-border",
                     )}
+                  />
+                ) : step.state === "upcoming" ? (
+                  <span
+                    aria-hidden="true"
+                    className="relative z-1 mt-0.5 size-3.25 rounded-full border border-dashed border-dim bg-surface-inset"
                   />
                 ) : (
                   <span
@@ -133,14 +140,24 @@ export function SuiviPanel({
                       "text-meta",
                       step.state === "current"
                         ? "font-semibold text-foreground"
-                        : "text-muted",
+                        : step.state === "upcoming"
+                          ? "text-muted-foreground"
+                          : "text-muted",
                     )}
                   >
                     {step.label}
-                    {step.state === "current" && (
+                    {step.state === "current" && step.tone !== "neutral" && (
                       <span className="sr-only"> (étape en cours)</span>
                     )}
+                    {step.state === "upcoming" && (
+                      <span className="sr-only"> (à venir)</span>
+                    )}
                   </span>
+                  {step.hint && (
+                    <MonoLabel size="nano" tone="secondary">
+                      {step.hint}
+                    </MonoLabel>
+                  )}
                   {step.detail && (
                     <span className="line-clamp-2 text-xs text-muted-foreground">
                       {step.detail}

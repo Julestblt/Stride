@@ -420,6 +420,7 @@ describe("conversations", () => {
       ["Claire consulte Inès", "done"],
       ["Avis d’Inès", "done"],
       ["Question d’Inès", "current"],
+      ["Réponse de Claire", "upcoming"],
     ]);
   });
 
@@ -477,11 +478,25 @@ describe("conversations", () => {
       ["Proposition du staff", "done"],
       ["À toi de décider", "current"],
     ]);
-    expect(timeline(null, "applied").at(-1)).toEqual(["Ta décision", "done"]);
-    expect(timeline("working", "applied").at(-1)).toEqual([
-      "Le staff travaille",
+    expect(timeline(null, "applied").at(-1)).toEqual([
+      "Ta décision",
       "current",
     ]);
+    const last = suiviTimeline({
+      items,
+      status: null,
+      pendingToolUseId: null,
+      proposalStatuses: { [proposalId]: "applied" },
+      timeZone: tz,
+    }).at(-1);
+    expect(last).toMatchObject({ tone: "neutral", hint: "Dernière étape" });
+    const working = timeline("working", "applied");
+    expect(working.slice(-3)).toEqual([
+      ["Ta décision", "done"],
+      ["Le staff travaille", "current"],
+      ["Réponse de Claire", "upcoming"],
+    ]);
+    expect(working.filter(([, state]) => state === "current")).toHaveLength(1);
     expect(threadPreview(items.slice(0, -1))).toBe(
       "Claire : Verdict : on continue.",
     );

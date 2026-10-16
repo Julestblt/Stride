@@ -51,11 +51,35 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
   await signIn(page);
   await page.goto("/today");
   const coachLink = page.getByRole("link", { name: "Coach", exact: true });
-  await expect(page.locator("li", { has: coachLink }).first()).toContainText(
-    "2 en attente : 1 question et 1 proposition",
+  const coachItem = page.locator("li", { has: coachLink }).first();
+  await expect(coachItem).toContainText(
+    "1 question et 1 proposition en attente",
   );
+  await expect(coachItem.getByText("Conversations")).toHaveCount(0);
   await coachLink.click();
   await expect(page).toHaveURL("/coach", { timeout: 20_000 });
+  const sidebarConversations = coachItem.getByRole("link", {
+    name: "Conversations",
+  });
+  await expect(sidebarConversations).toHaveAttribute("aria-current", "page");
+  const team = coachItem.locator('[aria-disabled="true"]');
+  await expect(team).toContainText("L’équipe");
+  await expect(team).toContainText("Bientôt");
+  await expect(coachItem.getByRole("link", { name: /équipe/ })).toHaveCount(0);
+
+  const filters = page.getByRole("group", { name: "Filtrer" });
+  const all = filters.getByRole("button", { name: "Toutes" });
+  const mine = filters.getByRole("button", { name: "À toi · 2" });
+  await expect(all).toHaveAttribute("aria-pressed", "true");
+  const filterStyle = await mine.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return [style.minHeight, style.fontSize, style.borderTopWidth];
+  });
+  expect(filterStyle).toEqual(["30px", "12px", "1px"]);
+  await mine.click();
+  await expect(mine).toHaveAttribute("aria-pressed", "true");
+  await expect(all).toHaveAttribute("aria-pressed", "false");
+  await all.click();
 
   const list = page.getByRole("region", { name: "Conversations" });
   await expect(list.getByText("En cours")).toBeVisible();
@@ -75,9 +99,14 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
   const consult = log.getByRole("group", { name: "Concertation du staff" });
   await expect(consult).toContainText("Inès · Question pour toi");
   await consult.getByRole("button", { expanded: false }).click();
-  await expect(
-    consult.getByText("Le genou réagit-il en descente ?"),
-  ).toBeVisible();
+  const exchange = consult.getByText("Le genou réagit-il en descente ?");
+  await expect(exchange).toBeVisible();
+  expect(
+    await exchange.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return [style.fontSize, style.lineHeight, style.color];
+    }),
+  ).toEqual(["14px", "21px", "rgb(179, 178, 170)"]);
   await expect(consult.getByText("Signalements · 14 jours")).toBeVisible();
   await expect(log.getByText("Question d’Inès")).toBeVisible();
   await expect(log.getByText("Demandée par Inès")).toBeVisible();
@@ -113,7 +142,10 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
     log.getByText("Parfait, on garde la sortie longue."),
   ).toBeVisible();
   await expect(log.getByText("Question répondue")).toBeVisible();
-  await expect(suivi.locator('[aria-current="step"]')).toHaveCount(0);
+  await expect(suivi.locator('[aria-current="step"]')).toHaveCount(1);
+  await expect(suivi.locator('[aria-current="step"]')).toContainText(
+    "Dernière étape",
+  );
   await expect(suivi.getByText("Ta réponse", { exact: true })).toBeVisible();
   expect(posted).toEqual({
     sessionId: "sesn_01Genou",
@@ -406,4 +438,28 @@ test("the thread menu offers deletion on mobile", async ({ page }) => {
   await expect(
     page.getByRole("menuitem", { name: "Supprimer la conversation" }),
   ).toBeVisible();
+});
+
+test("portraits load a sharp file on a retina screen", async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 2,
+  });
+  const page = await context.newPage();
+  await signIn(page);
+  await page.goto("/coach");
+  const portrait = page
+    .getByRole("region", { name: "Ton staff" })
+    .getByRole("img", { name: "Claire, coach" });
+  await expect(portrait).toBeVisible();
+  const { width, source } = await portrait.evaluate(
+    (image: HTMLImageElement) => ({
+      width: image.naturalWidth,
+      source: image.currentSrc,
+    }),
+  );
+  expect(source).toContain("q=90");
+  expect(new URL(source).searchParams.get("w")).toBe("256");
+  expect(width).toBeGreaterThanOrEqual(Math.ceil(56 * 1.8));
+  await context.close();
 });

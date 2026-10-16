@@ -64,10 +64,7 @@ function ConsultSteps({ consult }: { consult: ConsultView }) {
             </span>
             <Markdown
               text={step.text}
-              className={cn(
-                "gap-2 text-sm leading-normal",
-                step.from === "coach" ? "text-muted" : "text-foreground",
-              )}
+              className="gap-2.5 text-sm leading-normal text-muted"
             />
           </div>
         </div>

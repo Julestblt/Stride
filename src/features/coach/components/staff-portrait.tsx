@@ -7,6 +7,8 @@ import { staff, type StaffAgent } from "../staff";
 
 const portraits = { coach: claire, medical: ines } as const;
 
+const portraitQuality = 90;
+
 function radius(size: number) {
   if (size <= 22) return "rounded-mark";
   if (size <= 30) return "rounded-[4px]";
@@ -44,6 +46,7 @@ export function StaffPortrait({
         width={source}
         height={source}
         sizes={`${source}px`}
+        quality={portraitQuality}
         className="block size-full object-cover"
         style={
           crop

@@ -9,7 +9,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Toggle } from "@/components/ui/toggle";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
 import type {
@@ -20,6 +20,11 @@ import { StaffPortrait } from "@/features/coach/components/staff-portrait";
 import { ThreadStatusLabel } from "@/features/coach/components/thread-status";
 
 type Filter = "all" | "mine";
+
+const filters: { value: Filter; label: string }[] = [
+  { value: "all", label: "Toutes" },
+  { value: "mine", label: "À toi" },
+];
 
 function needsAthlete(row: ConversationRow) {
   return row.status === "question" || row.status === "proposal";
@@ -152,27 +157,24 @@ export function ConversationList({
                 className="text-meta"
               />
             </InputGroup>
-            <ToggleGroup
-              type="single"
-              variant="choice"
+            <div
+              role="group"
               aria-label="Filtrer"
-              value={filter}
-              onValueChange={(value) => value && setFilter(value as Filter)}
-              className="flex-nowrap gap-1.5"
+              className="flex flex-nowrap gap-1.5"
             >
-              <ToggleGroupItem
-                value="all"
-                className="min-h-9 rounded-full border-border bg-transparent text-meta"
-              >
-                Toutes
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="mine"
-                className="min-h-9 rounded-full border-border bg-transparent text-meta"
-              >
-                À toi · {waiting}
-              </ToggleGroupItem>
-            </ToggleGroup>
+              {filters.map((item) => (
+                <Toggle
+                  key={item.value}
+                  pressed={filter === item.value}
+                  onPressedChange={() => setFilter(item.value)}
+                  className="min-h-7.5 rounded-control border-border bg-transparent px-2.5 text-xs font-normal text-muted-foreground hover:border-border-strong data-[state=on]:border-border-strong data-[state=on]:bg-surface-raised data-[state=on]:font-normal data-[state=on]:text-foreground"
+                >
+                  {item.value === "mine"
+                    ? `${item.label} · ${waiting}`
+                    : item.label}
+                </Toggle>
+              ))}
+            </div>
           </>
         )}
       </div>

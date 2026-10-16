@@ -60,10 +60,12 @@ export function NavGoalSwitcher({
 export function NavBadge({
   kind,
   tone = "muted",
+  className,
   children,
 }: {
   kind: "value" | "count";
   tone?: "muted" | "warning";
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -75,6 +77,7 @@ export function NavBadge({
           (tone === "warning" ? "text-warning" : "text-muted-foreground"),
         kind === "count" &&
           "right-2 h-4.5 min-w-4.5 rounded-full bg-warning px-1 text-label font-semibold tracking-normal text-background",
+        className,
       )}
     >
       {children}
@@ -89,6 +92,7 @@ export function NavItem({
   isActive = false,
   badge,
   attention = false,
+  children,
 }: {
   href: string;
   icon: React.ReactNode;
@@ -96,6 +100,7 @@ export function NavItem({
   isActive?: boolean;
   badge?: React.ReactNode;
   attention?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <SidebarMenuItem>
@@ -118,6 +123,7 @@ export function NavItem({
         </Link>
       </SidebarMenuButton>
       {badge}
+      {children}
     </SidebarMenuItem>
   );
 }
