@@ -1,4 +1,11 @@
 import "server-only";
+import { askAthleteTool } from "@/server/coaching/tools/ask-athlete";
+import { ToolError, toolError } from "@/server/coaching/tools/errors";
+import {
+  parseToolInput,
+  runCustomTool,
+  type ToolOutcome,
+} from "@/server/coaching/tools/registry";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import {
   consoleSessionUrl,
@@ -14,7 +21,6 @@ import {
   type SessionStatus,
 } from "./store";
 import { turnAccessToken, turnTimeoutMs } from "./token";
-import { runCustomTool } from "./tools";
 import { syncAthleteVault } from "./vault";
 
 export type { SessionMode } from "./store";
@@ -125,12 +131,22 @@ function textOf(content: readonly { type: string; text?: string }[]) {
     .join("\n");
 }
 
-function questionOf(input: unknown): Omit<PendingQuestion, "toolUseId"> {
-  const value = (input ?? {}) as Record<string, unknown>;
-  return {
-    question: typeof value.question === "string" ? value.question : "",
-    askedFor: typeof value.asked_for === "string" ? value.asked_for : "coach",
-  };
+function questionOf(
+  input: unknown,
+):
+  | { ok: true; question: Omit<PendingQuestion, "toolUseId"> }
+  | { ok: false; outcome: ToolOutcome } {
+  try {
+    const value = parseToolInput(askAthleteTool, input);
+    return {
+      ok: true,
+      question: { question: value.question, askedFor: value.asked_for },
+    };
+  } catch (error) {
+    const failure =
+      error instanceof ToolError ? error : toolError("invalid_input");
+    return { ok: false, outcome: { ok: false, content: failure.toBody() } };
+  }
 }
 
 function costCents(amount: string | undefined) {
@@ -259,15 +275,18 @@ export async function* streamCoachTurn(
           };
           break;
         case "agent.custom_tool_use": {
-          if (event.name === "ask_athlete") {
-            pendingQuestion = {
-              toolUseId: event.id,
-              ...questionOf(event.input),
-            };
-            break;
-          }
           const toolStarted = Date.now();
-          const outcome = await runCustomTool(context, event.name, event.input);
+          let outcome: ToolOutcome;
+          if (event.name === askAthleteTool.name) {
+            const asked = questionOf(event.input);
+            if (asked.ok) {
+              pendingQuestion = { toolUseId: event.id, ...asked.question };
+              break;
+            }
+            outcome = asked.outcome;
+          } else {
+            outcome = await runCustomTool(context, event.name, event.input);
+          }
           yield {
             type: "tool",
             thread: event.session_thread_id ?? "primary",
