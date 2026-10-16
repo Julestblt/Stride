@@ -4,8 +4,8 @@ Claude Managed Agents definitions for the coaching runtime, chosen by the [#128]
 
 | Path                         | Resource                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------ |
-| `agents/coach.md`            | Stride Coach: coordinator, plan designer and the athlete's only voice    |
-| `agents/medical.md`          | Stride Medical, consulted by the Coach only                              |
+| `agents/coach.md`            | Stride Coach: leads the group conversation, designs plans and proposals  |
+| `agents/medical.md`          | Stride Medical, brought in by the Coach, then talks to the athlete       |
 | `skills/*/SKILL.md`          | Coaching knowledge loaded on demand (plan format, periodization, races…) |
 | `environments/coaching.yaml` | Cloud environment, limited networking, MCP servers only                  |
 | `claude-lock.json`           | Resource IDs written by `ant apply`, committed                           |
@@ -16,7 +16,7 @@ Both agents run on Claude Sonnet 5.5. Their only sandbox tool is `read`, which l
 - `read_health_reports` (Coach, Medical): recent wellness check-ins;
 - `read_active_plan`, `read_plan_progress` and `read_plan_history` (Coach): the plan for a range, planned-versus-completed status, and recorded proposals with their decisions;
 - `submit_plan` and `create_plan_proposal` (Coach), which store validated proposals only;
-- `ask_athlete` (Coach), which pauses the turn until the athlete answers.
+- `ask_athlete` (Coach, Medical), which asks one question, with optional answer options, and pauses the turn until the athlete answers. The answer goes back to the agent that asked.
 
 The custom tool entries in `agents/*.md` are generated from the registry between the `# stride-tools:start` and `# stride-tools:end` markers. Never edit them by hand: change the tool module, run `npm run agents:tools`, and commit both. `npm run agents:tools:check` and `npm test` fail when a block drifts. The agent files are excluded from Prettier so the generated lines stay intact.
 
@@ -43,9 +43,9 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 - a resumed session must exist in the athlete's own `coach_sessions` rows **and** carry the athlete's `stride_user_id` metadata, otherwise the API answers 404;
 - custom tool calls run under the athlete's row-level security, only when the calling agent's thread is allowed the tool in `agentTools`; any other name, including one the model invents, is answered with `unknown_tool` without running anything. `ask_athlete` pauses the session (`awaiting_athlete`) until the athlete answers;
 - a turn stops after 15 minutes: Stride sends `user.interrupt` and shows a French message; a session that reaches its budget is closed.
-- every athlete-visible item of the turn (the athlete's message or answer, the Coach's messages, the specialist consult with the data it read, `ask_athlete` questions, proposals and errors) is appended to `coach_thread_items` under row-level security and streamed as an `item` event, so the thread reloads without re-reading Managed Agents events. A message may ask for Medical's opinion (`consult: "medical"`); the Coach still decides.
+- every athlete-visible item of the turn (the athlete's message or answer, the Coach's messages, the specialist's replies with the data it read, `ask_athlete` questions with their options, proposals and errors) is appended to `coach_thread_items` under row-level security and streamed as an `item` event, so the thread reloads without re-reading Managed Agents events. A message may mention Medical (`consult: "medical"`); the Coach still routes the request. Each athlete message also carries the names used in the group (the chosen staff faces and the athlete's first name), so agents mention the right people. A specialist's reply to the Coach is shown to the athlete as the specialist's own message; the brief between agents is stored but never shown.
 
-The athlete reaches the Coach at `/coach` (conversations list, thread with Concertation blocks, question and proposal cards, and the Suivi panel).
+The athlete reaches the Coach at `/coach` (conversations list, group thread with each staff member's messages, questions with answer options and proposal cards, and the Suivi panel).
 
 Accepted proposals are applied by the `stride-coach-worker` service, not by the web process. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md).
 
