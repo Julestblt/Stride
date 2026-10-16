@@ -1503,6 +1503,9 @@ export type Database = {
           created_at: string;
           ends_on: string;
           id: string;
+          matches_activities_through: string | null;
+          matches_computed_at: string | null;
+          matches_version: number | null;
           primary_race_id: string | null;
           starts_on: string;
           status: string;
@@ -1517,6 +1520,9 @@ export type Database = {
           created_at?: string;
           ends_on: string;
           id?: string;
+          matches_activities_through?: string | null;
+          matches_computed_at?: string | null;
+          matches_version?: number | null;
           primary_race_id?: string | null;
           starts_on: string;
           status?: string;
@@ -1530,6 +1536,9 @@ export type Database = {
           created_at?: string;
           ends_on?: string;
           id?: string;
+          matches_activities_through?: string | null;
+          matches_computed_at?: string | null;
+          matches_version?: number | null;
           primary_race_id?: string | null;
           starts_on?: string;
           status?: string;
@@ -1735,6 +1744,16 @@ export type Database = {
         Returns: number;
       };
       race_owned: { Args: { p_race_id: string }; Returns: boolean };
+      refresh_session_matches: {
+        Args: {
+          p_activities_through?: string;
+          p_algorithm_version: string;
+          p_matches: Json;
+          p_plan_id: string;
+          p_version: number;
+        };
+        Returns: number;
+      };
       reject_plan_proposal: {
         Args: { p_note?: string; p_proposal_id: string };
         Returns: {

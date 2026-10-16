@@ -11,7 +11,8 @@ import {
 } from "@/features/plans/view/program";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readRaceCourses } from "@/server/races/courses";
-import { readSessionMatches, type SessionMatch } from "./matches";
+import { readFreshSessionMatches } from "./auto-matches";
+import type { SessionMatch } from "./matches";
 import { readReadyProposals, type ReadyProposal } from "./proposals";
 import { readActivePlan, type StoredPlan } from "./stored";
 
@@ -70,7 +71,7 @@ export const loadPlanOverview = cache(
     ]);
     if (!plan) return null;
     const [matches, proposals] = await Promise.all([
-      readSessionMatches(context, plan.planId),
+      readFreshSessionMatches(context, plan),
       readReadyProposals(context, plan.planId),
     ]);
     return {
