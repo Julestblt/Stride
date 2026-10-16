@@ -75,3 +75,11 @@ export function refusalText(code: unknown) {
     ? turnRefusals[code]
     : turnFailure;
 }
+
+export const deleteFailures: Record<string, string> = {
+  turn_in_progress:
+    "Le staff travaille encore sur cette conversation. Réessaie quand il a terminé.",
+  "not-found": "Cette conversation est introuvable.",
+  "session-expired": "Ta session a expiré. Reconnecte-toi pour continuer.",
+  error: "La conversation n’a pas pu être supprimée. Réessaie dans un instant.",
+};

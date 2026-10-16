@@ -49,8 +49,9 @@ export async function loadConversations(
     readConsultRequests(context, ids),
     readThreadProposalStatuses(context, ids),
   ]);
-  return threads.map((thread, index) => {
+  return threads.flatMap((thread, index) => {
     const threadItems = latest[index];
+    if (!visibleThread(thread.title, threadItems)) return [];
     return {
       id: thread.id,
       title: thread.title ?? "Conversation",
@@ -68,6 +69,10 @@ export async function loadConversations(
   });
 }
 
+function visibleThread(title: string | null, items: readonly ThreadItem[]) {
+  return title !== null || items.length > 0;
+}
+
 export async function loadThread(
   context: OnboardingContext,
   threadId: string,
@@ -78,6 +83,7 @@ export async function loadThread(
     readThreadItems(context, thread.id),
     readThreadProposalStatuses(context, [thread.id]),
   ]);
+  if (!visibleThread(thread.title, items)) return null;
   return {
     id: thread.id,
     managedSessionId: thread.managedSessionId,

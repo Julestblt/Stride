@@ -51,6 +51,7 @@ import { buildThread } from "@/features/coach/thread";
 import { markCoachThreadRead } from "@/server/coaching/actions";
 import { ConversationList } from "./conversation-list";
 import { SuiviPanel } from "./suivi-panel";
+import { ThreadMenu } from "./thread-menu";
 import { StaffWorking, ThreadLog } from "./thread-view";
 
 export type CoachThreadProps = {
@@ -569,6 +570,13 @@ export function CoachScreen({
               >
                 <ListIcon aria-hidden="true" />
               </Button>
+            )}
+            {ids.threadId && state !== null && (
+              <ThreadMenu
+                threadId={ids.threadId}
+                busy={busy}
+                onFailure={setFailure}
+              />
             )}
           </div>
           <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">

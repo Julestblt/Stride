@@ -158,25 +158,30 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
   );
   const entries: ThreadEntry[] = [];
   let coach: Extract<ThreadEntry, { type: "coach" }> | null = null;
-  let consultItems: ConsultItem[] = [];
-  let consultIndex = -1;
+  type PendingConsult = { index: number; items: ConsultItem[] };
+  let pending: PendingConsult[] = [];
+  let open: PendingConsult | null = null;
+  let byThread = new Map<string, PendingConsult>();
 
-  function flushConsult(live: boolean) {
-    if (!coach || consultIndex < 0) return;
-    const folded = foldConsults(consultItems, live);
-    coach.blocks[consultIndex] = {
-      type: "consult",
-      key: `${coach.key}-${consultIndex}`,
-      live: folded.live,
-      consults: folded.consults,
-    };
-    consultItems = [];
-    consultIndex = -1;
+  function finishEntry(live: boolean) {
+    if (coach)
+      for (const block of pending) {
+        const folded = foldConsults(block.items, live);
+        coach.blocks[block.index] = {
+          type: "consult",
+          key: `${coach.key}-${block.index}`,
+          live: folded.live,
+          consults: folded.consults,
+        };
+      }
+    pending = [];
+    open = null;
+    byThread = new Map();
   }
 
   input.items.forEach((item, index) => {
     if (item.kind === "athlete" || item.kind === "answer") {
-      flushConsult(false);
+      finishEntry(false);
       coach = null;
       entries.push({
         type: "athlete",
@@ -194,15 +199,19 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
       entries.push(coach);
     }
     if (isConsultItem(item)) {
-      if (consultIndex < 0) {
-        consultIndex = coach.blocks.length;
+      let block = byThread.get(item.thread) ?? open;
+      if (!block) {
+        block = { index: coach.blocks.length, items: [] };
         coach.blocks.push({ type: "text", text: "" });
+        pending.push(block);
       }
-      consultItems.push(item);
+      block.items.push(item);
+      byThread.set(item.thread, block);
+      open = block;
       return;
     }
     if (item.kind === "coach") {
-      flushConsult(false);
+      open = null;
       if (item.text.trim())
         coach.blocks.push({ type: "text", text: item.text });
       return;
@@ -238,7 +247,7 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
     if (item.kind === "error")
       coach.blocks.push({ type: "error", text: item.text });
   });
-  flushConsult(input.live);
+  finishEntry(input.live);
   for (const entry of entries)
     if (entry.type === "coach") linkQuestions(entry.blocks);
   return entries;

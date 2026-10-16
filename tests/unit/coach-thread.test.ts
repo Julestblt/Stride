@@ -17,7 +17,10 @@ import {
   parseThreadItem,
   type ThreadItem,
 } from "../../src/features/coach/items";
-import { portraitCrop } from "../../src/features/coach/portrait-crop";
+import {
+  portraitCrop,
+  portraitSourceSize,
+} from "../../src/features/coach/portrait-crop";
 import { readLabel } from "../../src/features/coach/reads";
 import { agentOfManagedName } from "../../src/features/coach/staff";
 import {
@@ -170,6 +173,44 @@ describe("thread view model", () => {
     expect(entry.blocks[1]).toMatchObject({
       live: false,
       consults: [{ state: "asked", summary: "Question pour toi" }],
+    });
+  });
+
+  it("keeps one Concertation per consult despite interleaved text and duplicate ends", () => {
+    const end = {
+      kind: "consult_end",
+      at: at(2),
+      thread: "sthr_m",
+      agent: "medical",
+    } as const;
+    const entry = coachEntry([
+      ...consultTurn.slice(0, 3),
+      end,
+      { kind: "coach", at: at(2), text: "Inès regarde tes données." },
+      end,
+      { ...consultTurn[3] },
+      {
+        kind: "consult_reply",
+        at: at(3),
+        thread: "sthr_m",
+        agent: "medical",
+        text: "Ask about downhill.",
+      },
+      end,
+      end,
+    ]);
+    const consults = entry.blocks.filter((block) => block.type === "consult");
+    expect(consults).toHaveLength(1);
+    expect(entry.blocks.map((block) => block.type)).toEqual([
+      "text",
+      "consult",
+      "text",
+    ]);
+    if (consults[0].type !== "consult") throw new Error();
+    expect(consults[0].consults).toHaveLength(1);
+    expect(consults[0].consults[0]).toMatchObject({
+      state: "replied",
+      reads: ["Signalements · 14 jours"],
     });
   });
 
@@ -377,8 +418,73 @@ describe("conversations", () => {
       ["Ta demande", "done"],
       ["Réponse de Claire", "done"],
       ["Claire consulte Inès", "done"],
-      ["Question d’Inès", "pending"],
+      ["Avis d’Inès", "done"],
+      ["Question d’Inès", "current"],
     ]);
+  });
+
+  it("follows every turn of the thread in Déroulé", () => {
+    const items: ThreadItem[] = [
+      ...consultDone,
+      { kind: "answer", at: at(5), toolUseId: "sevt_ask", text: "Non" },
+      { kind: "coach", at: at(6), text: "Je relance Inès." },
+      {
+        kind: "consult_request",
+        at: at(6),
+        thread: "sthr_m",
+        agent: "medical",
+        text: "No downhill pain.",
+      },
+      {
+        kind: "consult_reply",
+        at: at(7),
+        thread: "sthr_m",
+        agent: "medical",
+        text: "Fine.",
+      },
+      { kind: "coach", at: at(8), text: "**Verdict** : on continue." },
+      {
+        kind: "proposal",
+        at: at(9),
+        proposalId,
+        scope: "session",
+        title: "Séance allégée",
+        summary: null,
+        opinions: [],
+      },
+    ];
+    const timeline = (
+      status: "working" | "proposal" | null,
+      decided?: string,
+    ) =>
+      suiviTimeline({
+        items,
+        status,
+        pendingToolUseId: null,
+        proposalStatuses: decided ? { [proposalId]: decided } : {},
+        timeZone: tz,
+      }).map((step) => [step.label, step.state]);
+    expect(timeline("proposal")).toEqual([
+      ["Ta demande", "done"],
+      ["Réponse de Claire", "done"],
+      ["Claire consulte Inès", "done"],
+      ["Avis d’Inès", "done"],
+      ["Question d’Inès", "done"],
+      ["Ta réponse", "done"],
+      ["Claire consulte Inès", "done"],
+      ["Avis d’Inès", "done"],
+      ["Réponse de Claire", "done"],
+      ["Proposition du staff", "done"],
+      ["À toi de décider", "current"],
+    ]);
+    expect(timeline(null, "applied").at(-1)).toEqual(["Ta décision", "done"]);
+    expect(timeline("working", "applied").at(-1)).toEqual([
+      "Le staff travaille",
+      "current",
+    ]);
+    expect(threadPreview(items.slice(0, -1))).toBe(
+      "Claire : Verdict : on continue.",
+    );
   });
 });
 
@@ -400,5 +506,8 @@ describe("staff and reads", () => {
     expect(portraitCrop(36)).toEqual({ scale: 1.8, originY: "7.3%" });
     expect(portraitCrop(96)).toEqual({ scale: 1.3, originY: "0%" });
     expect(portraitCrop(168)).toBeNull();
+    expect(portraitSourceSize(36)).toBe(65);
+    expect(portraitSourceSize(96)).toBe(125);
+    expect(portraitSourceSize(168)).toBe(168);
   });
 });

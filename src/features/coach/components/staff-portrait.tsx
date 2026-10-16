@@ -2,7 +2,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import claire from "../portraits/claire.webp";
 import ines from "../portraits/ines.webp";
-import { portraitCrop } from "../portrait-crop";
+import { portraitCrop, portraitSourceSize } from "../portrait-crop";
 import { staff, type StaffAgent } from "../staff";
 
 const portraits = { coach: claire, medical: ines } as const;
@@ -27,6 +27,7 @@ export function StaffPortrait({
   className?: string;
 }) {
   const crop = portraitCrop(size);
+  const source = portraitSourceSize(size);
   return (
     <span
       aria-hidden={decorative || undefined}
@@ -40,9 +41,9 @@ export function StaffPortrait({
       <Image
         src={portraits[agent]}
         alt={decorative ? "" : staff[agent].alt}
-        width={size}
-        height={size}
-        sizes={`${size}px`}
+        width={source}
+        height={source}
+        sizes={`${source}px`}
         className="block size-full object-cover"
         style={
           crop

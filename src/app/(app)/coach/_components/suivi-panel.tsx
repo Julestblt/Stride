@@ -100,6 +100,7 @@ export function SuiviPanel({
             {steps.map((step, index) => (
               <li
                 key={step.key}
+                aria-current={step.state === "current" ? "step" : undefined}
                 className="relative grid grid-cols-[14px_minmax(0,1fr)_auto] items-start gap-2.5 py-1.75"
               >
                 {index < steps.length - 1 && (
@@ -108,10 +109,15 @@ export function SuiviPanel({
                     className="absolute top-5.5 -bottom-2 left-1.5 w-px bg-border"
                   />
                 )}
-                {step.state === "pending" ? (
+                {step.state === "current" ? (
                   <span
                     aria-hidden="true"
-                    className="relative z-1 mt-0.5 size-3.25 rounded-full bg-warning ring-3 ring-warning/15"
+                    className={cn(
+                      "relative z-1 mt-0.5 size-3.25 rounded-full ring-3",
+                      step.tone === "accent"
+                        ? "bg-accent ring-accent/15 motion-safe:animate-breathe"
+                        : "bg-warning ring-warning/15",
+                    )}
                   />
                 ) : (
                   <span
@@ -125,14 +131,14 @@ export function SuiviPanel({
                   <span
                     className={cn(
                       "text-meta",
-                      step.state === "pending"
-                        ? "text-foreground"
+                      step.state === "current"
+                        ? "font-semibold text-foreground"
                         : "text-muted",
                     )}
                   >
                     {step.label}
-                    {step.state === "pending" && (
-                      <span className="sr-only"> (en attente)</span>
+                    {step.state === "current" && (
+                      <span className="sr-only"> (étape en cours)</span>
                     )}
                   </span>
                   {step.detail && (

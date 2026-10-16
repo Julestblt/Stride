@@ -1057,6 +1057,7 @@ function twinPlanAthlete(owner, ownerPlanId, prefix) {
 }
 const coachKneeThread = "c0c0c0c0-0000-4000-8000-000000000001";
 const coachPlanThread = "c0c0c0c0-0000-4000-8000-000000000002";
+const coachSpikeThread = "c0c0c0c0-0000-4000-8000-000000000003";
 const coachNewPlanProposal = "eeeeeeee-eeee-4eee-8eee-900000000001";
 const coachToday = new Date().toISOString().slice(0, 10);
 const coachAt = (time) => `${coachToday}T${time}Z`;
@@ -1103,6 +1104,18 @@ tables.coach_sessions = [
     created_at: coachAt("06:00:00"),
   }),
 ];
+tables.coach_sessions.push(
+  coachSession({
+    id: coachSpikeThread,
+    managed_session_id: "sesn_01Spike",
+    title: null,
+    status: "awaiting_athlete",
+    pending_tool_use_id: "sevt_spike",
+    last_turn_at: coachAt("09:00:00"),
+    last_activity_at: coachAt("09:00:00"),
+    created_at: coachAt("09:00:00"),
+  }),
+);
 tables.coach_thread_items = [
   coachItem(coachKneeThread, "08:00:00", "athlete", {
     text: "J’ai une douleur au genou depuis la sortie de dimanche.",
@@ -1924,6 +1937,30 @@ createServer(async (request, response) => {
         );
         return send(204, undefined);
       }
+    }
+    if (
+      url.pathname === "/rest/v1/coach_sessions" &&
+      request.method === "DELETE"
+    ) {
+      const owner = url.searchParams.get("user_id");
+      const id = url.searchParams.get("id");
+      const deleted = tables.coach_sessions.filter(
+        (row) => `eq.${row.user_id}` === owner && `eq.${row.id}` === id,
+      );
+      const ids = deleted.map((row) => row.id);
+      tables.coach_sessions = tables.coach_sessions.filter(
+        (row) => !ids.includes(row.id),
+      );
+      tables.coach_thread_items = tables.coach_thread_items.filter(
+        (row) => !ids.includes(row.coach_session_id),
+      );
+      for (const proposal of tables.plan_proposals)
+        if (ids.includes(proposal.coach_session_id))
+          proposal.coach_session_id = null;
+      return send(
+        200,
+        deleted.map((row) => ({ id: row.id })),
+      );
     }
     if (url.pathname === "/rest/v1/athlete_races") {
       if (request.method === "POST") {

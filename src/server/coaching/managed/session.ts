@@ -361,6 +361,7 @@ export async function* streamCoachTurn(
 
   let pendingQuestion: PendingQuestion | null = null;
   const threadAgents = new Map<string, string>();
+  const endedThreads = new Set<string>();
   const speakerOf = (thread: string | null | undefined): StaffAgent =>
     (thread ? agentOfManagedName(threadAgents.get(thread)) : null) ?? "coach";
   let stopReason = "interrupted";
@@ -430,6 +431,7 @@ export async function* streamCoachTurn(
           const agent = agentOfManagedName(event.to_agent_name);
           if (agent && agent !== "coach") {
             threadAgents.set(event.to_session_thread_id, event.to_agent_name!);
+            endedThreads.delete(event.to_session_thread_id);
             yield persist({
               kind: "consult_request",
               at: now(),
@@ -543,13 +545,23 @@ export async function* streamCoachTurn(
         case "session.thread_status_idle":
         case "session.thread_status_terminated": {
           const agent = agentOfManagedName(event.agent_name);
-          if (agent && agent !== "coach")
+          const finished =
+            event.type === "session.thread_status_terminated" ||
+            event.stop_reason.type !== "requires_action";
+          if (
+            agent &&
+            agent !== "coach" &&
+            finished &&
+            !endedThreads.has(event.session_thread_id)
+          ) {
+            endedThreads.add(event.session_thread_id);
             yield persist({
               kind: "consult_end",
               at: now(),
               thread: event.session_thread_id,
               agent,
             });
+          }
           break;
         }
         case "session.status_idle":

@@ -642,6 +642,12 @@ describe("coach turn stream", () => {
           session_thread_id: "sthr_medical",
         },
         {
+          type: "session.thread_status_idle",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+          stop_reason: { type: "requires_action" },
+        },
+        {
           type: "agent.thread_message_received",
           from_agent_name: "Stride Medical",
           from_session_thread_id: "sthr_medical",
@@ -652,6 +658,11 @@ describe("coach turn stream", () => {
           session_thread_id: "sthr_medical",
           agent_name: "Stride Medical",
           stop_reason: { type: "end_turn" },
+        },
+        {
+          type: "session.thread_status_terminated",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
         },
         {
           type: "agent.custom_tool_use",

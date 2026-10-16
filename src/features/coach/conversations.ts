@@ -1,4 +1,5 @@
 import type { ThreadItem } from "./items";
+import { markdownPlainText } from "./markdown";
 import { staff, staffJoin, type StaffAgent } from "./staff";
 import { ofName, proposalCardStatus } from "./thread";
 
@@ -87,7 +88,7 @@ export function participantsLine(agents: readonly StaffAgent[]) {
 export function threadPreview(items: readonly ThreadItem[]) {
   for (const item of [...items].reverse()) {
     if (item.kind === "coach" && item.text.trim())
-      return `${staff.coach.name} : ${item.text.replace(/\s+/g, " ").trim()}`;
+      return `${staff.coach.name} : ${markdownPlainText(item.text)}`;
     if (item.kind === "question") return item.question;
     if (item.kind === "athlete" || item.kind === "answer")
       return `Toi : ${item.text.replace(/\s+/g, " ").trim()}`;
@@ -310,7 +311,8 @@ export type TimelineStep = {
   label: string;
   detail: string | null;
   at: string | null;
-  state: "done" | "pending" | "upcoming";
+  state: "done" | "current";
+  tone: "accent" | "warning" | null;
 };
 
 export function suiviTimeline(input: {
@@ -322,87 +324,116 @@ export function suiviTimeline(input: {
 }): TimelineStep[] {
   const steps: TimelineStep[] = [];
   const at = (iso: string) => timeLabel(iso, input.timeZone);
-  let coachSeen = false;
+  const answered = new Set(
+    input.items.flatMap((item) =>
+      item.kind === "answer" ? [item.toolUseId] : [],
+    ),
+  );
+  const lastCoach = new Set<number>();
+  let segmentCoach = -1;
+  input.items.forEach((item, index) => {
+    if (item.kind === "athlete" || item.kind === "answer") {
+      if (segmentCoach >= 0) lastCoach.add(segmentCoach);
+      segmentCoach = -1;
+    }
+    if (item.kind === "coach" && item.text.trim()) segmentCoach = index;
+  });
+  if (segmentCoach >= 0) lastCoach.add(segmentCoach);
+
+  const done = (
+    key: string,
+    label: string,
+    iso: string | null,
+    detail: string | null = null,
+  ) =>
+    steps.push({
+      key,
+      label,
+      detail,
+      at: iso ? at(iso) : null,
+      state: "done",
+      tone: null,
+    });
+  let consulted = new Set<string>();
+  let replied = new Set<string>();
+
   input.items.forEach((item, index) => {
     const key = `step-${index}`;
-    if (item.kind === "athlete") {
-      coachSeen = false;
-      steps.push({
-        key,
-        label: "Ta demande",
-        detail: null,
-        at: at(item.at),
-        state: "done",
-      });
+    switch (item.kind) {
+      case "athlete":
+      case "answer":
+        consulted = new Set();
+        replied = new Set();
+        done(
+          key,
+          item.kind === "athlete" ? "Ta demande" : "Ta réponse",
+          item.at,
+        );
+        break;
+      case "consult_request":
+        if (consulted.has(item.thread)) break;
+        consulted.add(item.thread);
+        done(
+          key,
+          `${staff.coach.name} consulte ${staff[item.agent].name}`,
+          item.at,
+          staff[item.agent].role,
+        );
+        break;
+      case "consult_reply":
+        if (replied.has(item.thread)) break;
+        replied.add(item.thread);
+        done(key, `Avis ${ofName(item.agent)}`, item.at);
+        break;
+      case "question": {
+        const current =
+          item.toolUseId === input.pendingToolUseId &&
+          !answered.has(item.toolUseId);
+        steps.push({
+          key,
+          label: `Question ${ofName(item.askedFor)}`,
+          detail: current ? item.question : null,
+          at: at(item.at),
+          state: current ? "current" : "done",
+          tone: current ? "warning" : null,
+        });
+        break;
+      }
+      case "coach":
+        if (lastCoach.has(index))
+          done(key, `Réponse ${ofName("coach")}`, item.at);
+        break;
+      case "proposal": {
+        const card = proposalCardStatus(
+          input.proposalStatuses[item.proposalId],
+        );
+        done(key, "Proposition du staff", item.at, item.title);
+        if (card === "pending" || card === "applying")
+          steps.push({
+            key: `${key}-decision`,
+            label: "À toi de décider",
+            detail: card === "applying" ? "Application en cours" : null,
+            at: null,
+            state: "current",
+            tone: "warning",
+          });
+        else
+          done(
+            `${key}-decision`,
+            "Ta décision",
+            null,
+            card === "applied"
+              ? "Appliquée"
+              : card === "rejected"
+                ? "Refusée"
+                : "Plus applicable",
+          );
+        break;
+      }
+      case "error":
+        done(key, "Réponse interrompue", item.at);
+        break;
     }
-    if (item.kind === "answer") {
-      coachSeen = false;
-      steps.push({
-        key,
-        label: "Ta réponse",
-        detail: null,
-        at: at(item.at),
-        state: "done",
-      });
-    }
-    if (item.kind === "consult_request")
-      steps.push({
-        key,
-        label: `${staff.coach.name} consulte ${staff[item.agent].name}`,
-        detail: staff[item.agent].role,
-        at: at(item.at),
-        state: "done",
-      });
-    if (item.kind === "question")
-      steps.push({
-        key,
-        label: `Question ${ofName(item.askedFor)}`,
-        detail: item.question,
-        at: at(item.at),
-        state: item.toolUseId === input.pendingToolUseId ? "pending" : "done",
-      });
-    if (item.kind === "coach" && !coachSeen) {
-      coachSeen = true;
-      steps.push({
-        key,
-        label: `Réponse ${ofName("coach")}`,
-        detail: null,
-        at: at(item.at),
-        state: "done",
-      });
-    }
-    if (item.kind === "proposal") {
-      const card = proposalCardStatus(input.proposalStatuses[item.proposalId]);
-      steps.push({
-        key,
-        label: "Proposition du staff",
-        detail: item.title,
-        at: at(item.at),
-        state: "done",
-      });
-      steps.push({
-        key: `${key}-decision`,
-        label: "Ta décision",
-        detail:
-          card === "applied"
-            ? "Appliquée"
-            : card === "rejected"
-              ? "Refusée"
-              : card === "closed"
-                ? "Plus applicable"
-                : null,
-        at: card === "pending" || card === "applying" ? "En attente" : null,
-        state: card === "pending" || card === "applying" ? "pending" : "done",
-      });
-    }
-    if (item.kind === "error")
-      steps.push({
-        key,
-        label: "Réponse interrompue",
-        detail: null,
-        at: at(item.at),
-        state: "done",
-      });
   });
   if (input.status === "working")
     steps.push({
@@ -410,7 +441,8 @@ export function suiviTimeline(input: {
       label: "Le staff travaille",
       detail: null,
       at: null,
-      state: "pending",
+      state: "current",
+      tone: "accent",
     });
   return steps;
 }

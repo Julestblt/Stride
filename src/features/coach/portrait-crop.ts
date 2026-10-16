@@ -5,3 +5,7 @@ export function portraitCrop(size: number): PortraitCrop {
   if (size <= 120) return { scale: 1.3, originY: "0%" };
   return null;
 }
+
+export function portraitSourceSize(size: number) {
+  return Math.ceil(size * (portraitCrop(size)?.scale ?? 1));
+}

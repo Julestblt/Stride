@@ -11,6 +11,7 @@ import {
   StaffPortrait,
   StaffStack,
 } from "@/features/coach/components/staff-portrait";
+import { Markdown } from "@/features/coach/components/markdown";
 import { staff } from "@/features/coach/staff";
 import {
   askedByLabel,
@@ -61,14 +62,13 @@ function ConsultSteps({ consult }: { consult: ConsultView }) {
                 </>
               )}
             </span>
-            <p
+            <Markdown
+              text={step.text}
               className={cn(
-                "text-sm leading-normal whitespace-pre-wrap",
+                "gap-2 text-sm leading-normal",
                 step.from === "coach" ? "text-muted" : "text-foreground",
               )}
-            >
-              {step.text}
-            </p>
+            />
           </div>
         </div>
       ))}
@@ -354,12 +354,11 @@ function CoachMessage({
         {entry.blocks.map((block, index) => {
           if (block.type === "text")
             return (
-              <p
+              <Markdown
                 key={index}
-                className="text-body leading-[1.55] whitespace-pre-wrap"
-              >
-                {block.text}
-              </p>
+                text={block.text}
+                className="text-body leading-[1.55]"
+              />
             );
           if (block.type === "consult")
             return block.live ? (
