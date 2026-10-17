@@ -10,24 +10,14 @@ import {
 import { NavBadge, NavItem } from "@/components/stride/navigation";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { StaffStack } from "@/features/coach/components/staff-portrait";
+import {
+  coachAttentionLabel,
+  coachWaiting,
+  type CoachAttention,
+} from "../coach-attention";
 
 const subClass =
   "min-h-7.5 pl-4 text-meta text-muted-foreground data-[active=true]:bg-transparent data-[active=true]:text-foreground";
-
-export type CoachAttention = { questions: number; proposals: number };
-
-function count(value: number, one: string, many: string) {
-  if (value === 0) return null;
-  return value === 1 ? `1 ${one}` : `${value} ${many}`;
-}
-
-export function coachAttentionLabel(attention: CoachAttention) {
-  const parts = [
-    count(attention.questions, "question", "questions"),
-    count(attention.proposals, "proposition", "propositions"),
-  ].filter(Boolean);
-  return `${parts.join(" et ")} en attente`;
-}
 
 export function CoachNavItem({
   attention,
@@ -37,7 +27,7 @@ export function CoachNavItem({
   const pathname = usePathname();
   const active = pathname === "/coach" || pathname.startsWith("/coach/");
   const team = pathname === "/coach/equipe";
-  const waiting = attention ? attention.questions + attention.proposals : 0;
+  const waiting = coachWaiting(attention);
   return (
     <NavItem
       href="/coach"
