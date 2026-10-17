@@ -667,7 +667,11 @@ planBlockDefinitions.forEach(([blockKey], blockIndex) => {
         date: shiftDay(weekStart, offset),
         content,
       }))
-      .filter(({ date }) => date <= planRaceDay);
+      .filter(
+        ({ date, content }) =>
+          date < planRaceDay ||
+          (date === planRaceDay && content.kind === "race"),
+      );
     for (const { date, content } of scheduled)
       planSessions.push({
         plan_id: planId,
