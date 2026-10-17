@@ -109,6 +109,31 @@ test("background data stays in place until the athlete applies it", async ({
   await expect(apply).not.toBeVisible();
 });
 
+test("the fresh-data pill stays above the mobile tab bar", async ({ page }) => {
+  let value = observation("complete");
+  await page.route("**/api/data-activity", (route) =>
+    route.fulfill({ json: value }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/activities");
+  const tabs = page.getByRole("navigation", { name: "Navigation principale" });
+  await expect(tabs).toBeVisible();
+  value = observation("complete", 21);
+  value.sync.categories.activities.lastSuccessAt = "2026-10-13T06:15:00Z";
+  await pollNow(page);
+  const apply = page.getByRole("button", { name: "Afficher", exact: true });
+  await expect(apply).toBeVisible();
+  const pill = await page
+    .getByRole("status")
+    .filter({ has: apply })
+    .boundingBox();
+  const bar = await tabs.boundingBox();
+  expect((pill?.y ?? 0) + (pill?.height ?? 0)).toBeLessThanOrEqual(bar?.y ?? 0);
+  await apply.click();
+  await expect(apply).not.toBeVisible();
+});
+
 test("offline and malformed responses retain athlete content", async ({
   page,
   context,

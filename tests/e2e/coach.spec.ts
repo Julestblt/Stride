@@ -404,6 +404,57 @@ test("mobile shows the list, the thread and the Suivi sheet at 390", async ({
   expect(cardWidth).toBeLessThanOrEqual(390);
 });
 
+test("mobile tab bar reaches the main screens and hides in a conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/coach");
+  const tabs = page.getByRole("navigation", { name: "Navigation principale" });
+  await expect(tabs).toBeVisible();
+  const coach = tabs.getByRole("link", { name: /^Coach, .+ en attente$/ });
+  await expect(coach).toHaveAttribute("aria-current", "page");
+  await expect(coach.locator('[data-kind="count"]')).toHaveText(/^\d+$/);
+  const box = await tabs.boundingBox();
+  expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBe(844);
+  const covered = await tabs.evaluate((nav) => {
+    const previous = nav.previousElementSibling;
+    if (!previous) return true;
+    const bottom = Math.max(
+      ...[...previous.children].map(
+        (child) => child.getBoundingClientRect().bottom,
+      ),
+    );
+    return bottom > nav.getBoundingClientRect().top + 1;
+  });
+  expect(covered).toBe(false);
+
+  await tabs.getByRole("link", { name: "Aujourd’hui" }).focus();
+  await page.keyboard.press("Tab");
+  const plan = tabs.getByRole("link", { name: "Plan" });
+  await expect(plan).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/plan/, { timeout: 20_000 });
+  await expect(plan).toHaveAttribute("aria-current", "page");
+  await expect(tabs.getByRole("link", { name: /^Coach/ })).not.toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  await page.goto(`/coach/${kneeThread}`);
+  await expect(page.getByRole("log", { name: "Messages" })).toBeVisible();
+  await expect(tabs).toHaveCount(0);
+
+  await page.goto("/coach/equipe");
+  await expect(tabs.getByRole("link", { name: /^Coach/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(tabs).toBeHidden();
+});
+
 test("reduced motion stops the live indicators", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 1000 });
