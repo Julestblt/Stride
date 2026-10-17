@@ -5,6 +5,7 @@ import { clampItem, type ThreadItem } from "@/features/coach/items";
 import { readLabel } from "@/features/coach/reads";
 import { agentOfManagedName, type StaffAgent } from "@/features/coach/staff";
 import { askAthleteTool } from "@/server/coaching/tools/ask-athlete";
+import { messageAthleteTool } from "@/server/coaching/tools/message-athlete";
 import { ToolError, toolError } from "@/server/coaching/tools/errors";
 import {
   parseToolInput,
@@ -225,6 +226,23 @@ async function openSession(
     budgetCents,
     title: threadTitle(request.input.text),
   });
+}
+
+function messageOf(input: unknown): {
+  text: string | null;
+  outcome: ToolOutcome;
+} {
+  try {
+    const value = parseToolInput(messageAthleteTool, input);
+    return {
+      text: value.text,
+      outcome: { ok: true, content: { shown: true } },
+    };
+  } catch (error) {
+    const failure =
+      error instanceof ToolError ? error : toolError("invalid_input");
+    return { text: null, outcome: { ok: false, content: failure.toBody() } };
+  }
 }
 
 const consultInstruction: Record<"medical", string> = {
@@ -502,6 +520,17 @@ export async function* streamCoachTurn(
               break;
             }
             outcome = asked.outcome;
+          } else if (event.name === messageAthleteTool.name) {
+            const message = messageOf(event.input);
+            outcome = message.outcome;
+            if (message.text)
+              yield persist({
+                kind: "staff_message",
+                at: now(),
+                thread: event.session_thread_id ?? "primary",
+                agent: caller,
+                text: message.text,
+              });
           } else {
             outcome = await runCustomTool(
               { ...context, coachSessionId: record.id },

@@ -83,6 +83,7 @@ type Handoff = {
   at: string;
   reads: string[];
   done: boolean;
+  spoke: boolean;
 };
 
 export function buildThread(input: ThreadInput): ThreadEntry[] {
@@ -128,6 +129,7 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
       at,
       reads: [],
       done: false,
+      spoke: false,
     };
     handoffs.set(thread, handoff);
     return handoff;
@@ -160,9 +162,22 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
             text: item.text,
           });
         return;
-      case "consult_request":
-        handoffOf(item.thread, item.agent, item.at).done = false;
+      case "consult_request": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = false;
+        handoff.spoke = false;
         return;
+      }
+      case "staff_message": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = true;
+        handoff.spoke = true;
+        speak(item.agent, item.at, index).blocks.push({
+          type: "text",
+          text: item.text,
+        });
+        return;
+      }
       case "read":
         if (item.agent !== "coach") {
           const handoff = handoffOf(item.thread, item.agent, item.at);
@@ -172,14 +187,16 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
         return;
       case "consult_note":
         return;
-      case "consult_reply":
-        handoffOf(item.thread, item.agent, item.at).done = true;
-        if (item.text.trim())
+      case "consult_reply": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = true;
+        if (!handoff.spoke && item.text.trim())
           speak(item.agent, item.at, index).blocks.push({
             type: "text",
             text: item.text,
           });
         return;
+      }
       case "consult_end":
         handoffOf(item.thread, item.agent, item.at).done = true;
         return;

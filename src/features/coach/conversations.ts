@@ -67,12 +67,28 @@ export function threadStatus(input: {
   return null;
 }
 
+export function staffMessages(items: readonly ThreadItem[]) {
+  const spoke = new Set<string>();
+  const shown: ThreadItem[] = [];
+  for (const item of items) {
+    if (item.kind === "consult_request") spoke.delete(item.thread);
+    if (item.kind === "staff_message") {
+      spoke.add(item.thread);
+      shown.push(item);
+    }
+    if (item.kind === "consult_reply" && !spoke.has(item.thread))
+      shown.push(item);
+  }
+  return new Set(shown);
+}
+
 export function threadParticipants(items: readonly ThreadItem[]) {
   const agents: StaffAgent[] = ["coach"];
   for (const item of items) {
     const agent =
       item.kind === "consult_request" ||
       item.kind === "consult_reply" ||
+      item.kind === "staff_message" ||
       item.kind === "read"
         ? item.agent
         : item.kind === "question"
@@ -91,10 +107,15 @@ export function participantsLine(staff: Staff, agents: readonly StaffAgent[]) {
 }
 
 export function threadPreview(staff: Staff, items: readonly ThreadItem[]) {
+  const shown = staffMessages(items);
   for (const item of [...items].reverse()) {
     if (item.kind === "coach" && item.text.trim())
       return `${staff.coach.name} : ${markdownPlainText(item.text)}`;
-    if (item.kind === "consult_reply" && item.text.trim())
+    if (
+      (item.kind === "consult_reply" || item.kind === "staff_message") &&
+      shown.has(item) &&
+      item.text.trim()
+    )
       return `${staff[item.agent].name} : ${markdownPlainText(item.text)}`;
     if (item.kind === "question") return item.question;
     if (item.kind === "athlete" || item.kind === "answer")
@@ -292,10 +313,11 @@ export function suiviParticipants(
   staff: Staff,
   items: readonly ThreadItem[],
 ): SuiviParticipant[] {
+  const shown = staffMessages(items);
   return threadParticipants(items).map((agent) => {
     const messages = items.filter((item) =>
-      item.kind === "consult_reply"
-        ? item.agent === agent
+      item.kind === "consult_reply" || item.kind === "staff_message"
+        ? shown.has(item) && item.agent === agent
         : item.kind === "question" && item.askedFor === agent,
     ).length;
     return {
@@ -408,6 +430,7 @@ export function suiviTimeline(input: {
         );
         break;
       case "consult_reply":
+      case "staff_message":
         if (replied.has(item.thread)) break;
         replied.add(item.thread);
         done(key, `Réponse ${ofName(input.staff[item.agent])}`, item.at);

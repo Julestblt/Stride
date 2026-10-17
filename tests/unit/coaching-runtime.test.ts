@@ -770,6 +770,63 @@ describe("coach turn stream", () => {
     });
   });
 
+  it("posts a specialist's message to the athlete under its name", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.thread_created",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_msg",
+          name: "message_athlete",
+          input: { text: "@Jules Pas de course demain." },
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "agent.custom_tool_use",
+          id: "sevt_bad",
+          name: "message_athlete",
+          input: { text: "" },
+          session_thread_id: "sthr_medical",
+        },
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+
+    expect(runCustomTool).not.toHaveBeenCalled();
+    const items = store.appendThreadItem.mock.calls.map(([, , item]) => item);
+    expect(items.filter((item) => item.kind === "staff_message")).toEqual([
+      expect.objectContaining({
+        thread: "sthr_medical",
+        agent: "medical",
+        text: "@Jules Pas de course demain.",
+      }),
+    ]);
+    expect(managed.send).toHaveBeenCalledWith("sesn_01A", {
+      events: [
+        expect.objectContaining({
+          custom_tool_use_id: "sevt_msg",
+          is_error: false,
+          content: [{ type: "text", text: '{"shown":true}' }],
+        }),
+      ],
+    });
+    expect(managed.send).toHaveBeenCalledWith("sesn_01A", {
+      events: [
+        expect.objectContaining({
+          custom_tool_use_id: "sevt_bad",
+          is_error: true,
+        }),
+      ],
+    });
+  });
+
   it("records a proposal card with its attributed reasons", async () => {
     store.findOwnSession.mockResolvedValue(record());
     const proposalId = "d0000000-0000-4000-8000-00000000000d";

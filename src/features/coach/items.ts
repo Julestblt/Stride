@@ -21,6 +21,7 @@ const bodies = {
   consult_request: z.object({ thread: z.string(), agent, text }),
   consult_reply: z.object({ thread: z.string(), agent, text }),
   consult_note: z.object({ thread: z.string(), agent, text }),
+  staff_message: z.object({ thread: z.string(), agent, text }),
   consult_end: z.object({ thread: z.string(), agent }),
   read: z.object({
     thread: z.string(),

@@ -141,10 +141,15 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
         consoleUrl: "https://console.test",
       },
       item("answer", { toolUseId: "sevt_knee", text: "Aucune gêne" }),
-      item("consult_reply", {
+      item("staff_message", {
         thread: "sthr_knee",
         agent: "medical",
         text: "@Jules Alors tu peux courir, en gardant les descentes faciles.",
+      }),
+      item("consult_reply", {
+        thread: "sthr_knee",
+        agent: "medical",
+        text: "Limites pour le plan : descentes faciles jusqu’au 31/10.",
       }),
       item("consult_end", { thread: "sthr_knee", agent: "medical" }),
       item("coach", { text: "Parfait, on garde la sortie longue." }),
@@ -157,6 +162,7 @@ test("the conversations list, consult, question and Suivi at 1440", async ({
   ).toBeVisible();
   await expect(log.getByText("En réponse à Inès")).toBeVisible();
   await expect(log.getByText("Alors tu peux courir")).toBeVisible();
+  await expect(log).not.toContainText("Limites pour le plan");
   await expect(question).toContainText("Répondue");
   await expect(
     question.getByRole("button", { name: "Aucune gêne" }),

@@ -8,6 +8,7 @@ import { ToolError, toolError, type ToolErrorBody } from "./errors";
 import { readHealthReportsTool } from "./health-reports";
 import { readPlanHistoryTool } from "./plan-history";
 import { readPlanProgressTool } from "./plan-progress";
+import { messageAthleteTool } from "./message-athlete";
 import { createPlanProposalTool } from "./plan-proposal";
 import { submitPlanTool } from "./submit-plan";
 
@@ -23,6 +24,7 @@ export const coachingTools = [
   readPlanHistoryTool,
   readHealthReportsTool,
   askAthleteTool,
+  messageAthleteTool,
   createPlanProposalTool,
 ] as const satisfies readonly RegisteredTool[];
 
@@ -39,7 +41,12 @@ export const agentTools = {
     "ask_athlete",
     "create_plan_proposal",
   ],
-  medical: ["read_athlete_context", "read_health_reports", "ask_athlete"],
+  medical: [
+    "read_athlete_context",
+    "read_health_reports",
+    "ask_athlete",
+    "message_athlete",
+  ],
 } as const satisfies Record<string, readonly CoachingToolName[]>;
 
 export type AgentName = keyof typeof agentTools;

@@ -171,6 +171,7 @@ describe("tool registry", () => {
       "read_athlete_context",
       "read_health_reports",
       "ask_athlete",
+      "message_athlete",
     ]);
   });
 

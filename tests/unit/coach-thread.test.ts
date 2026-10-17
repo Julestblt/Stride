@@ -216,6 +216,50 @@ describe("thread view model", () => {
     });
   });
 
+  it("shows a specialist's message to the athlete and hides its report to the coach", () => {
+    const items: ThreadItem[] = [
+      ...answered.slice(0, -3),
+      {
+        kind: "staff_message",
+        at: at(6),
+        thread: "sthr_m",
+        agent: "medical",
+        text: "@Jules Tu peux courir à plat.",
+      },
+      {
+        kind: "consult_reply",
+        at: at(6),
+        thread: "sthr_m",
+        agent: "medical",
+        text: "Limites : pas de descente jusqu’au 31/10.",
+      },
+      { kind: "consult_end", at: at(6), thread: "sthr_m", agent: "medical" },
+    ];
+    const entries = view(items, true);
+    expect(entries.at(-1)).toMatchObject({
+      type: "staff",
+      agent: "medical",
+      blocks: [{ type: "text", text: "@Jules Tu peux courir à plat." }],
+    });
+    expect(JSON.stringify(entries)).not.toContain("Limites");
+    expect(threadPreview(defaultStaff, items)).toBe(
+      "Inès : @Jules Tu peux courir à plat.",
+    );
+    expect(suiviParticipants(defaultStaff, items)[1]).toMatchObject({
+      messages: 2,
+    });
+    expect(
+      suiviTimeline({
+        staff: defaultStaff,
+        items,
+        status: null,
+        pendingToolUseId: null,
+        proposalStatuses: {},
+        timeZone: tz,
+      }).filter((step) => step.label === "Réponse d’Inès"),
+    ).toHaveLength(1);
+  });
+
   it("keeps old stored questions without options readable", () => {
     const parsed = parseThreadItem({
       kind: "question",
