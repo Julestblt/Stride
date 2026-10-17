@@ -67,14 +67,35 @@ export function threadStatus(input: {
   return null;
 }
 
+export function staffMessages(items: readonly ThreadItem[]) {
+  const spoke = new Set<string>();
+  const shown: ThreadItem[] = [];
+  for (const item of items) {
+    if (item.kind === "consult_request") spoke.delete(item.thread);
+    if (item.kind === "staff_message") {
+      spoke.add(item.thread);
+      shown.push(item);
+    }
+    if (item.kind === "consult_reply" && !spoke.has(item.thread))
+      shown.push(item);
+  }
+  return new Set(shown);
+}
+
 export function threadParticipants(items: readonly ThreadItem[]) {
   const agents: StaffAgent[] = ["coach"];
-  for (const item of items)
-    if (
-      (item.kind === "consult_request" || item.kind === "read") &&
-      !agents.includes(item.agent)
-    )
-      agents.push(item.agent);
+  for (const item of items) {
+    const agent =
+      item.kind === "consult_request" ||
+      item.kind === "consult_reply" ||
+      item.kind === "staff_message" ||
+      item.kind === "read"
+        ? item.agent
+        : item.kind === "question"
+          ? item.askedFor
+          : null;
+    if (agent && !agents.includes(agent)) agents.push(agent);
+  }
   return agents;
 }
 
@@ -86,9 +107,16 @@ export function participantsLine(staff: Staff, agents: readonly StaffAgent[]) {
 }
 
 export function threadPreview(staff: Staff, items: readonly ThreadItem[]) {
+  const shown = staffMessages(items);
   for (const item of [...items].reverse()) {
     if (item.kind === "coach" && item.text.trim())
       return `${staff.coach.name} : ${markdownPlainText(item.text)}`;
+    if (
+      (item.kind === "consult_reply" || item.kind === "staff_message") &&
+      shown.has(item) &&
+      item.text.trim()
+    )
+      return `${staff[item.agent].name} : ${markdownPlainText(item.text)}`;
     if (item.kind === "question") return item.question;
     if (item.kind === "athlete" || item.kind === "answer")
       return `Toi : ${item.text.replace(/\s+/g, " ").trim()}`;
@@ -285,18 +313,19 @@ export function suiviParticipants(
   staff: Staff,
   items: readonly ThreadItem[],
 ): SuiviParticipant[] {
+  const shown = staffMessages(items);
   return threadParticipants(items).map((agent) => {
-    const messages = items.filter(
-      (item) =>
-        (item.kind === "consult_reply" || item.kind === "consult_note") &&
-        item.agent === agent,
+    const messages = items.filter((item) =>
+      item.kind === "consult_reply" || item.kind === "staff_message"
+        ? shown.has(item) && item.agent === agent
+        : item.kind === "question" && item.askedFor === agent,
     ).length;
     return {
       agent,
       role:
         agent === "coach"
           ? `${staff.coach.role} · mène`
-          : `${staff[agent].role} · ${staff[agent].consulted}`,
+          : `${staff[agent].role} · ${staff[agent].mentioned}`,
       messages,
     };
   });
@@ -332,6 +361,14 @@ export function suiviTimeline(input: {
       item.kind === "answer" ? [item.toolUseId] : [],
     ),
   );
+  const askedFor = new Map(
+    input.items.flatMap((item) =>
+      item.kind === "question"
+        ? [[item.toolUseId, item.askedFor] as const]
+        : [],
+    ),
+  );
+  let awaitingFrom: StaffAgent = "coach";
   const lastCoach = new Set<number>();
   let segmentCoach = -1;
   input.items.forEach((item, index) => {
@@ -366,35 +403,46 @@ export function suiviTimeline(input: {
     const key = `step-${index}`;
     switch (item.kind) {
       case "athlete":
-      case "answer":
+      case "answer": {
         consulted = new Set();
         replied = new Set();
+        const target =
+          item.kind === "answer" ? askedFor.get(item.toolUseId) : undefined;
         done(
           key,
-          item.kind === "athlete" ? "Ta demande" : "Ta réponse",
+          item.kind === "athlete"
+            ? "Ta demande"
+            : target && target !== "coach"
+              ? `Ta réponse à ${input.staff[target].name}`
+              : "Ta réponse",
           item.at,
         );
         break;
+      }
       case "consult_request":
         if (consulted.has(item.thread)) break;
         consulted.add(item.thread);
         done(
           key,
-          `${input.staff.coach.name} consulte ${input.staff[item.agent].name}`,
+          `${input.staff.coach.name} passe la main à ${input.staff[item.agent].name}`,
           item.at,
           input.staff[item.agent].role,
         );
         break;
       case "consult_reply":
+      case "staff_message":
         if (replied.has(item.thread)) break;
         replied.add(item.thread);
-        done(key, `Avis ${ofName(input.staff[item.agent])}`, item.at);
+        done(key, `Réponse ${ofName(input.staff[item.agent])}`, item.at);
         break;
       case "question": {
         const current =
           item.toolUseId === input.pendingToolUseId &&
           !answered.has(item.toolUseId);
-        if (current) awaitingAnswer = true;
+        if (current) {
+          awaitingAnswer = true;
+          awaitingFrom = item.askedFor;
+        }
         steps.push({
           key,
           label: `Question ${ofName(input.staff[item.askedFor])}`,
@@ -457,7 +505,7 @@ export function suiviTimeline(input: {
   if (input.status === "working" || awaitingAnswer)
     steps.push({
       key: "upcoming-answer",
-      label: `Réponse ${ofName(input.staff.coach)}`,
+      label: `Réponse ${ofName(input.staff[awaitingFrom])}`,
       detail: null,
       at: null,
       state: "upcoming",

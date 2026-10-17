@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { cn } from "@/lib/utils";
+import { splitMentions } from "../thread";
 import {
   parseMarkdown,
   type MarkdownList,
@@ -8,7 +9,16 @@ import {
 
 function Spans({ spans }: { spans: readonly MarkdownSpan[] }) {
   return spans.map((span, index) => {
-    let node: React.ReactNode = span.text;
+    let node: React.ReactNode = splitMentions(span.text).map(
+      (part, partIndex) =>
+        partIndex % 2 === 1 ? (
+          <span key={partIndex} className="font-medium text-accent">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+    );
     if (span.italic) node = <em>{node}</em>;
     if (span.bold) node = <strong className="font-semibold">{node}</strong>;
     return <Fragment key={index}>{node}</Fragment>;

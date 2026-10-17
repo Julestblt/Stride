@@ -48,7 +48,7 @@ import {
 } from "@/features/coach/components/staff-portrait";
 import { useStaff } from "@/features/coach/components/staff-context";
 import { refusalText, splitFrames, turnFailure } from "@/features/coach/stream";
-import { buildThread, ofName } from "@/features/coach/thread";
+import { buildThread } from "@/features/coach/thread";
 import { markCoachThreadRead } from "@/server/coaching/actions";
 import { ConversationList } from "./conversation-list";
 import { SuiviPanel } from "./suivi-panel";
@@ -136,9 +136,8 @@ function Composer({
     >
       <InputGroup className="h-auto rounded-card border-border-strong bg-surface p-1.5 md:h-auto">
         <InputGroupTextarea
-          aria-label={
-            answering ? "Ta réponse au staff" : `Écrire à ${staff.coach.name}`
-          }
+          id="coach-composer"
+          aria-label={answering ? "Ta réponse au staff" : "Écrire au staff"}
           placeholder={placeholder}
           rows={1}
           value={text}
@@ -162,12 +161,11 @@ function Composer({
               variant="choice"
               pressed={consult}
               onPressedChange={setConsult}
-              aria-label={`Demander l’avis ${ofName(staff.medical)}`}
+              aria-label={`Mentionner ${staff.medical.name}`}
               disabled={busy}
               className="min-h-9 gap-1.5 rounded-control border-border bg-transparent pr-2 pl-1.5 text-meta font-normal data-[state=on]:border-foreground data-[state=on]:bg-surface-raised data-[state=on]:font-semibold data-[state=on]:text-foreground"
             >
-              <StaffStack agents={["medical"]} size={18} />
-              Avis
+              <StaffStack agents={["medical"]} size={18} />@{staff.medical.name}
             </Toggle>
           )}
           {busy ? (
@@ -198,8 +196,9 @@ function Composer({
         </InputGroupAddon>
       </InputGroup>
       <p className="text-xs text-muted-foreground max-sm:hidden">
-        {staff.coach.name} te répond toujours. {staff.coach.pronoun} consulte au
-        plus deux spécialistes par demande, et rien ne change sans ton accord.
+        {staff.coach.name} lit chaque message et passe la main au bon
+        spécialiste, deux au plus par demande. Les questions d’un spécialiste
+        lui reviennent directement. Rien ne change sans ton accord.
       </p>
     </form>
   );
@@ -446,7 +445,7 @@ export function CoachScreen({
     : null;
   const placeholder = answeringAgent
     ? `Ta réponse à ${staff[answeringAgent].name}…`
-    : `Écris à ${staff.coach.name}…`;
+    : "Écris au staff…";
   const empty = items.length === 0 && !sending;
 
   const suivi = (
@@ -603,13 +602,13 @@ export function CoachScreen({
                 <StaffPortrait agent="coach" size={56} />
                 <h2 className="text-headline font-semibold">
                   {mode === "plan"
-                    ? "Demande ton plan à Claire"
-                    : "Écris à Claire"}
+                    ? `Demande ton plan à ${staff.coach.name}`
+                    : "Écris à ton staff"}
                 </h2>
                 <p className="max-w-140 text-body leading-normal text-muted">
                   {mode === "plan"
-                    ? "Claire construit ton plan à partir de tes objectifs, de tes disponibilités et de ton historique, puis te le propose. Rien n’est enregistré sans ton accord."
-                    : "Pose ta question sur ton entraînement, ta récupération ou une douleur. Claire consulte Inès quand c’est utile et te répond toujours elle-même."}
+                    ? `${staff.coach.name} construit ton plan à partir de tes objectifs, de tes disponibilités et de ton historique, puis te le propose. Rien n’est enregistré sans ton accord.`
+                    : `Pose ta question sur ton entraînement, ta récupération ou une douleur. ${staff.coach.name} te répond ou passe la main à ${staff.medical.name}, qui te parle directement quand c’est utile.`}
                 </p>
               </div>
             ) : (
@@ -620,16 +619,14 @@ export function CoachScreen({
                 now={now}
                 busy={busy}
                 onAnswer={(answer) => void send(answer, false)}
+                onOther={() =>
+                  document.getElementById("coach-composer")?.focus()
+                }
               />
             )}
-            {busy &&
-              !entries.some(
-                (entry) =>
-                  entry.type === "coach" &&
-                  entry.blocks.some(
-                    (block) => block.type === "consult" && block.live,
-                  ),
-              ) && <StaffWorking />}
+            {busy && !entries.some((entry) => entry.type === "typing") && (
+              <StaffWorking />
+            )}
             {failure && (
               <p
                 role="alert"

@@ -5,6 +5,7 @@ import { clampItem, type ThreadItem } from "@/features/coach/items";
 import { readLabel } from "@/features/coach/reads";
 import { agentOfManagedName, type StaffAgent } from "@/features/coach/staff";
 import { askAthleteTool } from "@/server/coaching/tools/ask-athlete";
+import { messageAthleteTool } from "@/server/coaching/tools/message-athlete";
 import { ToolError, toolError } from "@/server/coaching/tools/errors";
 import {
   parseToolInput,
@@ -30,6 +31,7 @@ import {
 } from "./store";
 import { turnAccessToken, turnTimeoutMs } from "./token";
 import { syncAthleteVault } from "./vault";
+import { readGroupLine } from "../staff";
 
 export type { SessionMode } from "./store";
 
@@ -60,7 +62,8 @@ export type TurnRequest = {
 export type PendingQuestion = {
   toolUseId: string;
   question: string;
-  askedFor: string;
+  options: string[];
+  askedFor: AgentName;
 };
 
 export type TurnEvent =
@@ -160,6 +163,7 @@ function textOf(content: readonly { type: string; text?: string }[]) {
 
 function questionOf(
   input: unknown,
+  askedFor: AgentName,
 ):
   | { ok: true; question: Omit<PendingQuestion, "toolUseId"> }
   | { ok: false; outcome: ToolOutcome } {
@@ -167,7 +171,11 @@ function questionOf(
     const value = parseToolInput(askAthleteTool, input);
     return {
       ok: true,
-      question: { question: value.question, askedFor: value.asked_for },
+      question: {
+        question: value.question,
+        options: value.options ?? [],
+        askedFor,
+      },
     };
   } catch (error) {
     const failure =
@@ -220,9 +228,26 @@ async function openSession(
   });
 }
 
+function messageOf(input: unknown): {
+  text: string | null;
+  outcome: ToolOutcome;
+} {
+  try {
+    const value = parseToolInput(messageAthleteTool, input);
+    return {
+      text: value.text,
+      outcome: { ok: true, content: { shown: true } },
+    };
+  } catch (error) {
+    const failure =
+      error instanceof ToolError ? error : toolError("invalid_input");
+    return { text: null, outcome: { ok: false, content: failure.toBody() } };
+  }
+}
+
 const consultInstruction: Record<"medical", string> = {
   medical:
-    "The athlete asks you to consult Stride Medical on this request before you answer. You still make the decision.",
+    "L’athlète a mentionné Stride Medical : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
 };
 
 const proposalTools = new Set(["submit_plan", "create_plan_proposal"]);
@@ -368,6 +393,8 @@ export async function* streamCoachTurn(
   let crashed = false;
   let firstEventMs: number | null = null;
   const turnStarted = Date.now();
+  const group =
+    request.input.kind === "message" ? await readGroupLine(context) : null;
 
   try {
     const stream = await client.beta.sessions.events.stream(
@@ -382,6 +409,7 @@ export async function* streamCoachTurn(
               type: "user.message",
               content: [
                 { type: "text", text: request.input.text },
+                ...(group ? [{ type: "text" as const, text: group }] : []),
                 ...(request.input.consult
                   ? [
                       {
@@ -479,23 +507,30 @@ export async function* streamCoachTurn(
         case "agent.custom_tool_use": {
           const toolStarted = Date.now();
           let outcome: ToolOutcome;
-          if (
-            !toolAllowed(
-              callingAgent(threadAgents, event.session_thread_id),
-              event.name,
-            )
-          ) {
+          const caller = callingAgent(threadAgents, event.session_thread_id);
+          if (!toolAllowed(caller, event.name)) {
             outcome = {
               ok: false,
               content: toolError("unknown_tool").toBody(),
             };
           } else if (event.name === askAthleteTool.name) {
-            const asked = questionOf(event.input);
+            const asked = questionOf(event.input, caller);
             if (asked.ok) {
               pendingQuestion = { toolUseId: event.id, ...asked.question };
               break;
             }
             outcome = asked.outcome;
+          } else if (event.name === messageAthleteTool.name) {
+            const message = messageOf(event.input);
+            outcome = message.outcome;
+            if (message.text)
+              yield persist({
+                kind: "staff_message",
+                at: now(),
+                thread: event.session_thread_id ?? "primary",
+                agent: caller,
+                text: message.text,
+              });
           } else {
             outcome = await runCustomTool(
               { ...context, coachSessionId: record.id },
@@ -601,7 +636,8 @@ export async function* streamCoachTurn(
       at: now(),
       toolUseId: pendingQuestion.toolUseId,
       question: pendingQuestion.question,
-      askedFor: pendingQuestion.askedFor === "medical" ? "medical" : "coach",
+      options: pendingQuestion.options,
+      askedFor: pendingQuestion.askedFor,
     });
   } else if (crashed) {
     status = "failed";

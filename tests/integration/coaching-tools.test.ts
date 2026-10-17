@@ -225,7 +225,8 @@ function inputFor(name: string) {
       ],
       specialist_opinions: [],
     },
-    ask_athlete: { question: "Comment te sens-tu ?", asked_for: "coach" },
+    ask_athlete: { question: "Comment te sens-tu ?" },
+    message_athlete: { text: "Tu peux courir à plat." },
   };
   return inputs[name];
 }
@@ -264,7 +265,9 @@ describe("coaching tools run as athlete A", () => {
       for (const marker of foreignMarkers()) expect(text).not.toContain(marker);
       for (const number of foreignNumbers)
         expect(numbersIn(outcome.content)).not.toContain(number);
-      if (name !== "ask_athlete") expect(outcome.ok, text).toBe(true);
+      const handledBySession = !coachingTools.find((tool) => tool.name === name)
+        ?.run;
+      expect(outcome.ok, text).toBe(!handledBySession);
     },
   );
 

@@ -1,35 +1,21 @@
-import type { ItemOf, ProposalOpinion, ThreadItem } from "./items";
+import type { ProposalOpinion, ThreadItem } from "./items";
 import type { StaffAgent, StaffMember } from "./staff";
-
-export type ConsultStep = {
-  from: StaffAgent;
-  to: StaffAgent | null;
-  text: string;
-};
-
-export type ConsultView = {
-  agent: StaffAgent;
-  thread: string;
-  state: "working" | "replied" | "asked";
-  steps: ConsultStep[];
-  reads: string[];
-  summary: string;
-};
 
 export type ProposalCardStatus =
   "pending" | "applying" | "applied" | "rejected" | "closed";
 
 export type QuestionState = "pending" | "answered" | "closed";
 
-export type CoachBlock =
+export type StaffBlock =
   | { type: "text"; text: string }
-  | { type: "consult"; key: string; live: boolean; consults: ConsultView[] }
   | {
       type: "question";
       toolUseId: string;
       question: string;
+      options: string[];
       askedFor: StaffAgent;
       state: QuestionState;
+      answer: string | null;
       answeredAt: string | null;
     }
   | {
@@ -50,9 +36,23 @@ export type ThreadEntry =
       at: string;
       text: string;
       consult: StaffAgent | null;
-      answer: boolean;
+      replyTo: StaffAgent | null;
     }
-  | { type: "coach"; key: string; at: string; blocks: CoachBlock[] };
+  | {
+      type: "staff";
+      key: string;
+      at: string;
+      agent: StaffAgent;
+      blocks: StaffBlock[];
+      reads: string[];
+    }
+  | {
+      type: "typing";
+      key: string;
+      at: string;
+      agent: StaffAgent;
+      read: string | null;
+    };
 
 export type ThreadInput = {
   items: readonly ThreadItem[];
@@ -60,27 +60,6 @@ export type ThreadInput = {
   pendingToolUseId: string | null;
   proposalStatuses?: Readonly<Record<string, string>>;
 };
-
-const consultKinds = new Set([
-  "consult_request",
-  "consult_reply",
-  "consult_note",
-  "consult_end",
-]);
-
-type ConsultItem =
-  | ItemOf<"consult_request">
-  | ItemOf<"consult_reply">
-  | ItemOf<"consult_note">
-  | ItemOf<"consult_end">
-  | ItemOf<"read">;
-
-function isConsultItem(item: ThreadItem): item is ConsultItem {
-  return (
-    consultKinds.has(item.kind) ||
-    (item.kind === "read" && item.agent !== "coach")
-  );
-}
 
 export function proposalCardStatus(status: string | undefined) {
   switch (status) {
@@ -99,182 +78,183 @@ export function proposalCardStatus(status: string | undefined) {
   }
 }
 
-function consultSummary(consult: Omit<ConsultView, "summary">) {
-  if (consult.state === "asked") return "Question pour toi";
-  if (consult.state === "replied") return "Avis rendu";
-  const read = consult.reads.at(-1);
-  return read ? `Lit ${read.toLowerCase()}…` : "Analyse en cours…";
-}
-
-function foldConsults(
-  items: readonly ConsultItem[],
-  live: boolean,
-): { consults: ConsultView[]; live: boolean } {
-  const byThread = new Map<string, Omit<ConsultView, "summary">>();
-  const ended = new Set<string>();
-  for (const item of items) {
-    const consult = byThread.get(item.thread) ?? {
-      agent: item.agent,
-      thread: item.thread,
-      state: "working" as const,
-      steps: [],
-      reads: [],
-    };
-    byThread.set(item.thread, consult);
-    if (item.kind === "consult_request")
-      consult.steps.push({ from: "coach", to: item.agent, text: item.text });
-    if (item.kind === "consult_reply") {
-      consult.steps.push({ from: item.agent, to: "coach", text: item.text });
-      consult.state = "replied";
-    }
-    if (item.kind === "consult_note")
-      consult.steps.push({ from: item.agent, to: null, text: item.text });
-    if (item.kind === "read" && !consult.reads.includes(item.label))
-      consult.reads.push(item.label);
-    if (item.kind === "consult_end") ended.add(item.thread);
-  }
-  const consults = [...byThread.values()].map((consult) => {
-    const state: ConsultView["state"] =
-      consult.state === "replied" || ended.has(consult.thread) || !live
-        ? "replied"
-        : "working";
-    return {
-      ...consult,
-      state,
-      summary: consultSummary({ ...consult, state }),
-    };
-  });
-  return {
-    consults,
-    live: live && consults.some((consult) => consult.state === "working"),
-  };
-}
+type Handoff = {
+  agent: StaffAgent;
+  at: string;
+  reads: string[];
+  done: boolean;
+  spoke: boolean;
+};
 
 export function buildThread(input: ThreadInput): ThreadEntry[] {
   const answers = new Map(
     input.items.flatMap((item) =>
-      item.kind === "answer" ? [[item.toolUseId, item.at] as const] : [],
+      item.kind === "answer" ? [[item.toolUseId, item] as const] : [],
+    ),
+  );
+  const askedFor = new Map(
+    input.items.flatMap((item) =>
+      item.kind === "question"
+        ? [[item.toolUseId, item.askedFor] as const]
+        : [],
     ),
   );
   const entries: ThreadEntry[] = [];
-  let coach: Extract<ThreadEntry, { type: "coach" }> | null = null;
-  type PendingConsult = { index: number; items: ConsultItem[] };
-  let pending: PendingConsult[] = [];
-  let open: PendingConsult | null = null;
-  let byThread = new Map<string, PendingConsult>();
+  let current: Extract<ThreadEntry, { type: "staff" }> | null = null;
+  let handoffs = new Map<string, Handoff>();
 
-  function finishEntry(live: boolean) {
-    if (coach)
-      for (const block of pending) {
-        const folded = foldConsults(block.items, live);
-        coach.blocks[block.index] = {
-          type: "consult",
-          key: `${coach.key}-${block.index}`,
-          live: folded.live,
-          consults: folded.consults,
-        };
-      }
-    pending = [];
-    open = null;
-    byThread = new Map();
+  function speak(agent: StaffAgent, at: string, index: number) {
+    if (!current || current.agent !== agent) {
+      current = {
+        type: "staff",
+        key: `staff-${index}`,
+        at,
+        agent,
+        blocks: [],
+        reads: [],
+      };
+      entries.push(current);
+    }
+    if (agent !== "coach")
+      for (const handoff of handoffs.values())
+        if (handoff.agent === agent)
+          for (const read of handoff.reads.splice(0))
+            if (!current.reads.includes(read)) current.reads.push(read);
+    return current;
+  }
+
+  function handoffOf(thread: string, agent: StaffAgent, at: string) {
+    const handoff = handoffs.get(thread) ?? {
+      agent,
+      at,
+      reads: [],
+      done: false,
+      spoke: false,
+    };
+    handoffs.set(thread, handoff);
+    return handoff;
   }
 
   input.items.forEach((item, index) => {
-    if (item.kind === "athlete" || item.kind === "answer") {
-      finishEntry(false);
-      coach = null;
-      entries.push({
-        type: "athlete",
-        key: `athlete-${index}`,
-        at: item.at,
-        text: item.text,
-        consult: item.kind === "athlete" ? item.consult : null,
-        answer: item.kind === "answer",
-      });
-      return;
-    }
-    if (item.kind === "read" && item.agent === "coach") return;
-    if (!coach) {
-      coach = { type: "coach", key: `coach-${index}`, at: item.at, blocks: [] };
-      entries.push(coach);
-    }
-    if (isConsultItem(item)) {
-      let block = byThread.get(item.thread) ?? open;
-      if (!block) {
-        block = { index: coach.blocks.length, items: [] };
-        coach.blocks.push({ type: "text", text: "" });
-        pending.push(block);
+    switch (item.kind) {
+      case "athlete":
+      case "answer": {
+        current = null;
+        if (item.kind === "athlete") handoffs = new Map();
+        const target =
+          item.kind === "answer"
+            ? (askedFor.get(item.toolUseId) ?? null)
+            : null;
+        entries.push({
+          type: "athlete",
+          key: `athlete-${index}`,
+          at: item.at,
+          text: item.text,
+          consult: item.kind === "athlete" ? item.consult : null,
+          replyTo: target === "coach" ? null : target,
+        });
+        return;
       }
-      block.items.push(item);
-      byThread.set(item.thread, block);
-      open = block;
-      return;
+      case "coach":
+        if (item.text.trim())
+          speak("coach", item.at, index).blocks.push({
+            type: "text",
+            text: item.text,
+          });
+        return;
+      case "consult_request": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = false;
+        handoff.spoke = false;
+        return;
+      }
+      case "staff_message": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = true;
+        handoff.spoke = true;
+        speak(item.agent, item.at, index).blocks.push({
+          type: "text",
+          text: item.text,
+        });
+        return;
+      }
+      case "read":
+        if (item.agent !== "coach") {
+          const handoff = handoffOf(item.thread, item.agent, item.at);
+          if (!handoff.reads.includes(item.label))
+            handoff.reads.push(item.label);
+        }
+        return;
+      case "consult_note":
+        return;
+      case "consult_reply": {
+        const handoff = handoffOf(item.thread, item.agent, item.at);
+        handoff.done = true;
+        if (!handoff.spoke && item.text.trim())
+          speak(item.agent, item.at, index).blocks.push({
+            type: "text",
+            text: item.text,
+          });
+        return;
+      }
+      case "consult_end":
+        handoffOf(item.thread, item.agent, item.at).done = true;
+        return;
+      case "question": {
+        const answer = answers.get(item.toolUseId) ?? null;
+        speak(item.askedFor, item.at, index).blocks.push({
+          type: "question",
+          toolUseId: item.toolUseId,
+          question: item.question,
+          options: item.options,
+          askedFor: item.askedFor,
+          state: answer
+            ? "answered"
+            : item.toolUseId === input.pendingToolUseId
+              ? "pending"
+              : "closed",
+          answer: answer?.text ?? null,
+          answeredAt: answer?.at ?? null,
+        });
+        return;
+      }
+      case "proposal":
+        speak("coach", item.at, index).blocks.push({
+          type: "proposal",
+          proposalId: item.proposalId,
+          scope: item.scope,
+          title: item.title,
+          summary: item.summary,
+          opinions: item.opinions,
+          status: proposalCardStatus(input.proposalStatuses?.[item.proposalId]),
+        });
+        return;
+      case "error":
+        speak("coach", item.at, index).blocks.push({
+          type: "error",
+          text: item.text,
+        });
+        return;
     }
-    if (item.kind === "coach") {
-      open = null;
-      if (item.text.trim())
-        coach.blocks.push({ type: "text", text: item.text });
-      return;
-    }
-    if (item.kind === "question") {
-      const answeredAt = answers.get(item.toolUseId) ?? null;
-      coach.blocks.push({
-        type: "question",
-        toolUseId: item.toolUseId,
-        question: item.question,
-        askedFor: item.askedFor,
-        state: answeredAt
-          ? "answered"
-          : item.toolUseId === input.pendingToolUseId
-            ? "pending"
-            : "closed",
-        answeredAt,
-      });
-      return;
-    }
-    if (item.kind === "proposal") {
-      coach.blocks.push({
-        type: "proposal",
-        proposalId: item.proposalId,
-        scope: item.scope,
-        title: item.title,
-        summary: item.summary,
-        opinions: item.opinions,
-        status: proposalCardStatus(input.proposalStatuses?.[item.proposalId]),
-      });
-      return;
-    }
-    if (item.kind === "error")
-      coach.blocks.push({ type: "error", text: item.text });
   });
-  finishEntry(input.live);
-  for (const entry of entries)
-    if (entry.type === "coach") linkQuestions(entry.blocks);
+
+  if (input.live && !input.pendingToolUseId)
+    for (const [thread, handoff] of handoffs)
+      if (!handoff.done)
+        entries.push({
+          type: "typing",
+          key: `typing-${thread}`,
+          at: handoff.at,
+          agent: handoff.agent,
+          read: handoff.reads.at(-1) ?? null,
+        });
   return entries;
 }
 
-function linkQuestions(blocks: CoachBlock[]) {
-  blocks.forEach((block, index) => {
-    if (block.type !== "question") return;
-    for (const earlier of blocks.slice(0, index).reverse()) {
-      if (earlier.type !== "consult") continue;
-      const consult = earlier.consults.findLast(
-        (item) => item.agent === block.askedFor,
-      );
-      if (!consult) continue;
-      consult.state = "asked";
-      consult.summary = consultSummary(consult);
-      earlier.live =
-        earlier.live &&
-        earlier.consults.some((item) => item.state === "working");
-      return;
-    }
-  });
-}
-
-export function consultHeadline(consults: readonly ConsultView[]) {
-  const count = consults.length;
-  return count === 1 ? "1 avis" : `${count} avis`;
+export function typingLabel(member: StaffMember, read: string | null) {
+  return read
+    ? `${member.name} lit ${read.toLowerCase()}…`
+    : `${member.name} écrit…`;
 }
 
 export function ofName({ name }: StaffMember) {
@@ -285,6 +265,10 @@ export function questionAttribution(member: StaffMember) {
   return `Question ${ofName(member)}`;
 }
 
-export function askedByLabel(member: StaffMember) {
-  return `Demandée par ${member.name}`;
+export function replyToLabel(member: StaffMember) {
+  return `En réponse à ${member.name}`;
+}
+
+export function splitMentions(text: string) {
+  return text.split(/(@[\p{Lu}][\p{L}’'-]*)/u);
 }

@@ -57,6 +57,7 @@ export type StaffMember = {
   role: string;
   alt: string;
   consulted: string;
+  mentioned: string;
   pronoun: "Elle" | "Il";
   feminine: boolean;
 };
@@ -72,6 +73,7 @@ export function staffMember(agent: StaffAgent, face: StaffFace): StaffMember {
     role: roles[agent].role,
     alt: `${name}, ${roles[agent].title}`,
     consulted: feminine ? "consultée" : "consulté",
+    mentioned: feminine ? "mentionnée" : "mentionné",
     pronoun: feminine ? "Elle" : "Il",
     feminine,
   };
@@ -108,4 +110,11 @@ export function staffJoin(staff: Staff, agents: readonly StaffAgent[]) {
   const names = agents.map((agent) => staff[agent].name);
   if (names.length <= 1) return names.join("");
   return `${names.slice(0, -1).join(", ")} et ${names.at(-1)}`;
+}
+
+export function groupLine(staff: Staff, athlete: string | null) {
+  const names = `coach ${staff.coach.name}, médecin ${staff.medical.name}`;
+  return athlete
+    ? `Noms dans ce groupe : ${names}, athlète ${athlete}.`
+    : `Noms dans ce groupe : ${names}.`;
 }

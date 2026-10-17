@@ -13,10 +13,10 @@ export const teamProfiles: Record<StaffAgent, TeamProfile> = {
   coach: {
     tagline: "Coach · mène le staff",
     summary: (member) =>
-      `${member.feminine ? "Ta seule interlocutrice" : "Ton seul interlocuteur"}. ${member.pronoun} construit et adapte ton plan, répond à tes questions et réunit le staff quand ta demande le nécessite.`,
+      `${member.feminine ? "Ta première interlocutrice" : "Ton premier interlocuteur"}. ${member.pronoun} construit et adapte ton plan, répond à tes questions et passe la main au bon spécialiste quand ta demande le nécessite.`,
     listTitle: "Son rôle",
-    duties: (member) => [
-      `Toutes tes demandes passent par ${member.feminine ? "elle" : "lui"}`,
+    duties: () => [
+      "Lit chaque message et passe la main au bon spécialiste",
       "Rédige chaque proposition que tu valides",
     ],
     reads: ["Plan", "Historique", "Forme du jour", "Courses"],

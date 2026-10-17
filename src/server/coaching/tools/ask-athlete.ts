@@ -4,7 +4,7 @@ import { defineTool } from "./define";
 export const askAthleteTool = defineTool({
   name: "ask_athlete",
   description:
-    "Ask the athlete one question and wait for the answer. Use it when you or a specialist need information only the athlete has. The question is shown to the athlete in French; the answer comes back as the result.",
+    "Ask the athlete one question in the group conversation and wait for the answer, which comes back to you as the result. The question is shown in French under your name. When the answer can be chosen, give 2 to 5 short answer options; the athlete can always write another answer. Never combine several questions in one.",
   class: "propose",
   dataClasses: ["plan"],
   input: z.strictObject({
@@ -12,9 +12,16 @@ export const askAthleteTool = defineTool({
       .string()
       .trim()
       .min(1)
-      .max(500)
-      .describe("The question, in French, as the athlete will read it."),
-    asked_for: z.enum(["coach", "medical"]).describe("Who needs the answer."),
+      .max(300)
+      .describe("One question, in French, as the athlete will read it."),
+    options: z
+      .array(z.string().trim().min(1).max(60))
+      .min(2)
+      .max(5)
+      .optional()
+      .describe(
+        "Short French answer options the athlete can pick, each a complete answer on its own.",
+      ),
   }),
-  output: z.string().describe("The athlete's answer, as written."),
+  output: z.string().describe("The athlete's answer, as chosen or written."),
 });
