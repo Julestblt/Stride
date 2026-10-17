@@ -151,13 +151,14 @@ test("mobile navigation uses a sheet and thumb-reachable tabs", async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/design-system/shell");
-  const tabs = page.getByRole("navigation", { name: "Primary" });
+  const tabs = page.getByRole("navigation", {
+    name: "Navigation principale",
+  });
   await expect(tabs).toBeVisible();
-  await expect(tabs.getByRole("link", { name: "Ask Stride" })).toBeVisible();
-  await expect(tabs.getByRole("link", { name: "Today" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  await expect(tabs.getByRole("link", { name: "Aujourd’hui" })).toBeVisible();
+  await expect(
+    tabs.getByRole("link", { name: "Coach, 2 questions en attente" }),
+  ).toHaveAttribute("aria-current", "page");
   await page.getByRole("button", { name: "Toggle sidebar" }).click();
   const sheet = page.getByRole("dialog", { name: "Navigation" });
   await expect(sheet).toBeVisible();

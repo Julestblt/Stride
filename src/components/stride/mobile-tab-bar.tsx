@@ -1,10 +1,10 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { cn } from "@/lib/utils";
 import { StrideMark } from "@/components/stride/stride-mark";
 
 export function MobileTabBar({
   className,
-  label = "Primary",
+  label = "Navigation principale",
   ...props
 }: React.ComponentProps<"nav"> & { label?: string }) {
   return (
@@ -50,21 +50,31 @@ export function MobileTab({
 
 export function MobileAskAction({
   href,
-  label = "Ask Stride",
+  label = "Coach",
+  isActive = false,
+  badge,
 }: {
   href: string;
   label?: string;
+  isActive?: boolean;
+  badge?: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
       aria-label={label}
-      className="-mt-4.5 grid size-13 place-items-center justify-self-center rounded-full bg-accent transition-colors duration-150 ease-stride hover:bg-accent/85"
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "relative -mt-4.5 grid size-13 place-items-center justify-self-center rounded-full bg-accent transition-colors duration-150 ease-stride hover:bg-accent/85",
+        isActive &&
+          "ring-[1.5px] ring-accent ring-offset-3 ring-offset-background",
+      )}
     >
       <StrideMark
         className="size-5.5 stroke-accent-foreground"
         strokeWidth="2.2"
       />
+      {badge}
     </Link>
   );
 }
