@@ -112,7 +112,9 @@ describe("templates", () => {
         const { easyPct, moderatePct, hardPct } = phase.intensity;
         expect(easyPct + moderatePct + hardPct).toBe(100);
         expect(easyPct).toBeGreaterThanOrEqual(75);
-        expect(phase.longRun.sharePct).toBeLessThanOrEqual(35);
+        expect(phase.longRun.sharePct).toBeLessThanOrEqual(
+          template.distanceKm.min >= 60 ? 45 : 35,
+        );
       }
       for (
         let weeks = template.weeks.min;
@@ -505,6 +507,107 @@ describe("assessFeasibility", () => {
       assessFeasibility({ ...result, today, optimisticSeconds: 5_700 }).reasons,
     ).toContain(
       "Ton temps visé est plus rapide que l’estimation la plus optimiste de Stride.",
+    );
+  });
+});
+
+describe("ultra preparation", () => {
+  const troughStart = addDays("2026-10-12", -28);
+  const afterRace = (): HistoryActivity[] => [
+    ...history(165, 4, "trail_running"),
+    ...history(270, 16, "trail_running").filter(
+      (activity) => activity.day < troughStart,
+    ),
+    {
+      day: "2026-09-13",
+      type: "trail_running",
+      duration: 520 * 60,
+      distance: 63_000,
+      gain: 1_200,
+    },
+  ];
+  const ecotrail = (patch: Partial<ObjectiveRace> = {}) =>
+    race(120, "2027-03-20", { kind: "trail", ...patch });
+
+  it("measures proven capacity without race-week outliers and keeps the longest effort", () => {
+    const summary = summarizeHistory(afterRace(), today);
+    expect(summary.held.durationSeconds).toBe(165 * 60);
+    expect(summary.provenDurationSeconds).toBe(270 * 60);
+    expect(summary.longestEffort90d).toEqual({
+      date: "2026-09-13",
+      distanceMeters: 63_000,
+      durationSeconds: 520 * 60,
+    });
+  });
+
+  it("starts from proven capacity after a post-race trough and aims for the template peak", () => {
+    const { skeleton } = build([ecotrail()], afterRace());
+    if (skeleton.status !== "ready") throw new Error("not ready");
+    expect(skeleton.template.id).toBe("trail_ultra_80_100");
+    expect(skeleton.state.weeks[0].targets.durationSeconds).toBe(
+      Math.round(270 * 60 * 0.85),
+    );
+    expect(skeleton.peak.durationSeconds).toBe(8 * 3600);
+    expect(skeleton.warnings).not.toContainEqual(
+      expect.objectContaining({ code: "peak_below_template" }),
+    );
+    const longest = Math.max(
+      ...skeleton.state.weeks.map((week) => week.targets.longRunSeconds ?? 0),
+    );
+    expect(longest).toBeGreaterThan(3 * 3600);
+    expect(longest).toBeLessThanOrEqual(Math.round(8 * 3600 * 0.45));
+  });
+
+  it("grows ultra long runs by at most 10% over the longest planned one", () => {
+    const { skeleton } = build(
+      [race(100, "2027-04-18", { kind: "trail", elevationGainM: 5_000 })],
+      history(240, 16, "trail_running", 800),
+    );
+    if (skeleton.status !== "ready") throw new Error("not ready");
+    let longest = 60 * 60;
+    for (const week of skeleton.state.weeks) {
+      const long = week.targets.longRunSeconds ?? 0;
+      expect(long).toBeLessThanOrEqual(Math.round(longest * 1.1) + 1);
+      longest = Math.max(longest, long);
+    }
+  });
+
+  it("keeps road plans on the held volume", () => {
+    const { skeleton } = build(
+      [race(42.2, "2027-03-07")],
+      afterRace().map((activity) => ({ ...activity, type: "running" })),
+    );
+    if (skeleton.status !== "ready") throw new Error("not ready");
+    expect(skeleton.peak.durationSeconds).toBe(
+      Math.round(165 * 60 * (100 / 88)),
+    );
+  });
+
+  it("grows full weeks by at most 15% over the previous full week", () => {
+    const { skeleton } = build([ecotrail()], afterRace());
+    if (skeleton.status !== "ready") throw new Error("not ready");
+    const full = skeleton.state.weeks
+      .filter((week) => ["lead_in", "build"].includes(week.weekType))
+      .map((week) => week.targets.durationSeconds);
+    full
+      .slice(1)
+      .forEach((duration, index) =>
+        expect(duration / full[index]).toBeLessThanOrEqual(1.15),
+      );
+  });
+
+  it("checks the weekend block against the expected race duration", () => {
+    const short = build([ecotrail({ targetSeconds: 14 * 3600 })], afterRace());
+    expect(assessFeasibility({ ...short, today }).demands).toContainEqual(
+      expect.objectContaining({
+        key: "long_block",
+        target: Math.round(14 * 3600 * 0.4),
+        status: "short",
+      }),
+    );
+    const fits = build([ecotrail({ targetSeconds: 10 * 3600 })], afterRace());
+    expect(assessFeasibility({ ...fits, today }).demands).toContainEqual(
+      expect.objectContaining({ key: "long_block", status: "ok" }),
     );
   });
 });

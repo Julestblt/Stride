@@ -304,7 +304,7 @@ export const planTemplates: Record<TemplateId, PlanTemplate> = {
         [97, 100],
         split(84, 4, 12),
         2,
-        [33, 360],
+        [45, 360],
       ),
       phase(
         "taper",
@@ -355,7 +355,7 @@ export const planTemplates: Record<TemplateId, PlanTemplate> = {
         [96, 100],
         split(85, 4, 11),
         2,
-        [33, 420],
+        [45, 420],
       ),
       phase(
         "taper",

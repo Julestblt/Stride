@@ -1,6 +1,7 @@
 import { mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
 import { structureTotals } from "../model/structure";
+import { thresholds } from "./thresholds";
 
 export type ConstraintSpec =
   | { kind: "no_running"; from: string; to: string; source: string }
@@ -58,6 +59,7 @@ export type ValidationInput = {
       durationSeconds: number;
       elevationGainMeters: number | null;
     }[];
+    provenWeeklySeconds?: number;
   };
   health: { conditions: ConditionReport[]; readiness: ReadinessDay[] } | null;
   load: { acuteChronicRatio: number | null; days: number } | null;
@@ -65,6 +67,7 @@ export type ValidationInput = {
     longestRunMeters: number | null;
     weeklyElevationMeters: number | null;
     weeklyDurationSeconds: number | null;
+    longBlockSeconds: number | null;
   } | null;
   specialistConstraints: ConstraintSpec[];
 };
@@ -83,6 +86,19 @@ export function isRunning(session: PlanSession) {
 
 export function isQuality(session: PlanSession) {
   return isRunning(session) && qualityKinds.has(session.kind);
+}
+
+export function isUltraProfile(input: ValidationInput) {
+  const primary = input.races.find(
+    (race) => race.id === input.candidate.plan.primaryRaceId,
+  );
+  const painful = (input.health?.conditions ?? []).some(
+    (condition) =>
+      condition.kind === "pain" &&
+      condition.status !== "resolved" &&
+      condition.severity >= thresholds.painCautionSeverity,
+  );
+  return (primary?.distanceKm ?? 0) >= thresholds.ultraProfileKm && !painful;
 }
 
 export function sessionDistance(session: PlanSession) {

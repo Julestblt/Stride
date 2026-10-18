@@ -153,7 +153,7 @@ describe("report", () => {
     expect(report.results.map((result) => result.ruleId)).toHaveLength(21);
     expect(validatePlan(value)).toEqual(report);
     expect(report.valid).toBe(true);
-    expect(report.thresholdsVersion).toBe("2026-10-14");
+    expect(report.thresholdsVersion).toBe("2026-10-18");
   });
 
   it("never passes a rule silently when its data is missing", () => {
@@ -739,6 +739,7 @@ describe("information rules", () => {
         longestRunMeters,
         weeklyElevationMeters: null,
         weeklyDurationSeconds: null,
+        longBlockSeconds: null,
       },
     });
     expect(rule(input(value, demands(30_000)), "D1").outcome).toBe("pass");
@@ -746,6 +747,164 @@ describe("information rules", () => {
       outcome: "fail",
       severity: "info",
       issues: ["longest_run"],
+    });
+  });
+});
+
+describe("ultra profile", () => {
+  const ultraRace = {
+    id: "ultra",
+    date: "2027-03-20",
+    priority: "A" as const,
+    distanceKm: 120,
+  };
+  const ultra = (sessions: PlanSession[]) => state(sessions, {}, ultraRace.id);
+  const ultraInput = (
+    candidate: PlanState,
+    patch: Partial<ValidationInput> = {},
+  ) => input(candidate, { races: [ultraRace], ...patch });
+  const pain = (severity: number) => ({
+    health: {
+      conditions: [
+        {
+          kind: "pain" as const,
+          severity,
+          status: "active" as const,
+          worsening: false,
+          systemicSymptoms: false,
+          redFlag: false,
+        },
+      ],
+      readiness: [],
+    },
+  });
+  const fiveHourWeek = () => [
+    run("a", "2026-10-13", 80),
+    run("b", "2026-10-15", 80),
+    run("c", "2026-10-17", 80),
+    run("long", "2026-10-18", 300, { kind: "long" }),
+  ];
+
+  it("P3 accepts a 5 h long run in a 9 h ultra week and keeps 35% on road plans", () => {
+    expect(rule(ultraInput(ultra(fiveHourWeek())), "P3")).toMatchObject({
+      outcome: "pass",
+      threshold: 0.6,
+    });
+    expect(rule(input(state(fiveHourWeek())), "P3")).toMatchObject({
+      outcome: "fail",
+      keys: ["long"],
+      threshold: 0.35,
+    });
+  });
+
+  it("P3 evaluates a back-to-back weekend as one block", () => {
+    const weekend = (saturday: number, sunday: number, weekday: number) =>
+      ultra([
+        run("a", "2026-10-13", weekday),
+        run("b", "2026-10-15", weekday),
+        run("sat", "2026-10-17", saturday, { kind: "long" }),
+        run("sun", "2026-10-18", sunday),
+      ]);
+    expect(rule(ultraInput(weekend(240, 120, 90)), "P3").outcome).toBe("pass");
+    expect(rule(ultraInput(weekend(300, 180, 30)), "P3")).toMatchObject({
+      outcome: "fail",
+      keys: ["sat", "sun"],
+    });
+  });
+
+  it("keeps the generic rules while a pain of 4/10 or more is reported", () => {
+    expect(
+      rule(ultraInput(ultra(fiveHourWeek()), pain(4)), "P3"),
+    ).toMatchObject({ outcome: "fail", threshold: 0.35 });
+    expect(rule(ultraInput(ultra(fiveHourWeek()), pain(3)), "P3").outcome).toBe(
+      "pass",
+    );
+  });
+
+  it("P1 measures a rebuild against 90% of the proven weekly volume", () => {
+    const history = {
+      history: {
+        runs: [],
+        weeks: ["2026-09-14", "2026-09-21", "2026-09-28", "2026-10-05"].map(
+          (weekStart) => ({
+            weekStart,
+            durationSeconds: 10_000,
+            elevationGainMeters: null,
+          }),
+        ),
+        provenWeeklySeconds: 18_000,
+      },
+    };
+    const week = ultra([
+      run("s1", "2026-10-15", 8_000 / 60),
+      run("s2", "2026-10-18", 8_000 / 60),
+    ]);
+    expect(rule(ultraInput(week, history), "P1").outcome).toBe("pass");
+    expect(rule(input(week, history), "P1")).toMatchObject({
+      outcome: "fail",
+      strong: true,
+    });
+  });
+
+  it("P1 also accepts 10% over the last full week across a recovery week", () => {
+    const sessions = [
+      ...[
+        "2026-10-13",
+        "2026-10-20",
+        "2026-10-27",
+        "2026-11-03",
+        "2026-11-10",
+      ].map((date, index) =>
+        run(`s${index}`, date, [300, 330, 360, 290, 395][index]),
+      ),
+    ];
+    const plan = state(sessions, { "2026-11-02": "recovery" }, ultraRace.id);
+    const generic = state(sessions, { "2026-11-02": "recovery" });
+    expect(rule(ultraInput(plan), "P1").outcome).toBe("pass");
+    expect(rule(input(generic), "P1").outcome).toBe("fail");
+  });
+
+  it("E1 compares an ultra long run with the longest effort of 90 days", () => {
+    const history = {
+      history: {
+        runs: [
+          { date: "2026-08-20", durationSeconds: 18_000, distanceMeters: null },
+          ...["2026-10-01", "2026-10-05", "2026-10-10"].map((date) => ({
+            date,
+            durationSeconds: 3_600,
+            distanceMeters: null,
+          })),
+        ],
+        weeks: [],
+      },
+    };
+    const long = ultra([run("long", "2026-10-15", 240, { kind: "long" })]);
+    expect(rule(ultraInput(long, history), "E1").outcome).toBe("pass");
+    expect(rule(ultraInput(long, history), "E2").outcome).toBe("pass");
+    expect(rule(input(long, history), "E1").outcome).toBe("fail");
+    const easy = ultra([run("easy", "2026-10-15", 240)]);
+    expect(rule(ultraInput(easy, history), "E1").outcome).toBe("fail");
+  });
+
+  it("D1 checks the longest weekend block against the ultra demand", () => {
+    const weekend = ultra([
+      run("sat", "2026-10-17", 240, { kind: "long" }),
+      run("sun", "2026-10-18", 120),
+    ]);
+    const demands = (longBlockSeconds: number) => ({
+      demands: {
+        longestRunMeters: null,
+        weeklyElevationMeters: null,
+        weeklyDurationSeconds: null,
+        longBlockSeconds,
+      },
+    });
+    expect(rule(ultraInput(weekend, demands(30_000)), "D1").outcome).toBe(
+      "pass",
+    );
+    expect(rule(ultraInput(weekend, demands(40_000)), "D1")).toMatchObject({
+      outcome: "fail",
+      issues: ["long_block"],
     });
   });
 });

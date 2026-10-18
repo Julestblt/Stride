@@ -14,9 +14,11 @@ import {
   peakFactor,
   resolveTemplateWeeks,
   type PhaseId,
+  type ResolvedWeek,
   type PlanTemplate,
   type TemplatePhase,
 } from "../templates/templates";
+import { thresholds } from "../validation/thresholds";
 import type { Objective, ObjectiveRace } from "./objective";
 
 export const leadInRampRatio = 1.04;
@@ -24,6 +26,7 @@ export const progressionCapRatio = 1.1;
 export const baseBuildingWeeks = 12;
 export const otherRaceWeekFactor = 0.85;
 export const afterOtherRaceWeekFactor = 0.9;
+export const ultraProvenStartShare = 0.85;
 const fallbackPaceSecondsPerKm = 360;
 
 export type Availability = {
@@ -162,7 +165,7 @@ function weekCapacity(
   );
 }
 
-function estimatedRaceSeconds(
+export function estimatedRaceSeconds(
   race: ObjectiveRace,
   paceSecondsPerKm: number | null,
 ) {
@@ -300,6 +303,8 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
     ? Math.max(0, weeksBetween(start, raceWeek))
     : baseBuildingWeeks;
   const isBase = template.id === "base_building";
+  const ultra =
+    !isBase && race !== null && race.distanceKm >= thresholds.ultraProfileKm;
   if (!isBase && preRaceWeeks < template.weeks.min)
     return {
       status: "too_short",
@@ -376,9 +381,12 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
       });
     }
   } else {
+    const baseline = ultra
+      ? Math.max(held, summary.provenDurationSeconds * ultraProvenStartShare)
+      : held;
     leadInCount = Math.max(0, preRaceWeeks - template.weeks.max);
     templateWeeks = preRaceWeeks - leadInCount;
-    const ramp = leadInWeeks(leadInCount, history, held, template, ceiling);
+    const ramp = leadInWeeks(leadInCount, history, baseline, template, ceiling);
     ramp.volumes.forEach((volume, index) =>
       drafts.push({
         weekStart: addDays(start, 7 * index),
@@ -394,24 +402,64 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
     );
     const factor = peakFactor(template);
     peakSeconds = ramp.reached * factor.volume;
+    if (ultra)
+      peakSeconds = Math.max(
+        peakSeconds,
+        Math.min(
+          template.peakWeekHours.min * 3600,
+          ramp.reached * leadInRampRatio ** templateWeeks,
+        ),
+      );
     if (ceiling !== null && peakSeconds > ceiling) {
       peakSeconds = ceiling;
       warnings.push({ code: "peak_capped_by_ceiling", peakSeconds });
     }
-    const minimumSeconds = template.peakWeekHours.min * 3600;
-    if (peakSeconds < minimumSeconds)
-      warnings.push({
-        code: "peak_below_template",
-        peakSeconds,
-        minimumSeconds,
-      });
     peakElevation =
       heldElevation && factor.elevation
         ? heldElevation * (ramp.reached / held) * factor.elevation
         : null;
+    const firstPct = 100 / factor.volume;
+    const buildSeconds = (pct: number) =>
+      ramp.reached +
+      ((peakSeconds - ramp.reached) * (pct - firstPct)) / (100 - firstPct);
+    const series = [...history, ...ramp.volumes.map((item) => item.duration)];
+    const floor = ultra
+      ? summary.provenDurationSeconds * thresholds.ultraProvenReferenceShare
+      : 0;
+    let lastFull = ramp.reached;
+    let reachedPeak = ramp.reached;
+    const weekSeconds = (week: ResolvedWeek) => {
+      if (!ultra) return (peakSeconds * week.volumePct) / 100;
+      let duration: number;
+      if (week.kind === "build") {
+        const recent = series.slice(-thresholds.weeklyReferenceWeeks);
+        const mean =
+          recent.length > 0
+            ? recent.reduce((total, value) => total + value, 0) / recent.length
+            : lastFull;
+        duration = Math.min(
+          buildSeconds(week.volumePct),
+          Math.max(mean, floor, lastFull) * progressionCapRatio,
+        );
+        lastFull = duration;
+        reachedPeak = Math.max(reachedPeak, duration);
+      } else if (week.kind === "lighter")
+        duration = lastFull * template.lighterWeek.volumeFactor;
+      else duration = (reachedPeak * week.volumePct) / 100;
+      series.push(duration);
+      return duration;
+    };
+    const weekElevation = (week: ResolvedWeek, seconds: number) => {
+      if (peakElevation === null || week.elevationPct === null) return null;
+      if (!ultra) return (peakElevation * week.elevationPct) / 100;
+      return (
+        heldElevation! * (seconds / held) * (week.elevationPct / week.volumePct)
+      );
+    };
     const resolved = resolveTemplateWeeks(template, templateWeeks)!;
     resolved.forEach((week, position) => {
       const weekStart = addDays(start, 7 * (leadInCount + position));
+      const durationSeconds = weekSeconds(week);
       const isRaceWeek = week.kind === "taper" && weekStart === raceWeek;
       drafts.push({
         weekStart,
@@ -424,14 +472,19 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
             : week.kind === "post_race"
               ? "post_race"
               : week.kind,
-        durationSeconds: (peakSeconds * week.volumePct) / 100,
-        elevationGainMeters:
-          peakElevation !== null && week.elevationPct !== null
-            ? (peakElevation * week.elevationPct) / 100
-            : null,
+        durationSeconds,
+        elevationGainMeters: weekElevation(week, durationSeconds),
         qualitySessions: week.qualitySessions,
       });
     });
+    if (ultra) peakSeconds = reachedPeak;
+    const minimumSeconds = template.peakWeekHours.min * 3600;
+    if (peakSeconds < minimumSeconds)
+      warnings.push({
+        code: "peak_below_template",
+        peakSeconds,
+        minimumSeconds,
+      });
   }
 
   const otherRaceWeeks = new Map(
@@ -439,6 +492,30 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
   );
   const capped: string[] = [];
   const unavailable: string[] = [];
+  const effort = summary.longestEffort90d;
+  let longestPlanned = 0;
+  const longRunSeconds = (
+    seconds: number,
+    phase: TemplatePhase,
+    weekStart: string,
+  ) => {
+    if (seconds === 0) return null;
+    let long = Math.min(
+      (seconds * phase.longRun.sharePct) / 100,
+      phase.longRun.capMinutes * 60,
+    );
+    const reference = Math.max(
+      longestPlanned,
+      effort &&
+        weekStart < addDays(effort.date, thresholds.ultraLongEffortWindowDays)
+        ? effort.durationSeconds
+        : 0,
+    );
+    if (ultra && reference > 0)
+      long = Math.min(long, reference * thresholds.spikeRatio);
+    longestPlanned = Math.max(longestPlanned, long);
+    return Math.round(long);
+  };
   const weeks: PlanWeek[] = drafts.map((draft) => {
     let duration = draft.durationSeconds;
     let quality = draft.qualitySessions;
@@ -478,15 +555,7 @@ export function buildSkeleton(input: SkeletonInput): Skeleton {
                   (seconds / Math.max(draft.durationSeconds, 1)),
               ),
         qualitySessions: seconds === 0 ? 0 : quality,
-        longRunSeconds:
-          seconds === 0
-            ? null
-            : Math.round(
-                Math.min(
-                  (seconds * draft.phase.longRun.sharePct) / 100,
-                  draft.phase.longRun.capMinutes * 60,
-                ),
-              ),
+        longRunSeconds: longRunSeconds(seconds, draft.phase, draft.weekStart),
         intensitySplit: draft.phase.intensity,
       },
       notes: null,

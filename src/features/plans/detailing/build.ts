@@ -2,6 +2,7 @@ import type { PlanningConstraints } from "../constraints";
 import {
   assessFeasibility,
   longestRunTargetMeters,
+  ultraDemands,
   type Feasibility,
 } from "../feasibility/feasibility";
 import {
@@ -171,6 +172,8 @@ function validateCandidate(
           longestRunMeters: longestRunTargetMeters(race.distanceKm),
           weeklyElevationMeters: null,
           weeklyDurationSeconds: null,
+          longBlockSeconds: null,
+          ...ultraDemands(race, summary.heldPaceSecondsPerKm),
         }
       : null,
     specialistConstraints: [],

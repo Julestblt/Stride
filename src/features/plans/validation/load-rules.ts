@@ -6,6 +6,7 @@ import {
   hardSeconds,
   isQuality,
   isRunning,
+  isUltraProfile,
   plannedWeeks,
   sessionDistance,
   weekLoads,
@@ -26,7 +27,7 @@ function futureRuns(input: ValidationInput) {
   );
 }
 
-function spikeRules(input: ValidationInput): Rules {
+function spikeRules(input: ValidationInput, ultra: boolean): Rules {
   const planned = futureRuns(input);
   const races = input.candidate.sessions.filter(
     (session) =>
@@ -48,11 +49,18 @@ function spikeRules(input: ValidationInput): Rules {
   let evaluated = 0;
   let observed = 0;
   for (const session of planned) {
-    const from = addDays(session.scheduledOn, -thresholds.spikeWindowDays);
-    const window = runs.filter(
-      (run) => run.date >= from && run.date < session.scheduledOn,
-    );
-    if (window.length < thresholds.spikeMinimumRuns) continue;
+    const since = (days: number) =>
+      runs.filter(
+        (run) =>
+          run.date >= addDays(session.scheduledOn, -days) &&
+          run.date < session.scheduledOn,
+      );
+    const recent = since(thresholds.spikeWindowDays);
+    if (recent.length < thresholds.spikeMinimumRuns) continue;
+    const window =
+      ultra && session.kind === "long"
+        ? since(thresholds.ultraLongEffortWindowDays)
+        : recent;
     const distance = sessionDistance(session);
     const distances = window
       .map((run) => run.distanceMeters)
@@ -95,6 +103,8 @@ function progressionRule(
   ratioLimit: number,
   strongLimit: number | null,
   skipReason: string,
+  ultra = false,
+  referenceFloor = 0,
 ): RuleOutcome {
   const loads = weekLoads(input);
   const byWeek = new Map(loads.map((load) => [load.weekStart, load]));
@@ -112,9 +122,20 @@ function progressionRule(
       (_, index) => byWeek.get(addDays(load.weekStart, -7 * (index + 1))),
     ).map((week) => (week ? value(week) : null));
     if (current === null || previous.some((item) => item === null)) continue;
-    const mean =
+    const lastFull = ultra
+      ? previous.find(
+          (_, index) =>
+            !deloadWeekTypes.has(
+              weekType(input, addDays(load.weekStart, -7 * (index + 1))) ?? "",
+            ),
+        )
+      : null;
+    const mean = Math.max(
       (previous as number[]).reduce((total, item) => total + item, 0) /
-      previous.length;
+        previous.length,
+      referenceFloor,
+      lastFull ?? 0,
+    );
     if (mean <= 0) continue;
     const ratio = current / mean;
     evaluated += 1;
@@ -128,7 +149,49 @@ function progressionRule(
     : { outcome: "pass", observed, threshold: ratioLimit };
 }
 
-function weekRules(input: ValidationInput): Rules {
+function blockPartner(sessions: PlanSession[], long: PlanSession) {
+  return sessions.find(
+    (session) =>
+      session.scheduledOn === addDays(long.scheduledOn, 1) &&
+      (session.kind === "long" || session.kind === "easy") &&
+      session.targets.durationSeconds >=
+        thresholds.ultraBlockSecondMinimumSeconds,
+  );
+}
+
+function longShareIssues(
+  running: PlanSession[],
+  total: number,
+  ultra: boolean,
+) {
+  const longest = running.reduce((best, session) =>
+    session.targets.durationSeconds > best.targets.durationSeconds
+      ? session
+      : best,
+  );
+  const share = longest.targets.durationSeconds / total;
+  const limit = ultra ? thresholds.ultraLongRunShare : thresholds.longRunShare;
+  const keys = share > limit ? [longest.sessionKey] : [];
+  let observed = share;
+  if (ultra)
+    for (const long of running.filter((session) => session.kind === "long")) {
+      const next = blockPartner(running, long);
+      const block = next
+        ? (long.targets.durationSeconds + next.targets.durationSeconds) / total
+        : 0;
+      if (next && block > thresholds.ultraLongBlockShare) {
+        observed = Math.max(observed, block);
+        keys.push(
+          ...[long.sessionKey, next.sessionKey].filter(
+            (key) => !keys.includes(key),
+          ),
+        );
+      }
+    }
+  return { share: observed, keys };
+}
+
+function weekRules(input: ValidationInput, ultra: boolean): Rules {
   const weeks = [...plannedWeeks(input.candidate)].filter(
     ([weekStart]) => weekStart >= mondayOf(input.today),
   );
@@ -156,15 +219,10 @@ function weekRules(input: ValidationInput): Rules {
       running.length >= thresholds.longRunShareMinimumRuns &&
       !raceWeeks.has(weekStart)
     ) {
-      const longest = running.reduce((best, session) =>
-        session.targets.durationSeconds > best.targets.durationSeconds
-          ? session
-          : best,
-      );
-      const share = longest.targets.durationSeconds / total;
+      const { share, keys } = longShareIssues(running, total, ultra);
       longEvaluated += 1;
       longObserved = Math.max(longObserved, share);
-      if (share > thresholds.longRunShare) longKeys.push(longest.sessionKey);
+      longKeys.push(...keys);
     }
     const hard =
       running.reduce((sum, session) => sum + hardSeconds(session), 0) / total;
@@ -189,6 +247,9 @@ function weekRules(input: ValidationInput): Rules {
       ),
   );
 
+  const longLimit = ultra
+    ? thresholds.ultraLongRunShare
+    : thresholds.longRunShare;
   return {
     P3:
       longEvaluated === 0
@@ -198,12 +259,12 @@ function weekRules(input: ValidationInput): Rules {
               outcome: "fail",
               keys: longKeys,
               observed: longObserved,
-              threshold: thresholds.longRunShare,
+              threshold: longLimit,
             }
           : {
               outcome: "pass",
               observed: longObserved,
-              threshold: thresholds.longRunShare,
+              threshold: longLimit,
             },
     P4:
       p4Keys.length > 0
@@ -339,6 +400,18 @@ function longestPlanned(sessions: PlanSession[]) {
   return distances.length > 0 ? Math.max(...distances) : null;
 }
 
+function longestBlock(sessions: PlanSession[]) {
+  const longs = sessions.filter((session) => session.kind === "long");
+  return Math.max(
+    0,
+    ...longs.map(
+      (long) =>
+        long.targets.durationSeconds +
+        (blockPartner(sessions, long)?.targets.durationSeconds ?? 0),
+    ),
+  );
+}
+
 function informationRules(input: ValidationInput): Rules {
   const load = input.load;
   const p8: RuleOutcome =
@@ -368,11 +441,13 @@ function informationRules(input: ValidationInput): Rules {
         ...loads.map((item) => item.elevationGainMeters ?? 0),
       ),
       weekly_volume: Math.max(0, ...loads.map((item) => item.durationSeconds)),
+      long_block: longestBlock(planned),
     };
     const targets = {
       longest_run: demands.longestRunMeters,
       weekly_elevation: demands.weeklyElevationMeters,
       weekly_volume: demands.weeklyDurationSeconds,
+      long_block: demands.longBlockSeconds,
     };
     const issues = (Object.keys(targets) as (keyof typeof targets)[]).filter(
       (name) => {
@@ -394,18 +469,24 @@ function informationRules(input: ValidationInput): Rules {
 }
 
 export function evaluateLoadRules(input: ValidationInput): Rules {
+  const ultra = isUltraProfile(input);
   const hasTrail = input.candidate.sessions.some(
     (session) =>
       session.sport === "trail" || session.targets.elevationGainMeters !== null,
   );
   return {
-    ...spikeRules(input),
+    ...spikeRules(input, ultra),
     P1: progressionRule(
       input,
       (load) => load.durationSeconds,
       thresholds.weeklyIncreaseRatio,
       thresholds.weeklyStrongIncreaseRatio,
       "fewer_than_four_weeks_of_history",
+      ultra,
+      ultra
+        ? (input.history.provenWeeklySeconds ?? 0) *
+            thresholds.ultraProvenReferenceShare
+        : 0,
     ),
     P2: hasTrail
       ? progressionRule(
@@ -414,9 +495,10 @@ export function evaluateLoadRules(input: ValidationInput): Rules {
           thresholds.elevationIncreaseRatio,
           null,
           "fewer_than_four_weeks_of_elevation",
+          ultra,
         )
       : { outcome: "skipped", reason: "road_plan" },
-    ...weekRules(input),
+    ...weekRules(input, ultra),
     ...raceRules(input),
     ...informationRules(input),
   };

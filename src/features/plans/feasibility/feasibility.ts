@@ -1,9 +1,16 @@
 import { addDays, mondayOf } from "../model/dates";
 import type { Objective } from "../skeleton/objective";
-import type { Skeleton } from "../skeleton/skeleton";
-import { planTemplates, type PlanTemplate } from "../templates/templates";
+import type { ObjectiveRace } from "../skeleton/objective";
+import { estimatedRaceSeconds, type Skeleton } from "../skeleton/skeleton";
+import {
+  matchTemplate,
+  planTemplates,
+  type PlanTemplate,
+} from "../templates/templates";
+import { thresholds } from "../validation/thresholds";
 
 export const demandShare = 0.75;
+export const ultraLongBlockShare = 0.4;
 
 export type FeasibilityOption =
   | { kind: "shorter_format"; templateId: PlanTemplate["id"]; label: string }
@@ -11,7 +18,7 @@ export type FeasibilityOption =
   | { kind: "base_first" };
 
 export type DemandComponent = {
-  key: "longest_run" | "biggest_session_elevation";
+  key: "longest_run" | "biggest_session_elevation" | "long_block";
   planned: number | null;
   target: number;
   status: "ok" | "short" | "unavailable";
@@ -27,6 +34,23 @@ export type Feasibility = {
 export function longestRunTargetMeters(distanceKm: number) {
   const meters = distanceKm * 1000;
   return Math.min(Math.max(0.6 * meters, Math.min(meters, 30_000)), 60_000);
+}
+
+export function isUltraRace(race: Pick<ObjectiveRace, "distanceKm">) {
+  return race.distanceKm >= thresholds.ultraProfileKm;
+}
+
+export function ultraDemands(
+  race: ObjectiveRace,
+  paceSecondsPerKm: number | null,
+) {
+  if (!isUltraRace(race)) return null;
+  return {
+    longBlockSeconds: Math.round(
+      estimatedRaceSeconds(race, paceSecondsPerKm) * ultraLongBlockShare,
+    ),
+    weeklyDurationSeconds: matchTemplate(race).peakWeekHours.min * 3600,
+  };
 }
 
 function formatHours(seconds: number) {
@@ -114,6 +138,14 @@ export function assessFeasibility({
             ? "short"
             : "ok",
     });
+    const ultra = ultraDemands(race, skeleton.paceSecondsPerKm);
+    if (ultra)
+      demands.push({
+        key: "long_block",
+        planned: longest,
+        target: ultra.longBlockSeconds,
+        status: longest < ultra.longBlockSeconds * demandShare ? "short" : "ok",
+      });
     if (race.kind === "trail" && race.elevationGainM) {
       const peakWeek = skeleton.state.weeks.reduce((best, week) =>
         (week.targets.elevationGainMeters ?? 0) >
@@ -146,7 +178,9 @@ export function assessFeasibility({
     reasons.push(
       demand.key === "longest_run"
         ? `La plus longue sortie prévue reste sous 75 % de la cible (${Math.round(demand.target / 1000)} km) pour cette course.`
-        : `Le dénivelé de la plus grosse sortie reste sous 75 % de la cible (${Math.round(demand.target)} m D+).`,
+        : demand.key === "long_block"
+          ? `La plus longue sortie prévue reste sous 75 % du bloc du week-end visé (${formatHours(demand.target)}) pour cet ultra : enchaîne deux sorties longues le week-end.`
+          : `Le dénivelé de la plus grosse sortie reste sous 75 % de la cible (${Math.round(demand.target)} m D+).`,
     );
   for (const warning of skeleton.warnings) {
     if (warning.code === "peak_below_template")
