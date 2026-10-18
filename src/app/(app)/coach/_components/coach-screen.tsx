@@ -8,7 +8,6 @@ import {
   ChevronRightIcon,
   ListIcon,
   PlusIcon,
-  SquareIcon,
 } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { DataActivityThread } from "@/features/data-activity/components/status";
@@ -77,6 +76,7 @@ export type CoachThreadProps = {
   state: SessionState;
   pendingToolUseId: string | null;
   lastTurnAt: string | null;
+  composingSince: string | null;
   createdAt: string;
   items: ThreadItem[];
   proposalStatuses: Record<string, string>;
@@ -107,7 +107,6 @@ function Composer({
   options,
   today,
   onSend,
-  onStop,
 }: {
   placeholder: string;
   answering: boolean;
@@ -122,7 +121,6 @@ function Composer({
     consult: boolean,
     attachments: SentAttachment[],
   ) => Promise<boolean>;
-  onStop: () => void;
 }) {
   const staff = useStaff();
   const [text, setText] = useState(initialText);
@@ -265,31 +263,15 @@ function Composer({
               <StaffStack agents={["medical"]} size={18} />@{staff.medical.name}
             </Toggle>
           )}
-          {busy ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              aria-label="Arrêter le staff"
-              onClick={onStop}
-              className="size-9.5 rounded-surface"
-            >
-              <SquareIcon
-                aria-hidden="true"
-                className="size-2.5 fill-current"
-              />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              size="icon"
-              aria-label="Envoyer"
-              disabled={!text.trim()}
-              className="size-9.5 rounded-surface"
-            >
-              <ArrowUpIcon aria-hidden="true" />
-            </Button>
-          )}
+          <Button
+            type="submit"
+            size="icon"
+            aria-label="Envoyer"
+            disabled={busy || !text.trim()}
+            className="size-9.5 rounded-surface"
+          >
+            <ArrowUpIcon aria-hidden="true" />
+          </Button>
         </InputGroupAddon>
       </InputGroup>
       {!answering && (
@@ -349,14 +331,27 @@ export function CoachScreen({
     thread?.pendingToolUseId ?? null,
   );
   const [lastTurnAt, setLastTurnAt] = useState(thread?.lastTurnAt ?? null);
+  const [composingSince, setComposingSince] = useState(
+    thread?.composingSince ?? null,
+  );
   const [busy, setBusy] = useState(false);
+  const [syncedThread, setSyncedThread] = useState(thread);
+  if (syncedThread !== thread) {
+    setSyncedThread(thread);
+    if (thread && !busy) {
+      setState(thread.state);
+      setPendingQuestion(thread.pendingToolUseId);
+      setLastTurnAt(thread.lastTurnAt);
+      setComposingSince(thread.composingSince);
+    }
+  }
+  const [clock, setClock] = useState(now);
   const [sending, setSending] = useState<{
     text: string;
     attachments: SentAttachment[];
   } | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [suiviOpen, setSuiviOpen] = useState(false);
-  const controller = useRef<AbortController | null>(null);
   const logEnd = useRef<HTMLDivElement>(null);
 
   const items = useMemo(
@@ -368,23 +363,13 @@ export function CoachScreen({
     () => thread?.proposalStatuses ?? {},
     [thread],
   );
-  const entries = useMemo(
-    () =>
-      buildThread({
-        items,
-        live: busy,
-        pendingToolUseId: pendingQuestion,
-        proposalStatuses,
-      }),
-    [items, busy, pendingQuestion, proposalStatuses],
-  );
   const status =
     state === null
       ? null
       : threadStatus({
           state: busy ? "running" : state,
           lastTurnAt: busy ? new Date().toISOString() : lastTurnAt,
-          now: busy ? new Date() : now,
+          now: busy ? new Date() : clock,
           proposalStatuses: Object.values(proposalStatuses).concat(
             items.flatMap((item) =>
               item.kind === "proposal" && !(item.proposalId in proposalStatuses)
@@ -393,6 +378,18 @@ export function CoachScreen({
             ),
           ),
         });
+  const resumed = !busy && status === "working";
+  const working = busy || resumed;
+  const entries = useMemo(
+    () =>
+      buildThread({
+        items,
+        live: working,
+        pendingToolUseId: pendingQuestion,
+        proposalStatuses,
+      }),
+    [items, working, pendingQuestion, proposalStatuses],
+  );
   const closed = state !== null && closedStates.includes(state);
   const participants = threadParticipants(items);
   const title =
@@ -446,14 +443,27 @@ export function CoachScreen({
     logEnd.current?.scrollIntoView({ block: "end" });
   }, [items.length, sending]);
 
+  useEffect(() => {
+    if (!working) return;
+    const tick = window.setInterval(() => setClock(new Date()), 5_000);
+    return () => window.clearInterval(tick);
+  }, [working]);
+
+  useEffect(() => {
+    if (!resumed) return;
+    const poll = window.setInterval(() => router.refresh(), 4_000);
+    return () => window.clearInterval(poll);
+  }, [resumed, router]);
+
   async function send(
     text: string,
     consult: boolean,
     attachments: SentAttachment[] = [],
   ) {
-    if (busy) return false;
+    if (working) return false;
     const answering = pendingQuestion;
     setFailure(null);
+    setComposingSince(null);
     setBusy(true);
     setSending({
       text,
@@ -464,9 +474,8 @@ export function CoachScreen({
         date,
       })),
     });
-    const abort = new AbortController();
-    controller.current = abort;
     let sent = false;
+    let started = false;
     let threadKnown = Boolean(thread);
     let currentThread = ids.threadId;
     let turnError: string | null = null;
@@ -476,7 +485,6 @@ export function CoachScreen({
       const response = await fetch("/api/coach/turns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: abort.signal,
         body: JSON.stringify({
           ...(ids.sessionId ? { sessionId: ids.sessionId } : {}),
           mode,
@@ -515,6 +523,7 @@ export function CoachScreen({
           buffer = rest;
           for (const event of events) {
             if (event.type === "session") {
+              started = true;
               currentThread = event.threadId;
               setIds({ threadId: event.threadId, sessionId: event.sessionId });
               setState("running");
@@ -539,6 +548,7 @@ export function CoachScreen({
               }));
             }
             if (event.type === "question") setPendingQuestion(event.toolUseId);
+            if (event.type === "composing") setComposingSince(event.since);
             if (event.type === "error") turnError = event.text;
             if (event.type === "done") {
               finished = true;
@@ -549,14 +559,12 @@ export function CoachScreen({
         }
       }
     } catch {
-      if (!abort.signal.aborted) setFailure(turnFailure);
+      if (!started) setFailure(turnFailure);
     } finally {
       if (turnError && !errorShown) setFailure(turnError);
-      if (!finished)
-        setState((value) => (value === "running" ? "idle" : value));
+      if (finished) setComposingSince(null);
       setSending(null);
       setBusy(false);
-      controller.current = null;
     }
     if (sent && currentThread) {
       void markCoachThreadRead({ threadId: currentThread });
@@ -579,7 +587,7 @@ export function CoachScreen({
   const empty = items.length === 0 && !sending;
   const replies = suggestedReplies({
     mode,
-    busy,
+    busy: working,
     closed,
     questionPending: pendingQuestion !== null,
     status,
@@ -729,7 +737,7 @@ export function CoachScreen({
             {ids.threadId && state !== null && (
               <ThreadMenu
                 threadId={ids.threadId}
-                busy={busy}
+                busy={working}
                 onFailure={setFailure}
               />
             )}
@@ -755,15 +763,15 @@ export function CoachScreen({
                 pending={sending}
                 timeZone={timeZone}
                 now={now}
-                busy={busy}
+                busy={working}
                 onAnswer={(answer) => void send(answer, false)}
                 onOther={() =>
                   document.getElementById("coach-composer")?.focus()
                 }
               />
             )}
-            {busy && !entries.some((entry) => entry.type === "typing") && (
-              <StaffWorking />
+            {working && !entries.some((entry) => entry.type === "typing") && (
+              <StaffWorking composingSince={composingSince} now={clock} />
             )}
             {failure && (
               <p
@@ -779,14 +787,13 @@ export function CoachScreen({
             key={ids.threadId ?? "new"}
             placeholder={placeholder}
             answering={pendingQuestion !== null}
-            busy={busy}
+            busy={working}
             closed={closed}
             initialText={thread ? "" : draft.text}
             replies={replies}
             options={attachmentOptions}
             today={localToday(now)}
             onSend={send}
-            onStop={() => controller.current?.abort()}
           />
         </section>
         {!empty && (

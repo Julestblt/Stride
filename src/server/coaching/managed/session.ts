@@ -29,6 +29,7 @@ import {
 import {
   appendThreadItem,
   findOwnSession,
+  recordComposing,
   recordSession,
   updateSession,
   type CoachSessionRecord,
@@ -89,6 +90,7 @@ export type TurnEvent =
   | { type: "delegation"; from: string; to: string; text: string }
   | { type: "tool"; thread: string; name: string; ok: boolean; ms: number }
   | { type: "mcp"; thread: string; name: string }
+  | { type: "composing"; since: string | null }
   | { type: "question"; question: PendingQuestion }
   | {
       type: "error";
@@ -336,7 +338,6 @@ function threadOf(event: object) {
 export async function* streamCoachTurn(
   context: OnboardingContext,
   request: TurnRequest,
-  signal?: AbortSignal,
 ): AsyncGenerator<TurnEvent> {
   const client = managedClient();
   const attachments =
@@ -376,6 +377,17 @@ export async function* streamCoachTurn(
       });
     return { type: "item", item } as const;
   };
+  let recorded = Promise.resolve();
+  const composing = (since: string | null) => {
+    recorded = recorded
+      .then(() => recordComposing(context, id, since))
+      .catch((error: unknown) => {
+        console.error("Coach activity was not recorded", {
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      });
+    return { type: "composing", since } as const;
+  };
   const now = () => new Date().toISOString();
   yield persist(
     request.input.kind === "message"
@@ -400,14 +412,13 @@ export async function* streamCoachTurn(
     timedOut = true;
     controller.abort();
   }, turnTimeoutMs);
-  const onAbort = () => controller.abort();
-  signal?.addEventListener("abort", onAbort);
 
   let pendingQuestion: PendingQuestion | null = null;
   const threadAgents = new Map<string, string>();
   const endedThreads = new Set<string>();
   const speakerOf = (thread: string | null | undefined): StaffAgent =>
     (thread ? agentOfManagedName(threadAgents.get(thread)) : null) ?? "coach";
+  let composingSince: string | null = null;
   let stopReason = "interrupted";
   let crashed = false;
   let firstEventMs: number | null = null;
@@ -595,6 +606,21 @@ export async function* streamCoachTurn(
           });
           break;
         }
+        case "span.model_request_start":
+          if (speakerOf(threadOf(event)) === "coach") {
+            composingSince = now();
+            yield composing(composingSince);
+          }
+          break;
+        case "span.model_request_end":
+          if (
+            composingSince !== null &&
+            speakerOf(threadOf(event)) === "coach"
+          ) {
+            composingSince = null;
+            yield composing(null);
+          }
+          break;
         case "session.thread_created":
         case "session.thread_status_running":
           threadAgents.set(event.session_thread_id, event.agent_name);
@@ -640,10 +666,9 @@ export async function* streamCoachTurn(
     }
   } finally {
     clearTimeout(timeout);
-    signal?.removeEventListener("abort", onAbort);
   }
 
-  if (controller.signal.aborted && !pendingQuestion)
+  if (timedOut && !pendingQuestion)
     await client.beta.sessions.events
       .send(id, { events: [{ type: "user.interrupt" }] })
       .catch(() => undefined);
@@ -669,8 +694,6 @@ export async function* streamCoachTurn(
     status = "timed_out";
     stopReason = "timeout";
     failure = { type: "error", code: "timeout", text: turnMessages.timeout };
-  } else if (controller.signal.aborted) {
-    status = "idle";
   } else if (stopReason === "budget_reached") {
     status = "budget_reached";
     failure = {
@@ -697,6 +720,7 @@ export async function* streamCoachTurn(
     });
   }
   await persisted;
+  await recorded;
 
   const session = await client.beta.sessions.retrieve(id).catch(() => null);
   const listCostCents = costCents(session?.usage?.list_cost?.amount);
@@ -704,9 +728,6 @@ export async function* streamCoachTurn(
     status,
     pendingToolUseId: pendingQuestion?.toolUseId ?? null,
     ...(listCostCents === null ? {} : { listCostCents }),
-    ...(signal?.aborted && !timedOut
-      ? { readAt: new Date().toISOString() }
-      : {}),
   });
   yield {
     type: "done",

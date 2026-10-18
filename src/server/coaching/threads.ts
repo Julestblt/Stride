@@ -30,6 +30,7 @@ export type CoachThreadData = {
   state: CoachSessionRecord["status"];
   pendingToolUseId: string | null;
   lastTurnAt: string | null;
+  composingSince: string | null;
   createdAt: string;
   readAt: string | null;
   lastActivityAt: string;
@@ -96,6 +97,7 @@ export async function loadThread(
     state: thread.status,
     pendingToolUseId: thread.pendingToolUseId,
     lastTurnAt: thread.lastTurnAt,
+    composingSince: thread.composingSince,
     createdAt: thread.createdAt,
     readAt: thread.readAt,
     lastActivityAt: thread.lastActivityAt,

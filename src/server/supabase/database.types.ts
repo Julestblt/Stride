@@ -283,6 +283,7 @@ export type Database = {
       coach_sessions: {
         Row: {
           budget_cents: number;
+          composing_since: string | null;
           created_at: string;
           id: string;
           last_activity_at: string;
@@ -300,6 +301,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           budget_cents: number;
+          composing_since?: string | null;
           created_at?: string;
           id?: string;
           last_activity_at?: string;
@@ -316,6 +318,7 @@ export type Database = {
         };
         Update: {
           budget_cents?: number;
+          composing_since?: string | null;
           created_at?: string;
           id?: string;
           last_activity_at?: string;

@@ -18,6 +18,21 @@ async function resetCoach() {
   });
 }
 
+async function coachTurn(update: {
+  session: Record<string, unknown>;
+  items?: { kind: string; body: Record<string, unknown> }[];
+}) {
+  const response = await fetch(
+    `http://127.0.0.1:${authPort}/__test__/coach-turn`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ threadId: planThread, ...update }),
+    },
+  );
+  expect(response.ok).toBe(true);
+}
+
 test.beforeAll(resetCoach);
 test.afterAll(resetCoach);
 
@@ -336,8 +351,12 @@ test("suggested replies send from the keyboard and hide while the staff works", 
   await expect(other).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("button", { name: "Arrêter le staff" }),
+    page.getByRole("status").filter({ hasText: "Claire réfléchit…" }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Envoyer" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Arrêter le staff" }),
+  ).toHaveCount(0);
   await expect(row).toHaveCount(0);
   await expect(composer).toHaveValue("");
   expect(posted).toEqual({
@@ -981,4 +1000,67 @@ test("mobile reaches the team page from the conversations list at 390", async ({
   });
   await page.getByRole("link", { name: "Retour aux conversations" }).click();
   await expect(page).toHaveURL("/coach", { timeout: 20_000 });
+});
+
+test("a refresh during a turn keeps the staff working and shows its result", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${planThread}`);
+  await page.route("**/api/coach/turns", () => new Promise<void>(() => {}));
+  const request = "Prolonge mon plan jusqu’à l’EcoTrail 120K.";
+  const composer = page.getByRole("textbox", { name: "Écrire au staff" });
+  await composer.fill(request);
+  await composer.press("Enter");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Claire réfléchit…" }),
+  ).toBeVisible();
+
+  await coachTurn({
+    session: {
+      status: "running",
+      last_turn_at: at(),
+      composing_since: new Date(Date.now() - 3 * 60_000 - 5_000).toISOString(),
+    },
+    items: [
+      {
+        kind: "athlete",
+        body: { text: request, consult: null, attachments: [] },
+      },
+    ],
+  });
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.reload();
+
+  const log = page.getByRole("log", { name: "Messages" });
+  await expect(log.getByText(request)).toBeVisible();
+  const working = page
+    .getByRole("status")
+    .filter({ hasText: "Claire rédige sa réponse…" });
+  await expect(working).toContainText("depuis 3 min");
+  await expect(working).toContainText(
+    "Tu peux quitter la page : le staff continue et sa réponse t’attendra ici.",
+  );
+  await expect(page.getByRole("button", { name: "Envoyer" })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Arrêter le staff" }),
+  ).toHaveCount(0);
+
+  await coachTurn({
+    session: { status: "idle", composing_since: null },
+    items: [
+      {
+        kind: "coach",
+        body: { text: "J’ai ajouté les semaines jusqu’à l’EcoTrail 120K." },
+      },
+    ],
+  });
+  await expect(
+    log.getByText("J’ai ajouté les semaines jusqu’à l’EcoTrail 120K."),
+  ).toBeVisible({ timeout: 15_000 });
+  await expect(working).toHaveCount(0);
+  await composer.fill("Merci");
+  await expect(page.getByRole("button", { name: "Envoyer" })).toBeEnabled();
+  await resetCoach();
 });

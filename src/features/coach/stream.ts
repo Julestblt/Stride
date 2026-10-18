@@ -5,6 +5,7 @@ export type StreamEvent =
   | { type: "session"; sessionId: string; threadId: string }
   | { type: "item"; item: ThreadItem }
   | { type: "question"; toolUseId: string }
+  | { type: "composing"; since: string | null }
   | { type: "error"; text: string }
   | { type: "done"; status: string };
 
@@ -22,6 +23,7 @@ const eventSchema = z.discriminatedUnion("type", [
     type: z.literal("question"),
     question: z.object({ toolUseId: z.string() }),
   }),
+  z.object({ type: z.literal("composing"), since: z.string().nullable() }),
   z.object({ type: z.literal("done"), status: z.string() }),
   z.object({ type: z.literal("error"), text: z.string() }),
 ]);

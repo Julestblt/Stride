@@ -12,6 +12,7 @@ import {
   attachmentHref,
   type SentAttachment,
 } from "@/features/coach/attachments";
+import { longWriteNote, workingLabel } from "@/features/coach/activity";
 import { AttachmentIcon } from "@/features/coach/components/attachment-icon";
 import { dayLabel, sameDay, timeLabel } from "@/features/coach/conversations";
 import { StaffPortrait } from "@/features/coach/components/staff-portrait";
@@ -442,15 +443,58 @@ export function ThreadLog({
   );
 }
 
-export function StaffWorking() {
+export function StaffWorking({
+  composingSince,
+  now,
+}: {
+  composingSince: string | null;
+  now: Date;
+}) {
   const staff = useStaff();
+  const label = workingLabel(staff.coach, composingSince, now);
   return (
     <div
       role="status"
-      className="mx-auto flex w-full max-w-205 items-center gap-2 px-4 pb-4 text-meta text-muted sm:px-[clamp(20px,3vw,44px)]"
+      aria-live="polite"
+      className="mx-auto flex w-full max-w-205 flex-col gap-2 px-4 pb-4 sm:grid sm:grid-cols-[36px_minmax(0,1fr)] sm:items-start sm:gap-3 sm:px-[clamp(20px,3vw,44px)]"
     >
-      <PulseDot />
-      {staff.coach.name} réfléchit…
+      <span className="max-sm:hidden">
+        <StaffPortrait agent="coach" size={36} decorative />
+      </span>
+      <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="sm:hidden">
+            <StaffPortrait agent="coach" size={28} decorative />
+          </span>
+          <StaffName agent="coach" />
+        </div>
+        <span className="inline-flex flex-wrap items-center gap-2.5 self-start rounded-[4px_16px_16px_16px] border border-border bg-surface px-3.5 py-2.5 text-meta text-muted">
+          <span aria-hidden="true" className="inline-flex gap-1">
+            {[0, 1, 2].map((dot) => (
+              <span
+                key={dot}
+                className="size-1.25 rounded-full bg-accent motion-safe:animate-pulse"
+                style={{ animationDelay: `${dot * 300}ms` }}
+              />
+            ))}
+          </span>
+          {label.text}
+          {label.since && <MonoLabel size="nano">{label.since}</MonoLabel>}
+        </span>
+        {label.writing && (
+          <>
+            <span
+              aria-hidden="true"
+              className="relative h-0.5 max-w-65 overflow-hidden rounded-full bg-border"
+            >
+              <span className="absolute inset-y-0 left-0 w-[30%] bg-linear-to-r from-transparent via-accent to-transparent motion-safe:animate-trace motion-reduce:hidden" />
+            </span>
+            <p className="max-w-115 text-meta leading-normal text-muted-foreground">
+              {longWriteNote}
+            </p>
+          </>
+        )}
+      </div>
     </div>
   );
 }
