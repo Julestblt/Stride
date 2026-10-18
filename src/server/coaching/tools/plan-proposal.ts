@@ -1,11 +1,13 @@
 import "server-only";
 import { z } from "zod";
 import { localToday } from "@/features/plans/constraints";
+import { raceRoles } from "@/features/plans/model/plan";
 import { applyOperations } from "@/features/plans/operations/apply";
 import {
   planOperationSchema,
   type PlanOperation,
 } from "@/features/plans/operations/operations";
+import { loadPlanningInput } from "@/server/plans/draft";
 import { readSessionMatches } from "@/server/plans/matches";
 import type { Database } from "@/server/supabase/database.types";
 import { requireActivePlan } from "./active-plan";
@@ -55,6 +57,18 @@ const coachOperationSchema = z.discriminatedUnion("op", [
         "The new session content, in the same shape as a session's content returned by read_active_plan (without sessionKey and scheduledOn).",
       ),
   }),
+  z.strictObject({
+    op: z.literal("set_race_role"),
+    raceId: z
+      .string()
+      .min(1)
+      .max(64)
+      .describe("Id of a race inside the plan's dates."),
+    role: z
+      .enum(raceRoles)
+      .nullable()
+      .describe("Role of the race in the plan, or null to remove it."),
+  }),
 ]);
 
 const opinionSchema = z.strictObject({
@@ -68,6 +82,7 @@ function targetKeys(operations: PlanOperation[]) {
     if (operation.op === "swap_sessions")
       return [operation.firstKey, operation.secondKey];
     if ("sessionKey" in operation) return [operation.sessionKey];
+    if (operation.op === "set_race_role") return [`race:${operation.raceId}`];
     return [];
   });
 }
@@ -105,7 +120,7 @@ export const createPlanProposalTool = defineTool({
       .min(1)
       .max(20)
       .describe(
-        "Plan operations on session keys returned by read_active_plan: skip, move, swap or replace one session.",
+        "Plan operations: skip, move, swap or replace one session by a key returned by read_active_plan, or set the role of a race inside the plan's dates.",
       ),
     specialist_opinions: z
       .array(opinionSchema)
@@ -130,6 +145,22 @@ export const createPlanProposalTool = defineTool({
         })),
       );
     const stored = await requireActivePlan(context);
+    const roles = operations.data.filter(
+      (operation) => operation.op === "set_race_role",
+    );
+    if (roles.length) {
+      const { input: planning } = await loadPlanningInput(context);
+      const { startsOn, endsOn } = stored.state.plan;
+      const outside = roles.filter(({ raceId }) => {
+        const race = planning.races.find((item) => item.id === raceId);
+        return !race || race.date < startsOn || race.date > endsOn;
+      });
+      if (outside.length)
+        throw toolError("validation_failed", {
+          reason: "race_outside_plan",
+          raceIds: outside.map((operation) => operation.raceId),
+        });
+    }
     const matches = await readSessionMatches(context, stored.planId);
     const result = applyOperations(stored.state, operations.data, {
       today: localToday(stored.state.plan.timeZone),

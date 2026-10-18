@@ -9,6 +9,7 @@ import { readHealthReportsTool } from "./health-reports";
 import { readPlanHistoryTool } from "./plan-history";
 import { readPlanProgressTool } from "./plan-progress";
 import { messageAthleteTool } from "./message-athlete";
+import { extendPlanTool } from "./extend-plan";
 import { createPlanProposalTool } from "./plan-proposal";
 import { submitPlanTool } from "./submit-plan";
 
@@ -26,6 +27,7 @@ export const coachingTools = [
   askAthleteTool,
   messageAthleteTool,
   createPlanProposalTool,
+  extendPlanTool,
 ] as const satisfies readonly RegisteredTool[];
 
 export type CoachingToolName = (typeof coachingTools)[number]["name"];
@@ -40,6 +42,7 @@ export const agentTools = {
     "read_health_reports",
     "ask_athlete",
     "create_plan_proposal",
+    "extend_plan",
   ],
   medical: [
     "read_athlete_context",

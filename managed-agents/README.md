@@ -15,7 +15,7 @@ Both agents run on Claude Sonnet 5.5. Their only sandbox tool is `read`, which l
 - `read_athlete_context` (Coach, Medical): compact context with today, profile, availability, upcoming races, recent running, training intensities, Garmin values with source and date, feasibility reference, last week's check-ins;
 - `read_health_reports` (Coach, Medical): recent wellness check-ins;
 - `read_active_plan`, `read_plan_progress` and `read_plan_history` (Coach): the plan for a range, planned-versus-completed status, and recorded proposals with their decisions;
-- `submit_plan` and `create_plan_proposal` (Coach), which store validated proposals only;
+- `submit_plan`, `create_plan_proposal` and `extend_plan` (Coach), which store validated proposals only. `extend_plan` adds weeks after the active plan's end for a race added later, so the athlete keeps one plan (ADR 0008);
 - `ask_athlete` (Coach, Medical), which asks one question, with optional answer options, and pauses the turn until the athlete answers. The answer goes back to the agent that asked.
 
 The custom tool entries in `agents/*.md` are generated from the registry between the `# stride-tools:start` and `# stride-tools:end` markers. Never edit them by hand: change the tool module, run `npm run agents:tools`, and commit both. `npm run agents:tools:check` and `npm test` fail when a block drifts. The agent files are excluded from Prettier so the generated lines stay intact.
