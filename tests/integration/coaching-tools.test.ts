@@ -324,6 +324,13 @@ function inputFor(name: string) {
       redFlag: false,
     },
     update_condition_report: { id: a.conditionId, severity: 1 },
+    read_season_calendar: { candidates: [] },
+    read_race_strategy: { raceId: a.raceId },
+    read_nutrition_targets: {
+      from: isoDay(0),
+      days: 7,
+      deficitRequested: false,
+    },
   };
   return inputs[name];
 }
@@ -431,6 +438,10 @@ describe("coaching tools run as athlete A", () => {
     const [foreign] = await sql<{ status: string }[]>`
       select status from public.athlete_condition_reports where id = ${b.conditionId}`;
     expect(foreign.status).toBe("active");
+    const strategy = await runCustomTool(a.context, "read_race_strategy", {
+      raceId: b.raceId,
+    });
+    expect(strategy.content).toMatchObject({ code: "not_found" });
   });
 
   it("stores A's proposals for A only", async () => {
