@@ -27,8 +27,19 @@ import {
 } from "@/components/ui/sheet";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toggle } from "@/components/ui/toggle";
+import { ContextChip } from "@/components/stride/context-chip";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
+import { localToday } from "@/features/app-shell/shell";
+import {
+  attachmentDate,
+  attachmentRefs,
+  toggleAttachment,
+  type AttachmentOption,
+  type AttachmentOptions,
+  type SentAttachment,
+} from "@/features/coach/attachments";
+import { AttachmentIcon } from "@/features/coach/components/attachment-icon";
 import {
   closedStates,
   conversationSections,
@@ -50,6 +61,7 @@ import { useStaff } from "@/features/coach/components/staff-context";
 import { refusalText, splitFrames, turnFailure } from "@/features/coach/stream";
 import { buildThread } from "@/features/coach/thread";
 import { markCoachThreadRead } from "@/server/coaching/actions";
+import { ContextPicker } from "./context-picker";
 import { ConversationList } from "./conversation-list";
 import { SuiviPanel } from "./suivi-panel";
 import { ThreadMenu } from "./thread-menu";
@@ -89,6 +101,8 @@ function Composer({
   busy,
   closed,
   initialText,
+  options,
+  today,
   onSend,
   onStop,
 }: {
@@ -97,20 +111,40 @@ function Composer({
   busy: boolean;
   closed: boolean;
   initialText: string;
-  onSend: (text: string, consult: boolean) => Promise<boolean>;
+  options: AttachmentOptions;
+  today: string;
+  onSend: (
+    text: string,
+    consult: boolean,
+    attachments: SentAttachment[],
+  ) => Promise<boolean>;
   onStop: () => void;
 }) {
   const staff = useStaff();
   const [text, setText] = useState(initialText);
   const [consult, setConsult] = useState(false);
+  const [attachments, setAttachments] = useState<AttachmentOption[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const contextTrigger = useRef<HTMLButtonElement>(null);
 
   async function submit() {
     const message = text.trim();
     if (!message || busy) return;
+    const attached = answering ? [] : attachments;
     setText("");
-    const sent = await onSend(message, consult && !answering);
+    if (!answering) setAttachments([]);
+    const sent = await onSend(message, consult && !answering, attached);
     if (sent) setConsult(false);
-    else setText(message);
+    else {
+      setText(message);
+      if (!answering) setAttachments(attached);
+    }
+  }
+
+  function remove(option: AttachmentOption) {
+    setAttachments((current) => toggleAttachment(current, option));
+    input.current?.focus();
   }
 
   if (closed)
@@ -134,8 +168,56 @@ function Composer({
       }}
       className="mx-auto flex w-full max-w-205 flex-col gap-2.5 border-t border-border-subtle bg-surface-inset px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-[clamp(20px,3vw,44px)] sm:pb-5"
     >
-      <InputGroup className="h-auto rounded-card border-border-strong bg-surface p-1.5 md:h-auto">
+      <InputGroup className="h-auto flex-wrap rounded-card border-border-strong bg-surface p-1.5 has-[>[data-align=block-start]]:flex-row md:h-auto">
+        {!answering && attachments.length > 0 && (
+          <InputGroupAddon
+            align="block-start"
+            className="cursor-default px-0.5 pt-0.5 pb-1"
+          >
+            <ul
+              aria-label="Contexte joint au message"
+              className="flex min-w-0 gap-1.5 max-md:overflow-x-auto md:flex-wrap"
+            >
+              {attachments.map((option) => (
+                <li
+                  key={`${option.kind}-${option.id}`}
+                  className="flex max-w-full shrink-0"
+                >
+                  <ContextChip
+                    icon={<AttachmentIcon kind={option.kind} />}
+                    label={option.title}
+                    meta={attachmentDate(option.date)}
+                    removeLabel={`Retirer ${option.title} du contexte`}
+                    onRemove={() => remove(option)}
+                    disabled={busy}
+                  />
+                </li>
+              ))}
+            </ul>
+          </InputGroupAddon>
+        )}
+        {!answering && (
+          <InputGroupAddon align="inline-start" className="self-end pl-0">
+            <Button
+              ref={contextTrigger}
+              type="button"
+              variant="ghost"
+              aria-label="Ajouter du contexte : séance, activité ou course"
+              aria-haspopup="dialog"
+              aria-expanded={pickerOpen}
+              disabled={busy}
+              onClick={() => setPickerOpen(true)}
+              className="size-11 rounded-surface p-0 text-muted md:h-9 md:w-auto md:border md:border-border md:px-2.5 md:text-meta md:font-normal"
+            >
+              <PlusIcon aria-hidden="true" />
+              <span aria-hidden="true" className="max-md:hidden">
+                Contexte
+              </span>
+            </Button>
+          </InputGroupAddon>
+        )}
         <InputGroupTextarea
+          ref={input}
           id="coach-composer"
           aria-label={answering ? "Ta réponse au staff" : "Écrire au staff"}
           placeholder={placeholder}
@@ -153,7 +235,7 @@ function Composer({
               void submit();
             }
           }}
-          className="max-h-40 min-h-10 py-2.5 text-body"
+          className="max-h-40 min-h-10 min-w-0 flex-1 basis-0 py-2.5 text-body"
         />
         <InputGroupAddon align="inline-end" className="gap-1.5 self-end pr-0">
           {!answering && (
@@ -195,6 +277,19 @@ function Composer({
           )}
         </InputGroupAddon>
       </InputGroup>
+      {!answering && (
+        <ContextPicker
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          options={options}
+          selected={attachments}
+          today={today}
+          returnFocus={contextTrigger}
+          onToggle={(option) =>
+            setAttachments((current) => toggleAttachment(current, option))
+          }
+        />
+      )}
       <p className="text-xs text-muted-foreground max-sm:hidden">
         {staff.coach.name} lit chaque message et passe la main au bon
         spécialiste, deux au plus par demande. Les questions d’un spécialiste
@@ -211,6 +306,7 @@ export function CoachScreen({
   draft,
   now: nowIso,
   timeZone,
+  attachmentOptions,
 }: {
   conversations: ConversationSummary[];
   thread: CoachThreadProps | null;
@@ -218,6 +314,7 @@ export function CoachScreen({
   draft: { mode: "conversation" | "plan"; text: string };
   now: string;
   timeZone: string;
+  attachmentOptions: AttachmentOptions;
 }) {
   const staff = useStaff();
   const router = useRouter();
@@ -238,7 +335,10 @@ export function CoachScreen({
   );
   const [lastTurnAt, setLastTurnAt] = useState(thread?.lastTurnAt ?? null);
   const [busy, setBusy] = useState(false);
-  const [sending, setSending] = useState<string | null>(null);
+  const [sending, setSending] = useState<{
+    text: string;
+    attachments: SentAttachment[];
+  } | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [suiviOpen, setSuiviOpen] = useState(false);
   const controller = useRef<AbortController | null>(null);
@@ -331,12 +431,24 @@ export function CoachScreen({
     logEnd.current?.scrollIntoView({ block: "end" });
   }, [items.length, sending]);
 
-  async function send(text: string, consult: boolean) {
+  async function send(
+    text: string,
+    consult: boolean,
+    attachments: SentAttachment[] = [],
+  ) {
     if (busy) return false;
     const answering = pendingQuestion;
     setFailure(null);
     setBusy(true);
-    setSending(text);
+    setSending({
+      text,
+      attachments: attachments.map(({ kind, id, title, date }) => ({
+        kind,
+        id,
+        title,
+        date,
+      })),
+    });
     const abort = new AbortController();
     controller.current = abort;
     let sent = false;
@@ -359,6 +471,9 @@ export function CoachScreen({
                 kind: "message",
                 text,
                 ...(consult ? { consult: "medical" } : {}),
+                ...(attachments.length
+                  ? { attachments: attachmentRefs(attachments) }
+                  : {}),
               },
         }),
       });
@@ -644,6 +759,8 @@ export function CoachScreen({
             busy={busy}
             closed={closed}
             initialText={thread ? "" : draft.text}
+            options={attachmentOptions}
+            today={localToday(now)}
             onSend={send}
             onStop={() => controller.current?.abort()}
           />

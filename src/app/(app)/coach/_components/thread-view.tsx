@@ -3,9 +3,16 @@
 import { useId } from "react";
 import { CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ContextChipLink } from "@/components/stride/context-chip";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
 import { cn } from "@/lib/utils";
+import {
+  attachmentDate,
+  attachmentHref,
+  type SentAttachment,
+} from "@/features/coach/attachments";
+import { AttachmentIcon } from "@/features/coach/components/attachment-icon";
 import { dayLabel, sameDay, timeLabel } from "@/features/coach/conversations";
 import { StaffPortrait } from "@/features/coach/components/staff-portrait";
 import { Markdown } from "@/features/coach/components/markdown";
@@ -316,6 +323,30 @@ function TypingMessage({
   );
 }
 
+function SentChips({ attachments }: { attachments: SentAttachment[] }) {
+  if (attachments.length === 0) return null;
+  return (
+    <ul
+      aria-label="Contexte joint"
+      className="mt-2.5 flex flex-wrap gap-1.5 whitespace-normal"
+    >
+      {attachments.map((attachment) => (
+        <li
+          key={`${attachment.kind}-${attachment.id}`}
+          className="flex max-w-full"
+        >
+          <ContextChipLink
+            href={attachmentHref(attachment)}
+            icon={<AttachmentIcon kind={attachment.kind} />}
+            label={attachment.title}
+            meta={attachmentDate(attachment.date)}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function AthleteMessage({
   entry,
   timeZone,
@@ -337,6 +368,7 @@ function AthleteMessage({
       )}
       <div className="rounded-[16px_16px_4px_16px] bg-surface-raised px-3.25 py-2.75 text-body leading-[1.45] whitespace-pre-wrap">
         {entry.text}
+        <SentChips attachments={entry.attachments} />
         <MonoLabel size="nano" className="mt-1 block text-right">
           {timeLabel(entry.at, timeZone)}
         </MonoLabel>
@@ -355,7 +387,7 @@ export function ThreadLog({
   onOther,
 }: {
   entries: ThreadEntry[];
-  pending: string | null;
+  pending: { text: string; attachments: SentAttachment[] } | null;
   timeZone: string;
   now: Date;
   busy: boolean;
@@ -401,7 +433,8 @@ export function ThreadLog({
       })}
       {pending && (
         <div className="flex max-w-[84%] flex-col self-end rounded-[16px_16px_4px_16px] bg-surface-raised px-3.25 py-2.75 text-body leading-[1.45] whitespace-pre-wrap opacity-70">
-          {pending}
+          {pending.text}
+          <SentChips attachments={pending.attachments} />
           <span className="sr-only">Envoi en cours</span>
         </div>
       )}
