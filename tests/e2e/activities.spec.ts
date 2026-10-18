@@ -235,7 +235,9 @@ test("the full detail says when Garmin sent no laps and stays within 320px", asy
   await signIn(page);
   await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000001/details");
   await expect(
-    page.getByText("Garmin n’a transmis aucun tour pour cette activité."),
+    page
+      .getByRole("article")
+      .getByText("Garmin n’a transmis aucun tour pour cette activité."),
   ).toBeVisible();
   await expect(page.getByRole("table")).toHaveCount(0);
   await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000004/details");
