@@ -1734,6 +1734,10 @@ export type Database = {
         Returns: string;
       };
       allow_auth_attempt: { Args: { p_user_id: string }; Returns: boolean };
+      apply_accepted_plan_proposal: {
+        Args: { p_changeset: Json; p_proposal_id: string };
+        Returns: number;
+      };
       claim_sync_job: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -1862,6 +1866,10 @@ export type Database = {
         };
         Returns: number;
       };
+      record_plan_proposal_outcome: {
+        Args: { p_note?: string; p_outcome: string; p_proposal_id: string };
+        Returns: undefined;
+      };
       reject_plan_proposal: {
         Args: { p_note?: string; p_proposal_id: string };
         Returns: {
@@ -1927,6 +1935,7 @@ export type Database = {
         Args: { p_points: Json; p_race_id: string; p_summary: Json };
         Returns: undefined;
       };
+      reset_own_plan: { Args: { p_plan_id?: string }; Returns: undefined };
       schedule_incremental_sync: {
         Args: Record<PropertyKey, never>;
         Returns: number;
