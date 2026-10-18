@@ -93,6 +93,7 @@ import { StrideMark } from "@/components/stride/stride-mark";
 import { SyncStatus } from "@/components/stride/sync-status";
 import { VerdictList, VerdictRow } from "@/components/stride/verdict-row";
 import { ContextChipsExample } from "./_components/context-chips";
+import { SuggestedRepliesExample } from "./_components/suggested-replies";
 import { GallerySection, Specimen } from "./_components/specimen";
 
 const sessionTileKinds: SessionTileKind[] = [
@@ -863,6 +864,14 @@ export default function DesignSystemPage() {
             <p className="text-xs text-muted-foreground">
               Removable chip for an item attached in the composer, and the link
               chip on the sent message. 44px targets below md.
+            </p>
+          </Specimen>
+          <Specimen title="Suggested replies" meta="SuggestedReplies">
+            <SuggestedRepliesExample />
+            <p className="text-xs text-muted-foreground">
+              Short replies above the Coach composer that send on tap. Pills
+              with 44px targets that scroll below md, compact outline buttons
+              that wrap from md.
             </p>
           </Specimen>
           <Specimen title="Signals and notes" meta="SignalChip · CoachNote">
