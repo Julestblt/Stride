@@ -26,6 +26,7 @@ import { readProfile } from "@/server/onboarding/profile";
 import { loadProgressHistory } from "@/server/progress/history";
 import { readRaceCourses } from "@/server/races/courses";
 import { readPlanningConstraints } from "./constraints";
+import { readPlanningHealth } from "./health";
 
 export type PlanDraft = { today: string; plan: DeterministicPlan };
 
@@ -86,16 +87,16 @@ export const loadPlanningInput = cache(
       await readPlanningConstraints(context);
     const constraints = { timeZone, maxWeeklyMinutes, unavailablePeriods };
     const today = localToday(constraints.timeZone, now);
-    const [profile, goals, courses, history, zones, garmin] = await Promise.all(
-      [
+    const [profile, goals, courses, history, zones, garmin, health] =
+      await Promise.all([
         readProfile(context),
         readGoals(context),
         readRaceCourses(context),
         loadProgressHistory(context, today),
         loadHeartRateZones(context, now),
         readGarminThreshold(context),
-      ],
-    );
+        readPlanningHealth(context, today),
+      ]);
     const races: ObjectiveRace[] = resolveRaceSnapshots(
       goals.races,
       courses,
@@ -170,6 +171,7 @@ export const loadPlanningInput = cache(
         strideZones: zones ? { zones: zones.zones, asOf: today } : null,
       },
       optimisticSeconds,
+      health,
     };
     return { today, input };
   },

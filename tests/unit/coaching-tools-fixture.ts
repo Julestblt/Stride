@@ -106,6 +106,7 @@ export function planningInputFixture(): DeterministicPlanInput {
       },
     },
     optimisticSeconds: 11_400,
+    health: null,
   };
 }
 

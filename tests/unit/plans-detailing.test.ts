@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { PlanningConstraints } from "@/features/plans/constraints";
-import { buildDeterministicPlan } from "@/features/plans/detailing/build";
+import {
+  buildDeterministicPlan,
+  validatePlanChange,
+} from "@/features/plans/detailing/build";
+import type { PlanningHealth } from "@/features/plans/health/health";
 import type { DetailingAvailability } from "@/features/plans/detailing/detailing";
 import type { HistoryActivity } from "@/features/plans/history/summary";
 import {
@@ -103,7 +107,7 @@ const constraints: PlanningConstraints = {
 const build = (
   races: ObjectiveRace[],
   activities: HistoryActivity[],
-  patch: { constraints?: PlanningConstraints } = {},
+  patch: { constraints?: PlanningConstraints; health?: PlanningHealth } = {},
 ) =>
   buildDeterministicPlan({
     today,
@@ -112,6 +116,7 @@ const build = (
     availability,
     constraints: patch.constraints ?? constraints,
     targets: targetsInput,
+    health: patch.health ?? null,
   });
 
 const steps = (structure: StructureStep[]) =>
@@ -406,5 +411,125 @@ describe("buildDeterministicPlan", () => {
       feasibility: { verdict: "too_short" },
     });
     expect(build([race(42.2, "2027-03-07")], []).status).toBe("no_history");
+  });
+});
+
+describe("health input in plan validation", () => {
+  const marathon = race(42.2, "2027-03-07");
+  const ready = (health?: PlanningHealth) => {
+    const plan = build([marathon], history(330), { health });
+    if (plan.status !== "ready") throw new Error("not ready");
+    return plan;
+  };
+  const pain = (severity: number) => ({
+    conditions: [
+      {
+        kind: "pain" as const,
+        severity,
+        status: "active" as const,
+        worsening: false,
+        systemicSymptoms: false,
+        redFlag: false,
+      },
+    ],
+    readiness: [],
+  });
+  const change = (health: PlanningHealth | null, on = today) => {
+    const { state } = ready();
+    return validatePlanChange(
+      {
+        today: on,
+        races: [marathon],
+        activities: history(330),
+        availability,
+        constraints,
+        targets: targetsInput,
+        health,
+      },
+      state,
+      state,
+      {
+        versions: { expected: 1, current: 1 },
+        matchedSessionKeys: new Set(),
+      },
+    );
+  };
+  const rule = (
+    report: ReturnType<typeof change>,
+    ruleId: "H1" | "H2" | "H3",
+  ) => report.results.find((result) => result.ruleId === ruleId)!;
+  const running = (horizon: number, quality: boolean, from = today) =>
+    ready()
+      .state.sessions.filter(
+        (session) =>
+          (session.sport === "run" || session.sport === "trail") &&
+          (!quality ||
+            [
+              "tempo",
+              "threshold",
+              "intervals",
+              "hills",
+              "race_specific",
+            ].includes(session.kind)) &&
+          session.scheduledOn >= from &&
+          session.scheduledOn < addDays(from, horizon),
+      )
+      .map((session) => session.sessionKey);
+
+  const firstQuality = () => {
+    const [first] = running(14, true);
+    const day = ready().state.sessions.find(
+      (session) => session.sessionKey === first,
+    )!.scheduledOn;
+    return { first, day };
+  };
+
+  it("keeps the health rules skipped without health input", () => {
+    const report = change(null);
+    expect(rule(report, "H1")).toMatchObject({
+      outcome: "skipped",
+      skipReason: "no_health_input",
+    });
+    expect(report.valid).toBe(true);
+  });
+
+  it("blocks a change with running during the week after a 7/10 pain", () => {
+    const keys = running(7, false);
+    expect(keys.length).toBeGreaterThan(0);
+    const report = change(pain(7));
+    expect(rule(report, "H1")).toMatchObject({ outcome: "fail", keys });
+    expect(report.valid).toBe(false);
+  });
+
+  it("blocks quality in the next three days after a 5/10 pain", () => {
+    const { day } = firstQuality();
+    const report = change(pain(5), day);
+    expect(rule(report, "H1").outcome).toBe("pass");
+    const keys = running(3, true, day);
+    expect(keys.length).toBeGreaterThan(0);
+    expect(rule(report, "H2")).toMatchObject({ outcome: "fail", keys });
+  });
+
+  it("checks quality against a red readiness day", () => {
+    const { first, day } = firstQuality();
+    const report = change({
+      conditions: [],
+      readiness: [{ date: addDays(day, -1), level: "red" }],
+    });
+    expect(rule(report, "H3")).toMatchObject({ outcome: "fail" });
+    expect(rule(report, "H3").keys).toContain(first);
+    expect(
+      rule(
+        change({
+          conditions: [],
+          readiness: [{ date: addDays(day, -1), level: "green" }],
+        }),
+        "H3",
+      ).outcome,
+    ).toBe("pass");
+  });
+
+  it("validates the deterministic draft against the same health input", () => {
+    expect(ready(pain(8)).report.valid).toBe(false);
   });
 });

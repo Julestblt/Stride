@@ -5,7 +5,7 @@ export type ToolContext = OnboardingContext & {
   coachSessionId?: string | null;
 };
 
-export type ToolClass = "read" | "compute" | "propose";
+export type ToolClass = "read" | "compute" | "propose" | "record";
 export type DataClass = "training" | "health" | "plan";
 
 export type CoachingTool<

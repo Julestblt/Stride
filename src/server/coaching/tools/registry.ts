@@ -3,6 +3,10 @@ import { z } from "zod";
 import { readActivePlanTool } from "./active-plan";
 import { askAthleteTool } from "./ask-athlete";
 import { readAthleteContextTool } from "./athlete-context";
+import {
+  recordConditionReportTool,
+  updateConditionReportTool,
+} from "./condition-reports";
 import type { CoachingTool, ToolContext } from "./define";
 import { ToolError, toolError, type ToolErrorBody } from "./errors";
 import { readHealthReportsTool } from "./health-reports";
@@ -28,6 +32,8 @@ export const coachingTools = [
   messageAthleteTool,
   createPlanProposalTool,
   extendPlanTool,
+  recordConditionReportTool,
+  updateConditionReportTool,
 ] as const satisfies readonly RegisteredTool[];
 
 export type CoachingToolName = (typeof coachingTools)[number]["name"];
@@ -49,6 +55,8 @@ export const agentTools = {
     "read_health_reports",
     "ask_athlete",
     "message_athlete",
+    "record_condition_report",
+    "update_condition_report",
   ],
 } as const satisfies Record<string, readonly CoachingToolName[]>;
 

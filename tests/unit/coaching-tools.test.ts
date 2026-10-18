@@ -172,7 +172,10 @@ describe("tool registry", () => {
       "read_health_reports",
       "ask_athlete",
       "message_athlete",
+      "record_condition_report",
+      "update_condition_report",
     ]);
+    expect(agentTools.coach).not.toContain("record_condition_report");
   });
 
   it("has a French message for every error code", () => {
@@ -893,6 +896,160 @@ describe("read_health_reports", () => {
       "2026-10-13",
     ]);
     expect(calls.every(scopedToAthlete)).toBe(true);
+  });
+});
+
+const conditionId = "f0000000-0000-4000-8000-00000000000f";
+const conditionRow = {
+  id: conditionId,
+  kind: "pain",
+  body_area: "shin",
+  severity: 5,
+  started_on: "2026-10-15",
+  status: "active",
+  resolved_on: null,
+  worsening: false,
+  systemic_symptoms: false,
+  red_flag: false,
+  note: null,
+};
+
+describe("condition reports", () => {
+  it("returns open condition reports with the health reports", async () => {
+    const { calls, client } = fakeClient({
+      athlete_condition_reports: { data: [conditionRow], error: null },
+    });
+    const outcome = await runCustomTool(
+      contextWith(client),
+      "read_health_reports",
+      { days: 7 },
+    );
+    expect(outcome.ok).toBe(true);
+    expect((outcome.content as { conditions: unknown[] }).conditions).toEqual([
+      {
+        id: conditionId,
+        kind: "pain",
+        bodyArea: "shin",
+        severity: 5,
+        startedOn: "2026-10-15",
+        status: "active",
+        worsening: false,
+        systemicSymptoms: false,
+        redFlag: false,
+      },
+    ]);
+    expect(
+      calls.find((call) => call.table === "athlete_condition_reports")!.steps,
+    ).toContainEqual(["or", "status.neq.resolved,resolved_on.gte.2026-10-09"]);
+    expect(calls.every(scopedToAthlete)).toBe(true);
+  });
+
+  it("records a report the athlete confirmed, for the athlete only", async () => {
+    const { calls, client } = fakeClient({
+      athlete_condition_reports: { data: [conditionRow], error: null },
+    });
+    const outcome = await runCustomTool(
+      contextWith(client),
+      "record_condition_report",
+      {
+        kind: "pain",
+        bodyArea: "shin",
+        severity: 5,
+        startedOn: "2026-10-15",
+        status: "active",
+        worsening: false,
+        systemicSymptoms: false,
+        redFlag: false,
+      },
+    );
+    expect(outcome).toMatchObject({ ok: true, content: { id: conditionId } });
+    expect(calls[0].steps[0]).toEqual([
+      "insert",
+      expect.objectContaining({
+        user_id: athlete,
+        severity: 5,
+        started_on: "2026-10-15",
+        source: "coach_confirmed",
+      }),
+    ]);
+  });
+
+  it("refuses a severity outside 0 to 10 or a start in the future", async () => {
+    const { calls, client } = fakeClient({});
+    const report = {
+      kind: "pain",
+      severity: 11,
+      status: "active",
+      worsening: false,
+      systemicSymptoms: false,
+      redFlag: false,
+    };
+    expect(
+      (
+        await runCustomTool(
+          contextWith(client),
+          "record_condition_report",
+          report,
+        )
+      ).content,
+    ).toMatchObject({ code: "invalid_input" });
+    expect(
+      (
+        await runCustomTool(contextWith(client), "record_condition_report", {
+          ...report,
+          severity: 4,
+          startedOn: "2026-10-17",
+        })
+      ).content,
+    ).toMatchObject({ code: "invalid_input" });
+    expect(calls).toEqual([]);
+  });
+
+  it("resolves a report today in the athlete's time zone", async () => {
+    const { calls, client } = fakeClient({
+      athlete_condition_reports: {
+        data: [
+          { ...conditionRow, status: "resolved", resolved_on: "2026-10-16" },
+        ],
+        error: null,
+      },
+    });
+    const outcome = await runCustomTool(
+      contextWith(client),
+      "update_condition_report",
+      { id: conditionId, status: "resolved" },
+    );
+    expect(outcome).toMatchObject({
+      ok: true,
+      content: { status: "resolved", resolvedOn: "2026-10-16" },
+    });
+    expect(calls[0].steps[0]).toEqual([
+      "update",
+      { status: "resolved", resolved_on: "2026-10-16" },
+    ]);
+    expect(calls[0].steps).toContainEqual(["eq", "id", conditionId]);
+    expect(scopedToAthlete(calls[0])).toBe(true);
+  });
+
+  it("answers not_found for another athlete's report and needs a change", async () => {
+    const { client } = fakeClient({
+      athlete_condition_reports: { data: [], error: null },
+    });
+    expect(
+      (
+        await runCustomTool(contextWith(client), "update_condition_report", {
+          id: conditionId,
+          severity: 2,
+        })
+      ).content,
+    ).toMatchObject({ code: "not_found" });
+    expect(
+      (
+        await runCustomTool(contextWith(client), "update_condition_report", {
+          id: conditionId,
+        })
+      ).content,
+    ).toMatchObject({ code: "invalid_input" });
   });
 });
 

@@ -30,6 +30,7 @@ type Seeded = {
   proposalId: string;
   activityId: string;
   raceId: string;
+  conditionId: string;
 };
 
 const createdUsers: string[] = [];
@@ -116,6 +117,10 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
   await sql`
     insert into public.athlete_wellness_checkins (user_id, checkin_date, legs, soreness, stress)
     values (${userId}, ${isoDay(-1)}, ${label === "a" ? "fresh" : "heavy"}, 'none', 'low')`;
+  const [condition] = await sql<{ id: string }[]>`
+    insert into public.athlete_condition_reports (user_id, kind, body_area, severity, started_on, note)
+    values (${userId}, 'pain', 'shin', 2, ${isoDay(-3)}, ${`Douleur ${label}`})
+    returning id`;
   const connection = await admin
     .from("provider_connections")
     .insert({ user_id: userId, provider: "garmin", status: "connected" })
@@ -162,6 +167,7 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
     proposalId: proposal.id,
     activityId: activity.data.id,
     raceId: race.id,
+    conditionId: condition.id,
   };
 }
 
@@ -282,6 +288,15 @@ function inputFor(name: string) {
     },
     ask_athlete: { question: "Comment te sens-tu ?" },
     message_athlete: { text: "Tu peux courir à plat." },
+    record_condition_report: {
+      kind: "fatigue",
+      severity: 3,
+      status: "monitoring",
+      worsening: false,
+      systemicSymptoms: false,
+      redFlag: false,
+    },
+    update_condition_report: { id: a.conditionId, severity: 1 },
   };
   return inputs[name];
 }
@@ -294,6 +309,8 @@ function foreignMarkers() {
     b.proposalId,
     b.activityId,
     b.sessionKey,
+    b.conditionId,
+    "Douleur b",
     "s-b-next",
     "Proposition b",
     "Note b",
@@ -375,6 +392,18 @@ describe("coaching tools run as athlete A", () => {
       operations: [{ op: "skip_session", sessionKey: "s-b-next" }],
     });
     expect(proposal.content).toMatchObject({ code: "not_found" });
+    const condition = await runCustomTool(
+      a.context,
+      "update_condition_report",
+      {
+        id: b.conditionId,
+        status: "resolved",
+      },
+    );
+    expect(condition.content).toMatchObject({ code: "not_found" });
+    const [foreign] = await sql<{ status: string }[]>`
+      select status from public.athlete_condition_reports where id = ${b.conditionId}`;
+    expect(foreign.status).toBe("active");
   });
 
   it("stores A's proposals for A only", async () => {

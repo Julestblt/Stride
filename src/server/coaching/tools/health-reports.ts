@@ -4,6 +4,8 @@ import { localToday } from "@/features/plans/constraints";
 import { addDays } from "@/features/plans/model/dates";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readPlanningConstraints } from "@/server/plans/constraints";
+import { readConditionReports } from "@/server/plans/health";
+import { conditionSchema, toConditionOutput } from "./condition-reports";
 import { defineTool } from "./define";
 
 export const checkinSchema = z.strictObject({
@@ -48,7 +50,7 @@ export async function readCheckins(
 export const readHealthReportsTool = defineTool({
   name: "read_health_reports",
   description:
-    "Read the athlete's wellness check-ins for the last days, newest first: legs, soreness and stress by date. Values the athlete did not report are absent. Returns JSON. Use it before giving any health opinion.",
+    "Read the athlete's health reports for the last days: wellness check-ins newest first (legs, soreness and stress by date; values the athlete did not report are absent), and condition reports with their ids, open ones plus those resolved in the period. Returns JSON. Use it before giving any health opinion and before recording or updating a condition report.",
   class: "read",
   dataClasses: ["health"],
   input: z.strictObject({
@@ -61,13 +63,16 @@ export const readHealthReportsTool = defineTool({
   output: z.strictObject({
     today: z.iso.date(),
     checkins: z.array(checkinSchema),
+    conditions: z.array(conditionSchema),
   }),
   run: async (context, { days }) => {
     const { timeZone } = await readPlanningConstraints(context);
     const today = localToday(timeZone);
-    return {
-      today,
-      checkins: await readCheckins(context, addDays(today, -days)),
-    };
+    const since = addDays(today, -days);
+    const [checkins, conditions] = await Promise.all([
+      readCheckins(context, since),
+      readConditionReports(context, since),
+    ]);
+    return { today, checkins, conditions: conditions.map(toConditionOutput) };
   },
 });

@@ -9,6 +9,64 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      athlete_condition_reports: {
+        Row: {
+          body_area: string | null;
+          created_at: string;
+          id: string;
+          kind: string;
+          note: string | null;
+          red_flag: boolean;
+          resolved_on: string | null;
+          revision: number;
+          severity: number;
+          source: string;
+          started_on: string;
+          status: string;
+          systemic_symptoms: boolean;
+          updated_at: string;
+          user_id: string;
+          worsening: boolean;
+        };
+        ComputedFields: never;
+        Insert: {
+          body_area?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          note?: string | null;
+          red_flag?: boolean;
+          resolved_on?: string | null;
+          revision?: number;
+          severity: number;
+          source?: string;
+          started_on: string;
+          status?: string;
+          systemic_symptoms?: boolean;
+          updated_at?: string;
+          user_id: string;
+          worsening?: boolean;
+        };
+        Update: {
+          body_area?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          note?: string | null;
+          red_flag?: boolean;
+          resolved_on?: string | null;
+          revision?: number;
+          severity?: number;
+          source?: string;
+          started_on?: string;
+          status?: string;
+          systemic_symptoms?: boolean;
+          updated_at?: string;
+          user_id?: string;
+          worsening?: boolean;
+        };
+        Relationships: [];
+      };
       athlete_goals: {
         Row: {
           created_at: string;
