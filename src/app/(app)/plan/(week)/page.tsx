@@ -4,6 +4,7 @@ import { DataActivityLink as Link } from "@/features/data-activity/components/na
 import { mondayOf } from "@/features/plans/model/dates";
 import { proposalsByWeek } from "@/features/plans/review/proposal";
 import { buildProgram } from "@/features/plans/view/program";
+import { programText } from "@/features/plans/view/program-text";
 import { requireAthlete } from "@/server/app/session";
 import { loadPlanOverview, programInput } from "@/server/plans/overview";
 import { loadIntensityPaces } from "@/server/plans/paces";
@@ -16,6 +17,7 @@ import {
   watchState,
 } from "@/features/garmin/watch";
 import { loadWatchView } from "@/server/garmin/watch";
+import { CopyProgramButton } from "../_components/copy-program";
 import { PlanEmpty } from "../_components/plan-empty";
 import { PlanFrame } from "../_components/plan-frame";
 import { ProgramExplorer } from "../_components/program-explorer";
@@ -91,13 +93,25 @@ export default async function PlanPage({
       </p>
       <div className="flex items-start gap-3 max-sm:flex-col-reverse max-sm:items-stretch">
         <ProgramTabs programs={programs} active={program} />
-        <Link
-          href="/plan/historique"
-          className="ml-auto flex min-h-9 shrink-0 items-center gap-2 rounded-surface border border-border px-3 text-[13px] text-muted hover:text-foreground max-sm:-mt-11 max-sm:min-h-11 max-sm:self-end"
-        >
-          <HistoryIcon aria-hidden="true" className="size-3.5" />
-          Historique
-        </Link>
+        <div className="ml-auto flex shrink-0 gap-2 max-sm:-mt-11 max-sm:self-end">
+          <CopyProgramButton
+            text={programText({
+              state: overview.plan.state,
+              version: overview.plan.version,
+              summary: overview.plan.versionSummary,
+              races: overview.races,
+              today: overview.today,
+              paces,
+            })}
+          />
+          <Link
+            href="/plan/historique"
+            className="flex min-h-9 shrink-0 items-center gap-2 rounded-surface border border-border px-3 text-[13px] text-muted hover:text-foreground max-sm:min-h-11"
+          >
+            <HistoryIcon aria-hidden="true" className="size-3.5" />
+            Historique
+          </Link>
+        </div>
       </div>
       <ProgramExplorer
         key={program.raceId ?? "plan"}

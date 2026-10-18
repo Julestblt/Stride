@@ -145,6 +145,28 @@ test("a nested race opens its own program", async ({ page }) => {
   await expect(page.getByText(/^dans \d+ j$/)).toBeVisible();
 });
 
+test("the whole program is copied as text for another AI", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page, "plan@example.com");
+  await page.goto("/plan");
+  await page.getByRole("button", { name: "Copier le programme" }).click();
+  await expect(
+    page.getByText("Programme copié", { exact: true }),
+  ).toBeVisible();
+  const text = await page.evaluate(() => navigator.clipboard.readText());
+  expect(text).toMatch(/^# Programme d’entraînement · /);
+  expect(text).toMatch(/- \*\*Marathon de Paris\*\* · priorité A · /);
+  expect(text).toMatch(/- Du \d{2}\/\d{2}\/\d{4} au \d{2}\/\d{2}\/\d{4} · /);
+  expect(text).toContain("## Structure en blocs");
+  expect(text).toMatch(/### Semaine 1 · \d{2}\/\d{2}\/\d{4} → /);
+  expect(text).toMatch(/#### [a-zé]+\. \d{2}\/\d{2}\/\d{4} · /);
+  expect(text).toContain("- Déroulé :");
+});
+
 test("the program fits a phone and shows the selected week", async ({
   page,
 }) => {
