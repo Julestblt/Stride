@@ -5,6 +5,7 @@ import {
   ultraDemands,
   type Feasibility,
 } from "../feasibility/feasibility";
+import type { PlanningHealth } from "../health/health";
 import {
   historyForValidation,
   summarizeHistory,
@@ -35,6 +36,7 @@ export type DeterministicPlanInput = {
   targets: Omit<TargetsInput, "today">;
   declaredWeeklyMinutes?: number | null;
   optimisticSeconds?: number | null;
+  health: PlanningHealth | null;
 };
 
 export type DeterministicPlan =
@@ -165,7 +167,7 @@ function validateCandidate(
       distanceKm: item.distanceKm,
     })),
     history: historyForValidation(input.activities, summary, today),
-    health: null,
+    health: input.health,
     load: null,
     demands: race
       ? {
