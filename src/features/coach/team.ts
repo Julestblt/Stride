@@ -1,5 +1,5 @@
 import { zonedEpoch } from "@/features/races/sun";
-import type { StaffAgent, StaffMember } from "./staff";
+import type { SpecialistAgent, StaffAgent, StaffMember } from "./staff";
 
 export type TeamProfile = {
   tagline: string;
@@ -33,9 +33,48 @@ export const teamProfiles: Record<StaffAgent, TeamProfile> = {
     ],
     reads: ["Signalements", "Sommeil", "VFC", "Charge"],
   },
+  director: {
+    tagline: "Directeur sportif",
+    summary: () =>
+      "Ta saison dans son ensemble : le rôle de chaque course, l'espacement entre elles et ce qui est réaliste sur l'année.",
+    listTitle: "Consulté quand",
+    duties: () => [
+      "Tu ajoutes, retires ou changes une course",
+      "Un objectif semble hors de portée",
+      "Deux courses se rapprochent trop",
+    ],
+    reads: ["Courses", "Plan", "Charge", "Faisabilité"],
+  },
+  strategist: {
+    tagline: "Stratège de course",
+    summary: () =>
+      "Le parcours, ton objectif sur ce parcours et ta gestion de course : allures, montées, nuit et ravitaillements.",
+    listTitle: "Consulté quand",
+    duties: () => [
+      "Tu parles du parcours ou de ton objectif",
+      "Tu prépares ton allure de course",
+      "La météo change la semaine de course",
+    ],
+    reads: ["Profil du parcours", "Météo", "Seuils", "Résultats"],
+  },
+  nutritionist: {
+    tagline: "Nutritionniste",
+    summary: () =>
+      "Énergie et glucides selon tes séances, charge glucidique avant course et ravitaillement pendant l'effort.",
+    listTitle: "Consulté quand",
+    duties: () => [
+      "Tu demandes quoi manger avant ou après une séance",
+      "Les jours avant une course longue",
+      "Tu prépares ton plan de ravitaillement",
+    ],
+    reads: ["Profil", "Séances prévues", "Calories actives"],
+  },
 };
 
-export type StaffUsage = { conversations: number; medicalOpinions: number };
+export type StaffUsage = {
+  conversations: number;
+  opinions: Record<SpecialistAgent, number>;
+};
 
 export function monthStart(now: Date, timeZone: string) {
   const today = new Intl.DateTimeFormat("en-CA", { timeZone }).format(now);

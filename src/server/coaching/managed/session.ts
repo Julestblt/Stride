@@ -4,7 +4,12 @@ import { threadTitle } from "@/features/coach/conversations";
 import type { AttachmentRef } from "@/features/coach/attachments";
 import { clampItem, type ThreadItem } from "@/features/coach/items";
 import { readLabel } from "@/features/coach/reads";
-import { agentOfManagedName, type StaffAgent } from "@/features/coach/staff";
+import {
+  agentOfManagedName,
+  specialistAgents,
+  type SpecialistAgent,
+  type StaffAgent,
+} from "@/features/coach/staff";
 import {
   attachmentContextText,
   resolveAttachments,
@@ -60,7 +65,7 @@ export type TurnInput =
   | {
       kind: "message";
       text: string;
-      consult?: "medical";
+      consult?: SpecialistAgent;
       attachments?: AttachmentRef[];
     }
   | { kind: "answer"; toolUseId: string; text: string };
@@ -127,6 +132,9 @@ export class SessionStateError extends Error {
 const agentNames: Record<string, AgentName> = {
   "Stride Coach": "coach",
   "Stride Medical": "medical",
+  "Stride Sports Director": "director",
+  "Stride Course Strategist": "strategist",
+  "Stride Nutritionist": "nutritionist",
 };
 
 function callingAgent(
@@ -258,9 +266,15 @@ function messageOf(input: unknown): {
   }
 }
 
-const consultInstruction: Record<"medical", string> = {
+const consultInstruction: Record<SpecialistAgent, string> = {
   medical:
     "L’athlète a mentionné Stride Medical : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
+  director:
+    "L’athlète a mentionné Stride Sports Director : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
+  strategist:
+    "L’athlète a mentionné Stride Course Strategist : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
+  nutritionist:
+    "L’athlète a mentionné Stride Nutritionist : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
 };
 
 const proposalTools = new Set([
@@ -276,7 +290,7 @@ const proposalInputSchema = z.object({
   specialist_opinions: z
     .array(
       z.object({
-        specialist: z.literal("medical"),
+        specialist: z.enum(specialistAgents),
         verdict: z.string(),
         summary: z.string(),
       }),

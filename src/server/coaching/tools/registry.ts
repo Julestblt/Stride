@@ -15,7 +15,10 @@ import { readPlanProgressTool } from "./plan-progress";
 import { messageAthleteTool } from "./message-athlete";
 import { extendPlanTool } from "./extend-plan";
 import { createPlanProposalTool } from "./plan-proposal";
+import { readNutritionTargetsTool } from "./nutrition-targets";
+import { readRaceStrategyTool } from "./race-strategy";
 import { rewritePlanRangeTool } from "./rewrite-plan-range";
+import { readSeasonCalendarTool } from "./season-calendar";
 import { submitPlanTool } from "./submit-plan";
 
 export type RegisteredTool = Omit<CoachingTool, "run"> & {
@@ -36,6 +39,9 @@ export const coachingTools = [
   rewritePlanRangeTool,
   recordConditionReportTool,
   updateConditionReportTool,
+  readSeasonCalendarTool,
+  readRaceStrategyTool,
+  readNutritionTargetsTool,
 ] as const satisfies readonly RegisteredTool[];
 
 export type CoachingToolName = (typeof coachingTools)[number]["name"];
@@ -60,6 +66,30 @@ export const agentTools = {
     "message_athlete",
     "record_condition_report",
     "update_condition_report",
+  ],
+  director: [
+    "read_athlete_context",
+    "read_season_calendar",
+    "read_active_plan",
+    "read_plan_progress",
+    "read_health_reports",
+    "ask_athlete",
+    "message_athlete",
+  ],
+  strategist: [
+    "read_athlete_context",
+    "read_race_strategy",
+    "read_health_reports",
+    "ask_athlete",
+    "message_athlete",
+  ],
+  nutritionist: [
+    "read_athlete_context",
+    "read_nutrition_targets",
+    "read_active_plan",
+    "read_health_reports",
+    "ask_athlete",
+    "message_athlete",
   ],
 } as const satisfies Record<string, readonly CoachingToolName[]>;
 

@@ -12,8 +12,11 @@ export function StaffProvider({
   faces: StaffFaces;
   children: React.ReactNode;
 }) {
-  const { coach, medical } = faces;
-  const staff = useMemo(() => staffOf({ coach, medical }), [coach, medical]);
+  const { coach, medical, director, strategist, nutritionist } = faces;
+  const staff = useMemo(
+    () => staffOf({ coach, medical, director, strategist, nutritionist }),
+    [coach, medical, director, strategist, nutritionist],
+  );
   return <StaffContext value={staff}>{children}</StaffContext>;
 }
 

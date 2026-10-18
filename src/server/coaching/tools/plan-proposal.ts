@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { specialistAgents } from "@/features/coach/staff";
 import { localToday } from "@/features/plans/constraints";
 import { raceRoles } from "@/features/plans/model/plan";
 import { applyOperations } from "@/features/plans/operations/apply";
@@ -72,7 +73,7 @@ const coachOperationSchema = z.discriminatedUnion("op", [
 ]);
 
 const opinionSchema = z.strictObject({
-  specialist: z.literal("medical"),
+  specialist: z.enum(specialistAgents),
   verdict: z.string().min(1).max(64),
   summary: z.string().min(1).max(1000),
 });

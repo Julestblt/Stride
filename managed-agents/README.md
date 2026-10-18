@@ -6,17 +6,23 @@ Claude Managed Agents definitions for the coaching runtime, chosen by the [#128]
 | ---------------------------- | ------------------------------------------------------------------------ |
 | `agents/coach.md`            | Stride Coach: leads the group conversation, designs plans and proposals  |
 | `agents/medical.md`          | Stride Medical, brought in by the Coach, then talks to the athlete       |
+| `agents/director.md`         | Stride Sports Director: season calendar, race roles, spacing             |
+| `agents/strategist.md`       | Stride Course Strategist: one race on its course, scenarios and pacing   |
+| `agents/nutritionist.md`     | Stride Nutritionist: daily targets from the nutrition calculator         |
 | `skills/*/SKILL.md`          | Coaching knowledge loaded on demand (plan format, periodization, races…) |
 | `environments/coaching.yaml` | Cloud environment, limited networking, MCP servers only                  |
 | `claude-lock.json`           | Resource IDs written by `ant apply`, committed                           |
 
-Both agents run on Claude Sonnet 5.5. Their only sandbox tool is `read`, which loads skills; there is no bash, file writing or web access. Stride data reaches the agents only through custom tools from the typed registry in `src/server/coaching/tools`, executed by the Stride server under the athlete's row-level security:
+The Coach and the specialists run on Claude Sonnet 5.5, except the Nutritionist on Claude Haiku 5.5, because its numbers come from code. Their only sandbox tool is `read`, which loads skills; there is no bash, file writing or web access. Stride data reaches the agents only through custom tools from the typed registry in `src/server/coaching/tools`, executed by the Stride server under the athlete's row-level security:
 
 - `read_athlete_context` (Coach, Medical): compact context with today, profile, availability, upcoming races, recent running, training intensities, Garmin values with source and date, feasibility reference, last week's check-ins;
 - `read_health_reports` (Coach, Medical): recent wellness check-ins;
 - `read_active_plan`, `read_plan_progress` and `read_plan_history` (Coach): the plan for a range, planned-versus-completed status, and recorded proposals with their decisions;
 - `submit_plan`, `create_plan_proposal`, `extend_plan` and `rewrite_plan_range` (Coach), which store validated proposals only. `extend_plan` adds weeks after the active plan's end for a race added later, so the athlete keeps one plan (ADR 0008); `rewrite_plan_range` rebuilds the phases, weeks and sessions of a date range and keeps the weeks outside it unchanged;
-- `ask_athlete` (Coach, Medical), which asks one question, with optional answer options, and pauses the turn until the athlete answers. The answer goes back to the agent that asked.
+- `read_season_calendar` (Sports Director): every race with its weekday, km-effort, recovery and taper windows, the gaps and the conflicts, from the deterministic calendar check in `src/features/races/calendar.ts`; candidates the athlete mentions are tested without being saved;
+- `read_race_strategy` (Course Strategist): the race workspace analysis for one race, with the three scenarios simulated on the course, passages, cutoff margins, night sections, fueling totals and, within 14 days, the weather;
+- `read_nutrition_targets` (Nutritionist): daily energy and macro targets from the deterministic calculator in `src/features/nutrition/calculator.ts`, with the light-deficit verdict and missing profile fields;
+- `ask_athlete` (Coach and every specialist), which asks one question, with optional answer options, and pauses the turn until the athlete answers. The answer goes back to the agent that asked.
 
 The custom tool entries in `agents/*.md` are generated from the registry between the `# stride-tools:start` and `# stride-tools:end` markers. Never edit them by hand: change the tool module, run `npm run agents:tools`, and commit both. `npm run agents:tools:check` and `npm test` fail when a block drifts. The agent files are excluded from Prettier so the generated lines stay intact.
 
@@ -24,16 +30,19 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 
 ## Skills
 
-| Skill                                                                     | Agents            |
-| ------------------------------------------------------------------------- | ----------------- |
-| `plan-format`, `plan-periodization`, `race-specificity`, `session-design` | Coach             |
-| `health-recovery`                                                         | Coach and Medical |
-| `fueling`                                                                 | Coach             |
-| `status-reports`: today's session, the current week, the next race        | Coach             |
-| `explain-decision`: why a proposal or change was made                     | Coach             |
-| `garmin-data-access`: bounded, read-only Garmin reads                     | Coach and Medical |
+| Skill                                                                     | Agents                                    |
+| ------------------------------------------------------------------------- | ----------------------------------------- |
+| `plan-format`, `plan-periodization`, `race-specificity`, `session-design` | Coach                                     |
+| `health-recovery`                                                         | Coach and Medical                         |
+| `fueling`                                                                 | Coach, Course Strategist and Nutritionist |
+| `season-calendar`: roles, recovery and taper rules, feasibility           | Sports Director                           |
+| `race-strategy`: course workflow, three scenarios, golden rules           | Course Strategist                         |
+| `daily-nutrition`: how the targets are computed, timing, deficit guards   | Nutritionist                              |
+| `status-reports`: today's session, the current week, the next race        | Coach                                     |
+| `explain-decision`: why a proposal or change was made                     | Coach                                     |
+| `garmin-data-access`: bounded, read-only Garmin reads                     | Coach and Medical                         |
 
-`status-reports`, `explain-decision` and `garmin-data-access` are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and describes the `read_plan_progress` and `read_plan_history` tools.
+`status-reports`, `explain-decision`, `garmin-data-access`, `season-calendar`, `race-strategy`, `daily-nutrition` and the three specialist prompts are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and describes the `read_plan_progress` and `read_plan_history` tools.
 
 ## Runtime
 

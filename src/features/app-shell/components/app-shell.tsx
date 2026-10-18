@@ -12,6 +12,7 @@ import {
   ActivityIcon,
   ChartColumnIcon,
   CircleDotIcon,
+  AppleIcon,
   FlagIcon,
   PlusIcon,
   TrendingUpIcon,
@@ -134,6 +135,11 @@ export function AppShell({
                     href="/progress"
                     icon={<TrendingUpIcon />}
                     label="Progression"
+                  />
+                  <ShellNavItem
+                    href="/nutrition"
+                    icon={<AppleIcon />}
+                    label="Nutrition"
                   />
                   <ShellNavItem
                     href="/races"

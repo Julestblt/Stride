@@ -58,6 +58,7 @@ import {
   StaffStack,
 } from "@/features/coach/components/staff-portrait";
 import { useStaff } from "@/features/coach/components/staff-context";
+import { staffAgents } from "@/features/coach/staff";
 import { refusalText, splitFrames, turnFailure } from "@/features/coach/stream";
 import { suggestedReplies } from "@/features/coach/suggested-replies";
 import { buildThread } from "@/features/coach/thread";
@@ -676,7 +677,7 @@ export function CoachScreen({
                     </Link>
                   </div>
                   <div className="flex gap-3">
-                    {(["coach", "medical"] as const).map((agent) => (
+                    {staffAgents.map((agent) => (
                       <Link
                         key={agent}
                         href="/coach/equipe"

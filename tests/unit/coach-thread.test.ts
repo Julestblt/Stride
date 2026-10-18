@@ -654,13 +654,31 @@ describe("staff and reads", () => {
 });
 
 describe("staff faces", () => {
-  const swapped = staffOf({ coach: "thomas", medical: "karim" });
+  const swapped = staffOf({
+    coach: "thomas",
+    medical: "karim",
+    director: "sophie",
+    strategist: "nadia",
+    nutritionist: "yanis",
+  });
+  const defaults = {
+    coach: "claire",
+    medical: "ines",
+    director: "marc",
+    strategist: "hugo",
+    nutritionist: "lea",
+  };
 
-  it("defaults to Claire and Inès and ignores unknown stored faces", () => {
-    expect(staffFacesOf(null)).toEqual({ coach: "claire", medical: "ines" });
-    expect(staffFacesOf({ coach_face: "marc", medical_face: "karim" })).toEqual(
-      { coach: "claire", medical: "karim" },
-    );
+  it("defaults to the board faces and ignores unknown stored faces", () => {
+    expect(staffFacesOf(null)).toEqual(defaults);
+    expect(
+      staffFacesOf({
+        coach_face: "marc",
+        medical_face: "karim",
+        strategist_face: "nadia",
+        nutritionist_face: "ines",
+      }),
+    ).toEqual({ ...defaults, medical: "karim", strategist: "nadia" });
   });
 
   it("changes names, alt text and grammar but never the role", () => {
@@ -675,6 +693,11 @@ describe("staff faces", () => {
       role: "Médecin",
       consulted: "consulté",
     });
+    expect(swapped.director).toMatchObject({
+      name: "Sophie",
+      role: "Directeur sportif",
+      consulted: "consultée",
+    });
     expect(questionAttribution(swapped.medical)).toBe("Question de Karim");
     expect(participantsLine(swapped, ["coach", "medical"])).toBe(
       "Thomas, avec Karim",
@@ -688,6 +711,14 @@ describe("staff faces", () => {
     ).toBe(true);
     expect(
       staffFaceChoiceSchema.safeParse({ agent: "coach", face: "karim" })
+        .success,
+    ).toBe(false);
+    expect(
+      staffFaceChoiceSchema.safeParse({ agent: "nutritionist", face: "lea" })
+        .success,
+    ).toBe(true);
+    expect(
+      staffFaceChoiceSchema.safeParse({ agent: "director", face: "hugo" })
         .success,
     ).toBe(false);
   });

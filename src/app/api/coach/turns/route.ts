@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { z } from "zod";
 import { coachAttachmentsSchema } from "@/features/coach/attachments";
+import { specialistAgents } from "@/features/coach/staff";
 import { AttachmentAccessError } from "@/server/coaching/attachments";
 import {
   SessionAccessError,
@@ -25,7 +26,7 @@ const requestSchema = z.strictObject({
     z.strictObject({
       kind: z.literal("message"),
       text: z.string().trim().min(1).max(2000),
-      consult: z.literal("medical").optional(),
+      consult: z.enum(specialistAgents).optional(),
       attachments: coachAttachmentsSchema.optional(),
     }),
     z.strictObject({

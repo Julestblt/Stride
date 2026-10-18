@@ -12,7 +12,11 @@ import {
   StaffPortrait,
   StaffStack,
 } from "@/features/coach/components/staff-portrait";
-import { staffAgents, type StaffAgent } from "@/features/coach/staff";
+import {
+  staffAgents,
+  type SpecialistAgent,
+  type StaffAgent,
+} from "@/features/coach/staff";
 import {
   conversationsLabel,
   opinionsLabel,
@@ -25,9 +29,17 @@ import { FacePicker } from "./face-picker";
 const roleTone: Record<StaffAgent, { dot: string; text: string }> = {
   coach: { dot: "bg-accent", text: "text-accent" },
   medical: { dot: "bg-staff-medical", text: "text-staff-medical" },
+  director: { dot: "bg-staff-director", text: "text-staff-director" },
+  strategist: { dot: "bg-staff-strategist", text: "text-staff-strategist" },
+  nutritionist: {
+    dot: "bg-staff-nutritionist",
+    text: "text-staff-nutritionist",
+  },
 };
 
-const specialists = staffAgents.filter((agent) => agent !== "coach");
+const specialists = staffAgents.filter(
+  (agent): agent is SpecialistAgent => agent !== "coach",
+);
 
 function Dot({ className }: { className: string }) {
   return (
@@ -199,7 +211,7 @@ function SpecialistCard({
   agent,
   usage,
 }: {
-  agent: StaffAgent;
+  agent: SpecialistAgent;
   usage: StaffUsage;
 }) {
   const member = useStaff()[agent];
@@ -242,7 +254,7 @@ function SpecialistCard({
       <Reads items={profile.reads} />
       <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-3 md:pt-3.5">
         <Usage
-          count={usage.medicalOpinions}
+          count={usage.opinions[agent]}
           label={opinionsLabel}
           className="max-md:hidden"
         />
