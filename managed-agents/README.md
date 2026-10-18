@@ -47,7 +47,7 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 
 The athlete reaches the Coach at `/coach` (conversations list, group thread with each staff member's messages, questions with answer options and proposal cards, and the Suivi panel).
 
-Accepted proposals are applied by the `stride-coach-worker` service, not by the web process. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md).
+Accepted proposals are applied by the web process with the athlete's session, through an ownership-checked RPC. See [ADR 0009](../docs/adr/0009-coach-worker-runtime-on-postgres.md#amendment-2026-10-18-193).
 
 ## Development page
 
