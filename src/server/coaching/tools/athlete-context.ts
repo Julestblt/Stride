@@ -99,9 +99,13 @@ export const athleteContextSchema = z.strictObject({
       km: z.number().nonnegative(),
       gainM: z.int().nonnegative(),
     }),
+    provenWeeklyMinutes: z.int().nonnegative(),
     heldPaceSecondsPerKm: z.int().positive().optional(),
     longestRun30d: z
       .strictObject({ km: z.number(), minutes: z.int() })
+      .optional(),
+    longestEffort90d: z
+      .strictObject({ date: asOf, km: z.number(), minutes: z.int() })
       .optional(),
     runsLast30d: z.int().nonnegative(),
     trailShare: z.number().min(0).max(1),
@@ -307,6 +311,7 @@ export function buildAthleteContext({
         km: km(history.held.distanceMeters),
         gainM: Math.round(history.held.elevationGainMeters),
       },
+      provenWeeklyMinutes: minutes(history.provenDurationSeconds),
       heldPaceSecondsPerKm: history.heldPaceSecondsPerKm
         ? Math.round(history.heldPaceSecondsPerKm)
         : null,
@@ -314,6 +319,13 @@ export function buildAthleteContext({
         ? {
             km: km(longest.distanceMeters),
             minutes: minutes(longest.durationSeconds),
+          }
+        : null,
+      longestEffort90d: history.longestEffort90d
+        ? {
+            date: history.longestEffort90d.date,
+            km: km(history.longestEffort90d.distanceMeters),
+            minutes: minutes(history.longestEffort90d.durationSeconds),
           }
         : null,
       runsLast30d: history.runsLast30d,
@@ -411,7 +423,7 @@ async function readPredictions(
 export const readAthleteContextTool = defineTool({
   name: "read_athlete_context",
   description:
-    "Read the athlete's compact context computed by Stride: today's date and time zone, profile, availability and upcoming unavailability, upcoming races with their ids, dates, priorities and targets, the last weeks of running (weekly runs, minutes, km, elevation), training intensities with pace, heart-rate and RPE ranges and their sources, Garmin VO2max, lactate threshold and race predictions with source and date, a deterministic feasibility reference, the last week's wellness check-ins, and the active plan header. Absent values are omitted. Call it first in every conversation.",
+    "Read the athlete's compact context computed by Stride: today's date and time zone, profile, availability and upcoming unavailability, upcoming races with their ids, dates, priorities and targets, the last weeks of running (weekly runs, minutes, km, elevation) with the held and proven weekly volume and the longest effort of the last 90 days, training intensities with pace, heart-rate and RPE ranges and their sources, Garmin VO2max, lactate threshold and race predictions with source and date, a deterministic feasibility reference, the last week's wellness check-ins, and the active plan header. Absent values are omitted. Call it first in every conversation.",
   class: "read",
   dataClasses: ["training", "health"],
   input: z.strictObject({}),

@@ -4,6 +4,10 @@ import { addDays, mondayOf } from "../model/dates";
 export const summaryWeeks = 16;
 export const heldWeeks = 4;
 export const minimumHeldSeconds = 3_600;
+export const provenWindowWeeks = 12;
+export const provenWeeks = 4;
+export const provenOutlierRatio = 2;
+export const longEffortDays = 90;
 
 export type HistoryActivity = {
   day: string;
@@ -29,13 +33,43 @@ export type HistorySummary = {
     distanceMeters: number;
     elevationGainMeters: number;
   };
+  provenDurationSeconds: number;
   heldPaceSecondsPerKm: number | null;
+  longestEffort90d: {
+    date: string;
+    distanceMeters: number;
+    durationSeconds: number;
+  } | null;
   longestRun30d: { distanceMeters: number; durationSeconds: number } | null;
   runsLast30d: number;
   trailShare: number;
   consistency: number;
   sufficient: boolean;
 };
+
+function median(values: number[]) {
+  const sorted = [...values].sort((first, second) => first - second);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
+}
+
+export function provenDuration(weeks: HistoryWeek[]) {
+  const durations = weeks
+    .slice(-provenWindowWeeks)
+    .map((week) => week.durationSeconds);
+  const limit = median(durations) * provenOutlierRatio;
+  const highest = durations
+    .filter((duration) => duration <= limit)
+    .sort((first, second) => second - first)
+    .slice(0, provenWeeks);
+  return highest.length > 0
+    ? Math.round(
+        highest.reduce((total, duration) => total + duration, 0) / provenWeeks,
+      )
+    : 0;
+}
 
 export function summarizeHistory(
   activities: HistoryActivity[],
@@ -87,14 +121,29 @@ export function summarizeHistory(
   const timedSeconds = timed.reduce((total, run) => total + run.duration!, 0);
   const timedMeters = timed.reduce((total, run) => total + run.distance!, 0);
   const window = runs.filter((run) => run.day >= addDays(today, -30));
+  const longest = runs
+    .filter((run) => run.day >= addDays(today, -longEffortDays))
+    .reduce<HistoryActivity | null>(
+      (best, run) =>
+        best === null || run.duration! > best.duration! ? run : best,
+      null,
+    );
   const weeksWithRuns = weeks.filter((week) => week.runs > 0).length;
   const totalSeconds = runs.reduce((total, run) => total + run.duration!, 0);
   return {
     weeks,
     weeksWithRuns,
     held,
+    provenDurationSeconds: provenDuration(weeks),
     heldPaceSecondsPerKm:
       timedMeters > 0 ? timedSeconds / (timedMeters / 1000) : null,
+    longestEffort90d: longest
+      ? {
+          date: longest.day,
+          distanceMeters: longest.distance ?? 0,
+          durationSeconds: longest.duration!,
+        }
+      : null,
     longestRun30d:
       window.length > 0
         ? {
@@ -127,7 +176,7 @@ export function historyForValidation(
         (activity) =>
           isRunning(activity.type) &&
           activity.day < today &&
-          activity.day >= addDays(today, -60) &&
+          activity.day >= addDays(today, -longEffortDays) &&
           (activity.duration ?? 0) > 0,
       )
       .map((activity) => ({
@@ -140,5 +189,6 @@ export function historyForValidation(
       durationSeconds: week.durationSeconds,
       elevationGainMeters: week.elevationGainMeters,
     })),
+    provenWeeklySeconds: summary.provenDurationSeconds,
   };
 }
