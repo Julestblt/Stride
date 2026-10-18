@@ -1262,6 +1262,7 @@ const coachSnapshot = structuredClone(
     ]),
   ),
 );
+const profileSnapshot = structuredClone(tables.athlete_profiles[0]);
 const planReviewPlanId = "dddddddd-dddd-4ddd-8ddd-777777777777";
 twinPlanAthlete(planReviewUser, planReviewPlanId, "7777");
 twinPlanAthlete(
@@ -1590,6 +1591,20 @@ createServer(async (request, response) => {
       tables[table] = tables[table]
         .filter((row) => row.user_id !== planReviewUser.id)
         .concat(snapshot[table]);
+    return send(200, { reset: true });
+  }
+  if (
+    url.pathname === "/__test__/athlete-settings" &&
+    request.method === "DELETE"
+  ) {
+    const profile = tables.athlete_profiles[0];
+    Object.assign(profile, structuredClone(profileSnapshot), {
+      revision: profile.revision,
+      updated_at: profile.updated_at,
+    });
+    tables.athlete_unavailability = tables.athlete_unavailability.filter(
+      (row) => row.user_id !== user.id,
+    );
     return send(200, { reset: true });
   }
   if (url.pathname === "/__test__/coach" && request.method === "DELETE") {

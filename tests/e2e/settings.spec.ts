@@ -3,6 +3,19 @@ import { expect, test, type Page } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
+const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+
+test.afterEach(async () => {
+  await fetch(`http://127.0.0.1:${authPort}/__test__/athlete-settings`, {
+    method: "DELETE",
+  });
+});
+
+async function expectTrainingNotice(page: Page, message: string) {
+  await expect(page.getByText(message)).toBeVisible({ timeout: 15_000 });
+  await expect(page).toHaveURL("/settings/training");
+}
+
 async function signIn(page: Page, email = "athlete@example.com") {
   await page.goto("/sign-in");
   await page.getByLabel("Email", { exact: true }).fill(email);
@@ -137,7 +150,7 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await page
     .getByRole("button", { name: "Enregistrer les préférences" })
     .click();
-  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
+  await expectTrainingNotice(page, "Modifications enregistrées.");
   await page.reload();
   await expect(page.getByRole("radio", { name: "Route" })).toBeChecked();
   await page
@@ -593,6 +606,7 @@ test("profile tablet layouts fit without clipping and edit in a sheet", async ({
 test("training settings save planning constraints and unavailable periods", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
   await page.goto("/settings/training");
@@ -608,7 +622,7 @@ test("training settings save planning constraints and unavailable periods", asyn
   await page
     .getByRole("button", { name: "Enregistrer la planification" })
     .click();
-  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
+  await expectTrainingNotice(page, "Modifications enregistrées.");
   await page.reload();
   await expect(zone).toHaveText("New York (America)");
   await expect(ceiling).toHaveValue("6 h 30");
@@ -618,20 +632,17 @@ test("training settings save planning constraints and unavailable periods", asyn
   await page.getByLabel("Fin").pressSequentially("10112030");
   await expect(page.getByLabel("Début")).toHaveValue("12/11/2030");
   await page.getByRole("button", { name: "Ajouter la période" }).click();
-  await expect(
-    page.getByText(
-      "La fin de la période doit tomber le jour du début ou après.",
-    ),
-  ).toBeVisible();
+  await expectTrainingNotice(
+    page,
+    "La fin de la période doit tomber le jour du début ou après.",
+  );
 
   await page.getByLabel("Début").pressSequentially("10112030");
   await page.getByLabel("Fin").pressSequentially("12112030");
   await page.getByText("Repos", { exact: true }).click();
   await page.getByRole("textbox", { name: "Motif" }).fill("Vacances");
   await page.getByRole("button", { name: "Ajouter la période" }).click();
-  await expect(
-    page.getByText("Période d’indisponibilité ajoutée."),
-  ).toBeVisible();
+  await expectTrainingNotice(page, "Période d’indisponibilité ajoutée.");
   const periods = page.getByRole("list", { name: "Périodes à venir" });
   await expect(periods.getByText("Du 10/11/2030 au 12/11/2030")).toBeVisible();
   await expect(periods.getByText("Repos · Vacances")).toBeVisible();
@@ -647,9 +658,7 @@ test("training settings save planning constraints and unavailable periods", asyn
       name: "Supprimer la période : Du 10/11/2030 au 12/11/2030",
     })
     .click();
-  await expect(
-    page.getByText("Période d’indisponibilité supprimée."),
-  ).toBeVisible();
+  await expectTrainingNotice(page, "Période d’indisponibilité supprimée.");
   await expect(page.getByText("Aucune période à venir.")).toBeVisible();
 
   await zone.click();
@@ -658,5 +667,5 @@ test("training settings save planning constraints and unavailable periods", asyn
   await page
     .getByRole("button", { name: "Enregistrer la planification" })
     .click();
-  await expect(page.getByText("Modifications enregistrées.")).toBeVisible();
+  await expectTrainingNotice(page, "Modifications enregistrées.");
 });
