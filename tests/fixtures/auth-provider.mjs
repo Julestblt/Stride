@@ -1083,6 +1083,7 @@ const coachSession = (values) => ({
   list_cost_cents: 12,
   last_turn_at: null,
   read_at: null,
+  composing_since: null,
   ...values,
 });
 let coachItemId = 0;
@@ -1709,6 +1710,23 @@ createServer(async (request, response) => {
         .filter((row) => row.user_id !== coachUser.id)
         .concat(snapshot[table]);
     return send(200, { reset: true });
+  }
+  if (url.pathname === "/__test__/coach-turn" && request.method === "POST") {
+    const row = tables.coach_sessions.find(
+      (session) => session.id === body.threadId,
+    );
+    if (!row) return send(404, {});
+    Object.assign(row, body.session ?? {});
+    for (const item of body.items ?? [])
+      tables.coach_thread_items.push({
+        id: ++coachItemId,
+        user_id: row.user_id,
+        coach_session_id: row.id,
+        kind: item.kind,
+        body: item.body,
+        created_at: new Date().toISOString(),
+      });
+    return send(200, { ok: true });
   }
   const workerApply = url.pathname.match(/^\/v1\/proposals\/([^/]+)\/apply$/);
   if (workerApply && request.method === "POST") {
