@@ -28,6 +28,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toggle } from "@/components/ui/toggle";
 import { ContextChip } from "@/components/stride/context-chip";
+import { SuggestedReplies } from "@/components/stride/suggested-reply";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
 import { localToday } from "@/features/app-shell/shell";
@@ -59,6 +60,7 @@ import {
 } from "@/features/coach/components/staff-portrait";
 import { useStaff } from "@/features/coach/components/staff-context";
 import { refusalText, splitFrames, turnFailure } from "@/features/coach/stream";
+import { suggestedReplies } from "@/features/coach/suggested-replies";
 import { buildThread } from "@/features/coach/thread";
 import { markCoachThreadRead } from "@/server/coaching/actions";
 import { ContextPicker } from "./context-picker";
@@ -101,6 +103,7 @@ function Composer({
   busy,
   closed,
   initialText,
+  replies,
   options,
   today,
   onSend,
@@ -111,6 +114,7 @@ function Composer({
   busy: boolean;
   closed: boolean;
   initialText: string;
+  replies: readonly string[];
   options: AttachmentOptions;
   today: string;
   onSend: (
@@ -142,6 +146,12 @@ function Composer({
     }
   }
 
+  async function reply(message: string) {
+    if (busy) return;
+    const sent = await onSend(message, false, []);
+    if (!sent) setText((current) => (current.trim() ? current : message));
+  }
+
   function remove(option: AttachmentOption) {
     setAttachments((current) => toggleAttachment(current, option));
     input.current?.focus();
@@ -168,6 +178,11 @@ function Composer({
       }}
       className="mx-auto flex w-full max-w-205 flex-col gap-2.5 border-t border-border-subtle bg-surface-inset px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-[clamp(20px,3vw,44px)] sm:pb-5"
     >
+      <SuggestedReplies
+        replies={replies}
+        onSelect={(message) => void reply(message)}
+        className="max-sm:-mx-4 max-sm:px-4"
+      />
       <InputGroup className="h-auto flex-wrap rounded-card border-border-strong bg-surface p-1.5 has-[>[data-align=block-start]]:flex-row md:h-auto">
         {!answering && attachments.length > 0 && (
           <InputGroupAddon
@@ -562,6 +577,14 @@ export function CoachScreen({
     ? `Ta réponse à ${staff[answeringAgent].name}…`
     : "Écris au staff…";
   const empty = items.length === 0 && !sending;
+  const replies = suggestedReplies({
+    mode,
+    busy,
+    closed,
+    questionPending: pendingQuestion !== null,
+    status,
+    items,
+  });
 
   const suivi = (
     <SuiviPanel
@@ -759,6 +782,7 @@ export function CoachScreen({
             busy={busy}
             closed={closed}
             initialText={thread ? "" : draft.text}
+            replies={replies}
             options={attachmentOptions}
             today={localToday(now)}
             onSend={send}
