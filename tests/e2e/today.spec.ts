@@ -68,8 +68,14 @@ test("today shows the plan session, form, week and what comes next", async ({
   const legs = form.getByRole("radiogroup", {
     name: "Et tes jambes ce matin ?",
   });
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/today",
+  );
   await legs.getByRole("radio", { name: "Fraîches" }).click();
   await expect(legs.getByRole("radio", { name: "Fraîches" })).toBeChecked();
+  await saved;
   await page.reload();
   await expect(
     page

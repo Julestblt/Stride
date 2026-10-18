@@ -3,6 +3,7 @@ node_modules
 coverage
 playwright-report
 test-results
+.next-e2e
 .agents/skills
 evals/topology/results/
 managed-agents/agents/*.md

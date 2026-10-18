@@ -59,15 +59,15 @@ jobs:
           - lane: main-1
             project: chromium
             shard: 1/3
-            production: "false"
+            production: "true"
           - lane: main-2
             project: chromium
             shard: 2/3
-            production: "false"
+            production: "true"
           - lane: main-3
             project: chromium
             shard: 3/3
-            production: "false"
+            production: "true"
           - lane: course
             project: chromium-race-course
             shard: 1/1

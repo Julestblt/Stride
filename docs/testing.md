@@ -19,12 +19,12 @@ CI selects projects explicitly with `--no-deps`, so each runner has its own auth
 To exercise the isolated CI groups locally:
 
 ```bash
-npm run test:e2e -- --project=chromium --no-deps --shard=1/3
+PLAYWRIGHT_PRODUCTION=true npm run test:e2e -- --project=chromium --no-deps --shard=1/3
 PLAYWRIGHT_PRODUCTION=true npm run test:e2e -- --project=chromium-race-course --no-deps
 npm run test:e2e -- --project=chromium-development --no-deps
 ```
 
-The production course selection builds and starts the app inside Playwright's server command with the same environment, including public Supabase values. Both commands receive `PLAYWRIGHT_TEST=1` and use ignored `test-results/next`. Build outputs are neither shared between jobs nor cached. Main application journeys remain on `next dev` to preserve existing assertions and mutable-fixture navigation behavior. Keep the development project on `next dev`: the gallery is hidden in production, the origin test exercises development behavior, and authenticated data-activity API requests need loopback cookies that Playwright's API client omits when production marks them Secure.
+Production selections build and start the app inside Playwright's server command with the same environment, including public Supabase values. Both commands receive `PLAYWRIGHT_TEST=1` and use the ignored `.next-e2e` directory, outside Playwright's `test-results` output directory, so the Turbopack development cache survives between local runs. Build outputs are neither shared between CI jobs nor cached. Main application journeys run on a production build in CI so routes never compile during a test; a plain local `npm run test:e2e` still uses `next dev` for every project. Keep the development project on `next dev`: the gallery is hidden in production, the origin test exercises development behavior, and authenticated data-activity API requests need loopback cookies that Playwright's API client omits when production marks them Secure.
 
 List projects and shards with `--list` to check selection without starting servers. The original 130 main tests are covered exactly once: 93 main tests (31/31/31), 35 development tests and two course tests. See [CI design and measurements](ci.md) for required-check behavior.
 

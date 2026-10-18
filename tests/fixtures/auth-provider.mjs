@@ -1552,7 +1552,9 @@ createServer(async (request, response) => {
       url.pathname.startsWith("/storage/v1/object/sign/") &&
       request.method === "POST"
     )
-      return send(200, { signedURL: url.pathname + "?token=fixture" });
+      return send(200, {
+        signedURL: `${url.pathname.slice("/storage/v1".length)}?token=fixture`,
+      });
     if (
       url.pathname.startsWith("/storage/v1/object/sign/") &&
       request.method === "GET"
