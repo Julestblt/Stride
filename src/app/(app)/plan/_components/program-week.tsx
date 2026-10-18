@@ -1,4 +1,4 @@
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, WatchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -15,6 +15,7 @@ import {
   type ProgramWeek,
 } from "@/features/plans/view/program";
 import type { WeekProposal } from "@/features/plans/review/proposal";
+import type { WatchDayTag } from "@/features/garmin/watch";
 import { formatInteger } from "@/features/progress/format";
 import { markProposalOpened } from "./proposal-sheet";
 import { markSessionOpened } from "./session-sheet";
@@ -50,12 +51,29 @@ function DayState({ day }: { day: ProgramDay }) {
   }
 }
 
+function WatchTag({ tag }: { tag: WatchDayTag | undefined }) {
+  if (!tag) return null;
+  return (
+    <span
+      className={cn(
+        "flex items-center gap-1.25 text-xs",
+        tag === "on" ? "text-muted-foreground" : "text-danger",
+      )}
+    >
+      <WatchIcon aria-hidden="true" className="size-3 shrink-0" />
+      {tag === "on" ? "Sur la montre" : "Pas sur la montre"}
+    </span>
+  );
+}
+
 function DayCard({
   day,
   sessionHref,
+  watch,
 }: {
   day: ProgramDay;
   sessionHref: (sessionKey: string) => string;
+  watch?: WatchDayTag;
 }) {
   const rest = day.sessionKey === null;
   const body = (
@@ -101,6 +119,7 @@ function DayCard({
         />
       )}
       <DayState day={day} />
+      {day.state !== "proposed" && <WatchTag tag={watch} />}
     </>
   );
   const className = cn(
@@ -130,9 +149,11 @@ function DayCard({
 function DayRow({
   day,
   sessionHref,
+  watch,
 }: {
   day: ProgramDay;
   sessionHref: (sessionKey: string) => string;
+  watch?: WatchDayTag;
 }) {
   const rest = day.sessionKey === null;
   const details = [day.summary, day.elevation].filter(Boolean).join(" · ");
@@ -159,6 +180,7 @@ function DayRow({
         {details && (
           <span className="text-xs text-muted-foreground">{details}</span>
         )}
+        {day.state !== "proposed" && <WatchTag tag={watch} />}
       </span>
       <DayState day={day} />
     </>
@@ -428,8 +450,10 @@ export function ProgramWeekPanel({
   sessionHref,
   proposals = [],
   reviewHref,
+  watchTags = {},
 }: {
   week: ProgramWeek;
+  watchTags?: Record<string, WatchDayTag>;
   navigation: React.ReactNode;
   sessionHref: (sessionKey: string) => string;
   proposals?: WeekProposal[];
@@ -497,12 +521,22 @@ export function ProgramWeekPanel({
       )}
       <div className="grid grid-cols-7 gap-2 max-lg:hidden">
         {week.days.map((day) => (
-          <DayCard key={day.date} day={day} sessionHref={sessionHref} />
+          <DayCard
+            key={day.date}
+            day={day}
+            sessionHref={sessionHref}
+            watch={day.sessionKey ? watchTags[day.sessionKey] : undefined}
+          />
         ))}
       </div>
       <div className="flex flex-col lg:hidden">
         {week.days.map((day) => (
-          <DayRow key={day.date} day={day} sessionHref={sessionHref} />
+          <DayRow
+            key={day.date}
+            day={day}
+            sessionHref={sessionHref}
+            watch={day.sessionKey ? watchTags[day.sessionKey] : undefined}
+          />
         ))}
       </div>
     </section>

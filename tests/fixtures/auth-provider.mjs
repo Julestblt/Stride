@@ -67,7 +67,13 @@ const coachUser = {
   id: "99999999-9999-4999-8999-999999999999",
   email: "coach@example.com",
 };
+const watchUser = {
+  ...user,
+  id: "abababab-abab-4bab-8bab-abababababab",
+  email: "watch@example.com",
+};
 const recordsSessions = [
+  watchUser,
   coachUser,
   recordsEmptyUser,
   recordsFailureUser,
@@ -1366,6 +1372,15 @@ twinPlanAthlete(
   "dddddddd-dddd-4ddd-8ddd-888888888888",
   "8888",
 );
+twinPlanAthlete(watchUser, "dddddddd-dddd-4ddd-8ddd-abababababab", "abab");
+tables.athlete_profiles.push({
+  ...structuredClone(tables.athlete_profiles[0]),
+  user_id: watchUser.id,
+  watch_workouts_enabled: false,
+  watch_workouts_synced_key: null,
+  watch_workouts_synced_at: null,
+});
+tables.provider_workouts = [];
 function nameMatcher(filter) {
   if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
   const pattern = filter.slice(6).replaceAll("*", "%");
@@ -1670,6 +1685,32 @@ createServer(async (request, response) => {
     if (request.method === "DELETE") return send(200, []);
   }
   if (url.pathname === "/__test__/events") return send(200, events);
+  if (
+    url.pathname === "/__test__/provider-workouts" &&
+    request.method === "PUT"
+  ) {
+    tables.provider_workouts = tables.provider_workouts
+      .filter((row) => row.user_id !== body.user_id)
+      .concat(body.rows.map((row) => ({ ...row, user_id: body.user_id })));
+    return send(200, { stored: body.rows.length });
+  }
+  if (
+    url.pathname === "/__test__/watch-settings" &&
+    request.method === "DELETE"
+  ) {
+    const profile = tables.athlete_profiles.find(
+      (row) => row.user_id === watchUser.id,
+    );
+    Object.assign(profile, {
+      watch_workouts_enabled: false,
+      watch_workouts_synced_key: null,
+      watch_workouts_synced_at: null,
+    });
+    tables.provider_workouts = tables.provider_workouts.filter(
+      (row) => row.user_id !== watchUser.id,
+    );
+    return send(200, { reset: true });
+  }
   if (url.pathname === "/__test__/link")
     return send(200, { url: links.get(url.searchParams.get("email")) });
   if (url.pathname === "/__test__/expired-session")
@@ -2040,7 +2081,11 @@ createServer(async (request, response) => {
       request.method === "PATCH" &&
       url.pathname === "/rest/v1/athlete_profiles"
     ) {
-      if (Object.keys(body).every((key) => key.endsWith("_face"))) {
+      if (
+        Object.keys(body).every(
+          (key) => key.endsWith("_face") || key.startsWith("watch_workouts_"),
+        )
+      ) {
         const owner = tables.athlete_profiles.find(
           (row) => url.searchParams.get("user_id") === `eq.${row.user_id}`,
         );

@@ -225,6 +225,86 @@ function syncFor(connection, advance = true) {
   };
 }
 
+const authUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}`;
+
+function usesRpe(steps) {
+  return steps.some((step) =>
+    step.type === "repeat" ? usesRpe(step.steps) : step.target?.kind === "rpe",
+  );
+}
+
+async function storeWorkouts(user, connection) {
+  await fetch(`${authUrl}/__test__/provider-workouts`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: user,
+      rows: [...connection.workouts.values()].map((row) => ({
+        external_key: row.key,
+        scheduled_on: row.date,
+        status: row.status,
+        error_code: row.errorCode,
+        simplifications: row.simplifications,
+        sent_at: row.sentAt,
+      })),
+    }),
+  }).catch(() => undefined);
+}
+
+function reconcile(connection, body) {
+  const wanted = new Set(body.workouts.map((workout) => workout.key));
+  const removed = [];
+  for (const [key, row] of connection.workouts)
+    if (!wanted.has(key) && row.date >= body.from && row.date <= body.to) {
+      connection.workouts.delete(key);
+      removed.push(key);
+    }
+  const workouts = body.workouts.map((workout) => {
+    const hash = JSON.stringify([
+      workout.date,
+      workout.name,
+      workout.description,
+      workout.steps,
+    ]);
+    const simplifications = usesRpe(workout.steps) ? ["rpe_target"] : [];
+    const previous = connection.workouts.get(workout.key);
+    const held = simplifications.length > 0 && !workout.allow_simplified;
+    if (
+      previous?.hash === hash &&
+      !workout.force &&
+      (previous.status === "sent" ||
+        (held && previous.status === "needs_confirmation"))
+    )
+      return { ...previous, changed: false };
+    const row = {
+      key: workout.key,
+      date: workout.date,
+      hash,
+      simplifications,
+      errorCode: null,
+      sentAt: null,
+      status: held ? "needs_confirmation" : "sent",
+    };
+    if (!held && connection.failWorkouts) {
+      row.status = "failed";
+      row.errorCode = "provider_unavailable";
+    } else if (!held) row.sentAt = new Date().toISOString();
+    connection.workouts.set(workout.key, row);
+    return { ...row, changed: true };
+  });
+  return {
+    workouts: workouts.map((row) => ({
+      key: row.key,
+      date: row.date,
+      status: row.status,
+      changed: row.changed,
+      simplifications: row.simplifications,
+      ...(row.errorCode && { error_code: row.errorCode }),
+    })),
+    removed,
+  };
+}
+
 export function createGarminService() {
   const connections = new Map();
   const challenges = new Map();
@@ -234,6 +314,8 @@ export function createGarminService() {
       id: randomUUID(),
       connectedAt: new Date().toISOString(),
       syncReads: 0,
+      workouts: new Map(),
+      workoutRequests: [],
     };
     connections.set(user, connection);
     return { status: "connected" };
@@ -271,6 +353,36 @@ export function createGarminService() {
         return failure(response, 400, "invalid_request");
       connection.syncLimit = body.readsUntilComplete;
       return json(response, 200, { configured: true });
+    }
+
+    if (url.pathname === "/__test__/watch" && request.method === "POST") {
+      if (!connection) return failure(response, 409, "disconnected");
+      connection.failWorkouts = body.fail === true;
+      return json(response, 200, { configured: true });
+    }
+
+    if (url.pathname === "/__test__/watch" && request.method === "GET")
+      return json(response, 200, connection?.workoutRequests ?? []);
+
+    if (url.pathname === "/v1/connections/garmin/workouts") {
+      if (!connection) return failure(response, 409, "disconnected");
+      connection.workoutRequests.push({ method: request.method, body });
+      if (request.method === "PUT") {
+        const result = reconcile(connection, body);
+        await storeWorkouts(user, connection);
+        return json(response, 200, result);
+      }
+      if (request.method === "DELETE") {
+        const today = new Date().toISOString().slice(0, 10);
+        let removed = 0;
+        for (const [key, row] of connection.workouts)
+          if (row.date >= today) {
+            connection.workouts.delete(key);
+            removed += 1;
+          }
+        await storeWorkouts(user, connection);
+        return json(response, 200, { removed });
+      }
     }
 
     if (url.pathname === "/__test__/connected" && request.method === "POST") {

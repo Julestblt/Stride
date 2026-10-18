@@ -53,7 +53,7 @@ export default defineConfig({
       reuseExistingServer: false,
     },
     {
-      command: `GARMIN_FIXTURE_PORT=${garminPort} node tests/fixtures/garmin-service.mjs`,
+      command: `GARMIN_FIXTURE_PORT=${garminPort} PLAYWRIGHT_AUTH_PORT=${authPort} node tests/fixtures/garmin-service.mjs`,
       url: `http://127.0.0.1:${garminPort}/healthz`,
       reuseExistingServer: false,
     },

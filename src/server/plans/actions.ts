@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { outcomeOf } from "@/features/plans/review/proposal";
+import { syncWatchAfterResponse } from "@/server/garmin/watch";
 import {
   getOnboardingContext,
   type OnboardingContext,
@@ -47,7 +48,10 @@ async function apply(
     () => null,
   );
   if (!result) return { status: "pending" };
-  if (result.ok) return { status: "applied", version: result.version };
+  if (result.ok) {
+    await syncWatchAfterResponse(context);
+    return { status: "applied", version: result.version };
+  }
   const outcome = outcomeOf(result.reason);
   return outcome
     ? { status: outcome, reason: result.reason }

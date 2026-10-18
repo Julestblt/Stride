@@ -9,6 +9,11 @@ import { MonoLabel } from "@/components/stride/mono-label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { SessionPanel } from "@/features/plans/view/session-panel";
+import type { WatchCopy } from "@/features/garmin/watch";
+import {
+  useWatchSend,
+  WatchSendButton,
+} from "@/features/garmin/components/watch-status";
 import { SessionPanelBody } from "./session-panel";
 
 const iconButton =
@@ -25,8 +30,15 @@ export function markSessionOpened(event: React.MouseEvent) {
     !event.altKey;
 }
 
-export function SessionSheet({ panel }: { panel: SessionPanel }) {
+export function SessionSheet({
+  panel,
+  watch = null,
+}: {
+  panel: SessionPanel;
+  watch?: WatchCopy | null;
+}) {
   const router = useRouter();
+  const watchSend = useWatchSend(panel.sessionKey);
   const searchParams = useSearchParams();
   const mobile = useIsMobile();
   const [open, setOpen] = useState(true);
@@ -180,8 +192,35 @@ export function SessionSheet({ panel }: { panel: SessionPanel }) {
             mobile && "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           )}
         >
-          <SessionPanelBody panel={panel} titleId="session-panel-title" />
+          <SessionPanelBody
+            panel={panel}
+            titleId="session-panel-title"
+            watch={watch}
+            watchPending={watchSend.pending}
+          />
         </div>
+        {watch?.action && (
+          <footer
+            className={cn(
+              "flex flex-wrap items-center gap-2 border-t border-border bg-background",
+              mobile
+                ? "px-5 pt-3 pb-[max(1.875rem,env(safe-area-inset-bottom))]"
+                : "px-4 py-3.5",
+            )}
+          >
+            <WatchSendButton
+              action={watch.action}
+              pending={watchSend.pending}
+              onSend={watchSend.send}
+              className={mobile ? "h-12 flex-1" : undefined}
+            />
+            {watchSend.message && (
+              <p role="alert" className="basis-full text-xs text-danger">
+                {watchSend.message}
+              </p>
+            )}
+          </footer>
+        )}
       </SheetContent>
     </Sheet>
   );

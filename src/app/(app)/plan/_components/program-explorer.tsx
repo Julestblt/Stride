@@ -15,6 +15,7 @@ import {
 import { ProgramChart } from "./program-chart";
 import { ProgramHeader } from "./program-hero";
 import { ProgramWeekPanel } from "./program-week";
+import type { WatchDayTag } from "@/features/garmin/watch";
 
 const milestoneTones: Record<MilestoneTone, string> = {
   provider: "bg-provider",
@@ -79,10 +80,12 @@ export function ProgramExplorer({
   program,
   initialWeekKey,
   proposals = {},
+  watchTags = {},
 }: {
   program: RaceProgram;
   initialWeekKey: string | null;
   proposals?: Record<string, WeekProposal[]>;
+  watchTags?: Record<string, WatchDayTag>;
 }) {
   const { weeks } = program;
   const [selected, setSelected] = useState(
@@ -193,6 +196,7 @@ export function ProgramExplorer({
       {week && (
         <ProgramWeekPanel
           week={week}
+          watchTags={watchTags}
           navigation={navigation}
           sessionHref={(sessionKey) => {
             const query = new URLSearchParams();

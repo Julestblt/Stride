@@ -5,6 +5,7 @@ vi.mock("server-only", () => ({}));
 const rpc = vi.hoisted(() => vi.fn());
 const applyAcceptedProposal = vi.hoisted(() => vi.fn());
 const getOnboardingContext = vi.hoisted(() => vi.fn());
+const syncWatchAfterResponse = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("../../src/server/plans/apply", () => ({
@@ -13,6 +14,7 @@ vi.mock("../../src/server/plans/apply", () => ({
 vi.mock("../../src/server/onboarding/context", () => ({
   getOnboardingContext,
 }));
+vi.mock("../../src/server/garmin/watch", () => ({ syncWatchAfterResponse }));
 
 import {
   acceptProposal,
@@ -42,6 +44,7 @@ describe("proposal actions", () => {
       p_proposal_id: proposalId,
     });
     expect(applyAcceptedProposal).toHaveBeenCalledOnce();
+    expect(syncWatchAfterResponse).toHaveBeenCalledOnce();
   });
 
   it("reports a plan that moved between review and accept as stale", async () => {
@@ -58,6 +61,7 @@ describe("proposal actions", () => {
   it("keeps the proposal pending when applying fails unexpectedly", async () => {
     applyAcceptedProposal.mockRejectedValue(new Error("network"));
     expect(await acceptProposal({ proposalId })).toEqual({ status: "pending" });
+    expect(syncWatchAfterResponse).not.toHaveBeenCalled();
     applyAcceptedProposal.mockResolvedValue({ ok: true, version: 5 });
     expect(await retryProposal({ proposalId })).toEqual({
       status: "applied",

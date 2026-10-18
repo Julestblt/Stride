@@ -15,8 +15,14 @@ import {
   parseFailure,
   syncRequestSchema,
   syncSchema,
+  watchReconcileSchema,
+  watchRemovalSchema,
   wellnessDaySchema,
 } from "./contract";
+import type {
+  WatchReconcileResult,
+  WatchRequest,
+} from "@/features/garmin/watch";
 import type { WellnessDay } from "@/features/garmin/wellness";
 
 export type GarminRequestContext = { accessToken: string };
@@ -27,6 +33,7 @@ type GarminClientOptions = {
   readTimeoutMs?: number;
   authTimeoutMs?: number;
   wellnessTimeoutMs?: number;
+  workoutTimeoutMs?: number;
 };
 
 export type GarminClient = ReturnType<typeof createGarminClient>;
@@ -37,25 +44,27 @@ export function createGarminClient({
   readTimeoutMs = 10_000,
   authTimeoutMs = 60_000,
   wellnessTimeoutMs = 25_000,
+  workoutTimeoutMs = 120_000,
 }: GarminClientOptions) {
   async function request<Schema extends z.ZodType>(
     context: GarminRequestContext,
     path: string,
     schema: Schema,
     timeoutMs: number,
-    body?: Record<string, string>,
+    body?: unknown,
+    method: "GET" | "POST" | "PUT" | "DELETE" = body ? "POST" : "GET",
   ): Promise<GarminResult<z.output<Schema>>> {
     let response: Response;
     try {
       response = await send(new URL(path, baseUrl), {
-        method: body ? "POST" : "GET",
+        method,
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${context.accessToken}`,
           "X-Request-Id": crypto.randomUUID(),
-          ...(body && { "Content-Type": "application/json" }),
+          ...(body !== undefined && { "Content-Type": "application/json" }),
         },
-        body: body && JSON.stringify(body),
+        body: body === undefined ? undefined : JSON.stringify(body),
         cache: "no-store",
         redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
@@ -156,6 +165,31 @@ export function createGarminClient({
         `/v1/wellness/days/${encodeURIComponent(date)}`,
         wellnessDaySchema,
         wellnessTimeoutMs,
+      );
+    },
+    reconcileWorkouts(
+      context: GarminRequestContext,
+      body: WatchRequest,
+    ): Promise<GarminResult<WatchReconcileResult>> {
+      return request(
+        context,
+        "/v1/connections/garmin/workouts",
+        watchReconcileSchema,
+        workoutTimeoutMs,
+        body,
+        "PUT",
+      );
+    },
+    removeWorkouts(
+      context: GarminRequestContext,
+    ): Promise<GarminResult<{ removed: number }>> {
+      return request(
+        context,
+        "/v1/connections/garmin/workouts",
+        watchRemovalSchema,
+        workoutTimeoutMs,
+        undefined,
+        "DELETE",
       );
     },
   };

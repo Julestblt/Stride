@@ -10,6 +10,13 @@ import { loadPlanOverview, programInput } from "@/server/plans/overview";
 import { loadIntensityPaces } from "@/server/plans/paces";
 import { loadProposalReview } from "@/server/plans/proposals";
 import { loadSessionPanel } from "@/server/plans/session-panel";
+import {
+  watchCopy,
+  watchDayTags,
+  watchRowFor,
+  watchState,
+} from "@/features/garmin/watch";
+import { loadWatchView } from "@/server/garmin/watch";
 import { CopyProgramButton } from "../_components/copy-program";
 import { PlanEmpty } from "../_components/plan-empty";
 import { PlanFrame } from "../_components/plan-frame";
@@ -46,14 +53,22 @@ export default async function PlanPage({
         {reviewSheet}
       </PlanFrame>
     );
+  const watch = await loadWatchView(context, overview.plan);
+  const { planId, state } = overview.plan;
   const { programs } = buildProgram(programInput(overview, paces));
   const race = typeof query.race === "string" ? query.race : null;
   const program =
     programs.find((item) => race !== null && item.raceId === race) ??
     programs[0];
-  const session = overview.plan.state.sessions.find(
-    (item) => item.sessionKey === seance,
-  );
+  const session = state.sessions.find((item) => item.sessionKey === seance);
+  const sessionWatch =
+    watch.enabled && session
+      ? watchState({
+          session,
+          today: overview.today,
+          row: watchRowFor(watch.rows, planId, session.sessionKey),
+        })
+      : null;
   const requested =
     typeof query.week === "string"
       ? query.week
@@ -102,9 +117,25 @@ export default async function PlanPage({
         key={program.raceId ?? "plan"}
         program={program}
         initialWeekKey={initialWeekKey}
-        proposals={proposalsByWeek(overview.plan.state, overview.proposals)}
+        proposals={proposalsByWeek(state, overview.proposals)}
+        watchTags={watchDayTags({
+          enabled: watch.enabled,
+          rows: watch.rows,
+          planId,
+          sessions: state.sessions,
+          today: overview.today,
+        })}
       />
-      {panel && <SessionSheet key={panel.sessionKey} panel={panel} />}
+      {panel && (
+        <SessionSheet
+          key={panel.sessionKey}
+          panel={panel}
+          watch={
+            sessionWatch &&
+            watchCopy(sessionWatch, { pendingChange: panel.proposal !== null })
+          }
+        />
+      )}
       {reviewSheet}
     </PlanFrame>
   );
