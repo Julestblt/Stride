@@ -1580,13 +1580,13 @@ function decidePlanProposal(request, body, decision) {
 }
 function applyPlanProposal(request, proposalId) {
   const owner = currentPlanUser(request);
-  if (!owner) return [401, { ok: false, reason: "unauthorized" }];
+  if (!owner) return [401, { code: "PT401", message: "not_authenticated" }];
   const proposal = tables.plan_proposals.find(
     (item) => item.id === proposalId && item.user_id === owner.id,
   );
-  if (!proposal) return [409, { ok: false, reason: "not_found" }];
+  if (!proposal) return [404, { code: "PT404", message: "not_found" }];
   if (proposal.status !== "accepted")
-    return [409, { ok: false, reason: "not_accepted" }];
+    return [409, { code: "PT409", message: "invalid_state" }];
   if (proposal.scope === "new_plan") {
     proposal.status = "applied";
     proposal.applied_version = 1;
@@ -1600,7 +1600,7 @@ function applyPlanProposal(request, proposalId) {
       resulting_version: 1,
       created_at: new Date().toISOString(),
     });
-    return [200, { ok: true, version: 1 }];
+    return [200, 1];
   }
   const plan = tables.training_plans.find(
     (item) => item.id === proposal.plan_id,
@@ -1636,7 +1636,7 @@ function applyPlanProposal(request, proposalId) {
     resulting_version: version,
     created_at: new Date().toISOString(),
   });
-  return [200, { ok: true, version }];
+  return [200, version];
 }
 
 createServer(async (request, response) => {
@@ -1768,11 +1768,6 @@ createServer(async (request, response) => {
         created_at: new Date().toISOString(),
       });
     return send(200, { ok: true });
-  }
-  const workerApply = url.pathname.match(/^\/v1\/proposals\/([^/]+)\/apply$/);
-  if (workerApply && request.method === "POST") {
-    const [status, value] = applyPlanProposal(request, workerApply[1]);
-    return send(status, value);
   }
   if (url.pathname === "/__test__/plan-import" && request.method === "POST") {
     if (
@@ -2018,6 +2013,13 @@ createServer(async (request, response) => {
         body,
         url.pathname.endsWith("accept_plan_proposal") ? "accepted" : "rejected",
       );
+      return send(status, value);
+    }
+    if (
+      request.method === "POST" &&
+      url.pathname === "/rest/v1/rpc/apply_accepted_plan_proposal"
+    ) {
+      const [status, value] = applyPlanProposal(request, body.p_proposal_id);
       return send(status, value);
     }
     if (

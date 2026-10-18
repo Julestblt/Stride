@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { outcomeOf } from "@/features/plans/review/proposal";
-import { requestProposalApply } from "@/server/coaching/worker-client";
 import { syncWatchAfterResponse } from "@/server/garmin/watch";
 import {
   getOnboardingContext,
   type OnboardingContext,
 } from "@/server/onboarding/context";
+import { applyAcceptedProposal } from "@/server/plans/apply";
 
 export type ProposalActionResult =
   | { status: "applied"; version: number | null }
@@ -44,13 +44,14 @@ async function apply(
   context: OnboardingContext,
   proposalId: string,
 ): Promise<ProposalActionResult> {
-  const result = await requestProposalApply(context, proposalId);
+  const result = await applyAcceptedProposal(context, proposalId).catch(
+    () => null,
+  );
+  if (!result) return { status: "pending" };
   if (result.ok) {
     await syncWatchAfterResponse(context);
-    return { status: "applied", version: result.version ?? null };
+    return { status: "applied", version: result.version };
   }
-  if (["worker_unavailable", "worker_failed"].includes(result.reason))
-    return { status: "pending" };
   const outcome = outcomeOf(result.reason);
   return outcome
     ? { status: outcome, reason: result.reason }

@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const rpc = vi.hoisted(() => vi.fn());
-const requestProposalApply = vi.hoisted(() => vi.fn());
+const applyAcceptedProposal = vi.hoisted(() => vi.fn());
 const getOnboardingContext = vi.hoisted(() => vi.fn());
 const syncWatchAfterResponse = vi.hoisted(() => vi.fn());
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("../../src/server/coaching/worker-client", () => ({
-  requestProposalApply,
+vi.mock("../../src/server/plans/apply", () => ({
+  applyAcceptedProposal,
 }));
 vi.mock("../../src/server/onboarding/context", () => ({
   getOnboardingContext,
@@ -34,8 +34,8 @@ describe("proposal actions", () => {
     });
   });
 
-  it("accepts then applies through the worker", async () => {
-    requestProposalApply.mockResolvedValue({ ok: true, version: 5 });
+  it("accepts then applies with the athlete session", async () => {
+    applyAcceptedProposal.mockResolvedValue({ ok: true, version: 5 });
     expect(await acceptProposal({ proposalId })).toEqual({
       status: "applied",
       version: 5,
@@ -43,12 +43,12 @@ describe("proposal actions", () => {
     expect(rpc).toHaveBeenCalledWith("accept_plan_proposal", {
       p_proposal_id: proposalId,
     });
-    expect(requestProposalApply).toHaveBeenCalledOnce();
+    expect(applyAcceptedProposal).toHaveBeenCalledOnce();
     expect(syncWatchAfterResponse).toHaveBeenCalledOnce();
   });
 
   it("reports a plan that moved between review and accept as stale", async () => {
-    requestProposalApply.mockResolvedValue({
+    applyAcceptedProposal.mockResolvedValue({
       ok: false,
       reason: "stale_version",
     });
@@ -58,14 +58,11 @@ describe("proposal actions", () => {
     });
   });
 
-  it("keeps the proposal pending when the worker is unavailable", async () => {
-    requestProposalApply.mockResolvedValue({
-      ok: false,
-      reason: "worker_unavailable",
-    });
+  it("keeps the proposal pending when applying fails unexpectedly", async () => {
+    applyAcceptedProposal.mockRejectedValue(new Error("network"));
     expect(await acceptProposal({ proposalId })).toEqual({ status: "pending" });
     expect(syncWatchAfterResponse).not.toHaveBeenCalled();
-    requestProposalApply.mockResolvedValue({ ok: true, version: 5 });
+    applyAcceptedProposal.mockResolvedValue({ ok: true, version: 5 });
     expect(await retryProposal({ proposalId })).toEqual({
       status: "applied",
       version: 5,
@@ -76,17 +73,17 @@ describe("proposal actions", () => {
   it("never applies when the accept call fails", async () => {
     rpc.mockResolvedValue({ error: { message: "invalid_state" } });
     expect(await acceptProposal({ proposalId })).toEqual({ status: "error" });
-    expect(requestProposalApply).not.toHaveBeenCalled();
+    expect(applyAcceptedProposal).not.toHaveBeenCalled();
   });
 
-  it("rejects without calling the worker", async () => {
+  it("rejects without applying", async () => {
     expect(await rejectProposal({ proposalId })).toEqual({
       status: "rejected",
     });
     expect(rpc).toHaveBeenCalledWith("reject_plan_proposal", {
       p_proposal_id: proposalId,
     });
-    expect(requestProposalApply).not.toHaveBeenCalled();
+    expect(applyAcceptedProposal).not.toHaveBeenCalled();
   });
 
   it("refuses malformed input and expired sessions", async () => {

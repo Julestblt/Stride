@@ -72,7 +72,6 @@ export default defineConfig({
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "isolated-test-publishable-key",
         SITE_URL: `http://127.0.0.1:${appPort}`,
         GARMIN_API_URL: `http://127.0.0.1:${garminPort}`,
-        COACH_WORKER_URL: `http://127.0.0.1:${authPort}`,
       },
     },
   ],
