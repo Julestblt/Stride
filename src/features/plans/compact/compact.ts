@@ -52,6 +52,15 @@ const compactSessionSchema = z.strictObject({
     .max(30),
 });
 
+const compactWeekSchema = z.strictObject({
+  weekStart: isoDate,
+  phase: z.enum(blockKinds),
+  notes: z.string().min(1).max(280).nullable(),
+  sessions: z.array(compactSessionSchema).max(14),
+});
+
+export const compactWeeksSchema = z.array(compactWeekSchema).min(1).max(40);
+
 export const compactPlanSchema = z.strictObject({
   title: z.string().min(1).max(120),
   summary: z.string().min(1).max(1200),
@@ -67,20 +76,11 @@ export const compactPlanSchema = z.strictObject({
     )
     .max(10),
   lowConfidenceReasons: z.array(z.string().min(1).max(200)).max(5),
-  weeks: z
-    .array(
-      z.strictObject({
-        weekStart: isoDate,
-        phase: z.enum(blockKinds),
-        notes: z.string().min(1).max(280).nullable(),
-        sessions: z.array(compactSessionSchema).max(14),
-      }),
-    )
-    .min(1)
-    .max(40),
+  weeks: compactWeeksSchema,
 });
 
 export type CompactPlan = z.infer<typeof compactPlanSchema>;
+export type CompactWeek = z.infer<typeof compactWeekSchema>;
 type CompactStep = z.infer<typeof compactStepSchema>;
 
 const qualityKinds = new Set<PlanSession["kind"]>([
@@ -171,9 +171,9 @@ function sumOrNull(values: (number | null)[]) {
     : null;
 }
 
-function toSessions(compact: CompactPlan) {
+function toSessions(compactWeeks: CompactWeek[], takenKeys: string[]) {
   const sessions: PlanSession[] = [];
-  for (const week of compact.weeks)
+  for (const week of compactWeeks)
     for (const session of week.sessions) {
       const structure: StructureStep[] = session.steps.map((step) =>
         "repeat" in step
@@ -185,10 +185,10 @@ function toSessions(compact: CompactPlan) {
           : toStep(step),
       );
       sessions.push({
-        sessionKey: sessionKey(
-          session.date,
-          sessions.map((existing) => existing.sessionKey),
-        ),
+        sessionKey: sessionKey(session.date, [
+          ...takenKeys,
+          ...sessions.map((existing) => existing.sessionKey),
+        ]),
         scheduledOn: session.date,
         sport: session.sport,
         kind: session.kind,
@@ -213,32 +213,45 @@ function toSessions(compact: CompactPlan) {
   );
 }
 
-export function compactToPlanState(
-  compact: CompactPlan,
-  timeZone: string,
-): PlanState {
-  const sessions = toSessions(compact);
+export type CompactRange = {
+  startsOn: string;
+  endsOn: string;
+  existing?: Pick<PlanState, "blocks" | "sessions">;
+};
+
+export function compactWeeksToRows(
+  compactWeeks: CompactWeek[],
+  range: CompactRange,
+): Pick<PlanState, "blocks" | "weeks" | "sessions"> {
+  const takenBlocks = new Set(
+    range.existing?.blocks.map((block) => block.blockKey) ?? [],
+  );
+  const sessions = toSessions(
+    compactWeeks,
+    range.existing?.sessions.map((session) => session.sessionKey) ?? [],
+  );
   const blocks: PlanBlock[] = [];
   const weeks: PlanWeek[] = [];
   const ordinals = new Map<string, number>();
-  for (const week of compact.weeks) {
+  for (const week of compactWeeks) {
     let block = blocks.at(-1);
     if (!block || block.kind !== week.phase) {
-      const ordinal = (ordinals.get(week.phase) ?? 0) + 1;
+      let ordinal = (ordinals.get(week.phase) ?? 0) + 1;
+      while (takenBlocks.has(blockKey(week.phase, ordinal))) ordinal += 1;
       ordinals.set(week.phase, ordinal);
       block = {
         blockKey: blockKey(week.phase, ordinal),
         kind: week.phase,
         name: blockNames[week.phase],
         startsOn:
-          week.weekStart > compact.startsOn ? week.weekStart : compact.startsOn,
+          week.weekStart > range.startsOn ? week.weekStart : range.startsOn,
         endsOn: week.weekStart,
         objective: week.notes ?? blockNames[week.phase],
         raceId: null,
       };
       blocks.push(block);
     }
-    block.endsOn = [addDays(week.weekStart, 6), compact.endsOn].sort()[0];
+    block.endsOn = [addDays(week.weekStart, 6), range.endsOn].sort()[0];
     const running = sessions.filter(
       (session) =>
         mondayOf(session.scheduledOn) === week.weekStart &&
@@ -277,7 +290,15 @@ export function compactToPlanState(
       notes: week.notes,
     });
   }
+  return { blocks, weeks, sessions };
+}
+
+export function compactToPlanState(
+  compact: CompactPlan,
+  timeZone: string,
+): PlanState {
   return {
+    ...compactWeeksToRows(compact.weeks, compact),
     plan: {
       id: "coach",
       title: compact.title,
@@ -291,8 +312,5 @@ export function compactToPlanState(
         reasons: compact.lowConfidenceReasons,
       },
     },
-    blocks,
-    weeks,
-    sessions,
   };
 }

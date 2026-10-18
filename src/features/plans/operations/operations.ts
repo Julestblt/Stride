@@ -1,8 +1,11 @@
 import { z } from "zod";
 import {
+  blockSchema,
   planStateSchema,
   raceRoles,
   sessionContentSchema,
+  sessionSchema,
+  weekSchema,
   weekTargetsSchema,
 } from "../model/plan";
 import { sessionStructureSchema } from "../model/structure";
@@ -59,6 +62,16 @@ export const planOperationSchema = z.discriminatedUnion("op", [
     op: z.literal("set_race_role"),
     raceId: key,
     role: z.enum(raceRoles).nullable(),
+  }),
+  z.strictObject({
+    op: z.literal("extend_plan"),
+    previousEndsOn: isoDate,
+    endsOn: isoDate,
+    raceId: key,
+    role: z.enum(raceRoles),
+    blocks: z.array(blockSchema).min(1).max(20),
+    weeks: z.array(weekSchema).min(1).max(40),
+    sessions: z.array(sessionSchema).max(320),
   }),
 ]);
 

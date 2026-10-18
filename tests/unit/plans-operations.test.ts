@@ -4,7 +4,13 @@ import {
   isFrozenSession,
 } from "@/features/plans/operations/apply";
 import { planOperationSchema } from "@/features/plans/operations/operations";
-import { context, easyRun, planState, thresholdSession } from "./plan-fixture";
+import {
+  context,
+  easyRun,
+  extendPlan,
+  planState,
+  thresholdSession,
+} from "./plan-fixture";
 
 const errorCodes = (result: ReturnType<typeof applyOperations>) =>
   result.ok ? [] : result.errors.map((error) => error.code);
@@ -447,6 +453,158 @@ describe("set_race_role", () => {
     );
     expect(removed.ok && removed.changeset.plan?.raceRoles).toEqual([
       { raceId: "race-a", role: "primary" },
+    ]);
+  });
+});
+
+describe("extend_plan", () => {
+  it("moves the end, appends blocks, weeks and sessions and keeps earlier rows", () => {
+    const before = planState();
+    const result = applyOperations(before, [extendPlan()], context());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.plan.endsOn).toBe("2026-11-22");
+    expect(result.state.plan.raceRoles).toContainEqual({
+      raceId: "race-b",
+      role: "secondary",
+    });
+    expect(result.state.plan.primaryRaceId).toBe("race-a");
+    expect(result.changeset.blocks).toEqual({
+      closed: [],
+      added: [expect.objectContaining({ blockKey: "b-build-1" })],
+    });
+    expect(result.changeset.weeks.closed).toEqual([]);
+    expect(result.changeset.weeks.added.map((week) => week.weekKey)).toEqual([
+      "w-2026-11-09",
+      "w-2026-11-16",
+    ]);
+    expect(result.changeset.sessions.closed).toEqual([]);
+    expect(
+      result.changeset.sessions.added.map((session) => session.sessionKey),
+    ).toEqual(["s-2026-11-10-1", "s-2026-11-17-1"]);
+    expect(result.state.sessions.slice(0, before.sessions.length)).toEqual(
+      before.sessions,
+    );
+  });
+
+  it("makes a primary race the objective and the previous one a preparation race", () => {
+    const result = applyOperations(
+      planState(),
+      [extendPlan({ role: "primary" })],
+      context(),
+    );
+    expect(result.ok && result.state.plan.primaryRaceId).toBe("race-b");
+    expect(result.ok && result.state.plan.raceRoles).toEqual([
+      { raceId: "race-a", role: "preparation" },
+      { raceId: "race-b", role: "primary" },
+    ]);
+  });
+
+  it("rejects an end that does not move later or a stale previous end", () => {
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ endsOn: "2026-11-08" })],
+          context(),
+        ),
+      ),
+    ).toEqual(["outside_plan"]);
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ previousEndsOn: "2026-11-01" })],
+          context(),
+        ),
+      ),
+    ).toEqual(["invalid_operation"]);
+  });
+
+  it("rejects weeks or sessions inside the current plan or after the new end", () => {
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ weekStarts: ["2026-11-02", "2026-11-09"] })],
+          context(),
+        ),
+      ),
+    ).toEqual(["invalid_operation"]);
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ sessionDates: ["2026-11-05"] })],
+          context(),
+        ),
+      ),
+    ).toEqual(["outside_plan"]);
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ sessionDates: ["2026-11-25"] })],
+          context(),
+        ),
+      ),
+    ).toEqual(["outside_plan"]);
+  });
+
+  it("requires every added week and sessions inside them", () => {
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ weekStarts: ["2026-11-16"] })],
+          context(),
+        ),
+      ),
+    ).toEqual(["invalid_operation"]);
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [extendPlan({ endsOn: "2026-11-29" })],
+          context(),
+        ),
+      ),
+    ).toEqual(["invalid_operation"]);
+  });
+
+  it("must be the first operation and lets later operations use the new end", () => {
+    const later = applyOperations(
+      planState(),
+      [{ op: "skip_session", sessionKey: "s-2026-10-20-1" }, extendPlan()],
+      context(),
+    );
+    expect(errorCodes(later)).toEqual(["invalid_operation"]);
+    const combined = applyOperations(
+      planState(),
+      [
+        extendPlan(),
+        {
+          op: "add_session",
+          session: { scheduledOn: "2026-11-21", content: easyRun(30) },
+        },
+      ],
+      context(),
+    );
+    expect(combined.ok).toBe(true);
+  });
+});
+
+describe("set_race_role primary", () => {
+  it("moves the objective and turns the previous one into a preparation race", () => {
+    const result = applyOperations(
+      planState(),
+      [{ op: "set_race_role", raceId: "race-b", role: "primary" }],
+      context(),
+    );
+    expect(result.ok && result.state.plan.primaryRaceId).toBe("race-b");
+    expect(result.ok && result.state.plan.raceRoles).toEqual([
+      { raceId: "race-a", role: "preparation" },
+      { raceId: "race-b", role: "primary" },
     ]);
   });
 });
