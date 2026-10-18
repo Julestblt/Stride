@@ -9,9 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "14",
-      "hash": "7758e9917abaed6de3512390a8b80ae8",
-      "remote_hash": "f431ad02aea36a43c857c905ba5da1b3"
+      "version": "15",
+      "hash": "8de87122bce76bd1d9d424f8e68990dc",
+      "remote_hash": "c470972680f28b54d1a9d4ade56ff9d8"
+    },
+    "./agents/director.md": {
+      "kind": "agent",
+      "id": "agent_017vonN4KirZUgE4TdC7eept",
+      "version": "1",
+      "hash": "77a14fb552047d431f71c25facf8c79f",
+      "remote_hash": "55c4a76dff3fdb31a595ed3713a7f31b"
     },
     "./agents/medical.md": {
       "kind": "agent",
@@ -20,11 +27,31 @@
       "hash": "9e4078f597326451ff75547a228c1002",
       "remote_hash": "ec073119786e5ae18fbf2cf6379ac6ad"
     },
+    "./agents/nutritionist.md": {
+      "kind": "agent",
+      "id": "agent_01T4vwuYeP5ZjKoLPDdHC9z4",
+      "version": "1",
+      "hash": "55436de8cfb1a6f81a5986d239a032da",
+      "remote_hash": "5bf93079eb37f3eca3a8c04d05baf137"
+    },
+    "./agents/strategist.md": {
+      "kind": "agent",
+      "id": "agent_015ajAPp18SxHnnA4QEcQ8st",
+      "version": "1",
+      "hash": "8140353710fe4e9c3881e706bdc3fb05",
+      "remote_hash": "1b7c45f155aa2bf45c9e8e6875a80a4a"
+    },
     "./environments/coaching.yaml": {
       "kind": "environment",
       "id": "env_01VLDfiFmxn52uU7BCPirTCB",
       "hash": "1d890d72191fe02dc9248cd2d0e1f297",
       "remote_hash": "72d0b2cd62455eb38b15979e13b46c91"
+    },
+    "./skills/daily-nutrition": {
+      "kind": "skill",
+      "id": "skill_01XZb7tWQ2Tm6ZGRihsiXt6L",
+      "version": "skver_01LQHrYpdgYDQwsNgEvbnmWU",
+      "hash": "194539b1355f586343804c9bb78dd062"
     },
     "./skills/explain-decision": {
       "kind": "skill",
@@ -67,6 +94,18 @@
       "id": "skill_01VQqXNMQneHCr5RJSGEKkSN",
       "version": "skver_01XJVygPPNBQuJT793ZHRpgh",
       "hash": "dede43319735eac14a964e9ad60c1879"
+    },
+    "./skills/race-strategy": {
+      "kind": "skill",
+      "id": "skill_01NZHMP1ESZ1CdVEgR2hLQbc",
+      "version": "skver_017hdmzDyrRsZ3egnG9at9aa",
+      "hash": "dc220f0daa3aa3c8bb8d96a6720d239e"
+    },
+    "./skills/season-calendar": {
+      "kind": "skill",
+      "id": "skill_01QWi4yaJZQLoZAfGZU5aBBF",
+      "version": "skver_01NZU4Dvs9gaJ97GvEmKbyWn",
+      "hash": "33fabc1895e8595ace56be8954924544"
     },
     "./skills/session-design": {
       "kind": "skill",
