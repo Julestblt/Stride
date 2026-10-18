@@ -234,7 +234,7 @@ export type ProgramOverview = {
   currentWeekKey: string | null;
 };
 
-const weekTypeLabels: Record<PlanWeek["weekType"], string> = {
+export const weekTypeLabels: Record<PlanWeek["weekType"], string> = {
   lead_in: "Reprise",
   build: "Construction",
   recovery: "Allégée",
