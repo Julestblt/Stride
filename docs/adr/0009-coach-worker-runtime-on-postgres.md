@@ -1,6 +1,6 @@
 # ADR 0009: A coach worker on Supabase Postgres runs agent workflows
 
-- Status: Accepted (2026-10-13, #94), amended by the Managed Agents spike (2026-10-15, #128)
+- Status: Accepted (2026-10-13, #94), amended by the Managed Agents spike (2026-10-15, #128); the `stride-coach-worker` service is removed by the 2026-10-18 amendment (#193)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 
@@ -94,3 +94,18 @@ The group conversation from the [D10 amendment](../architecture/coaching-engine/
 - The Coach's hand-off line is a normal Coach message; the agent-to-agent brief stays out of the thread.
 
 **Prompt issues seen in the spike**, to fix in the production agents: Medical ended its reply with a second question in prose instead of a second `ask_athlete` call, and spoke to the Coach inside the athlete's message (« Coach, c'est à toi de voir… »); the Coach added a filler line (« Inès est en train de regarder ça avec toi. ») and a synthesis that partly repeated Medical's advice.
+
+## Amendment (2026-10-18, #193)
+
+The web process applies accepted proposals. The `stride-coach-worker` service, its client and its `COACH_WORKER_*` variables are removed.
+
+**Why.** The worker's login role was never created on the hosted project, so every accepted proposal stayed « Acceptée, application en attente ». The service and its credential added a deployment and a secret without a real control. The control is unchanged without it: plan tables stay read-only under RLS, the athlete accepts through an ownership-checked RPC, and no Coach tool can accept or apply.
+
+**Decision.**
+
+- When the athlete accepts or retries, the server action recomputes and revalidates the changeset from the stored operations under the athlete's RLS, as the worker did (`src/server/plans/apply.ts`).
+- It then calls `public.apply_accepted_plan_proposal(proposal_id, changeset)` with the athlete's session. This `security definer` RPC takes the athlete from `auth.uid()`, refuses a proposal the athlete does not own (`not_found`), and delegates to `private.apply_plan_proposal`, which still requires the `accepted` status and checks the base version in one transaction.
+- `public.record_plan_proposal_outcome` and `public.reset_own_plan` wrap `private.mark_plan_proposal_outcome`, `private.delete_plan` and `private.clear_new_plan_proposals` the same way. All three are executable by `authenticated` only.
+- An unexpected failure while applying keeps the proposal accepted, and the athlete can retry it.
+
+**Trade-off.** The athlete can send a changeset of their choice for their own accepted proposal. It only affects their own plan, and the private function still validates its structure. Background runs (weekly reviews, monitors) still need a credential other than the athlete's session, and stay out of scope as before.

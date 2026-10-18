@@ -1,9 +1,6 @@
 import { z } from "zod";
-import {
-  requestPlanReset,
-  requestProposalApply,
-} from "@/server/coaching/worker-client";
 import { getOnboardingContext } from "@/server/onboarding/context";
+import { applyAcceptedProposal, resetPlan } from "@/server/plans/apply";
 
 const requestSchema = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("apply"), proposalId: z.uuid() }),
@@ -30,12 +27,15 @@ export async function POST(request: Request) {
   const body = parsed.data;
 
   if (body.action === "apply")
-    return Response.json(await requestProposalApply(context, body.proposalId), {
-      headers,
-    });
+    return Response.json(
+      await applyAcceptedProposal(context, body.proposalId),
+      { headers },
+    );
 
-  if (body.action === "delete-plan")
-    return Response.json(await requestPlanReset(context), { headers });
+  if (body.action === "delete-plan") {
+    await resetPlan(context);
+    return Response.json({ ok: true }, { headers });
+  }
 
   const { error } = await context.client.rpc(
     body.decision === "accept"

@@ -1,5 +1,4 @@
 import "server-only";
-import postgres from "postgres";
 import { localToday } from "@/features/plans/constraints";
 import {
   validateNewPlan,
@@ -18,17 +17,8 @@ import { loadPlanningInput } from "@/server/plans/draft";
 import { readSessionMatches } from "@/server/plans/matches";
 import { readActivePlan } from "@/server/plans/stored";
 
-let sql: postgres.Sql | null = null;
-
-function workerSql() {
-  const url = process.env.COACH_WORKER_DATABASE_URL;
-  if (!url) throw new Error("The coach worker database is not configured");
-  sql ??= postgres(url, { prepare: false, max: 2 });
-  return sql;
-}
-
-export type WorkerResult =
-  { ok: true; version?: number } | { ok: false; reason: string };
+export type ApplyResult =
+  { ok: true; version: number } | { ok: false; reason: string };
 
 function failureReason(errors: OperationError[]) {
   if (
@@ -110,24 +100,23 @@ async function recordOutcome(
 ) {
   const outcome = outcomeOf(reason);
   if (!outcome) return;
-  try {
-    await workerSql()`
-      select private.mark_plan_proposal_outcome(
-        ${context.userId}::uuid, ${proposalId}::uuid, ${outcome}, ${reason}
-      )`;
-  } catch (cause) {
+  const { error } = await context.client.rpc("record_plan_proposal_outcome", {
+    p_proposal_id: proposalId,
+    p_outcome: outcome,
+    p_note: reason,
+  });
+  if (error)
     console.error("Unable to record the proposal outcome", {
       proposalId,
       reason,
-      error: cause instanceof Error ? cause.message : "unknown",
+      error: error.message,
     });
-  }
 }
 
 export async function applyAcceptedProposal(
   context: OnboardingContext,
   proposalId: string,
-): Promise<WorkerResult> {
+): Promise<ApplyResult> {
   const { data: proposal, error } = await context.client
     .from("plan_proposals")
     .select("id, status, scope, operations, plan_id, base_version")
@@ -143,29 +132,25 @@ export async function applyAcceptedProposal(
     await recordOutcome(context, proposal.id, changeset);
     return { ok: false, reason: changeset };
   }
-  try {
-    const [row] = await workerSql()<{ version: number }[]>`
-      select (private.apply_plan_proposal(
-        ${proposal.id}::uuid,
-        ${workerSql().json(JSON.parse(JSON.stringify(changeset)))}
-      )).version as version`;
-    return { ok: true, version: row.version };
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : "apply_failed";
-    await recordOutcome(context, proposal.id, message);
-    return { ok: false, reason: message };
+  const { data: version, error: applyError } = await context.client.rpc(
+    "apply_accepted_plan_proposal",
+    {
+      p_proposal_id: proposal.id,
+      p_changeset: JSON.parse(JSON.stringify(changeset)),
+    },
+  );
+  if (applyError) {
+    await recordOutcome(context, proposal.id, applyError.message);
+    return { ok: false, reason: applyError.message };
   }
+  return { ok: true, version };
 }
 
-export async function resetPlan(
-  context: OnboardingContext,
-): Promise<WorkerResult> {
+export async function resetPlan(context: OnboardingContext) {
   const stored = await readActivePlan(context);
-  if (stored)
-    await workerSql()`
-      select private.delete_plan(${context.userId}::uuid, ${stored.planId}::uuid)`;
-  else
-    await workerSql()`
-      select private.clear_new_plan_proposals(${context.userId}::uuid)`;
-  return { ok: true };
+  const { error } = await context.client.rpc(
+    "reset_own_plan",
+    stored ? { p_plan_id: stored.planId } : {},
+  );
+  if (error) throw new Error("Unable to reset the plan");
 }
