@@ -45,6 +45,7 @@ import {
   type ShellGoal,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
+import { AppMobileTabBar } from "./app-mobile-tab-bar";
 import { CoachNavItem } from "./coach-nav";
 import { PlanSidebarGroup } from "./plan-nav";
 import type { ProgramNav } from "@/features/plans/view/program";
@@ -265,9 +266,10 @@ export function AppShell({
             </SidebarFooter>
             <SidebarRail />
           </Sidebar>
-          <SidebarInset className="relative h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
+          <SidebarInset className="group/inset relative h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
             <DataActivityFeedback />
             <PullToSync>{children}</PullToSync>
+            <AppMobileTabBar attention={coachAttention} />
           </SidebarInset>
         </SidebarProvider>
       </DataActivityProvider>

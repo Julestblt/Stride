@@ -792,9 +792,16 @@ tables.provider_activity_tracks.push({
   heart_rate_histogram: null,
   source_point_count: 302,
 });
-const nextPlanSession = planSessions.find(
-  (session) => session.scheduled_on > planToday && session.kind !== "race",
-);
+const planWeekEnd = shiftDay(mondayOf(planToday), 6);
+const proposable = (session) =>
+  session.scheduled_on <= planWeekEnd && session.kind !== "race";
+const nextPlanSession =
+  planSessions.find(
+    (session) => session.scheduled_on > planToday && proposable(session),
+  ) ??
+  planSessions.find(
+    (session) => session.scheduled_on === planToday && proposable(session),
+  );
 const placedContent = (content) => ({
   sport: content.sport,
   kind: content.kind,

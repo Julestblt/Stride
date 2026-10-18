@@ -209,27 +209,34 @@ export default async function ShellPage() {
         </div>
       </SidebarInset>
       <MobileTabBar className="fixed inset-x-0 bottom-0 z-20 md:hidden">
-        <MobileTab
-          href={shell}
-          icon={<CircleDotIcon />}
-          label="Today"
-          isActive
-        />
+        <MobileTab href={shell} icon={<CircleDotIcon />} label="Aujourd’hui" />
         <MobileTab
           href={`${shell}#plan`}
           icon={<ChartNoAxesColumnIcon />}
           label="Plan"
         />
-        <MobileAskAction href={`${shell}#coach`} />
+        <MobileAskAction
+          href={`${shell}#coach`}
+          label="Coach, 2 questions en attente"
+          isActive
+          badge={
+            <NavBadge
+              kind="count"
+              className="-top-1 -right-1 translate-y-0 ring-2 ring-background"
+            >
+              <span aria-hidden="true">2</span>
+            </NavBadge>
+          }
+        />
         <MobileTab
           href={`${shell}#activities`}
           icon={<ActivityIcon />}
-          label="Activities"
+          label="Activités"
         />
         <MobileTab
           href={`${shell}#progress`}
           icon={<TrendingUpIcon />}
-          label="Progress"
+          label="Progression"
         />
       </MobileTabBar>
     </SidebarProvider>
