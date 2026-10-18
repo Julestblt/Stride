@@ -10,6 +10,7 @@ import {
 import { NavBadge, NavItem } from "@/components/stride/navigation";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { StaffStack } from "@/features/coach/components/staff-portrait";
+import { staffAgents } from "@/features/coach/staff";
 import {
   coachAttentionLabel,
   coachWaiting,
@@ -61,7 +62,7 @@ export function CoachNavItem({
               >
                 L’équipe
                 <StaffStack
-                  agents={["coach", "medical"]}
+                  agents={staffAgents}
                   size={16}
                   className="ml-auto"
                 />

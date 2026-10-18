@@ -2,8 +2,11 @@ import "server-only";
 import { z } from "zod";
 import {
   groupLine,
+  specialistAgents,
+  staffFaceColumns,
   staffFacesOf,
   staffOf,
+  type SpecialistAgent,
   type StaffFaceChoice,
   type StaffFaces,
 } from "@/features/coach/staff";
@@ -11,12 +14,15 @@ import { monthStart, type StaffUsage } from "@/features/coach/team";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { displayTimeZone } from "@/features/app-shell/shell";
 
+const staffFaceSelect =
+  "coach_face, medical_face, director_face, strategist_face, nutritionist_face";
+
 export async function readStaffFaces(
   context: OnboardingContext,
 ): Promise<StaffFaces> {
   const { data, error } = await context.client
     .from("athlete_profiles")
-    .select("coach_face, medical_face")
+    .select(staffFaceSelect)
     .eq("user_id", context.userId)
     .maybeSingle();
   if (error) return staffFacesOf(null);
@@ -27,7 +33,9 @@ export async function readGroupLine(context: OnboardingContext) {
   try {
     const { data } = await context.client
       .from("athlete_profiles")
-      .select("coach_face, medical_face, first_name")
+      .select(
+        "coach_face, medical_face, director_face, strategist_face, nutritionist_face, first_name",
+      )
       .eq("user_id", context.userId)
       .maybeSingle();
     return groupLine(
@@ -43,13 +51,11 @@ export async function saveStaffFace(
   context: OnboardingContext,
   choice: StaffFaceChoice,
 ) {
-  const values =
-    choice.agent === "coach"
-      ? { coach_face: choice.face }
-      : { medical_face: choice.face };
   const { data, error } = await context.client
     .from("athlete_profiles")
-    .update(values)
+    .update({ [staffFaceColumns[choice.agent]]: choice.face } as Partial<
+      Record<(typeof staffFaceColumns)[keyof typeof staffFaceColumns], string>
+    >)
     .eq("user_id", context.userId)
     .select("user_id");
   return !error && data.length === 1;
@@ -80,16 +86,22 @@ export async function loadStaffUsage(
       .gte("created_at", since)
       .limit(1000),
   ]);
-  const opinions = new Set(
-    z
-      .array(consultRowSchema)
-      .catch([])
-      .parse(consults.data ?? [])
-      .filter((row) => row.body.agent === "medical")
-      .map((row) => `${row.coach_session_id}:${row.body.thread}`),
-  );
+  const rows = z
+    .array(consultRowSchema)
+    .catch([])
+    .parse(consults.data ?? []);
+  const opinions = Object.fromEntries(
+    specialistAgents.map((agent) => [
+      agent,
+      new Set(
+        rows
+          .filter((row) => row.body.agent === agent)
+          .map((row) => `${row.coach_session_id}:${row.body.thread}`),
+      ).size,
+    ]),
+  ) as Record<SpecialistAgent, number>;
   return {
     conversations: threads.error ? 0 : (threads.count ?? 0),
-    medicalOpinions: opinions.size,
+    opinions,
   };
 }

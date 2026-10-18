@@ -1,3 +1,8 @@
+import {
+  defaultStaff,
+  staffAgents,
+  type StaffAgent,
+} from "@/features/coach/staff";
 import { mondayOf } from "../model/dates";
 import type { PlanState } from "../model/plan";
 
@@ -50,13 +55,13 @@ export type ProposalRecord = {
 
 export type StaffMember = { name: string; role: string; monogram: string };
 
-const staff: Record<string, { name: string; role: string }> = {
-  coach: { name: "Claire", role: "Coach" },
-  medical: { name: "Inès", role: "Médecin" },
-};
-
 export function staffMember(specialist: string): StaffMember {
-  const member = staff[specialist] ?? { name: "Spécialiste", role: "Staff" };
+  const known = (staffAgents as readonly string[]).includes(specialist)
+    ? defaultStaff[specialist as StaffAgent]
+    : null;
+  const member = known
+    ? { name: known.name, role: known.role }
+    : { name: "Spécialiste", role: "Staff" };
   return { ...member, monogram: member.name.slice(0, 1).toUpperCase() };
 }
 

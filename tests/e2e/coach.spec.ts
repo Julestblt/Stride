@@ -884,7 +884,7 @@ test("portraits load the full source file", async ({ browser }) => {
   await context.close();
 });
 
-test("the team page shows the Coach and Medical and changes faces everywhere", async ({
+test("the team page shows the whole staff and changes faces everywhere", async ({
   page,
 }) => {
   await resetCoach();
@@ -904,16 +904,18 @@ test("the team page shows the Coach and Medical and changes faces everywhere", a
       name: "Une équipe autour de toi, dans une seule conversation.",
     }),
   ).toBeVisible();
-  await expect(page.getByText("Ton staff · 2 agents IA")).toBeVisible();
+  await expect(page.getByText("Ton staff · 5 agents IA")).toBeVisible();
   const coach = page.getByRole("region", { name: "Claire" });
   await expect(coach).toContainText("Ta première interlocutrice.");
   await expect(coach).toContainText("2 conversations ce mois");
   const specialists = page.getByRole("region", { name: "Les spécialistes" });
-  await expect(specialists.getByRole("article")).toHaveCount(1);
+  await expect(specialists.getByRole("article")).toHaveCount(4);
   const medical = specialists.getByRole("article", { name: "Inès" });
   await expect(medical).toContainText("1 avis ce mois");
-  for (const name of ["Marc", "Hugo", "Léa", "Sophie", "Nadia", "Yanis"])
-    await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+  for (const name of ["Marc", "Hugo", "Léa"])
+    await expect(
+      specialists.getByRole("article", { name, exact: true }),
+    ).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Comment le staff travaille" }),
   ).toBeVisible();

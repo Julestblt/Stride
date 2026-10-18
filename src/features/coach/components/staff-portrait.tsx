@@ -3,17 +3,31 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import claire from "../portraits/claire.webp";
+import hugo from "../portraits/hugo.webp";
 import ines from "../portraits/ines.webp";
 import karim from "../portraits/karim.webp";
+import lea from "../portraits/lea.webp";
+import marc from "../portraits/marc.webp";
+import nadia from "../portraits/nadia.webp";
+import sophie from "../portraits/sophie.webp";
 import thomas from "../portraits/thomas.webp";
+import yanis from "../portraits/yanis.webp";
 import { portraitFrame, portraitSourceSize } from "../portrait-crop";
 import { staffMember, type StaffAgent, type StaffFace } from "../staff";
 import { useStaff } from "./staff-context";
 
-const portraits = { claire, thomas, ines, karim } as const satisfies Record<
-  StaffFace,
-  unknown
->;
+const portraits = {
+  claire,
+  thomas,
+  ines,
+  karim,
+  marc,
+  sophie,
+  hugo,
+  nadia,
+  lea,
+  yanis,
+} as const satisfies Record<StaffFace, unknown>;
 
 function radius(size: number) {
   if (size <= 22) return "rounded-mark";
