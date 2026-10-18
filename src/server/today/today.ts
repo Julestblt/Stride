@@ -3,6 +3,7 @@ import { localToday } from "@/features/app-shell/shell";
 import { buildProgram } from "@/features/plans/view/program";
 import { buildToday, todaySessionKey } from "@/features/today/today";
 import { listActivities } from "@/server/activities/activities";
+import { loadWatchView } from "@/server/garmin/watch";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import {
   loadPlanOverview,
@@ -28,6 +29,7 @@ export async function loadToday(context: OnboardingContext, now: Date) {
   const [panel, races] = await Promise.all([
     sessionKey ? loadSessionPanel(context, sessionKey) : null,
     overview ? overview.races : readPlanRaces(context),
+    loadWatchView(context, overview?.plan ?? null),
   ]);
   return {
     checkin: recovery.checkin,

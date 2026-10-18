@@ -8,6 +8,10 @@ import {
 } from "@/features/garmin/connection";
 import { sleepStages, type WellnessDay } from "@/features/garmin/wellness";
 import {
+  watchRowStatuses,
+  type WatchReconcileResult,
+} from "@/features/garmin/watch";
+import {
   garminJobPhases,
   garminJobStates,
   garminSyncStates,
@@ -248,3 +252,30 @@ export function parseFailure(
     }),
   };
 }
+
+export const watchReconcileSchema = z
+  .object({
+    workouts: z.array(
+      z.object({
+        key: z.string(),
+        date: z.iso.date(),
+        status: z.enum(watchRowStatuses),
+        changed: z.boolean(),
+        simplifications: z.array(z.string()),
+        error_code: z.string().optional(),
+      }),
+    ),
+    removed: z.array(z.string()),
+  })
+  .transform((value): WatchReconcileResult => ({
+    workouts: value.workouts.map((workout) => ({
+      key: workout.key,
+      status: workout.status,
+      errorCode: workout.error_code ?? null,
+    })),
+    removed: value.removed,
+  }));
+
+export const watchRemovalSchema = z.object({
+  removed: z.number().int().nonnegative(),
+});

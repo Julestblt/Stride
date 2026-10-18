@@ -510,3 +510,66 @@ describe("Garmin client against the contract fixture", () => {
     );
   });
 });
+
+describe("watch workouts", () => {
+  const body = {
+    from: "2026-10-14",
+    to: "2026-10-20",
+    workouts: [
+      {
+        key: "plan:s-1",
+        date: "2026-10-15",
+        name: "Footing",
+        description: "Endurance fondamentale",
+        steps: [],
+      },
+    ],
+  };
+
+  it("reconciles the window with a PUT and reads each workout state", async () => {
+    const send = respond(200, {
+      workouts: [
+        {
+          key: "plan:s-1",
+          date: "2026-10-15",
+          status: "failed",
+          changed: true,
+          simplifications: [],
+          error_code: "rate_limited",
+        },
+      ],
+      removed: ["plan:s-0"],
+    });
+    const result = await client(send).reconcileWorkouts(context, body);
+    const [url, init] = send.mock.calls[0];
+    expect(String(url)).toBe(
+      "http://garmin.test/v1/connections/garmin/workouts",
+    );
+    expect(init?.method).toBe("PUT");
+    expect(JSON.parse(String(init?.body))).toEqual(body);
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        workouts: [
+          { key: "plan:s-1", status: "failed", errorCode: "rate_limited" },
+        ],
+        removed: ["plan:s-0"],
+      },
+    });
+  });
+
+  it("removes upcoming workouts with a DELETE and maps reconnect errors", async () => {
+    const removed = respond(200, { removed: 2 });
+    expect(await client(removed).removeWorkouts(context)).toEqual({
+      ok: true,
+      value: { removed: 2 },
+    });
+    expect(removed.mock.calls[0][1]?.method).toBe("DELETE");
+    expect(removed.mock.calls[0][1]?.body).toBeUndefined();
+    expect(
+      await client(
+        respond(409, { error: { code: "reconnect_required" } }),
+      ).reconcileWorkouts(context, body),
+    ).toEqual({ ok: false, failure: { code: "reconnect_required" } });
+  });
+});

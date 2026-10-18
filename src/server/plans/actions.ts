@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { outcomeOf } from "@/features/plans/review/proposal";
 import { requestProposalApply } from "@/server/coaching/worker-client";
+import { syncWatchAfterResponse } from "@/server/garmin/watch";
 import {
   getOnboardingContext,
   type OnboardingContext,
@@ -44,7 +45,10 @@ async function apply(
   proposalId: string,
 ): Promise<ProposalActionResult> {
   const result = await requestProposalApply(context, proposalId);
-  if (result.ok) return { status: "applied", version: result.version ?? null };
+  if (result.ok) {
+    await syncWatchAfterResponse(context);
+    return { status: "applied", version: result.version ?? null };
+  }
   if (["worker_unavailable", "worker_failed"].includes(result.reason))
     return { status: "pending" };
   const outcome = outcomeOf(result.reason);
