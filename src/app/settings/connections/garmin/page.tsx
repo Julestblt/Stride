@@ -16,8 +16,20 @@ import {
   timelineCells,
   type YearCell,
 } from "@/features/garmin/settings-view";
+import {
+  latestSentAt,
+  watchRowLabel,
+  watchSentLabel,
+  watchUpcoming,
+} from "@/features/garmin/watch";
+import {
+  WatchRowAction,
+  WatchToggle,
+} from "@/features/garmin/components/watch-settings";
 import { cn } from "@/lib/utils";
 import { requireAthlete } from "@/server/app/session";
+import { loadWatchView } from "@/server/garmin/watch";
+import { loadPlanOverview } from "@/server/plans/overview";
 import {
   readGarminRecentData,
   readSettingsConnection,
@@ -162,11 +174,29 @@ function Banner({
 
 export default async function GarminSettingsPage() {
   const context = await requireAthlete();
-  const [{ connection, sync }, counts, recent] = await Promise.all([
+  const [{ connection, sync }, counts, recent, overview] = await Promise.all([
     readSettingsConnection(context),
     readStoredCounts(context),
     readGarminRecentData(context),
+    loadPlanOverview(context).catch(() => null),
   ]);
+  const watch = await loadWatchView(context, overview?.plan ?? null);
+  const upcoming =
+    watch.enabled && overview
+      ? watchUpcoming({
+          rows: watch.rows,
+          planId: overview.plan.planId,
+          sessions: overview.plan.state.sessions,
+          today: overview.today,
+          pendingKeys: overview.proposals.flatMap((proposal) =>
+            proposal.targetKeys.map((key) => key.replace(/^session:/, "")),
+          ),
+        })
+      : [];
+  const watchFailures = upcoming.filter(
+    (item) => item.state.kind === "failed",
+  ).length;
+  const lastWatchSend = watchSentLabel(latestSentAt(watch.rows));
   const now = new Date();
   const phase = sync ? syncPhase(sync) : null;
   const lastSync = connection?.lastSyncAt ?? sync?.lastSyncAt ?? null;
@@ -443,15 +473,7 @@ export default async function GarminSettingsPage() {
                 Sans ça, rien à analyser pour te coacher.
               </span>
             </div>
-            <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-b border-border py-3.25">
-              <span>Envoyer les séances prévues à ta montre</span>
-              <span className="rounded-tag border border-border-strong px-1.5 py-0.5 font-mono text-nano tracking-wider text-muted uppercase">
-                Bientôt
-              </span>
-              <span className="col-span-full text-xs text-muted-foreground">
-                La seule chose que Stride écrira sur Garmin.
-              </span>
-            </div>
+            <WatchToggle enabled={watch.enabled} disabled={!connected} />
           </div>
         </section>
         <section className="flex flex-col gap-3">
@@ -478,8 +500,87 @@ export default async function GarminSettingsPage() {
         </section>
       </div>
 
+      {watch.enabled && overview && (
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-baseline gap-3">
+            <h2 className={monoLabel}>Sur ta montre · 7 prochains jours</h2>
+            {lastWatchSend && (
+              <span className="ml-auto text-xs text-muted-foreground">
+                Dernier envoi {lastWatchSend}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-col border-t border-border">
+            {upcoming.length === 0 ? (
+              <p className="py-3 text-sm text-muted">
+                Aucune séance prévue dans les 7 prochains jours.
+              </p>
+            ) : (
+              upcoming.map((item) => {
+                const status = watchRowLabel(item.state, {
+                  pendingChange: item.pendingChange,
+                });
+                const action =
+                  item.state.kind === "failed" ||
+                  item.state.kind === "needs_confirmation"
+                    ? item.copy.action
+                    : null;
+                return (
+                  <div
+                    key={item.sessionKey}
+                    className="grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-x-4 gap-y-1 border-b border-border-subtle py-3 md:grid-cols-[5.625rem_minmax(0,1fr)_auto]"
+                  >
+                    <span className="font-metric text-[17px] font-semibold text-muted tabular-nums">
+                      {item.day}
+                    </span>
+                    <span className="text-sm font-semibold">{item.title}</span>
+                    <span className="flex flex-wrap items-center justify-start gap-2.5 max-md:col-start-2 md:justify-end">
+                      <span
+                        className={cn(
+                          "flex items-center gap-1.5 text-[13px]",
+                          status.tone === "success" && "text-success",
+                          status.tone === "warning" && "text-warning",
+                          status.tone === "danger" && "text-danger",
+                          status.tone === "muted" && "text-muted-foreground",
+                        )}
+                      >
+                        {status.tone === "success" && (
+                          <CheckIcon aria-hidden="true" className="size-3" />
+                        )}
+                        {status.label}
+                      </span>
+                      {action && (
+                        <WatchRowAction
+                          sessionKey={item.sessionKey}
+                          action={action.kind}
+                          label={action.label}
+                        />
+                      )}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Les séances arrivent dans ton calendrier Garmin sous le nom « Stride
+            · … » et se lancent depuis la montre comme un entraînement guidé.
+            Quand ton plan change, je remplace ou retire la séance. Je ne touche
+            jamais aux entraînements que tu as créés toi-même.
+          </p>
+        </section>
+      )}
+
       {!reconnect && (
-        <section>
+        <section className="flex flex-col gap-2.5">
+          {watchFailures > 0 && (
+            <Banner tone="warning">
+              {watchFailures === 1
+                ? "1 séance n’a pas pu partir vers ta montre."
+                : `${watchFailures} séances n’ont pas pu partir vers ta montre.`}{" "}
+              Je réessaie au prochain passage, ou tout de suite depuis la liste.
+            </Banner>
+          )}
           {unavailable ? (
             <Banner tone="warning">
               Garmin ne répond pas pour le moment. On réessaie régulièrement,

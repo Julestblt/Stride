@@ -10,6 +10,8 @@ import { SessionKindTile } from "@/components/stride/session-kind-tile";
 import { zoneFills } from "@/components/stride/session-shape";
 import { cn } from "@/lib/utils";
 import { ProposalLink } from "./proposal-sheet";
+import type { WatchCopy } from "@/features/garmin/watch";
+import { WatchStatusBlock } from "@/features/garmin/components/watch-status";
 import {
   panelStatusLabel,
   type PanelCompletion,
@@ -360,9 +362,13 @@ function Completion({ completion }: { completion: PanelCompletion }) {
 export function SessionPanelBody({
   panel,
   titleId,
+  watch = null,
+  watchPending = false,
 }: {
   panel: SessionPanel;
   titleId: string;
+  watch?: WatchCopy | null;
+  watchPending?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-4.5 sm:gap-5">
@@ -373,6 +379,7 @@ export function SessionPanelBody({
         <>
           {panel.proposal && <Proposal proposal={panel.proposal} />}
           <Stats panel={panel} />
+          {watch && <WatchStatusBlock copy={watch} pending={watchPending} />}
           {panel.segments.length > 0 && <Structure panel={panel} />}
           {panel.steps.length > 0 && <Steps panel={panel} />}
           {panel.contingencies.length > 0 && (
