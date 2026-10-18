@@ -1,9 +1,15 @@
 import "server-only";
 import { z } from "zod";
 import { threadTitle } from "@/features/coach/conversations";
+import type { AttachmentRef } from "@/features/coach/attachments";
 import { clampItem, type ThreadItem } from "@/features/coach/items";
 import { readLabel } from "@/features/coach/reads";
 import { agentOfManagedName, type StaffAgent } from "@/features/coach/staff";
+import {
+  attachmentContextText,
+  resolveAttachments,
+  sentAttachments,
+} from "@/server/coaching/attachments";
 import { askAthleteTool } from "@/server/coaching/tools/ask-athlete";
 import { messageAthleteTool } from "@/server/coaching/tools/message-athlete";
 import { ToolError, toolError } from "@/server/coaching/tools/errors";
@@ -50,7 +56,12 @@ export const turnMessages = {
 } as const;
 
 export type TurnInput =
-  | { kind: "message"; text: string; consult?: "medical" }
+  | {
+      kind: "message";
+      text: string;
+      consult?: "medical";
+      attachments?: AttachmentRef[];
+    }
   | { kind: "answer"; toolUseId: string; text: string };
 
 export type TurnRequest = {
@@ -328,6 +339,13 @@ export async function* streamCoachTurn(
   signal?: AbortSignal,
 ): AsyncGenerator<TurnEvent> {
   const client = managedClient();
+  const attachments =
+    request.input.kind === "message" && request.input.attachments?.length
+      ? await resolveAttachments(context, request.input.attachments)
+      : [];
+  const attachmentContext = attachments.length
+    ? attachmentContextText(attachments)
+    : null;
   const started = Date.now();
   const accessToken = await turnAccessToken(context, started);
   const vaultId = await syncAthleteVault(context.userId, accessToken);
@@ -366,6 +384,7 @@ export async function* streamCoachTurn(
           at: now(),
           text: request.input.text,
           consult: request.input.consult ?? null,
+          attachments: sentAttachments(attachments),
         }
       : {
           kind: "answer",
@@ -409,6 +428,9 @@ export async function* streamCoachTurn(
               type: "user.message",
               content: [
                 { type: "text", text: request.input.text },
+                ...(attachmentContext
+                  ? [{ type: "text" as const, text: attachmentContext }]
+                  : []),
                 ...(group ? [{ type: "text" as const, text: group }] : []),
                 ...(request.input.consult
                   ? [

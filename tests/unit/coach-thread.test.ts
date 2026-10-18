@@ -44,7 +44,13 @@ const tz = "Europe/Paris";
 const proposalId = "d0000000-0000-4000-8000-00000000000d";
 
 const consultTurn: ThreadItem[] = [
-  { kind: "athlete", at: at(0), text: "J’ai mal au genou", consult: "medical" },
+  {
+    kind: "athlete",
+    at: at(0),
+    text: "J’ai mal au genou",
+    consult: "medical",
+    attachments: [],
+  },
   { kind: "coach", at: at(1), text: "Je demande à Inès." },
   {
     kind: "consult_request",
@@ -260,6 +266,34 @@ describe("thread view model", () => {
     ).toHaveLength(1);
   });
 
+  it("reads old athlete rows without attachments and keeps sent ones", () => {
+    expect(
+      parseThreadItem({
+        kind: "athlete",
+        body: { text: "Salut", consult: null },
+        created_at: at(0),
+      }),
+    ).toMatchObject({ attachments: [] });
+    const attachments = [
+      {
+        kind: "race" as const,
+        id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        title: "Trail des Lacs",
+        date: "2027-06-27",
+      },
+    ];
+    const parsed = parseThreadItem({
+      kind: "athlete",
+      body: { text: "Analyse ça", consult: null, attachments },
+      created_at: at(0),
+    });
+    expect(parsed).toMatchObject({ attachments });
+    expect(view([parsed!])[0]).toMatchObject({
+      type: "athlete",
+      attachments,
+    });
+  });
+
   it("keeps old stored questions without options readable", () => {
     const parsed = parseThreadItem({
       kind: "question",
@@ -275,7 +309,13 @@ describe("thread view model", () => {
 
   it("does not answer for the Coach when the Coach asked", () => {
     const entries = view([
-      { kind: "athlete", at: at(0), text: "Plan ?", consult: null },
+      {
+        kind: "athlete",
+        at: at(0),
+        text: "Plan ?",
+        consult: null,
+        attachments: [],
+      },
       {
         kind: "question",
         at: at(1),
@@ -307,7 +347,13 @@ describe("thread view model", () => {
 
   it("shows a proposal card with its stored status", () => {
     const items: ThreadItem[] = [
-      { kind: "athlete", at: at(0), text: "Fais-moi un plan", consult: null },
+      {
+        kind: "athlete",
+        at: at(0),
+        text: "Fais-moi un plan",
+        consult: null,
+        attachments: [],
+      },
       {
         kind: "proposal",
         at: at(9),
@@ -335,7 +381,13 @@ describe("thread view model", () => {
 
   it("shows a turn error inside a Coach message", () => {
     const entries = view([
-      { kind: "athlete", at: at(0), text: "Salut", consult: null },
+      {
+        kind: "athlete",
+        at: at(0),
+        text: "Salut",
+        consult: null,
+        attachments: [],
+      },
       { kind: "error", at: at(1), code: "timeout", text: "Trop long" },
     ]);
     expect(entries[1]).toMatchObject({

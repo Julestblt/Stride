@@ -6,6 +6,9 @@ const planThread = "c0c0c0c0-0000-4000-8000-000000000002";
 const spikeThread = "c0c0c0c0-0000-4000-8000-000000000003";
 const newThread = "c0c0c0c0-0000-4000-8000-0000000000aa";
 const newPlanProposal = "eeeeeeee-eeee-4eee-8eee-900000000001";
+const coachActivity = "aaaaaaaa-aaaa-4aaa-8aaa-000000009101";
+const coachRace = "c0ace000-0000-4000-8000-000000000001";
+const addContext = "Ajouter du contexte : séance, activité ou course";
 
 test.describe.configure({ mode: "serial" });
 
@@ -277,6 +280,208 @@ test("a refused turn shows a French message and keeps the draft", async ({
       .filter({ hasText: "Le staff travaille déjà sur ta demande." }),
   ).toBeVisible();
   await expect(composer).toHaveValue("Et la semaine prochaine ?");
+});
+
+test("context chips are picked with the keyboard, survive a failed send and reach the staff", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto("/coach/nouvelle");
+  const trigger = page.getByRole("button", { name: addContext });
+  await expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+  await trigger.click();
+  const picker = page.getByRole("dialog", { name: "Ajouter du contexte" });
+  await expect(picker).toBeVisible();
+  await expect
+    .poll(async () => {
+      const box = await picker.boundingBox();
+      return box && [Math.round(box.x + box.width), Math.round(box.width)];
+    })
+    .toEqual([1440, 440]);
+  const tabs = picker.getByRole("tablist", { name: "Type de contexte" });
+  const sessions = tabs.getByRole("tab", { name: "Séances" });
+  await sessions.click();
+  await expect(sessions).toHaveAttribute("aria-selected", "true");
+  await expect(sessions).toBeFocused();
+  await expect(
+    picker.getByText(
+      "Aucune séance prévue autour d’aujourd’hui dans ton plan actif.",
+    ),
+  ).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(tabs.getByRole("tab", { name: "Activités" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.keyboard.press("ArrowRight");
+  const races = tabs.getByRole("tab", { name: "Courses" });
+  await expect(races).toHaveAttribute("aria-selected", "true");
+  await expect(races).toBeFocused();
+  const race = picker.getByRole("button", { name: /Trail des Lacs/ });
+  await expect(race).toContainText("50 km · 2 400 m D+");
+  await page.keyboard.press("Tab");
+  if (!(await race.evaluate((element) => element === document.activeElement)))
+    await page.keyboard.press("Tab");
+  await expect(race).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(race).toHaveAttribute("aria-pressed", "true");
+  await expect(picker.getByRole("status")).toHaveText("1 élément joint sur 3");
+  await page.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await picker.getByRole("tab", { name: "Activités" }).click();
+  const activity = picker.getByRole("button", {
+    name: /Sortie longue vallonnée/,
+  });
+  await expect(activity).toContainText("24,6 km · 680 m D+");
+  await activity.click();
+  await activity.click();
+  await expect(activity).toHaveAttribute("aria-pressed", "false");
+  await activity.click();
+  await expect(picker.getByRole("status")).toHaveText(
+    "2 éléments joints sur 3",
+  );
+  const others = picker.locator('button[aria-pressed="false"]');
+  await others.first().click();
+  await expect(picker.getByRole("status")).toHaveText("3 éléments au plus");
+  await expect(others.first()).toBeDisabled();
+  await picker.getByRole("button", { name: "Terminé" }).click();
+  await expect(picker).toBeHidden();
+
+  const chips = page.getByRole("list", { name: "Contexte joint au message" });
+  await expect(chips.getByRole("listitem")).toHaveCount(3);
+  const extra = chips.getByRole("listitem").nth(2);
+  const extraTitle = (await extra.innerText()).split("\n")[0];
+  await extra.getByRole("button", { name: /^Retirer / }).click();
+  const composer = page.getByRole("textbox", { name: "Écrire au staff" });
+  await expect(composer).toBeFocused();
+  await expect(chips.getByRole("listitem")).toHaveCount(2);
+  await expect(chips).not.toContainText(extraTitle);
+
+  await page.route("**/api/coach/turns", (route) =>
+    route.fulfill({ status: 500, json: { code: "failed" } }),
+  );
+  await composer.fill("Analyse ça");
+  await composer.press("Enter");
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: "Le message n’a pas pu être envoyé.",
+    }),
+  ).toBeVisible();
+  await expect(composer).toHaveValue("Analyse ça");
+  await expect(chips.getByRole("listitem")).toHaveCount(2);
+
+  await page.unroute("**/api/coach/turns");
+  const attachments = [
+    { kind: "race", id: coachRace },
+    { kind: "activity", id: coachActivity },
+  ];
+  let posted: unknown = null;
+  await page.route("**/api/coach/turns", async (route) => {
+    posted = route.request().postDataJSON();
+    await stream([
+      {
+        type: "session",
+        sessionId: "sesn_01Contexte",
+        threadId: newThread,
+        consoleUrl: "https://console.test",
+      },
+      item("athlete", {
+        text: "Analyse ça",
+        consult: null,
+        attachments: [
+          {
+            ...attachments[0],
+            title: "Trail des Lacs",
+            date: "2027-06-27",
+          },
+          {
+            ...attachments[1],
+            title: "Sortie longue vallonnée",
+            date: "2026-10-04",
+          },
+        ],
+      }),
+      item("coach", { text: "Je regarde ta sortie." }),
+      { type: "done", status: "idle" },
+    ])(route);
+  });
+  await page.getByRole("button", { name: "Envoyer" }).click();
+  await expect(chips).toBeHidden();
+  expect(posted).toEqual({
+    mode: "conversation",
+    input: { kind: "message", text: "Analyse ça", attachments },
+  });
+  const sent = page
+    .getByRole("log", { name: "Messages" })
+    .getByRole("list", { name: "Contexte joint" });
+  await expect(
+    sent.getByRole("link", { name: /Trail des Lacs/ }),
+  ).toHaveAttribute("href", `/races/${coachRace}`);
+  await expect(
+    sent.getByRole("link", { name: /Sortie longue vallonnée/ }),
+  ).toHaveAttribute("href", `/activities/${coachActivity}`);
+  await expect(sent).toContainText("27/06/2027");
+});
+
+test("a stored message keeps its chips and answer mode hides the context control", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${kneeThread}`);
+  const sent = page
+    .getByRole("log", { name: "Messages" })
+    .getByRole("list", { name: "Contexte joint" });
+  await expect(
+    sent.getByRole("link", { name: /Sortie longue vallonnée/ }),
+  ).toHaveAttribute("href", `/activities/${coachActivity}`);
+  await expect(
+    page.getByRole("textbox", { name: "Ta réponse au staff" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: addContext })).toHaveCount(0);
+});
+
+test("mobile picks context from a bottom sheet at 390", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto("/coach/nouvelle");
+  const trigger = page.getByRole("button", { name: addContext });
+  const triggerBox = await trigger.boundingBox();
+  expect(Math.round(triggerBox!.height)).toBeGreaterThanOrEqual(44);
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const picker = page.getByRole("dialog", { name: "Ajouter du contexte" });
+  await expect(picker).toBeVisible();
+  await expect
+    .poll(async () => {
+      const box = await picker.boundingBox();
+      return box && [Math.round(box.width), Math.round(box.y + box.height)];
+    })
+    .toEqual([390, 844]);
+  await picker.getByRole("tab", { name: "Courses" }).click();
+  await picker.getByRole("button", { name: /Trail des Lacs/ }).click();
+  await picker.getByRole("button", { name: "Terminé" }).click();
+  const chips = page.getByRole("list", { name: "Contexte joint au message" });
+  const remove = chips.getByRole("button", {
+    name: "Retirer Trail des Lacs du contexte",
+  });
+  const removeBox = await remove.boundingBox();
+  expect(Math.round(removeBox!.height)).toBe(44);
+  expect(Math.round(removeBox!.width)).toBe(44);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await remove.click();
+  await expect(chips).toBeHidden();
+  await expect(
+    page.getByRole("textbox", { name: "Écrire au staff" }),
+  ).toBeFocused();
 });
 
 test("a new-plan proposal opens the review sheet and activates without an active plan", async ({

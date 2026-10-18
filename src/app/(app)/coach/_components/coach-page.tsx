@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import { localToday } from "@/features/app-shell/shell";
 import { requireAthlete } from "@/server/app/session";
+import { loadAttachmentOptions } from "@/server/coaching/attachments";
 import {
   coachTimeZone,
   loadConversations,
@@ -19,9 +21,11 @@ export async function CoachPage({
   request?: string | null;
 }) {
   const context = await requireAthlete();
-  const [conversations, thread] = await Promise.all([
+  const now = new Date();
+  const [conversations, thread, attachmentOptions] = await Promise.all([
     loadConversations(context),
     threadId ? loadThread(context, threadId) : null,
+    loadAttachmentOptions(context, localToday(now)),
   ]);
   if (threadId && !thread) notFound();
   const plan = request === "plan";
@@ -35,8 +39,9 @@ export async function CoachPage({
         mode: plan ? "plan" : "conversation",
         text: plan ? planRequest : "",
       }}
-      now={new Date().toISOString()}
+      now={now.toISOString()}
       timeZone={coachTimeZone}
+      attachmentOptions={attachmentOptions}
     />
   );
 }

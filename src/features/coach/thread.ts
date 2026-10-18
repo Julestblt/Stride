@@ -1,3 +1,4 @@
+import type { SentAttachment } from "./attachments";
 import type { ProposalOpinion, ThreadItem } from "./items";
 import type { StaffAgent, StaffMember } from "./staff";
 
@@ -37,6 +38,7 @@ export type ThreadEntry =
       text: string;
       consult: StaffAgent | null;
       replyTo: StaffAgent | null;
+      attachments: SentAttachment[];
     }
   | {
       type: "staff";
@@ -152,6 +154,7 @@ export function buildThread(input: ThreadInput): ThreadEntry[] {
           text: item.text,
           consult: item.kind === "athlete" ? item.consult : null,
           replyTo: target === "coach" ? null : target,
+          attachments: item.kind === "athlete" ? item.attachments : [],
         });
         return;
       }

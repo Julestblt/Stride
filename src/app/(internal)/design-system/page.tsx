@@ -92,6 +92,7 @@ import {
 import { StrideMark } from "@/components/stride/stride-mark";
 import { SyncStatus } from "@/components/stride/sync-status";
 import { VerdictList, VerdictRow } from "@/components/stride/verdict-row";
+import { ContextChipsExample } from "./_components/context-chips";
 import { GallerySection, Specimen } from "./_components/specimen";
 
 const sessionTileKinds: SessionTileKind[] = [
@@ -856,6 +857,13 @@ export default function DesignSystemPage() {
                 </div>
               ))}
             </dl>
+          </Specimen>
+          <Specimen title="Context chips" meta="ContextChip · ContextChipLink">
+            <ContextChipsExample />
+            <p className="text-xs text-muted-foreground">
+              Removable chip for an item attached in the composer, and the link
+              chip on the sent message. 44px targets below md.
+            </p>
           </Specimen>
           <Specimen title="Signals and notes" meta="SignalChip · CoachNote">
             <div className="flex flex-wrap gap-1.5">

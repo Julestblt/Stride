@@ -16,6 +16,7 @@ const managed = vi.hoisted(() => ({
 }));
 const runCustomTool = vi.hoisted(() => vi.fn());
 const syncAthleteVault = vi.hoisted(() => vi.fn());
+const resolveAttachments = vi.hoisted(() => vi.fn());
 
 vi.mock("../../src/server/coaching/managed/store", async (original) => ({
   ...(await original<object>()),
@@ -46,6 +47,10 @@ vi.mock("../../src/server/coaching/tools/registry", async (original) => ({
 vi.mock("../../src/server/coaching/managed/vault", () => ({
   syncAthleteVault,
 }));
+vi.mock("../../src/server/coaching/attachments", async (original) => ({
+  ...(await original<object>()),
+  resolveAttachments,
+}));
 
 import {
   assertTurnAllowed,
@@ -56,6 +61,10 @@ import {
   type TurnEvent,
 } from "../../src/server/coaching/managed/session";
 import type { CoachSessionRecord } from "../../src/server/coaching/managed/store";
+import {
+  AttachmentAccessError,
+  attachmentContextSchema,
+} from "../../src/server/coaching/attachments";
 import {
   accessTokenExpiry,
   tokenNeedsRefresh,
@@ -1022,5 +1031,111 @@ describe("coach turn stream", () => {
     );
     await collect(streamCoachTurn(contextFor(athleteA), request));
     expect(store.appendThreadItem.mock.calls[1][2].text).toHaveLength(7000);
+  });
+
+  it("hands the staff a typed context block and records the attached items", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    resolveAttachments.mockResolvedValue([
+      {
+        kind: "activity",
+        id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000001",
+        title: "Sortie longue vallonnée",
+        date: "2026-10-04",
+        distanceKm: 24.6,
+      },
+      {
+        kind: "race",
+        id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        title: "Trail des Lacs",
+        date: "2027-06-27",
+        raceKind: "trail",
+        priority: "B",
+      },
+    ]);
+    managed.stream.mockResolvedValue(
+      streamOf([
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+    const refs = [
+      { kind: "activity", id: "aaaaaaaa-aaaa-4aaa-8aaa-000000000001" },
+      { kind: "race", id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb" },
+    ] as const;
+    const context = contextFor(athleteA);
+    await collect(
+      streamCoachTurn(context, {
+        ...request,
+        input: { kind: "message", text: "Analyse ça", attachments: [...refs] },
+      }),
+    );
+    expect(resolveAttachments).toHaveBeenCalledWith(context, refs);
+    const content = managed.send.mock.calls[0][1].events[0].content as {
+      text: string;
+    }[];
+    expect(content[0].text).toBe("Analyse ça");
+    const block = attachmentContextSchema.parse(JSON.parse(content[1].text));
+    expect(
+      block.attachments.map(({ kind, id, title, date }) => ({
+        kind,
+        id,
+        title,
+        date,
+      })),
+    ).toEqual([
+      {
+        kind: "activity",
+        id: refs[0].id,
+        title: "Sortie longue vallonnée",
+        date: "2026-10-04",
+      },
+      {
+        kind: "race",
+        id: refs[1].id,
+        title: "Trail des Lacs",
+        date: "2027-06-27",
+      },
+    ]);
+    expect(store.appendThreadItem.mock.calls[0][2]).toMatchObject({
+      kind: "athlete",
+      text: "Analyse ça",
+      attachments: [
+        { kind: "activity", title: "Sortie longue vallonnée" },
+        { kind: "race", title: "Trail des Lacs", date: "2027-06-27" },
+      ],
+    });
+  });
+
+  it("refuses the turn before anything is recorded when an item is not the athlete's", async () => {
+    resolveAttachments.mockRejectedValue(new AttachmentAccessError());
+    await expect(
+      collect(
+        streamCoachTurn(contextFor(athleteA), {
+          ...request,
+          input: {
+            kind: "message",
+            text: "Analyse ça",
+            attachments: [{ kind: "race", id: "foreign" }],
+          },
+        }),
+      ),
+    ).rejects.toBeInstanceOf(AttachmentAccessError);
+    expect(store.findOwnSession).not.toHaveBeenCalled();
+    expect(store.recordSession).not.toHaveBeenCalled();
+    expect(store.appendThreadItem).not.toHaveBeenCalled();
+    expect(managed.send).not.toHaveBeenCalled();
+  });
+
+  it("does not read attachments for a plain message", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+      ]),
+    );
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+    expect(resolveAttachments).not.toHaveBeenCalled();
+    expect(store.appendThreadItem.mock.calls[0][2]).toMatchObject({
+      attachments: [],
+    });
   });
 });

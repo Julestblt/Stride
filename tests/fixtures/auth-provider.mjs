@@ -1129,10 +1129,43 @@ tables.coach_sessions.push(
     created_at: coachAt("09:00:00"),
   }),
 );
+const coachActivity = {
+  ...activity(9101, 2, {
+    activity_name: "Sortie longue vallonnée",
+    activity_type: "trail_running",
+    distance_meters: 24_600,
+    duration_seconds: 9_000,
+    elevation_gain_meters: 680,
+  }),
+  user_id: coachUser.id,
+};
+tables.provider_activities.push(coachActivity);
+const coachRace = {
+  id: "c0ace000-0000-4000-8000-000000000001",
+  user_id: coachUser.id,
+  name: "Trail des Lacs",
+  race_kind: "trail",
+  race_date: new Date(Date.now() + 250 * day).toISOString().slice(0, 10),
+  distance_km: 50,
+  elevation_gain_m: 2400,
+  priority: "B",
+  target_duration_seconds: null,
+  revision: 1,
+  updated_at: "2026-01-01T00:00:00Z",
+};
+tables.athlete_races.push(coachRace);
 tables.coach_thread_items = [
   coachItem(coachKneeThread, "08:00:00", "athlete", {
     text: "J’ai une douleur au genou depuis la sortie de dimanche.",
     consult: "medical",
+    attachments: [
+      {
+        kind: "activity",
+        id: coachActivity.id,
+        title: "Sortie longue vallonnée",
+        date: coachActivity.started_at.slice(0, 10),
+      },
+    ],
   }),
   coachItem(coachKneeThread, "08:01:00", "coach", {
     text: "@Inès, tu peux regarder ton genou avec Jules ?",
