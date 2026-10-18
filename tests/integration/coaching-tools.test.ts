@@ -257,6 +257,22 @@ function compactPlan() {
   };
 }
 
+function rewriteWeeks() {
+  const weeks = [];
+  for (
+    let monday = addDays(mondayOf(isoDay(0)), 7);
+    monday <= mondayOf(planEnd);
+    monday = addDays(monday, 7)
+  ) {
+    const week = easyWeek(monday);
+    weeks.push({
+      ...week,
+      sessions: week.sessions.filter((session) => session.date <= planEnd),
+    });
+  }
+  return weeks;
+}
+
 function inputFor(name: string) {
   const range = { from: isoDay(-7), to: isoDay(14) };
   const inputs: Record<string, unknown> = {
@@ -284,6 +300,17 @@ function inputFor(name: string) {
       role: "secondary",
       endsOn: raceDay,
       weeks: extensionWeeks(),
+      specialist_opinions: [],
+    },
+    rewrite_plan_range: {
+      title: "Fin du plan refaite",
+      summary: "Les dernières semaines sont réécrites.",
+      rationale: "Test d’isolation.",
+      origin: "training",
+      from: addDays(mondayOf(isoDay(0)), 7),
+      to: planEnd,
+      raceId: null,
+      weeks: rewriteWeeks(),
       specialist_opinions: [],
     },
     ask_athlete: { question: "Comment te sens-tu ?" },
@@ -414,7 +441,7 @@ describe("coaching tools run as athlete A", () => {
         group by scope order by scope`;
     expect([...(await counts(a.context.userId))]).toEqual([
       { scope: "new_plan", count: 1 },
-      { scope: "plan", count: 1 },
+      { scope: "plan", count: 2 },
       { scope: "session", count: 1 },
     ]);
     expect([...(await counts(b.context.userId))]).toEqual([]);
