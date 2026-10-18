@@ -74,9 +74,6 @@ test("the plan shows the stored program with the current week selected", async (
   await expect(
     page.getByText("Proposé").filter({ visible: true }).first(),
   ).toBeVisible();
-  await expect(
-    page.getByText(/^Fait/).filter({ visible: true }).first(),
-  ).toBeVisible();
   await expect(page.getByText("Repères du programme")).toBeVisible();
   await expect(
     page.getByRole("img", {
@@ -88,6 +85,14 @@ test("the plan shows the stored program with the current week selected", async (
   await expect(sidebar).toHaveAttribute("aria-current", "page");
 
   await page.screenshot({ path: "test-results/plan-program-desktop.png" });
+
+  await chart.getByRole("button", { name: /^Semaine 1, / }).click();
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^S1 / }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/^Fait/).filter({ visible: true }).first(),
+  ).toBeVisible();
 
   await chart.getByRole("button", { name: /^Semaine 3, / }).click();
   await expect(page).toHaveURL(/\/plan\?week=\d{4}-\d{2}-\d{2}$/);
