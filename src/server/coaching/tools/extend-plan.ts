@@ -4,25 +4,72 @@ import {
   compactWeeksSchema,
   compactWeeksToRows,
 } from "@/features/plans/compact/compact";
-import { validatePlanChange } from "@/features/plans/detailing/build";
+import {
+  validatePlanChange,
+  type DeterministicPlanInput,
+} from "@/features/plans/detailing/build";
 import { addDays } from "@/features/plans/model/dates";
 import { raceRoles } from "@/features/plans/model/plan";
 import { applyOperations } from "@/features/plans/operations/apply";
-import { planOperationSchema } from "@/features/plans/operations/operations";
+import {
+  planOperationSchema,
+  type PlanOperation,
+} from "@/features/plans/operations/operations";
 import { introducedRules } from "@/features/plans/review/review";
 import { loadPlanningInput } from "@/server/plans/draft";
 import { readSessionMatches } from "@/server/plans/matches";
 import { requireActivePlan } from "./active-plan";
-import { defineTool } from "./define";
+import { defineTool, type ToolContext } from "./define";
 import { toolError } from "./errors";
 import { submitProposal } from "./plan-proposal";
 import { describeRule, issuesOf, ruleSchema } from "./submit-plan";
 
-const opinionSchema = z.strictObject({
+export const opinionSchema = z.strictObject({
   specialist: z.literal("medical"),
   verdict: z.string().min(1).max(64),
   summary: z.string().min(1).max(1000),
 });
+
+export async function checkPlanOperation(
+  context: ToolContext,
+  stored: Awaited<ReturnType<typeof requireActivePlan>>,
+  planning: DeterministicPlanInput,
+  operation: PlanOperation,
+) {
+  const matches = await readSessionMatches(context, stored.planId);
+  const matchedSessionKeys = new Set(
+    matches
+      .filter((match) => match.status !== "dismissed")
+      .map((match) => match.sessionKey),
+  );
+  const result = applyOperations(stored.state, [operation], {
+    today: planning.today,
+    matchedSessionKeys,
+  });
+  if (!result.ok)
+    throw toolError("validation_failed", { errors: result.errors });
+  const versions = {
+    expected: stored.activeVersion,
+    current: stored.activeVersion,
+  };
+  const before = validatePlanChange(planning, stored.state, stored.state, {
+    versions,
+    matchedSessionKeys,
+  });
+  const after = validatePlanChange(planning, stored.state, result.state, {
+    versions,
+    matchedSessionKeys,
+  });
+  const rulesOf = (ids: string[]) =>
+    after.results
+      .filter((rule) => rule.outcome === "fail" && ids.includes(rule.ruleId))
+      .map(describeRule);
+  const warnings = rulesOf(introducedRules(after, before, "warn"));
+  const blocking = rulesOf(introducedRules(after, before, "block"));
+  if (blocking.length)
+    throw toolError("validation_failed", { blocking, warnings });
+  return { changeset: result.changeset, warnings };
+}
 
 export const extendPlanTool = defineTool({
   name: "extend_plan",
@@ -113,38 +160,12 @@ export const extendPlanTool = defineTool({
     });
     if (!operation.success)
       throw toolError("invalid_plan", issuesOf(operation.error));
-    const matches = await readSessionMatches(context, stored.planId);
-    const matchedSessionKeys = new Set(
-      matches
-        .filter((match) => match.status !== "dismissed")
-        .map((match) => match.sessionKey),
+    const { changeset, warnings } = await checkPlanOperation(
+      context,
+      stored,
+      planning,
+      operation.data,
     );
-    const result = applyOperations(stored.state, [operation.data], {
-      today: planning.today,
-      matchedSessionKeys,
-    });
-    if (!result.ok)
-      throw toolError("validation_failed", { errors: result.errors });
-    const versions = {
-      expected: stored.activeVersion,
-      current: stored.activeVersion,
-    };
-    const before = validatePlanChange(planning, stored.state, stored.state, {
-      versions,
-      matchedSessionKeys,
-    });
-    const after = validatePlanChange(planning, stored.state, result.state, {
-      versions,
-      matchedSessionKeys,
-    });
-    const rulesOf = (ids: string[]) =>
-      after.results
-        .filter((rule) => rule.outcome === "fail" && ids.includes(rule.ruleId))
-        .map(describeRule);
-    const warnings = rulesOf(introducedRules(after, before, "warn"));
-    const blocking = rulesOf(introducedRules(after, before, "block"));
-    if (blocking.length)
-      throw toolError("validation_failed", { blocking, warnings });
     const data = await submitProposal(context, {
       p_scope: "plan",
       p_origin: "race",
@@ -152,7 +173,7 @@ export const extendPlanTool = defineTool({
       p_summary: input.summary,
       p_rationale: input.rationale,
       p_operations: [operation.data],
-      p_preview: result.changeset,
+      p_preview: changeset,
       p_plan_id: stored.planId,
       p_base_version: stored.activeVersion,
       p_specialist_opinions: input.specialist_opinions,
