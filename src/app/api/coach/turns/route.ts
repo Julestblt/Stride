@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { coachAttachmentsSchema } from "@/features/coach/attachments";
+import { AttachmentAccessError } from "@/server/coaching/attachments";
 import {
   SessionAccessError,
   SessionStateError,
@@ -23,6 +25,7 @@ const requestSchema = z.strictObject({
       kind: z.literal("message"),
       text: z.string().trim().min(1).max(2000),
       consult: z.literal("medical").optional(),
+      attachments: coachAttachmentsSchema.optional(),
     }),
     z.strictObject({
       kind: z.literal("answer"),
@@ -35,6 +38,11 @@ const requestSchema = z.strictObject({
 const jsonHeaders = { "Cache-Control": "private, no-store" };
 
 function rejection(error: unknown) {
+  if (error instanceof AttachmentAccessError)
+    return Response.json(
+      { code: "invalid-request" },
+      { status: 400, headers: jsonHeaders },
+    );
   if (error instanceof SessionAccessError)
     return Response.json(
       { code: "not-found" },

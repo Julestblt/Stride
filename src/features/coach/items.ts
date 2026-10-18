@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { maxAttachments, sentAttachmentSchema } from "./attachments";
 import { staffAgents } from "./staff";
 
 const agent = z.enum(staffAgents);
@@ -15,7 +16,11 @@ export const opinionSchema = z.object({
 });
 
 const bodies = {
-  athlete: z.object({ text, consult: agent.nullable().catch(null) }),
+  athlete: z.object({
+    text,
+    consult: agent.nullable().catch(null),
+    attachments: z.array(sentAttachmentSchema).max(maxAttachments).catch([]),
+  }),
   answer: z.object({ toolUseId: z.string(), text }),
   coach: z.object({ text }),
   consult_request: z.object({ thread: z.string(), agent, text }),
