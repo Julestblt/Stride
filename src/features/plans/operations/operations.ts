@@ -73,6 +73,16 @@ export const planOperationSchema = z.discriminatedUnion("op", [
     weeks: z.array(weekSchema).min(1).max(40),
     sessions: z.array(sessionSchema).max(320),
   }),
+  z
+    .strictObject({
+      op: z.literal("rewrite_range"),
+      from: isoDate,
+      to: isoDate,
+      blocks: z.array(blockSchema).min(1).max(20),
+      weeks: z.array(weekSchema).min(1).max(40),
+      sessions: z.array(sessionSchema).max(320),
+    })
+    .refine((operation) => operation.from <= operation.to),
 ]);
 
 export const planOperationsSchema = z

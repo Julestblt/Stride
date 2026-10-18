@@ -9,6 +9,7 @@ import {
   easyRun,
   extendPlan,
   planState,
+  rewriteRange,
   thresholdSession,
 } from "./plan-fixture";
 
@@ -429,6 +430,148 @@ describe("replace_range", () => {
     expect(replace("2026-10-19", "2026-10-25", "2026-10-28")).toEqual([
       "invalid_operation",
     ]);
+  });
+});
+
+describe("rewrite_range", () => {
+  it("rewrites the weeks, blocks and sessions of the range and keeps the rest byte-identical", () => {
+    const before = planState();
+    const result = applyOperations(before, [rewriteRange()], context());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const kept = (date: string) => date < "2026-10-19";
+    expect(
+      result.state.sessions.filter((session) => kept(session.scheduledOn)),
+    ).toEqual(before.sessions.filter((session) => kept(session.scheduledOn)));
+    expect(result.state.weeks[0]).toEqual(before.weeks[0]);
+    expect(result.state.blocks).toEqual([
+      { ...before.blocks[0], endsOn: "2026-10-18" },
+      rewriteRange().blocks[0],
+    ]);
+    expect(
+      result.state.weeks.slice(1).map((week) => [week.weekKey, week.blockKey]),
+    ).toEqual([
+      ["w-2026-10-19", "b-specific-1"],
+      ["w-2026-10-26", "b-specific-1"],
+      ["w-2026-11-02", "b-specific-1"],
+    ]);
+    expect(result.changeset.sessions.closed.sort()).toEqual([
+      "s-2026-10-20-1",
+      "s-2026-10-22-1",
+      "s-2026-10-25-1",
+    ]);
+    expect(
+      result.changeset.sessions.added.map((session) => session.sessionKey),
+    ).toEqual(["s-2026-10-24-2", "s-2026-10-25-2", "s-2026-11-01-2"]);
+    expect(result.changeset.weeks.closed).toEqual([
+      "w-2026-10-19",
+      "w-2026-10-26",
+      "w-2026-11-02",
+    ]);
+    expect(result.changeset.blocks.closed).toEqual(["b-base-1"]);
+    expect(result.changeset.plan).toBeNull();
+  });
+
+  it("starts the block after the range when the range ends before the plan", () => {
+    const result = applyOperations(
+      {
+        ...planState(),
+        blocks: [
+          { ...planState().blocks[0], endsOn: "2026-10-25" },
+          {
+            ...planState().blocks[0],
+            blockKey: "b-taper-1",
+            kind: "taper",
+            startsOn: "2026-10-26",
+          },
+        ],
+        weeks: planState().weeks.map((week) =>
+          week.weekStart >= "2026-10-26"
+            ? { ...week, blockKey: "b-taper-1" }
+            : week,
+        ),
+      },
+      [
+        rewriteRange({
+          to: "2026-11-01",
+          weekStarts: ["2026-10-19", "2026-10-26"],
+        }),
+      ],
+      context(),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.state.blocks.map((block) => [
+        block.blockKey,
+        block.startsOn,
+        block.endsOn,
+      ]),
+    ).toEqual([
+      ["b-base-1", "2026-10-12", "2026-10-18"],
+      ["b-taper-1", "2026-11-02", "2026-11-08"],
+      ["b-specific-1", "2026-10-19", "2026-11-01"],
+    ]);
+    expect(result.state.weeks.at(-1)?.blockKey).toBe("b-taper-1");
+  });
+
+  it("rejects ranges that start in the past or off a Monday, or end mid-week", () => {
+    const rewrite = (
+      overrides: Parameters<typeof rewriteRange>[0],
+      today = "2026-10-14",
+    ) =>
+      errorCodes(
+        applyOperations(planState(), [rewriteRange(overrides)], {
+          today,
+          matchedSessionKeys: new Set(),
+        }),
+      );
+    expect(
+      rewrite({
+        from: "2026-10-12",
+        weekStarts: ["2026-10-12", "2026-10-19", "2026-10-26", "2026-11-02"],
+        sessionDates: ["2026-10-16"],
+      }),
+    ).toEqual(["past_date"]);
+    expect(rewrite({ from: "2026-10-20" })).toEqual(["invalid_operation"]);
+    expect(rewrite({ to: "2026-11-05" })).toEqual(["invalid_operation"]);
+    expect(rewrite({ to: "2026-11-15" })).toEqual(["outside_plan"]);
+    expect(rewrite({}, "2026-10-20")).toEqual(["past_date"]);
+  });
+
+  it("rejects frozen sessions in the range", () => {
+    expect(
+      errorCodes(
+        applyOperations(
+          planState(),
+          [rewriteRange()],
+          context(["s-2026-10-22-1"]),
+        ),
+      ),
+    ).toEqual(["frozen_session"]);
+  });
+
+  it("rejects missing weeks, sessions outside the range and ranges inside one block", () => {
+    const rewrite = (overrides: Parameters<typeof rewriteRange>[0]) =>
+      errorCodes(
+        applyOperations(planState(), [rewriteRange(overrides)], context()),
+      );
+    expect(rewrite({ weekStarts: ["2026-10-19", "2026-11-02"] })).toEqual([
+      "invalid_operation",
+    ]);
+    expect(rewrite({ sessionDates: ["2026-10-16"] })).toEqual(["outside_plan"]);
+    expect(rewrite({ to: "2026-10-25", weekStarts: ["2026-10-19"] })).toEqual([
+      "invalid_operation",
+    ]);
+  });
+
+  it("caps the replacement sessions like a plan extension", () => {
+    expect(
+      planOperationSchema.safeParse({
+        ...rewriteRange(),
+        sessions: Array.from({ length: 100 }, () => rewriteRange().sessions[0]),
+      }).success,
+    ).toBe(true);
   });
 });
 

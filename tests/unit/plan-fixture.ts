@@ -183,3 +183,48 @@ export const extendPlan = (
     ),
   };
 };
+
+export const rewriteRange = (
+  overrides: Partial<{
+    from: string;
+    to: string;
+    weekStarts: string[];
+    sessionDates: string[];
+  }> = {},
+) => {
+  const base = planState();
+  const from = overrides.from ?? "2026-10-19";
+  const to = overrides.to ?? "2026-11-08";
+  const weekStarts = overrides.weekStarts ?? [
+    "2026-10-19",
+    "2026-10-26",
+    "2026-11-02",
+  ];
+  return {
+    op: "rewrite_range" as const,
+    from,
+    to,
+    blocks: [
+      {
+        blockKey: "b-specific-1",
+        kind: "specific" as const,
+        name: "Spécifique",
+        startsOn: from,
+        endsOn: to,
+        objective: "Préparer l'ultra",
+        raceId: "race-a",
+      },
+    ],
+    weeks: weekStarts.map((weekStart) => ({
+      ...base.weeks[0],
+      weekKey: `w-${weekStart}`,
+      weekStart,
+      blockKey: "b-specific-1",
+      weekType: "build" as const,
+      notes: "Dos à dos",
+    })),
+    sessions: (
+      overrides.sessionDates ?? ["2026-10-24", "2026-10-25", "2026-11-01"]
+    ).map((date) => placed(`s-${date}-2`, date, easyRun(120))),
+  };
+};
