@@ -3,6 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
+const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+
+test.afterEach(async () => {
+  await fetch(`http://127.0.0.1:${authPort}/__test__/athlete-settings`, {
+    method: "DELETE",
+  });
+});
+
 async function signIn(page: Page, email = "athlete@example.com") {
   await page.goto("/sign-in");
   await page.getByLabel("Email", { exact: true }).fill(email);
