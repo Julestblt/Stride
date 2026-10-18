@@ -261,7 +261,11 @@ const consultInstruction: Record<"medical", string> = {
     "L’athlète a mentionné Stride Medical : passe-lui la main sur cette demande. Tu restes responsable de la décision.",
 };
 
-const proposalTools = new Set(["submit_plan", "create_plan_proposal"]);
+const proposalTools = new Set([
+  "submit_plan",
+  "create_plan_proposal",
+  "extend_plan",
+]);
 
 const proposalInputSchema = z.object({
   title: z.string().catch(""),
