@@ -66,4 +66,25 @@ When the athlete adds a race after the active plan's end, call `extend_plan` ins
 - Every added week is fully detailed with the same rules as a new plan. The added race is a session of kind `race` on its date.
 - Start with recovery when the previous objective is a hard race, then rebuild and taper for the added race.
 
+## Rewriting part of the active plan with `rewrite_plan_range`
+
+When the athlete wants to keep the start of the active plan and rebuild a later part of it (for example « garde le plan jusqu'au 10 km et refais la suite jusqu'au 120 km »), call `rewrite_plan_range` instead of `submit_plan`, which would replace the weeks the athlete wants to keep:
+
+```
+{
+  "title": string, "summary": string, "rationale": string (French),
+  "origin": "training" | "recovery" | "performance" | "schedule" | "race",
+  "from": "YYYY-MM-DD" (a Monday, not in the past, after every session already done),
+  "to": "YYYY-MM-DD" (a Sunday, or the plan's endsOn),
+  "raceId": string | null (the race the rewritten weeks lead to, inside the range),
+  "weeks": [week, ...] (same week format as above),
+  "specialist_opinions": []
+}
+```
+
+- `weeks` holds every week of the range: one entry per Monday from `from` to the week containing `to`, each fully detailed with the same rules as a new plan. Weeks outside the range stay exactly as they are.
+- To rebuild what follows a preparation race, start `from` on the Monday after it and end `to` at the plan's end. Races inside the range keep their `race` session on their date.
+- Read the current plan with `read_active_plan` first, so the first rewritten week follows the last kept one without a jump in volume.
+- A range that starts and ends inside the same phase is refused: widen it to the phase boundaries.
+
 The tool answers with the proposal id, or with `invalid_plan` (format errors with their JSON path) or `validation_failed` (blocking rules). Fix every listed problem and submit the complete plan again. Warnings do not block; mention the important ones to the athlete.
