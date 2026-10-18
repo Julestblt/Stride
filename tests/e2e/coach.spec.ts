@@ -282,6 +282,124 @@ test("a refused turn shows a French message and keeps the draft", async ({
   await expect(composer).toHaveValue("Et la semaine prochaine ?");
 });
 
+test("suggested replies send from the keyboard and hide while the staff works", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/coach/${kneeThread}`);
+  await expect(
+    page.getByRole("log", { name: "Messages" }).getByText("Question d’Inès"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("group", { name: "Réponses suggérées" }),
+  ).toHaveCount(0);
+
+  await page.goto(`/coach/${planThread}`);
+  const row = page.getByRole("group", { name: "Réponses suggérées" });
+  const replies = row.getByRole("button");
+  await expect(replies).toHaveText([
+    "Pourquoi ce changement ?",
+    "Quel impact sur ma semaine ?",
+    "Propose une autre option",
+  ]);
+  const replyStyle = await replies.first().evaluate((element) => {
+    const style = getComputedStyle(element);
+    return [style.minHeight, style.fontSize];
+  });
+  expect(replyStyle).toEqual(["32px", "13px"]);
+  await page.screenshot({ path: "test-results/coach-replies-desktop.png" });
+
+  let posted: unknown = null;
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/coach/turns", async (route) => {
+    posted = route.request().postDataJSON();
+    await gate;
+    await stream([
+      item("athlete", {
+        text: "Propose une autre option",
+        consult: null,
+        attachments: [],
+      }),
+      item("coach", { text: "Je te prépare une variante plus douce." }),
+      { type: "done", status: "idle" },
+    ])(route);
+  });
+  const composer = page.getByRole("textbox", { name: "Écrire au staff" });
+  await composer.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
+  const other = row.getByRole("button", { name: "Propose une autre option" });
+  await expect(other).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("button", { name: "Arrêter le staff" }),
+  ).toBeVisible();
+  await expect(row).toHaveCount(0);
+  await expect(composer).toHaveValue("");
+  expect(posted).toEqual({
+    sessionId: expect.any(String),
+    mode: "plan",
+    input: { kind: "message", text: "Propose une autre option" },
+  });
+  release();
+  await expect(
+    page
+      .getByRole("log", { name: "Messages" })
+      .getByText("Je te prépare une variante plus douce."),
+  ).toBeVisible();
+  await expect(row).toBeVisible();
+});
+
+test("suggested replies scroll at 390 and restore a failed reply", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signIn(page);
+  await page.goto(`/coach/${planThread}`);
+  const row = page.getByRole("group", { name: "Réponses suggérées" });
+  const first = row.getByRole("button").first();
+  await expect(first).toBeVisible();
+  const reply = await first.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return [
+      element.getBoundingClientRect().height,
+      style.borderTopLeftRadius,
+      style.transitionProperty,
+    ];
+  });
+  expect(reply[0]).toBeGreaterThanOrEqual(44);
+  expect(reply[1]).not.toBe("8px");
+  expect(reply[2]).toBe("none");
+  const scroll = await row.evaluate((element) => ({
+    overflow: element.scrollWidth > element.clientWidth,
+    left: Math.round(element.getBoundingClientRect().left),
+    right: Math.round(element.getBoundingClientRect().right),
+  }));
+  expect(scroll).toEqual({ overflow: true, left: 0, right: 390 });
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: "test-results/coach-replies-mobile.png" });
+
+  await page.route("**/api/coach/turns", (route) =>
+    route.fulfill({ status: 409, json: { code: "turn_in_progress" } }),
+  );
+  await row.getByRole("button", { name: "Pourquoi ce changement ?" }).click();
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "Le staff travaille déjà sur ta demande." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Écrire au staff" }),
+  ).toHaveValue("Pourquoi ce changement ?");
+  await expect(row).toBeVisible();
+});
+
 test("context chips are picked with the keyboard, survive a failed send and reach the staff", async ({
   page,
 }) => {
