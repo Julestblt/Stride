@@ -20,7 +20,8 @@ export function HistoryEntry({ entry }: { entry: PlanHistoryEntry }) {
         Examiner
       </ProposalLink>
     </Button>
-  ) : entry.isNewPlan && entry.status.tone === "success" ? (
+  ) : (entry.isNewPlan || entry.isExtension) &&
+    entry.status.tone === "success" ? (
     <Button
       asChild
       variant="outline"

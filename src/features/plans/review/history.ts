@@ -39,6 +39,7 @@ export type PlanHistoryEntry = {
   note: string | null;
   reviewable: boolean;
   isNewPlan: boolean;
+  isExtension: boolean;
   highlighted: boolean;
 };
 
@@ -75,12 +76,43 @@ function category(proposal: ProposalRecord): HistoryFilter {
   }
 }
 
+function extensionOf(proposal: ProposalRecord) {
+  const operation = proposal.operations[0];
+  if (
+    !operation ||
+    typeof operation !== "object" ||
+    !("op" in operation) ||
+    operation.op !== "extend_plan" ||
+    !("previousEndsOn" in operation) ||
+    typeof operation.previousEndsOn !== "string" ||
+    !("endsOn" in operation) ||
+    typeof operation.endsOn !== "string" ||
+    !("weeks" in operation) ||
+    !Array.isArray(operation.weeks)
+  )
+    return null;
+  return {
+    previousEndsOn: operation.previousEndsOn,
+    endsOn: operation.endsOn,
+    weeks: operation.weeks.length,
+  };
+}
+
+function extensionNote(proposal: ProposalRecord) {
+  const extension = extensionOf(proposal);
+  if (!extension) return null;
+  return `Fin du plan : ${formatPlainDay(extension.previousEndsOn)} → ${formatPlainDay(extension.endsOn)}, +${extension.weeks} semaine${extension.weeks > 1 ? "s" : ""}.`;
+}
+
 function version(proposal: ProposalRecord) {
   if (proposal.status === "applied" && proposal.appliedVersion)
     return proposal.baseVersion
       ? `v${proposal.baseVersion} → v${proposal.appliedVersion}`
       : `v${proposal.appliedVersion}`;
-  if (proposal.baseVersion) return `Sur v${proposal.baseVersion}`;
+  if (proposal.baseVersion)
+    return extensionOf(proposal)
+      ? `Prolonge v${proposal.baseVersion}`
+      : `Sur v${proposal.baseVersion}`;
   return proposal.scope === "new_plan" ? "Nouveau plan" : null;
 }
 
@@ -136,7 +168,7 @@ function note(proposal: ProposalRecord, timeZone: string) {
     default:
       return proposal.scope === "new_plan"
         ? (newPlanNote(proposal) ?? proposal.summary)
-        : proposal.summary;
+        : (extensionNote(proposal) ?? proposal.summary);
   }
 }
 
@@ -198,6 +230,7 @@ export function buildPlanHistory(input: PlanHistoryInput): PlanHistory {
       note: note(proposal, input.timeZone),
       reviewable: proposal.status === "ready" || proposal.status === "accepted",
       isNewPlan: proposal.scope === "new_plan",
+      isExtension: extensionOf(proposal) !== null,
       highlighted: proposal.status === "ready",
     });
   }

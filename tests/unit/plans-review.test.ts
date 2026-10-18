@@ -11,7 +11,7 @@ import {
   type ReviewInput,
 } from "@/features/plans/review/review";
 import { planningInputFixture } from "./coaching-tools-fixture";
-import { easyRun, planState } from "./plan-fixture";
+import { easyRun, extendPlan, planState } from "./plan-fixture";
 
 function proposal(overrides: Partial<ProposalRecord> = {}): ProposalRecord {
   return {
@@ -520,5 +520,85 @@ describe("week proposals", () => {
       ],
       "2026-11-02": [{ id: "p-3", title: "Objectifs revus", summary: null }],
     });
+  });
+});
+
+describe("plan extension proposals", () => {
+  const extension = proposal({
+    title: "Ajoute le trail de novembre et prolonge le plan",
+    scope: "plan",
+    origin: "race",
+    specialistOpinions: [],
+    operations: [extendPlan()],
+  });
+  const races = [
+    {
+      id: "race-a",
+      name: "Marathon de Paris",
+      date: "2026-11-08",
+      priority: "A" as const,
+      targetSeconds: null,
+    },
+    {
+      id: "race-b",
+      name: "Trail de novembre",
+      date: "2026-11-22",
+      priority: "B" as const,
+      targetSeconds: null,
+    },
+  ];
+
+  it("shows the added race, the new end and the added weeks", () => {
+    const review = buildProposalReview(input({ proposal: extension, races }));
+    expect(review.kind).toBe("extension");
+    expect(review.kicker).toBe("Proposition · nouvelle course");
+    expect(review.subkicker).toBe("Prolonge la version 3 du plan");
+    expect(review.operations).toEqual([
+      {
+        label: "Ajoutée",
+        context: "Course",
+        before: null,
+        after: {
+          title: "Trail de novembre",
+          meta: "dim. 22/11/2026 · course secondaire",
+        },
+        badge: "B",
+      },
+      {
+        label: "Prolongé",
+        context: "Fin du plan",
+        before: { title: "dim. 08/11/2026", meta: "Marathon de Paris" },
+        after: { title: "dim. 22/11/2026", meta: "+2 semaines" },
+      },
+    ]);
+    expect(review.weekTotals).toEqual([]);
+    expect(review.extension).toEqual({
+      raceId: "race-b",
+      addedWeeks: 2,
+      addedSessions: 2,
+      peakWeek: "40’",
+      endsOn: "22/11/2026",
+      keptWeeks: 4,
+      phases: [
+        { key: "b-build-1", name: "Développement", weeks: 2, kind: "build" },
+      ],
+    });
+    expect(review.actions.accept).toBe(true);
+    expect(review.acceptLabel).toBe("Accepter");
+  });
+
+  it("notes the new end in the history", () => {
+    const history = buildPlanHistory({
+      proposals: [extension],
+      plan: null,
+      timeZone: "Europe/Paris",
+      filter: "all",
+    });
+    const [entry] = history.groups[0].entries;
+    expect(entry.version).toBe("Prolonge v3");
+    expect(entry.note).toBe(
+      "Fin du plan : 08/11/2026 → 22/11/2026, +2 semaines.",
+    );
+    expect(entry.isExtension).toBe(true);
   });
 });

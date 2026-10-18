@@ -1265,6 +1265,101 @@ const coachSnapshot = structuredClone(
 const profileSnapshot = structuredClone(tables.athlete_profiles[0]);
 const planReviewPlanId = "dddddddd-dddd-4ddd-8ddd-777777777777";
 twinPlanAthlete(planReviewUser, planReviewPlanId, "7777");
+const planExtensionRaceId = "77777777-0000-4000-8000-000000000009";
+const planExtensionRaceDay = shiftDay(planRaceDay, 28);
+tables.athlete_races.push({
+  id: planExtensionRaceId,
+  user_id: planReviewUser.id,
+  name: "Trail des Lacs 30K",
+  race_kind: "trail",
+  race_date: planExtensionRaceDay,
+  distance_km: 30,
+  elevation_gain_m: 900,
+  priority: "B",
+  target_duration_seconds: null,
+  revision: 1,
+  updated_at: "2026-01-01T00:00:00Z",
+});
+const planExtensionWeeks = [];
+for (
+  let weekStart = shiftDay(mondayOf(planRaceDay), 7);
+  weekStart <= mondayOf(planExtensionRaceDay);
+  weekStart = shiftDay(weekStart, 7)
+)
+  planExtensionWeeks.push(weekStart);
+const planExtensionSessions = [
+  ...planExtensionWeeks
+    .map((weekStart) => shiftDay(weekStart, 2))
+    .filter((date) => date < planExtensionRaceDay)
+    .map((date) => ({
+      ...placedContent(planSessionTemplates.easy(40)),
+      sessionKey: `s-${date}-1`,
+      scheduledOn: date,
+    })),
+  {
+    ...placedContent(planSessionTemplates.easy(180)),
+    kind: "race",
+    title: "Trail des Lacs 30K",
+    purpose: "Course ajoutée après le marathon",
+    isKey: true,
+    priority: "high",
+    sessionKey: `s-${planExtensionRaceDay}-1`,
+    scheduledOn: planExtensionRaceDay,
+  },
+];
+tables.plan_proposals.push({
+  ...readyPlanProposal(
+    planReviewUser,
+    planReviewPlanId,
+    "eeeeeeee-eeee-4eee-8eee-700000000009",
+  ),
+  scope: "plan",
+  origin: "race",
+  requested_by: "system",
+  title: "Ajoute le Trail des Lacs et prolonge le plan",
+  summary: "Le plan continue après le marathon jusqu’au Trail des Lacs.",
+  rationale:
+    "Tu as ajouté le Trail des Lacs quatre semaines après le marathon. Je garde ta préparation et j’ajoute une récupération puis une reprise.",
+  operations: [
+    {
+      op: "extend_plan",
+      previousEndsOn: planRaceDay,
+      endsOn: planExtensionRaceDay,
+      raceId: planExtensionRaceId,
+      role: "secondary",
+      blocks: [
+        {
+          blockKey: "b-recovery-9",
+          kind: "recovery",
+          name: "Récupération",
+          startsOn: planExtensionWeeks[0],
+          endsOn: planExtensionRaceDay,
+          objective: "Récupérer du marathon puis préparer le trail",
+          raceId: planExtensionRaceId,
+        },
+      ],
+      weeks: planExtensionWeeks.map((weekStart) => ({
+        weekKey: `w-${weekStart}`,
+        weekStart,
+        blockKey: "b-recovery-9",
+        weekType: "recovery",
+        targets: {
+          durationSeconds: 2_400,
+          distanceMeters: null,
+          elevationGainMeters: null,
+          qualitySessions: 0,
+          longRunSeconds: null,
+          intensitySplit: { easyPct: 100, moderatePct: 0, hardPct: 0 },
+        },
+        notes: null,
+      })),
+      sessions: planExtensionSessions,
+    },
+  ],
+  target_keys: ["plan:end"],
+  created_at: proposalAt(-2, "18:00:00"),
+  updated_at: proposalAt(-2, "18:00:00"),
+});
 twinPlanAthlete(
   planHistoryUser,
   "dddddddd-dddd-4ddd-8ddd-888888888888",
