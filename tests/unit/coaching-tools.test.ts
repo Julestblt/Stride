@@ -854,6 +854,137 @@ describe("extend_plan", () => {
   });
 });
 
+describe("rewrite_plan_range", () => {
+  const easy = (date: string, minutes: number) => ({
+    date,
+    sport: "run" as const,
+    kind: "easy" as const,
+    title: "Footing",
+    purpose: "Entretenir",
+    key: false,
+    km: 8,
+    elevationGainMeters: null,
+    terrain: "road" as const,
+    steps: [
+      {
+        type: "work" as const,
+        minutes,
+        intensity: "easy" as const,
+        target: "hr 130-145",
+      },
+    ],
+  });
+  const rewrite = {
+    title: "Refais la fin du plan",
+    summary: "Les deux dernières semaines sont réécrites.",
+    rationale: "Le début du plan te convient, seule la fin change.",
+    origin: "training",
+    from: "2026-10-26",
+    to: "2026-11-08",
+    raceId: null,
+    weeks: [
+      {
+        weekStart: "2026-10-26",
+        phase: "build",
+        notes: "Volume stable",
+        sessions: [easy("2026-10-27", 45), easy("2026-10-29", 50)],
+      },
+      {
+        weekStart: "2026-11-02",
+        phase: "recovery",
+        notes: null,
+        sessions: [easy("2026-11-04", 40)],
+      },
+    ],
+    specialist_opinions: [],
+  };
+
+  beforeEach(() => {
+    sources.loadPlanningInput.mockResolvedValue({
+      today: fixtureToday,
+      input: planningInputFixture(),
+    });
+  });
+
+  it("stores the rewrite as one plan-scope proposal targeting the rewritten weeks", async () => {
+    const { client } = fakeClient(
+      {},
+      { data: { id: proposalId, status: "ready" }, error: null },
+    );
+    const outcome = await runCustomTool(
+      contextWith(client),
+      "rewrite_plan_range",
+      rewrite,
+    );
+    expect(outcome).toMatchObject({
+      ok: true,
+      content: {
+        proposalId,
+        rewrittenWeeks: 2,
+        replacedSessions: 0,
+        newSessions: 3,
+      },
+    });
+    expect(client.rpc).toHaveBeenCalledWith(
+      "submit_plan_proposal",
+      expect.objectContaining({
+        p_scope: "plan",
+        p_origin: "training",
+        p_base_version: 3,
+        p_target_keys: ["week:w-2026-10-26", "week:w-2026-11-02"],
+        p_operations: [
+          expect.objectContaining({
+            op: "rewrite_range",
+            from: "2026-10-26",
+            to: "2026-11-08",
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("rejects a race outside the range", async () => {
+    const outcome = await runCustomTool(
+      contextWith(fakeClient({}).client),
+      "rewrite_plan_range",
+      { ...rewrite, raceId: "22222222-2222-4222-8222-222222222222" },
+    );
+    expect(outcome.content).toMatchObject({
+      code: "validation_failed",
+      details: { reason: "race_outside_range" },
+    });
+  });
+
+  it("refuses a range that rewrites a session already done", async () => {
+    sources.readSessionMatches.mockResolvedValue([
+      { sessionKey: "s-2026-10-20-1", status: "confirmed" },
+    ]);
+    const frozen = await runCustomTool(
+      contextWith(fakeClient({}).client),
+      "rewrite_plan_range",
+      {
+        ...rewrite,
+        from: "2026-10-19",
+        weeks: [
+          {
+            weekStart: "2026-10-19",
+            phase: "build",
+            notes: null,
+            sessions: [],
+          },
+          ...rewrite.weeks,
+        ],
+      },
+    );
+    expect(frozen.content).toMatchObject({
+      code: "validation_failed",
+      details: {
+        errors: [expect.objectContaining({ code: "frozen_session" })],
+      },
+    });
+  });
+});
+
 describe("submit_plan", () => {
   it("returns invalid_plan with the format issues", async () => {
     const outcome = await runCustomTool(contextWith({}), "submit_plan", {

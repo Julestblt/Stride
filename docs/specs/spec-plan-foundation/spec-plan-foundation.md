@@ -114,7 +114,7 @@ Rules: every non-rest session has at least one `work` step; every `work` step ha
 
 ### Operations
 
-The closed union is `create_plan`, `move_session`, `swap_sessions`, `shorten_session`, `replace_session`, `skip_session`, `add_session`, `set_week_targets`, `replace_range` and `set_race_role`. `applyOperations(state, operations, context)` returns either a changeset (closed and new revisions by stable key) or typed errors: `unknown_key`, `frozen_session`, `past_date`, `outside_plan`, `overlapping_targets`, `invalid_structure`.
+The closed union is `create_plan`, `move_session`, `swap_sessions`, `shorten_session`, `replace_session`, `skip_session`, `add_session`, `set_week_targets`, `replace_range`, `set_race_role`, `extend_plan` and `rewrite_range`. `rewrite_range` replaces the blocks, weeks and sessions from a Monday to a Sunday (or the plan's end) in one operation, truncates blocks that cross a boundary and refuses a range inside a single block or holding a frozen session. `applyOperations(state, operations, context)` returns either a changeset (closed and new revisions by stable key) or typed errors: `unknown_key`, `frozen_session`, `past_date`, `outside_plan`, `overlapping_targets`, `invalid_structure`.
 
 ### Training targets
 

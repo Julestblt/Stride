@@ -15,6 +15,7 @@ import { readPlanProgressTool } from "./plan-progress";
 import { messageAthleteTool } from "./message-athlete";
 import { extendPlanTool } from "./extend-plan";
 import { createPlanProposalTool } from "./plan-proposal";
+import { rewritePlanRangeTool } from "./rewrite-plan-range";
 import { submitPlanTool } from "./submit-plan";
 
 export type RegisteredTool = Omit<CoachingTool, "run"> & {
@@ -32,6 +33,7 @@ export const coachingTools = [
   messageAthleteTool,
   createPlanProposalTool,
   extendPlanTool,
+  rewritePlanRangeTool,
   recordConditionReportTool,
   updateConditionReportTool,
 ] as const satisfies readonly RegisteredTool[];
@@ -49,6 +51,7 @@ export const agentTools = {
     "ask_athlete",
     "create_plan_proposal",
     "extend_plan",
+    "rewrite_plan_range",
   ],
   medical: [
     "read_athlete_context",

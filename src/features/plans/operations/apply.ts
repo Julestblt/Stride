@@ -173,6 +173,23 @@ function targetKeys(operation: PlanOperation, state: PlanState | null) {
             session.scheduledOn <= operation.to,
         )
         .map((session) => `session:${session.sessionKey}`);
+    case "rewrite_range":
+      return [
+        ...(state?.weeks ?? [])
+          .filter(
+            (week) =>
+              week.weekStart >= operation.from &&
+              week.weekStart <= operation.to,
+          )
+          .map((week) => `week:${week.weekKey}`),
+        ...(state?.sessions ?? [])
+          .filter(
+            (session) =>
+              session.scheduledOn >= operation.from &&
+              session.scheduledOn <= operation.to,
+          )
+          .map((session) => `session:${session.sessionKey}`),
+      ];
     case "set_race_role":
       return [`race:${operation.raceId}`];
     case "extend_plan":
@@ -424,6 +441,74 @@ export function applyOperations(
           ...withRaceRole(plan, operation.raceId, operation.role),
           endsOn: operation.endsOn,
         };
+        return;
+      }
+      case "rewrite_range": {
+        if (!dateAllowed(operation.from) || !dateAllowed(operation.to)) return;
+        const next = addDays(operation.to, 1);
+        if (
+          mondayOf(operation.from) !== operation.from ||
+          (operation.to !== plan.endsOn && mondayOf(next) !== next)
+        )
+          return fail("invalid_operation", "range");
+        const inRange = (date: string) =>
+          date >= operation.from && date <= operation.to;
+        const replaced = [...sessions.values()].filter((session) =>
+          inRange(session.scheduledOn),
+        );
+        const frozen = replaced.find((session) =>
+          isFrozenSession(session, context),
+        );
+        if (frozen) return fail("frozen_session", frozen.sessionKey);
+        const expected = mondaysBetween(operation.from, mondayOf(operation.to));
+        const given = operation.weeks.map((week) => week.weekStart).sort();
+        if (expected.join() !== given.join())
+          return fail("invalid_operation", "weeks");
+        for (const block of [...blocks.values()]) {
+          if (block.endsOn < operation.from || block.startsOn > operation.to)
+            continue;
+          const before = block.startsOn < operation.from;
+          const after = block.endsOn > operation.to;
+          if (before && after) return fail("invalid_operation", block.blockKey);
+          if (before)
+            blocks.set(block.blockKey, {
+              ...block,
+              endsOn: addDays(operation.from, -1),
+            });
+          else if (after)
+            blocks.set(block.blockKey, { ...block, startsOn: next });
+          else blocks.delete(block.blockKey);
+        }
+        for (const week of [...weeks.values()])
+          if (inRange(week.weekStart)) weeks.delete(week.weekKey);
+        for (const session of replaced) sessions.delete(session.sessionKey);
+        for (const block of operation.blocks) {
+          if (
+            blocks.has(block.blockKey) ||
+            !inRange(block.startsOn) ||
+            !inRange(block.endsOn)
+          )
+            return fail("invalid_operation", block.blockKey);
+          blocks.set(block.blockKey, block);
+        }
+        for (const week of weeks.values())
+          if (!blocks.has(week.blockKey))
+            return fail("invalid_operation", week.blockKey);
+        for (const week of operation.weeks) {
+          if (
+            weeks.has(week.weekKey) ||
+            !operation.blocks.some((block) => block.blockKey === week.blockKey)
+          )
+            return fail("invalid_operation", week.weekKey);
+          weeks.set(week.weekKey, week);
+        }
+        for (const session of operation.sessions) {
+          if (sessions.has(session.sessionKey))
+            return fail("invalid_operation", session.sessionKey);
+          if (!inRange(session.scheduledOn))
+            return fail("outside_plan", session.sessionKey);
+          sessions.set(session.sessionKey, session);
+        }
         return;
       }
       case "create_plan":

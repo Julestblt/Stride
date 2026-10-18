@@ -9,9 +9,9 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "13",
-      "hash": "112904c7cc0ef0273bc73cc767f74660",
-      "remote_hash": "f44bf01afa0eafc39f082f0a3e22e372"
+      "version": "14",
+      "hash": "7758e9917abaed6de3512390a8b80ae8",
+      "remote_hash": "f431ad02aea36a43c857c905ba5da1b3"
     },
     "./agents/medical.md": {
       "kind": "agent",
@@ -53,8 +53,8 @@
     "./skills/plan-format": {
       "kind": "skill",
       "id": "skill_012bHRN9qv9aAfHU1DJVygLt",
-      "version": "skver_01Qfivd2qGfyoz6RWmJ4c71m",
-      "hash": "8d1865c3c829e68f1a3b6d67af3bd526"
+      "version": "skver_012avx86ZkJ2AH7h1p2LyKc6",
+      "hash": "732ad8a709922f3b250fe2a645e98062"
     },
     "./skills/plan-periodization": {
       "kind": "skill",

@@ -4,7 +4,13 @@ import {
   type DeterministicPlanInput,
 } from "../detailing/build";
 import { daysBetween, mondayOf } from "../model/dates";
-import type { PlanSession, PlanState, SessionContent } from "../model/plan";
+import type {
+  PlanBlock,
+  PlanSession,
+  PlanState,
+  PlanWeek,
+  SessionContent,
+} from "../model/plan";
 import { applyOperations, type OperationError } from "../operations/apply";
 import {
   planOperationsSchema,
@@ -345,6 +351,43 @@ function describeOperation(
         },
       ];
     }
+    case "rewrite_range": {
+      const inRange = (date: string) =>
+        date >= operation.from && date <= operation.to;
+      const previous = before.weeks.filter((week) => inRange(week.weekStart));
+      const count = (sessions: { scheduledOn: string }[]) => {
+        const total = sessions.filter((session) =>
+          inRange(session.scheduledOn),
+        ).length;
+        return `${total} séance${total > 1 ? "s" : ""}`;
+      };
+      const weeks = (total: number) =>
+        `${total} semaine${total > 1 ? "s" : ""}`;
+      const phases = (weekList: PlanWeek[], blocks: PlanBlock[]) =>
+        [
+          ...new Set(
+            weekList.flatMap(
+              (week) =>
+                blocks.find((block) => block.blockKey === week.blockKey)
+                  ?.name ?? [],
+            ),
+          ),
+        ].join(" · ") || null;
+      return [
+        {
+          label: "Réécrite",
+          context: `${formatPlainDay(operation.from)} → ${formatPlainDay(operation.to)}`,
+          before: {
+            title: `${weeks(previous.length)} · ${count(before.sessions)}`,
+            meta: phases(previous, before.blocks),
+          },
+          after: {
+            title: `${weeks(operation.weeks.length)} · ${count(operation.sessions)}`,
+            meta: phases(operation.weeks, operation.blocks),
+          },
+        },
+      ];
+    }
     case "set_race_role": {
       const race = races.find((item) => item.id === operation.raceId);
       const current = before.plan.raceRoles.find(
@@ -498,7 +541,7 @@ function affectedWeeks(before: PlanState, after: PlanState) {
     if (!previous.has(key)) weeks.add(mondayOf(session.scheduledOn));
   for (const week of after.weeks) {
     const old = before.weeks.find((item) => item.weekKey === week.weekKey);
-    if (old && JSON.stringify(old.targets) !== JSON.stringify(week.targets))
+    if (old && JSON.stringify(old) !== JSON.stringify(week))
       weeks.add(week.weekStart);
   }
   return [...weeks].sort();

@@ -965,45 +965,48 @@ describe("coach turn stream", () => {
     });
   });
 
-  it("records a proposal card for a plan extension", async () => {
-    store.findOwnSession.mockResolvedValue(record());
-    const proposalId = "f0000000-0000-4000-8000-00000000000f";
-    runCustomTool.mockResolvedValue({
-      ok: true,
-      content: {
-        proposalId,
-        addedWeeks: 20,
-        addedSessions: 90,
-        warnings: [],
-        note: "x",
-      },
-    });
-    managed.stream.mockResolvedValue(
-      streamOf([
-        {
-          type: "agent.custom_tool_use",
-          id: "sevt_extend",
-          name: "extend_plan",
-          input: {
-            title: "Cap sur l’Ecotrail 120 km",
-            summary: "Le plan continue jusqu’au 20/03/2027.",
-            specialist_opinions: [],
-          },
+  it.each(["extend_plan", "rewrite_plan_range"])(
+    "records a proposal card for a whole-plan change from %s",
+    async (name) => {
+      store.findOwnSession.mockResolvedValue(record());
+      const proposalId = "f0000000-0000-4000-8000-00000000000f";
+      runCustomTool.mockResolvedValue({
+        ok: true,
+        content: {
+          proposalId,
+          addedWeeks: 20,
+          addedSessions: 90,
+          warnings: [],
+          note: "x",
         },
-        { type: "session.status_idle", stop_reason: { type: "end_turn" } },
-      ]),
-    );
+      });
+      managed.stream.mockResolvedValue(
+        streamOf([
+          {
+            type: "agent.custom_tool_use",
+            id: "sevt_extend",
+            name,
+            input: {
+              title: "Cap sur l’Ecotrail 120 km",
+              summary: "Le plan continue jusqu’au 20/03/2027.",
+              specialist_opinions: [],
+            },
+          },
+          { type: "session.status_idle", stop_reason: { type: "end_turn" } },
+        ]),
+      );
 
-    await collect(streamCoachTurn(contextFor(athleteA), request));
+      await collect(streamCoachTurn(contextFor(athleteA), request));
 
-    expect(store.appendThreadItem.mock.calls[1][2]).toMatchObject({
-      kind: "proposal",
-      proposalId,
-      scope: "session",
-      title: "Cap sur l’Ecotrail 120 km",
-      summary: "Le plan continue jusqu’au 20/03/2027.",
-    });
-  });
+      expect(store.appendThreadItem.mock.calls[1][2]).toMatchObject({
+        kind: "proposal",
+        proposalId,
+        scope: "session",
+        title: "Cap sur l’Ecotrail 120 km",
+        summary: "Le plan continue jusqu’au 20/03/2027.",
+      });
+    },
+  );
 
   it("records a new-plan proposal from submit_plan", async () => {
     store.findOwnSession.mockResolvedValue(record({ mode: "plan" }));

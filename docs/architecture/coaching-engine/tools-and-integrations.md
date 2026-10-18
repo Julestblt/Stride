@@ -135,7 +135,8 @@ flowchart LR
 
 - Inputs are typed operations, never free-form patches:
   - `move_session`, `swap_sessions`, `shorten_session`, `replace_session`, `skip_session`, `add_session`;
-  - `set_week_targets`, `replace_range`, `set_race_role`, `create_plan`.
+  - `set_week_targets`, `replace_range`, `set_race_role`, `create_plan`;
+  - `extend_plan` (weeks added after the plan's end) and `rewrite_range` (#207: the blocks, weeks and sessions of a Monday-to-Sunday range replaced together, weeks outside the range unchanged; exposed to the Coach as `rewrite_plan_range`).
 - The worker resolves operations against the base version, runs the validator, computes the load deltas and before/after shapes, and stores the proposal as `ready` only if no rule blocks. Otherwise the tool returns the violations, and the model may revise within its budget.
 - Each proposal has an expiry: end of day for same-day sessions, 48 hours for week changes, 7 days for block and plan proposals.
 - Idempotency: the run id plus a step key identifies each submission, so a retried step cannot create a duplicate.

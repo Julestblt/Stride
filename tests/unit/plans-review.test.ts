@@ -11,7 +11,7 @@ import {
   type ReviewInput,
 } from "@/features/plans/review/review";
 import { planningInputFixture } from "./coaching-tools-fixture";
-import { easyRun, extendPlan, planState } from "./plan-fixture";
+import { easyRun, extendPlan, planState, rewriteRange } from "./plan-fixture";
 
 function proposal(overrides: Partial<ProposalRecord> = {}): ProposalRecord {
   return {
@@ -520,6 +520,38 @@ describe("week proposals", () => {
       ],
       "2026-11-02": [{ id: "p-3", title: "Objectifs revus", summary: null }],
     });
+  });
+});
+
+describe("plan range rewrite proposals", () => {
+  it("shows the rewritten range, its phases and every changed week", () => {
+    const review = buildProposalReview(
+      input({
+        proposal: proposal({
+          title: "Refais la suite jusqu’au 120 km",
+          scope: "plan",
+          origin: "training",
+          specialistOpinions: [],
+          operations: [rewriteRange()],
+        }),
+      }),
+    );
+    expect(review.kind).toBe("change");
+    expect(review.kicker).toBe("Proposition · semaines 2 à 4");
+    expect(review.operations).toEqual([
+      {
+        label: "Réécrite",
+        context: "19/10/2026 → 08/11/2026",
+        before: { title: "3 semaines · 3 séances", meta: "Base" },
+        after: { title: "3 semaines · 3 séances", meta: "Spécifique" },
+      },
+    ]);
+    expect(review.weekTotals.map((week) => week.label)).toEqual([
+      "Semaine 2",
+      "Semaine 3",
+      "Semaine 4",
+    ]);
+    expect(review.weekStart).toBe("2026-10-19");
   });
 });
 

@@ -267,6 +267,7 @@ const proposalTools = new Set([
   "submit_plan",
   "create_plan_proposal",
   "extend_plan",
+  "rewrite_plan_range",
 ]);
 
 const proposalInputSchema = z.object({

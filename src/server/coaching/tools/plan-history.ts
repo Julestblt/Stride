@@ -93,7 +93,26 @@ const extendPlanSchema = z.object({
   sessions: z.array(z.unknown()),
 });
 
+const rewriteRangeSchema = z.object({
+  op: z.literal("rewrite_range"),
+  from: z.string(),
+  to: z.string(),
+  weeks: z.array(z.unknown()),
+  sessions: z.array(z.unknown()),
+});
+
 export function summarizeOperation(operation: unknown) {
+  const rewritten = rewriteRangeSchema.safeParse(operation);
+  if (rewritten.success) {
+    const { from, to, weeks, sessions } = rewritten.data;
+    return {
+      op: "rewrite_range",
+      from,
+      to,
+      rewrittenWeeks: weeks.length,
+      newSessions: sessions.length,
+    };
+  }
   const extended = extendPlanSchema.safeParse(operation);
   if (extended.success) {
     const { previousEndsOn, endsOn, raceId, role, weeks, sessions } =
