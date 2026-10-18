@@ -9,16 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "12",
-      "hash": "8410443d2c61d888132259f72f6d0e1c",
-      "remote_hash": "96cbe767f3d304837ff0da84ba69653a"
+      "version": "13",
+      "hash": "112904c7cc0ef0273bc73cc767f74660",
+      "remote_hash": "f44bf01afa0eafc39f082f0a3e22e372"
     },
     "./agents/medical.md": {
       "kind": "agent",
       "id": "agent_011dYKZ33Wq7xwdNR3SqpugL",
-      "version": "10",
-      "hash": "3b281ebeca76244bff3b05a7cf2e5c73",
-      "remote_hash": "4595bdf348fd2373f88230c71db1ded9"
+      "version": "11",
+      "hash": "9e4078f597326451ff75547a228c1002",
+      "remote_hash": "ec073119786e5ae18fbf2cf6379ac6ad"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
@@ -59,14 +59,14 @@
     "./skills/plan-periodization": {
       "kind": "skill",
       "id": "skill_01DHHZifHU7Eq6byKet5Xfoc",
-      "version": "skver_018WtCDSLohmZWGa31dwT2rA",
-      "hash": "9d235e4d41eb0b93ee79457bde921206"
+      "version": "skver_01D4C7LyMwF6tx8XEmDMtzo2",
+      "hash": "02951adf2ad1ec483c51f555c91e21d4"
     },
     "./skills/race-specificity": {
       "kind": "skill",
       "id": "skill_01VQqXNMQneHCr5RJSGEKkSN",
-      "version": "skver_01Szac7MnSGxQZxujtAd5Zzz",
-      "hash": "7162f5f86d54d585ca1e3758ef14389c"
+      "version": "skver_01XJVygPPNBQuJT793ZHRpgh",
+      "hash": "dede43319735eac14a964e9ad60c1879"
     },
     "./skills/session-design": {
       "kind": "skill",
