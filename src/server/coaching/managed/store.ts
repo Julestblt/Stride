@@ -34,6 +34,7 @@ const rowSchema = z
     title: z.string().nullable(),
     last_activity_at: z.string(),
     read_at: z.string().nullable(),
+    composing_since: z.string().nullable(),
     created_at: z.string(),
   })
   .transform((row) => ({
@@ -48,13 +49,14 @@ const rowSchema = z
     title: row.title,
     lastActivityAt: row.last_activity_at,
     readAt: row.read_at,
+    composingSince: row.composing_since,
     createdAt: row.created_at,
   }));
 
 export type CoachSessionRecord = z.output<typeof rowSchema>;
 
 const columns =
-  "id, managed_session_id, mode, status, pending_tool_use_id, budget_cents, list_cost_cents, last_turn_at, title, last_activity_at, read_at, created_at";
+  "id, managed_session_id, mode, status, pending_tool_use_id, budget_cents, list_cost_cents, last_turn_at, title, last_activity_at, read_at, composing_since, created_at";
 
 export async function findOwnSession(
   context: OnboardingContext,
@@ -103,7 +105,6 @@ export async function updateSession(
     pendingToolUseId?: string | null;
     listCostCents?: number;
     lastTurnAt?: string;
-    readAt?: string;
   },
 ) {
   const { error } = await context.client
@@ -111,6 +112,7 @@ export async function updateSession(
     .update({
       status: patch.status,
       pending_tool_use_id: patch.pendingToolUseId ?? null,
+      composing_since: null,
       last_activity_at: new Date().toISOString(),
       ...(patch.listCostCents === undefined
         ? {}
@@ -118,11 +120,23 @@ export async function updateSession(
       ...(patch.lastTurnAt === undefined
         ? {}
         : { last_turn_at: patch.lastTurnAt }),
-      ...(patch.readAt === undefined ? {} : { read_at: patch.readAt }),
     })
     .eq("user_id", context.userId)
     .eq("managed_session_id", managedSessionId);
   if (error) throw new Error("Unable to update the coach session");
+}
+
+export async function recordComposing(
+  context: OnboardingContext,
+  managedSessionId: string,
+  since: string | null,
+) {
+  const { error } = await context.client
+    .from("coach_sessions")
+    .update({ composing_since: since })
+    .eq("user_id", context.userId)
+    .eq("managed_session_id", managedSessionId);
+  if (error) throw new Error("Unable to record the coach activity");
 }
 
 export async function findOwnThread(
