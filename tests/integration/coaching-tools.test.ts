@@ -29,6 +29,7 @@ type Seeded = {
   sessionKey: string;
   proposalId: string;
   activityId: string;
+  raceId: string;
 };
 
 const createdUsers: string[] = [];
@@ -66,7 +67,7 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
   const sessionKey = `s-${label}-done`;
   const [plan] = await sql<{ id: string }[]>`
     insert into public.training_plans (user_id, title, starts_on, ends_on, active_version, time_zone)
-    values (${userId}, ${planTitle}, ${isoDay(-7)}, ${isoDay(21)}, 1, 'Europe/Paris')
+    values (${userId}, ${planTitle}, ${isoDay(-7)}, ${planEnd}, 1, 'Europe/Paris')
     returning id`;
   await sql`
     insert into public.plan_versions (plan_id, version, user_id, created_by, effective_from, confidence, content_hash)
@@ -104,6 +105,10 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
       ${sql.json([{ op: "skip_session", sessionKey: `s-${label}-next` }])},
       ${sql.json([{ specialist: "medical", verdict: "compatible", summary: label }])},
       ${[`s-${label}-next`]})
+    returning id`;
+  const [race] = await sql<{ id: string }[]>`
+    insert into public.athlete_races (user_id, name, race_date, distance_km, race_kind, priority)
+    values (${userId}, ${`Course ajoutée ${label}`}, ${raceDay}, 10, 'road', 'B')
     returning id`;
   await sql`
     insert into public.plan_decisions (user_id, proposal_id, decision, actor, note)
@@ -156,8 +161,12 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
     sessionKey,
     proposalId: proposal.id,
     activityId: activity.data.id,
+    raceId: race.id,
   };
 }
+
+const planEnd = isoDay(21);
+const raceDay = isoDay(35);
 
 let a: Seeded;
 let b: Seeded;
@@ -171,6 +180,42 @@ afterAll(async () => {
   for (const userId of createdUsers) await admin.auth.admin.deleteUser(userId);
   await sql.end();
 });
+
+function easyWeek(monday: string) {
+  return {
+    weekStart: monday,
+    phase: "base",
+    notes: null,
+    sessions: [1, 3]
+      .map((offset) => addDays(monday, offset))
+      .filter((date) => date <= raceDay)
+      .map((date) => ({
+        date,
+        sport: "run",
+        kind: "easy",
+        title: "Footing",
+        purpose: "Endurance fondamentale",
+        key: false,
+        km: null,
+        elevationGainMeters: null,
+        terrain: "road",
+        steps: [
+          { type: "work", minutes: 30, intensity: "easy", target: "rpe 3-4" },
+        ],
+      })),
+  };
+}
+
+function extensionWeeks() {
+  const weeks = [];
+  for (
+    let monday = addDays(mondayOf(planEnd), 7);
+    monday <= mondayOf(raceDay);
+    monday = addDays(monday, 7)
+  )
+    weeks.push(easyWeek(monday));
+  return weeks;
+}
 
 function compactPlan() {
   const monday = addDays(mondayOf(isoDay(0)), 7);
@@ -223,6 +268,16 @@ function inputFor(name: string) {
       operations: [
         { op: "move_session", sessionKey: `s-a-next`, toDate: isoDay(3) },
       ],
+      specialist_opinions: [],
+    },
+    extend_plan: {
+      title: "Course ajoutée",
+      summary: "Le plan continue jusqu’à la course ajoutée.",
+      rationale: "Test d’isolation.",
+      raceId: a.raceId,
+      role: "secondary",
+      endsOn: raceDay,
+      weeks: extensionWeeks(),
       specialist_opinions: [],
     },
     ask_athlete: { question: "Comment te sens-tu ?" },
