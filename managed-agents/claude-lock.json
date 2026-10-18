@@ -9,16 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "11",
-      "hash": "450fea7013e95857274472a41b7fabf5",
-      "remote_hash": "fd0ef7fd2c88d893491fcab30fa5a040"
+      "version": "12",
+      "hash": "8410443d2c61d888132259f72f6d0e1c",
+      "remote_hash": "96cbe767f3d304837ff0da84ba69653a"
     },
     "./agents/medical.md": {
       "kind": "agent",
       "id": "agent_011dYKZ33Wq7xwdNR3SqpugL",
-      "version": "9",
-      "hash": "76cfcf2358adf3abe9e51d10176a8a7f",
-      "remote_hash": "146065437f8a1ea4652c5bed931650a4"
+      "version": "10",
+      "hash": "3b281ebeca76244bff3b05a7cf2e5c73",
+      "remote_hash": "4595bdf348fd2373f88230c71db1ded9"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
