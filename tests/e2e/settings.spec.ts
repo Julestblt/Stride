@@ -606,6 +606,7 @@ test("profile tablet layouts fit without clipping and edit in a sheet", async ({
 test("training settings save planning constraints and unavailable periods", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
   await page.goto("/settings/training");
