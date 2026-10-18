@@ -1856,6 +1856,10 @@ export type Database = {
         Returns: number;
       };
       race_owned: { Args: { p_race_id: string }; Returns: boolean };
+      record_plan_proposal_outcome: {
+        Args: { p_note?: string; p_outcome: string; p_proposal_id: string };
+        Returns: undefined;
+      };
       refresh_session_matches: {
         Args: {
           p_activities_through?: string;
@@ -1865,10 +1869,6 @@ export type Database = {
           p_version: number;
         };
         Returns: number;
-      };
-      record_plan_proposal_outcome: {
-        Args: { p_note?: string; p_outcome: string; p_proposal_id: string };
-        Returns: undefined;
       };
       reject_plan_proposal: {
         Args: { p_note?: string; p_proposal_id: string };
