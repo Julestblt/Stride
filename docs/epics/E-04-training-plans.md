@@ -10,6 +10,7 @@ Provide a complete training plan up to the athlete's main objective, tied to the
 - Plan creation for road 5 km to marathon, trail of every distance (low-confidence label above 60 km) and base building
 - Every session of every week fully structured with computed pace, heart-rate or effort targets
 - Plan presentation by blocks, weeks and sessions
+- One active plan per athlete; races added later amend that plan, extending it when the race falls after its end ([ADR 0008](../adr/0008-versioned-plans-and-proposal-lifecycle.md), #141)
 - Planned-versus-completed adherence and the Régularité measure
 - Explicit rationale and source context for proposed sessions
 - Athlete review, acceptance, rejection, and change history
