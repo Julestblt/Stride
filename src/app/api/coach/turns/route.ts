@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { coachAttachmentsSchema } from "@/features/coach/attachments";
 import { AttachmentAccessError } from "@/server/coaching/attachments";
@@ -5,11 +6,11 @@ import {
   SessionAccessError,
   SessionStateError,
   streamCoachTurn,
-  turnMessages,
   type TurnEvent,
   type TurnRequest,
 } from "@/server/coaching/managed/session";
 import { sessionModes } from "@/server/coaching/managed/store";
+import { detachedTurnStream } from "@/server/coaching/managed/turn-stream";
 import { getOnboardingContext } from "@/server/onboarding/context";
 
 export const maxDuration = 960;
@@ -72,12 +73,7 @@ export async function POST(request: Request) {
       { status: 400, headers: jsonHeaders },
     );
 
-  const disconnected = new AbortController();
-  const turn = streamCoachTurn(
-    context,
-    parsed.data satisfies TurnRequest,
-    disconnected.signal,
-  );
+  const turn = streamCoachTurn(context, parsed.data satisfies TurnRequest);
   let first: IteratorResult<TurnEvent>;
   try {
     first = await turn.next();
@@ -85,35 +81,8 @@ export async function POST(request: Request) {
     return rejection(error);
   }
 
-  const encoder = new TextEncoder();
-  let open = true;
-  const body = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (event: TurnEvent) => {
-        if (open)
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
-          );
-      };
-      try {
-        if (!first.done) send(first.value);
-        for await (const event of turn) send(event);
-      } catch {
-        send({
-          type: "error",
-          code: "failed",
-          text: turnMessages.failed,
-        });
-      } finally {
-        if (open) controller.close();
-        open = false;
-      }
-    },
-    cancel() {
-      open = false;
-      disconnected.abort();
-    },
-  });
+  const { body, drained } = detachedTurnStream(first, turn);
+  after(drained);
 
   return new Response(body, {
     headers: {

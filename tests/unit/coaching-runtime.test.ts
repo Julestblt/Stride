@@ -7,6 +7,7 @@ const store = vi.hoisted(() => ({
   recordSession: vi.fn(),
   updateSession: vi.fn(),
   appendThreadItem: vi.fn(),
+  recordComposing: vi.fn(),
 }));
 const managed = vi.hoisted(() => ({
   retrieve: vi.fn(),
@@ -110,6 +111,7 @@ function record(overrides: Partial<CoachSessionRecord> = {}) {
     title: "Ma semaine",
     lastActivityAt: "2026-10-16T09:00:00Z",
     readAt: null,
+    composingSince: null,
     createdAt: "2026-10-16T09:00:00Z",
     ...overrides,
   } satisfies CoachSessionRecord;
@@ -236,6 +238,7 @@ describe("coach turn stream", () => {
     syncAthleteVault.mockResolvedValue("vlt_test");
     store.updateSession.mockResolvedValue(undefined);
     store.appendThreadItem.mockResolvedValue(undefined);
+    store.recordComposing.mockResolvedValue(undefined);
     managed.send.mockResolvedValue({});
     managed.retrieve.mockResolvedValue({
       id: "sesn_01A",
@@ -586,6 +589,87 @@ describe("coach turn stream", () => {
       text: turnMessages.timeout,
     });
     expect(events.at(-1)).toMatchObject({ status: "timed_out" });
+  });
+
+  it("records while the Coach composes and clears it when the request ends", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        { type: "span.model_request_start", id: "span_1" },
+        { type: "span.model_request_end", id: "span_2" },
+        { type: "span.model_request_start", id: "span_3" },
+        {
+          type: "session.status_idle",
+          stop_reason: { type: "end_turn" },
+        },
+      ]),
+    );
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+    const composing = events.filter((event) => event.type === "composing");
+    expect(composing).toEqual([
+      { type: "composing", since: expect.any(String) },
+      { type: "composing", since: null },
+      { type: "composing", since: expect.any(String) },
+    ]);
+    expect(store.recordComposing.mock.calls.map((call) => call[2])).toEqual([
+      expect.any(String),
+      null,
+      expect.any(String),
+    ]);
+    expect(store.updateSession).toHaveBeenLastCalledWith(
+      expect.anything(),
+      "sesn_01A",
+      expect.objectContaining({ status: "idle" }),
+    );
+    expect(store.updateSession.mock.invocationCallOrder.at(-1)).toBeGreaterThan(
+      store.recordComposing.mock.invocationCallOrder.at(-1)!,
+    );
+  });
+
+  it("does not show a specialist's model request as the Coach composing", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        {
+          type: "session.thread_created",
+          session_thread_id: "sthr_medical",
+          agent_name: "Stride Medical",
+        },
+        {
+          type: "span.model_request_start",
+          id: "span_1",
+          session_thread_id: "sthr_medical",
+        },
+        {
+          type: "session.status_idle",
+          stop_reason: { type: "end_turn" },
+        },
+      ]),
+    );
+    const events = await collect(
+      streamCoachTurn(contextFor(athleteA), request),
+    );
+    expect(events.some((event) => event.type === "composing")).toBe(false);
+    expect(store.recordComposing).not.toHaveBeenCalled();
+  });
+
+  it("never interrupts a turn that ends on its own", async () => {
+    store.findOwnSession.mockResolvedValue(record());
+    managed.stream.mockResolvedValue(
+      streamOf([
+        { type: "agent.message", content: [{ type: "text", text: "Voilà." }] },
+        {
+          type: "session.status_idle",
+          stop_reason: { type: "end_turn" },
+        },
+      ]),
+    );
+    await collect(streamCoachTurn(contextFor(athleteA), request));
+    expect(managed.send).not.toHaveBeenCalledWith("sesn_01A", {
+      events: [{ type: "user.interrupt" }],
+    });
   });
 
   it("archives Garmin access when the token cannot be refreshed", async () => {
