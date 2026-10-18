@@ -385,6 +385,7 @@ describe("coaching tools run as athlete A", () => {
         group by scope order by scope`;
     expect([...(await counts(a.context.userId))]).toEqual([
       { scope: "new_plan", count: 1 },
+      { scope: "plan", count: 1 },
       { scope: "session", count: 1 },
     ]);
     expect([...(await counts(b.context.userId))]).toEqual([]);
