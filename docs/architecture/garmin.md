@@ -19,15 +19,17 @@ MCP is an interface for AI tools, never the source of truth. Coaching agents rea
 
 ## Consumer contract
 
-| Operation            | Endpoint                             | Stride use                                            |
-| -------------------- | ------------------------------------ | ----------------------------------------------------- |
-| Connection status    | `GET /v1/connections/garmin`         | Onboarding guard and shell reconciliation             |
-| Start connection     | `POST /v1/connections/garmin/start`  | Credentials submission; optional `history_start_date` |
-| Continue MFA         | `POST /v1/connections/garmin/mfa`    | `challenge_id` and `otp`                              |
-| Sync status          | `GET /v1/connections/garmin/sync`    | Import step and shell status                          |
-| Disconnect           | `DELETE /v1/connections/garmin`      | Settings, outside onboarding                          |
-| Delete imported data | `DELETE /v1/connections/garmin/data` | Settings, outside onboarding                          |
-| Wellness day         | `GET /v1/wellness/days/{date}`       | Santé day view; intraday curves fetched on demand     |
+| Operation            | Endpoint                                 | Stride use                                            |
+| -------------------- | ---------------------------------------- | ----------------------------------------------------- |
+| Connection status    | `GET /v1/connections/garmin`             | Onboarding guard and shell reconciliation             |
+| Start connection     | `POST /v1/connections/garmin/start`      | Credentials submission; optional `history_start_date` |
+| Continue MFA         | `POST /v1/connections/garmin/mfa`        | `challenge_id` and `otp`                              |
+| Sync status          | `GET /v1/connections/garmin/sync`        | Import step and shell status                          |
+| Disconnect           | `DELETE /v1/connections/garmin`          | Settings, outside onboarding                          |
+| Delete imported data | `DELETE /v1/connections/garmin/data`     | Settings, outside onboarding                          |
+| Wellness day         | `GET /v1/wellness/days/{date}`           | Santé day view; intraday curves fetched on demand     |
+| Push workouts        | `PUT /v1/connections/garmin/workouts`    | Watch sending: reconcile a date window (#190)         |
+| Remove workouts      | `DELETE /v1/connections/garmin/workouts` | Watch sending turned off                              |
 
 Start and MFA return `{ "status": "connected" }` or `{ "status": "mfa_required", "challenge_id": "<uuid>" }`. Errors return `{ "error": { "code": "<code>" } }`. Stride maps codes, never HTTP status alone, because both its own expired session and Garmin credential errors can be `401`.
 
@@ -54,6 +56,15 @@ The map uses MapLibre GL with CARTO's dark basemap and OpenStreetMap attribution
 Zone boundaries use the existing Stride calculation: the maximum heart rate observed over the last year, with the median resting heart rate from the last 28 days when there are at least seven observations (Karvonen), otherwise percentages of maximum heart rate. The UI identifies these as Stride estimates, not imported Garmin zone settings. Missing calibration omits zone assignments. The activity detail uses French UI copy. Gray chart bands identify laps lasting at least one minute whose pace is at least 8% faster than the activity average; they are labeled Stride estimates, not prescribed intervals. The pale horizontal heart-rate band marks estimated Z4. The pace/heart-rate scatter pairs samples and includes a French explanation of both axes. Missing tracks omit unavailable plots; coach analyses, prescribed targets and compliance are not fabricated from the design reference.
 
 The four time-series charts support inspecting recorded samples with a pointer, touch, or keyboard arrows (Home/End select the endpoints; Escape or blur dismisses the annotation). Each inspection shows the recorded measurement with its unit and elapsed time. Missing measurements remain explicitly unavailable; incomplete or invalid time series use sample positions without invented timestamps. Pace domains may be visually trimmed, while annotations preserve the actual recorded values. Effort statistics share the detail’s import provenance rather than repeating Garmin on every row.
+
+## Watch sending
+
+Sending planned sessions to the watch is the only Garmin write, and only the athlete triggers it (#190). The Coach and the MCP tools never write to Garmin. `athlete_profiles.watch_workouts_enabled` holds the setting. garmin_mcp records each pushed workout in `provider_workouts`, which Stride reads under owner RLS for the session, week and settings states. The garmin_mcp contract is documented in its `docs/workouts.md`.
+
+- `src/features/garmin/watch.ts` builds the request: the run and trail sessions with a structure in the next 7 days, the sessions already pushed further ahead (up to 31 days), and a session the athlete sends ahead of time. Keys are `<plan id>:<session key>`, so recorded workouts that left the active plan are removed.
+- The athlete confirms a session with effort (RPE) steps once (`allow_simplified`), because the watch receives them without a target. That consent stays with the session for later resends and retries; a new hold appears only for a session that was never confirmed.
+- A sync runs when sending is turned on, when the athlete sends, resends, retries or confirms a session, after an accepted proposal is applied, and after Today, Plan or the Garmin settings page renders. On those page loads it runs only if the plan version or the local day changed since the last sync, at most every 10 minutes after a failure, and hourly while a push has failed. garmin_mcp accepts only the athlete's access token, so the window rolls forward when the athlete opens Stride, not on a server schedule.
+- Turning sending off calls `DELETE`; disconnecting in garmin_mcp removes the upcoming workouts too.
 
 ## Network access
 
