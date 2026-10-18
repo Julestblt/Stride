@@ -57,6 +57,9 @@ export type Database = {
           updated_at: string;
           user_id: string;
           value_sources: NonNullable<Json>;
+          watch_workouts_enabled: boolean;
+          watch_workouts_synced_at: string | null;
+          watch_workouts_synced_key: string | null;
           weekday_session_minutes: number | null;
           weight_kg: number | null;
         };
@@ -83,6 +86,9 @@ export type Database = {
           updated_at?: string;
           user_id: string;
           value_sources?: NonNullable<Json>;
+          watch_workouts_enabled?: boolean;
+          watch_workouts_synced_at?: string | null;
+          watch_workouts_synced_key?: string | null;
           weekday_session_minutes?: number | null;
           weight_kg?: number | null;
         };
@@ -108,6 +114,9 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
           value_sources?: NonNullable<Json>;
+          watch_workouts_enabled?: boolean;
+          watch_workouts_synced_at?: string | null;
+          watch_workouts_synced_key?: string | null;
           weekday_session_minutes?: number | null;
           weight_kg?: number | null;
         };
@@ -1060,6 +1069,7 @@ export type Database = {
           last_sync_at: string | null;
           lease_expires_at: string | null;
           lease_owner: string | null;
+          manual_sync_available_at: string | null;
           provider: string;
           status: string;
           updated_at: string;
@@ -1075,6 +1085,7 @@ export type Database = {
           last_sync_at?: string | null;
           lease_expires_at?: string | null;
           lease_owner?: string | null;
+          manual_sync_available_at?: string | null;
           provider: string;
           status: string;
           updated_at?: string;
@@ -1089,12 +1100,76 @@ export type Database = {
           last_sync_at?: string | null;
           lease_expires_at?: string | null;
           lease_owner?: string | null;
+          manual_sync_available_at?: string | null;
           provider?: string;
           status?: string;
           updated_at?: string;
           user_id?: string;
         };
         Relationships: [];
+      };
+      provider_heart_rate_zones: {
+        Row: {
+          connection_id: string;
+          imported_at: string;
+          lactate_threshold_heart_rate_bpm: number | null;
+          max_heart_rate_bpm: number | null;
+          provider: string;
+          resting_heart_rate_auto_update: boolean | null;
+          resting_heart_rate_bpm: number | null;
+          sport: string;
+          training_method: string | null;
+          user_id: string;
+          zone1_floor_bpm: number | null;
+          zone2_floor_bpm: number | null;
+          zone3_floor_bpm: number | null;
+          zone4_floor_bpm: number | null;
+          zone5_floor_bpm: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          connection_id: string;
+          imported_at?: string;
+          lactate_threshold_heart_rate_bpm?: number | null;
+          max_heart_rate_bpm?: number | null;
+          provider: string;
+          resting_heart_rate_auto_update?: boolean | null;
+          resting_heart_rate_bpm?: number | null;
+          sport: string;
+          training_method?: string | null;
+          user_id: string;
+          zone1_floor_bpm?: number | null;
+          zone2_floor_bpm?: number | null;
+          zone3_floor_bpm?: number | null;
+          zone4_floor_bpm?: number | null;
+          zone5_floor_bpm?: number | null;
+        };
+        Update: {
+          connection_id?: string;
+          imported_at?: string;
+          lactate_threshold_heart_rate_bpm?: number | null;
+          max_heart_rate_bpm?: number | null;
+          provider?: string;
+          resting_heart_rate_auto_update?: boolean | null;
+          resting_heart_rate_bpm?: number | null;
+          sport?: string;
+          training_method?: string | null;
+          user_id?: string;
+          zone1_floor_bpm?: number | null;
+          zone2_floor_bpm?: number | null;
+          zone3_floor_bpm?: number | null;
+          zone4_floor_bpm?: number | null;
+          zone5_floor_bpm?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_heart_rate_zones_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "provider_connections";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       provider_observations: {
         Row: {
@@ -1185,6 +1260,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "provider_secrets_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "provider_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      provider_workouts: {
+        Row: {
+          connection_id: string;
+          content_hash: string;
+          error_code: string | null;
+          external_key: string;
+          provider: string;
+          provider_workout_id: number | null;
+          scheduled_on: string;
+          sent_at: string | null;
+          simplifications: string[];
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          connection_id: string;
+          content_hash: string;
+          error_code?: string | null;
+          external_key: string;
+          provider?: string;
+          provider_workout_id?: number | null;
+          scheduled_on: string;
+          sent_at?: string | null;
+          simplifications?: string[];
+          status: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          connection_id?: string;
+          content_hash?: string;
+          error_code?: string | null;
+          external_key?: string;
+          provider?: string;
+          provider_workout_id?: number | null;
+          scheduled_on?: string;
+          sent_at?: string | null;
+          simplifications?: string[];
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_workouts_connection_id_fkey";
             columns: ["connection_id"];
             isOneToOne: false;
             referencedRelation: "provider_connections";
@@ -1907,6 +2036,16 @@ export type Database = {
         Args: { p_connection_id: string; p_owner: string };
         Returns: boolean;
       };
+      replace_heart_rate_zones: {
+        Args: {
+          p_attempts: number;
+          p_connection_id: string;
+          p_job_id: string;
+          p_user_id: string;
+          p_zones: Json;
+        };
+        Returns: boolean;
+      };
       replace_race_course: {
         Args: {
           p_distance_m: number;
@@ -1927,6 +2066,7 @@ export type Database = {
         Args: { p_points: Json; p_race_id: string; p_summary: Json };
         Returns: undefined;
       };
+      request_manual_sync: { Args: { p_user_id: string }; Returns: Json };
       schedule_incremental_sync: {
         Args: Record<PropertyKey, never>;
         Returns: number;
