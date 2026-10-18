@@ -48,7 +48,7 @@ Every tool is declared once:
 | `name`, `description` | Model-facing; English, stable                                                           |
 | `input`               | Zod schema; strict; no athlete identifiers                                              |
 | `output`              | Zod schema; minimized fields; size cap                                                  |
-| `class`               | `read`, `compute` or `propose`                                                          |
+| `class`               | `read`, `compute`, `propose` or `record`                                                |
 | `scope`               | Which workflows may expose it                                                           |
 | `dataClass`           | `training`, `health` or `plan` — health tools are offered only when the task needs them |
 | `costUnits`           | Counted against the run's tool budget                                                   |
@@ -66,18 +66,22 @@ The Managed Agents runtime uses a first slice of this contract in `src/server/co
 - The agents' custom tool blocks in `managed-agents/agents/*.md` are generated between `# stride-tools:start` and `# stride-tools:end` from `z.toJSONSchema` (`npm run agents:tools`). `npm run agents:tools:check` and the unit suite fail on drift and name the agent file and tool.
 - `tests/integration/coaching-tools.test.ts` seeds two athletes on the CI-local Supabase and runs every tool as the first athlete: no row of the second appears, and the second athlete's proposal id or session key returns `not_found` (`npm run test:integration`, CI only).
 
-| Tool                   | Class   | Data classes     | Agents         |
-| ---------------------- | ------- | ---------------- | -------------- |
-| `read_athlete_context` | read    | training, health | Coach, Medical |
-| `read_active_plan`     | read    | plan             | Coach          |
-| `read_plan_progress`   | read    | plan, training   | Coach          |
-| `read_plan_history`    | read    | plan             | Coach          |
-| `read_health_reports`  | read    | health           | Coach, Medical |
-| `submit_plan`          | propose | plan             | Coach          |
-| `create_plan_proposal` | propose | plan             | Coach          |
-| `ask_athlete`          | propose | plan             | Coach          |
+| Tool                      | Class   | Data classes     | Agents         |
+| ------------------------- | ------- | ---------------- | -------------- |
+| `read_athlete_context`    | read    | training, health | Coach, Medical |
+| `read_active_plan`        | read    | plan             | Coach          |
+| `read_plan_progress`      | read    | plan, training   | Coach          |
+| `read_plan_history`       | read    | plan             | Coach          |
+| `read_health_reports`     | read    | health           | Coach, Medical |
+| `submit_plan`             | propose | plan             | Coach          |
+| `create_plan_proposal`    | propose | plan             | Coach          |
+| `ask_athlete`             | propose | plan             | Coach          |
+| `record_condition_report` | record  | health           | Medical        |
+| `update_condition_report` | record  | health           | Medical        |
 
 `ask_athlete` has no server handler: the session validates its input through the registry and pauses the turn until the athlete answers.
+
+Health record (#200): `record_condition_report` and `update_condition_report` write `athlete_condition_reports` as the athlete under RLS, with `source = coach_confirmed`. Medical records only what the athlete stated or confirmed with `ask_athlete` and never estimates a severity. `read_health_reports` returns the open reports and those resolved in its window, with their ids. `loadPlanningInput` passes the open reports and Garmin `training_readiness` for yesterday and today to the validator, so H1–H3 run on the deterministic draft and on every Coach proposal (`submit_plan`, `create_plan_proposal`, `extend_plan`). Readiness below 25 is red, 25–49 amber and 50 or more green, following Garmin's bands. A day without a score is left out, so H3 is skipped without data.
 
 Context packet: `read_athlete_context` keeps eight weeks of running history, the last seven days of check-ins, upcoming races and unavailability only, and pace, heart-rate and RPE ranges without the talk-test copy. On the unit-test fixture (`tests/unit/coaching-tools-fixture.ts`) the packet went from 7,212 bytes to 3,429 bytes; the test enforces a 4,096-byte budget.
 
