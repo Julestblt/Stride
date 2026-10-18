@@ -141,3 +141,45 @@ export const context = (matched: string[] = []) => ({
   today: "2026-10-14",
   matchedSessionKeys: new Set(matched),
 });
+
+export const extendPlan = (
+  overrides: Partial<{
+    previousEndsOn: string;
+    endsOn: string;
+    raceId: string;
+    role: "primary" | "preparation" | "secondary";
+    weekStarts: string[];
+    sessionDates: string[];
+  }> = {},
+) => {
+  const base = planState();
+  const weekStarts = overrides.weekStarts ?? ["2026-11-09", "2026-11-16"];
+  const endsOn = overrides.endsOn ?? "2026-11-22";
+  return {
+    op: "extend_plan" as const,
+    previousEndsOn: overrides.previousEndsOn ?? base.plan.endsOn,
+    endsOn,
+    raceId: overrides.raceId ?? "race-b",
+    role: overrides.role ?? "secondary",
+    blocks: [
+      {
+        blockKey: "b-build-1",
+        kind: "build" as const,
+        name: "Développement",
+        startsOn: weekStarts[0],
+        endsOn,
+        objective: "Préparer la course ajoutée",
+        raceId: overrides.raceId ?? "race-b",
+      },
+    ],
+    weeks: weekStarts.map((weekStart) => ({
+      ...base.weeks[0],
+      weekKey: `w-${weekStart}`,
+      weekStart,
+      blockKey: "b-build-1",
+    })),
+    sessions: (overrides.sessionDates ?? ["2026-11-10", "2026-11-17"]).map(
+      (date) => placed(`s-${date}-1`, date, easyRun(40)),
+    ),
+  };
+};

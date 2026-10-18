@@ -5,6 +5,7 @@ const ready = "eeeeeeee-eeee-4eee-8eee-700000000001";
 const toAccept = "eeeeeeee-eeee-4eee-8eee-700000000002";
 const toReject = "eeeeeeee-eeee-4eee-8eee-700000000003";
 const foreign = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
+const extension = "eeeeeeee-eeee-4eee-8eee-700000000009";
 
 test.describe.configure({ mode: "serial" });
 
@@ -154,4 +155,42 @@ test("another athlete's proposal is never shown", async ({ page }) => {
     await expect(page.locator("main h1")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("dialog")).toHaveCount(0);
   }
+});
+
+test("an extension proposal shows the added race and the new plan end", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/plan?proposition=${extension}`);
+  const sheet = page.getByRole("dialog");
+  await expect(
+    sheet.getByRole("heading", {
+      name: "Ajoute le Trail des Lacs et prolonge le plan",
+    }),
+  ).toBeVisible({ timeout: 20_000 });
+  await expect(sheet.getByText("Proposition · nouvelle course")).toBeVisible();
+  await expect(sheet.getByText("Prolonge la version 3 du plan")).toBeVisible();
+  await expect(
+    sheet.getByRole("heading", {
+      name: "Ce qui change · course ajoutée, plan prolongé",
+    }),
+  ).toBeVisible();
+  await expect(
+    sheet.getByText("Trail des Lacs 30K", { exact: true }),
+  ).toBeVisible();
+  await expect(sheet.getByText("Prolongé", { exact: true })).toBeVisible();
+  await expect(sheet.getByText("Nouvelle fin", { exact: true })).toBeVisible();
+  await expect(
+    sheet.getByRole("link", { name: "Voir le programme prolongé" }),
+  ).toHaveAttribute("href", "/plan?race=77777777-0000-4000-8000-000000000009");
+
+  await page.goto("/plan/historique");
+  const entry = page.getByRole("article", {
+    name: "Ajoute le Trail des Lacs et prolonge le plan",
+  });
+  await expect(entry.getByText("Prolonge v3")).toBeVisible();
+  await expect(
+    entry.getByText(/^Fin du plan : .+ → .+, \+\d semaines\.$/),
+  ).toBeVisible();
 });

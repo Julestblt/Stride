@@ -61,6 +61,7 @@ export type ReviewOperation = {
   context: string;
   before: ReviewSide | null;
   after: ReviewSide | null;
+  badge?: string;
 };
 
 export type ReviewWeekTotal = {
@@ -79,6 +80,16 @@ export type ReviewNewPlan = {
   replacesActive: boolean;
 };
 
+export type ReviewExtension = {
+  raceId: string;
+  addedWeeks: number;
+  addedSessions: number;
+  peakWeek: string;
+  endsOn: string;
+  keptWeeks: number;
+  phases: { key: string; name: string; weeks: number; kind: string }[];
+};
+
 export type ReviewOpinion = StaffMember & {
   label: string;
   text: string;
@@ -94,7 +105,7 @@ export type ProposalReview = {
   id: string;
   title: string;
   summary: string | null;
-  kind: "change" | "new_plan";
+  kind: "change" | "new_plan" | "extension";
   kicker: string;
   subkicker: string;
   status: { label: string; tone: ReviewTone };
@@ -107,6 +118,7 @@ export type ProposalReview = {
   operations: ReviewOperation[];
   weekTotals: ReviewWeekTotal[];
   newPlan: ReviewNewPlan | null;
+  extension: ReviewExtension | null;
   opinions: ReviewOpinion[];
   checks: ReviewCheck[];
   banner: ReviewBanner | null;
@@ -355,9 +367,91 @@ function describeOperation(
         },
       ];
     }
+    case "extend_plan": {
+      const race = races.find((item) => item.id === operation.raceId);
+      const previous = races.find(
+        (item) =>
+          item.date === operation.previousEndsOn &&
+          item.id !== operation.raceId,
+      );
+      const weeks = operation.weeks.length;
+      return [
+        {
+          label: "Ajoutée",
+          context: "Course",
+          before: null,
+          after: {
+            title: race?.name ?? "Course",
+            meta: [
+              race?.date ? formatPlanDay(race.date) : null,
+              raceRoleLabels[operation.role].toLowerCase(),
+            ]
+              .filter(Boolean)
+              .join(" · "),
+          },
+          badge: race?.priority ?? (operation.role === "primary" ? "A" : "B"),
+        },
+        {
+          label: "Prolongé",
+          context: "Fin du plan",
+          before: {
+            title: formatPlanDay(operation.previousEndsOn),
+            meta: previous?.name ?? null,
+          },
+          after: {
+            title: formatPlanDay(operation.endsOn),
+            meta: `+${weeks} semaine${weeks > 1 ? "s" : ""}`,
+          },
+        },
+      ];
+    }
     case "create_plan":
       return [];
   }
+}
+
+function blockWeeks(block: { startsOn: string; endsOn: string }) {
+  return Math.max(
+    1,
+    Math.round((daysBetween(block.startsOn, block.endsOn) + 1) / 7),
+  );
+}
+
+function extensionSummary(
+  operation: Extract<PlanOperation, { op: "extend_plan" }>,
+  keptWeeks: number,
+): ReviewExtension {
+  const peak = Math.max(
+    0,
+    ...operation.weeks.map((week) =>
+      operation.sessions
+        .filter(
+          (session) =>
+            mondayOf(session.scheduledOn) === week.weekStart &&
+            isRunning(session),
+        )
+        .reduce((total, session) => total + session.targets.durationSeconds, 0),
+    ),
+  );
+  return {
+    raceId: operation.raceId,
+    addedWeeks: operation.weeks.length,
+    addedSessions: operation.sessions.filter(isRunning).length,
+    peakWeek: formatDuration(peak),
+    endsOn: formatPlainDay(operation.endsOn),
+    keptWeeks,
+    phases: [...operation.blocks]
+      .sort((first, second) => first.startsOn.localeCompare(second.startsOn))
+      .map((block) => ({
+        key: block.blockKey,
+        name: block.name,
+        weeks: operation.weeks.filter(
+          (week) => week.blockKey === block.blockKey,
+        ).length,
+        kind: block.kind,
+      }))
+      .filter((phase) => phase.weeks > 0),
+  };
 }
 
 function weekTotals(state: PlanState, weekStart: string) {
@@ -557,10 +651,7 @@ function newPlanSummary(
       .map((block) => ({
         key: block.blockKey,
         name: block.name,
-        weeks: Math.max(
-          1,
-          Math.round((daysBetween(block.startsOn, block.endsOn) + 1) / 7),
-        ),
+        weeks: blockWeeks(block),
         kind: block.kind,
       })),
     races: state.plan.raceRoles.flatMap((entry) => {
@@ -652,6 +743,18 @@ export function buildProposalReview(input: ReviewInput): ProposalReview {
   let described: ReviewOperation[] = [];
   let totals: ReviewWeekTotal[] = [];
   let newPlan: ReviewNewPlan | null = null;
+  const extending = operations.find(
+    (operation) => operation.op === "extend_plan",
+  );
+  const extension = extending
+    ? extensionSummary(
+        extending,
+        plan?.state.weeks.filter(
+          (week) =>
+            !extending.weeks.some((added) => added.weekKey === week.weekKey),
+        ).length ?? 0,
+      )
+    : null;
   let weekStart: string | null = null;
   let kickerText = isNewPlan
     ? "Proposition · nouveau plan"
@@ -680,7 +783,8 @@ export function buildProposalReview(input: ReviewInput): ProposalReview {
         ? { today: input.today, matchedSessionKeys: input.matchedSessionKeys }
         : { today: plan.state.plan.startsOn, matchedSessionKeys: new Set() },
     );
-    if (outcome.ok) {
+    if (extension) kickerText = "Proposition · nouvelle course";
+    else if (outcome.ok) {
       const weeks = affectedWeeks(plan.state, outcome.state);
       totals = buildWeekTotals(plan.state, outcome.state, weeks);
       kickerText = kicker(plan.state, weeks);
@@ -733,13 +837,15 @@ export function buildProposalReview(input: ReviewInput): ProposalReview {
     id: proposal.id,
     title: proposal.title,
     summary: proposal.summary,
-    kind: isNewPlan ? "new_plan" : "change",
+    kind: isNewPlan ? "new_plan" : extension ? "extension" : "change",
     kicker: kickerText,
     subkicker: isNewPlan
       ? plan
         ? "Remplace le plan actif"
         : "Premier plan"
-      : `Sur la version ${proposal.baseVersion ?? "?"} du plan`,
+      : extension
+        ? `Prolonge la version ${proposal.baseVersion ?? "?"} du plan`
+        : `Sur la version ${proposal.baseVersion ?? "?"} du plan`,
     status,
     origin: {
       line: originLine(proposal),
@@ -750,6 +856,7 @@ export function buildProposalReview(input: ReviewInput): ProposalReview {
     operations: described,
     weekTotals: totals,
     newPlan,
+    extension,
     opinions: opinions(proposal),
     checks: pending ? checks : [],
     banner: blocked

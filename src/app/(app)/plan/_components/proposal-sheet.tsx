@@ -151,6 +151,18 @@ function Footer({
         </div>
       ) : (
         <div className={cn("flex gap-2", mobile && "flex-col")}>
+          {review.appliedVersion !== null && review.extension && (
+            <Button
+              asChild
+              variant="outline"
+              size="md"
+              className={cn(button, "h-11")}
+            >
+              <Link href={`/plan?race=${review.extension.raceId}`}>
+                Voir le programme
+              </Link>
+            </Button>
+          )}
           {review.appliedVersion !== null && review.weekStart && (
             <Button
               asChild

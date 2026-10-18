@@ -1,9 +1,11 @@
 import {
   ArrowRightIcon,
   CheckIcon,
+  ExternalLinkIcon,
   TriangleAlertIcon,
   XIcon,
 } from "lucide-react";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
 import { cn } from "@/lib/utils";
@@ -127,17 +129,38 @@ function Side({
   );
 }
 
+function RaceBadge({ letter }: { letter: string }) {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className={cn(
+          "grid size-5.5 shrink-0 place-items-center rounded-control font-metric text-meta font-bold",
+          letter === "A"
+            ? "bg-accent text-accent-foreground"
+            : "border-[1.5px] border-muted text-muted",
+        )}
+      >
+        {letter}
+      </span>
+      <span className="sr-only">Course {letter} · </span>
+    </>
+  );
+}
+
 function Operations({ review }: { review: ProposalReview }) {
   const count = review.operations.length;
+  const heading =
+    review.kind === "extension"
+      ? "Ce qui change · course ajoutée, plan prolongé"
+      : `Ce qui change · ${count} modification${count > 1 ? "s" : ""}`;
   return (
     <section
       aria-labelledby="review-operations"
       className="flex flex-col gap-2.5"
     >
       <MonoLabel asChild size="micro">
-        <h3 id="review-operations">
-          Ce qui change · {count} modification{count > 1 ? "s" : ""}
-        </h3>
+        <h3 id="review-operations">{heading}</h3>
       </MonoLabel>
       <ul className="flex flex-col border-b border-border">
         {review.operations.map((operation, index) => (
@@ -153,14 +176,21 @@ function Operations({ review }: { review: ProposalReview }) {
                 {operation.context}
               </span>
             </span>
-            <span className="grid grid-cols-[minmax(0,1fr)_14px_minmax(0,1fr)] items-center gap-2.5">
-              <Side side={operation.before} struck />
-              <ArrowRightIcon
-                aria-label="devient"
-                className="size-3.5 text-muted-foreground"
-              />
-              <Side side={operation.after} struck={false} />
-            </span>
+            {operation.badge ? (
+              <span className="flex min-w-0 items-center gap-2.5">
+                <RaceBadge letter={operation.badge} />
+                <Side side={operation.after} struck={false} />
+              </span>
+            ) : (
+              <span className="grid grid-cols-[minmax(0,1fr)_14px_minmax(0,1fr)] items-center gap-2.5">
+                <Side side={operation.before} struck />
+                <ArrowRightIcon
+                  aria-label="devient"
+                  className="size-3.5 text-muted-foreground"
+                />
+                <Side side={operation.after} struck={false} />
+              </span>
+            )}
           </li>
         ))}
       </ul>
@@ -217,27 +247,99 @@ const phaseTones: Record<string, string> = {
   transition: "bg-dim",
 };
 
+function Metrics({ metrics }: { metrics: { label: string; value: string }[] }) {
+  return (
+    <dl className="grid grid-cols-4 gap-3 rounded-card border border-border bg-surface-inset p-3.5 max-sm:grid-cols-2">
+      {metrics.map((metric) => (
+        <div key={metric.label} className="flex flex-col gap-0.75">
+          <dt className="order-2">
+            <MonoLabel size="micro">{metric.label}</MonoLabel>
+          </dt>
+          <dd className="order-1 font-metric text-2xl leading-none font-semibold tabular-nums">
+            {metric.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Extension({
+  extension,
+}: {
+  extension: NonNullable<ProposalReview["extension"]>;
+}) {
+  return (
+    <section aria-label="Plan prolongé" className="flex flex-col gap-3.5">
+      <Metrics
+        metrics={[
+          { label: "Semaines", value: `+${extension.addedWeeks}` },
+          { label: "Séances", value: `+${extension.addedSessions}` },
+          { label: "Semaine pic", value: extension.peakWeek },
+          { label: "Nouvelle fin", value: extension.endsOn.slice(0, 5) },
+        ]}
+      />
+      {extension.phases.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <MonoLabel size="micro">Programme</MonoLabel>
+          <span aria-hidden="true" className="flex h-2.5 gap-0.5">
+            {extension.keptWeeks > 0 && (
+              <span
+                className="rounded-mark bg-border-strong"
+                style={{ flex: extension.keptWeeks }}
+              />
+            )}
+            {extension.phases.map((phase) => (
+              <span
+                key={phase.key}
+                className={cn(
+                  "rounded-mark",
+                  phaseTones[phase.kind] ?? "bg-dim",
+                )}
+                style={{ flex: phase.weeks }}
+              />
+            ))}
+          </span>
+          <ul className="flex flex-wrap gap-x-3.5 gap-y-1 text-xs text-muted">
+            {extension.keptWeeks > 0 && (
+              <li className="text-muted-foreground">
+                Plan actuel · {extension.keptWeeks} sem., inchangé
+              </li>
+            )}
+            {extension.phases.map((phase) => (
+              <li key={phase.key}>
+                {phase.name} · {phase.weeks} sem.
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <Link
+        href={`/plan?race=${extension.raceId}`}
+        className="flex min-h-11 items-center justify-center gap-2 rounded-surface border border-border-strong text-sm text-foreground hover:bg-surface-raised"
+      >
+        <ExternalLinkIcon aria-hidden="true" className="size-3" />
+        Voir le programme prolongé
+      </Link>
+      <p className="text-meta leading-normal text-muted-foreground">
+        Les semaines déjà prévues ne changent pas. Tes séances passées et déjà
+        faites restent intactes.
+      </p>
+    </section>
+  );
+}
+
 function NewPlan({ plan }: { plan: NonNullable<ProposalReview["newPlan"]> }) {
-  const metrics = [
-    { label: "Semaines", value: String(plan.weeks) },
-    { label: "Séances", value: String(plan.sessions) },
-    { label: "Semaine pic", value: plan.peakWeek },
-    { label: "Début", value: plan.startsOn },
-  ];
   return (
     <section aria-label="Nouveau plan" className="flex flex-col gap-3.5">
-      <dl className="grid grid-cols-4 gap-3 rounded-card border border-border bg-surface-inset p-3.5 max-sm:grid-cols-2">
-        {metrics.map((metric) => (
-          <div key={metric.label} className="flex flex-col gap-0.75">
-            <dt className="order-2">
-              <MonoLabel size="micro">{metric.label}</MonoLabel>
-            </dt>
-            <dd className="order-1 font-metric text-2xl leading-none font-semibold tabular-nums">
-              {metric.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <Metrics
+        metrics={[
+          { label: "Semaines", value: String(plan.weeks) },
+          { label: "Séances", value: String(plan.sessions) },
+          { label: "Semaine pic", value: plan.peakWeek },
+          { label: "Début", value: plan.startsOn },
+        ]}
+      />
       {plan.phases.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <MonoLabel size="micro">Phases</MonoLabel>
@@ -271,18 +373,7 @@ function NewPlan({ plan }: { plan: NonNullable<ProposalReview["newPlan"]> }) {
                 key={race.id}
                 className="flex flex-wrap items-center gap-2.5 text-sm"
               >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "grid size-5.5 place-items-center rounded-control font-metric text-meta font-bold",
-                    race.letter === "A"
-                      ? "bg-accent text-accent-foreground"
-                      : "border-[1.5px] border-muted text-muted",
-                  )}
-                >
-                  {race.letter}
-                </span>
-                <span className="sr-only">Course {race.letter} · </span>
+                <RaceBadge letter={race.letter} />
                 <span className="font-semibold">{race.name}</span>
                 <span className="text-muted-foreground">{race.detail}</span>
               </li>
@@ -419,9 +510,10 @@ export function ProposalReviewBody({
           </span>
         </span>
       </div>
-      {review.kind === "change" && review.operations.length > 0 && (
+      {review.kind !== "new_plan" && review.operations.length > 0 && (
         <Operations review={review} />
       )}
+      {review.extension && <Extension extension={review.extension} />}
       {review.newPlan && <NewPlan plan={review.newPlan} />}
       <Opinions review={review} />
       <Checks checks={review.checks} />

@@ -47,4 +47,23 @@ Rules:
 - Schedule sessions only on the athlete's available weekdays, keep weekday sessions within the maximum weekday duration, respect the weekly maximum, and schedule nothing during unavailable periods.
 - Races the plan does not target but that fall inside it get a role in `raceRoles` and a session of kind `race` on their date.
 
+## Extending the active plan with `extend_plan`
+
+When the athlete adds a race after the active plan's end, call `extend_plan` instead of `submit_plan`:
+
+```
+{
+  "title": string, "summary": string, "rationale": string (French),
+  "raceId": string (the added race's id from read_athlete_context),
+  "role": "primary" | "preparation" | "secondary",
+  "endsOn": "YYYY-MM-DD" (the race date, or the last day of its recovery),
+  "weeks": [week, ...] (same week format as above),
+  "specialist_opinions": []
+}
+```
+
+- `weeks` holds only the added weeks: one entry per Monday from the first Monday after the current `endsOn` to the week containing the new `endsOn`. Never repeat or change existing weeks.
+- Every added week is fully detailed with the same rules as a new plan. The added race is a session of kind `race` on its date.
+- Start with recovery when the previous objective is a hard race, then rebuild and taper for the added race.
+
 The tool answers with the proposal id, or with `invalid_plan` (format errors with their JSON path) or `validation_failed` (blocking rules). Fix every listed problem and submit the complete plan again. Warnings do not block; mention the important ones to the athlete.

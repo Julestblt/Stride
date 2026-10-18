@@ -662,6 +662,27 @@ describe("create_plan_proposal", () => {
     );
   });
 
+  it("refuses a race role for a race outside the plan's dates", async () => {
+    const outcome = await runCustomTool(
+      contextWith(fakeClient({}).client),
+      "create_plan_proposal",
+      {
+        ...proposal,
+        operations: [
+          {
+            op: "set_race_role",
+            raceId: "22222222-2222-4222-8222-222222222222",
+            role: "preparation",
+          },
+        ],
+      },
+    );
+    expect(outcome.content).toMatchObject({
+      code: "validation_failed",
+      details: { reason: "race_outside_plan" },
+    });
+  });
+
   it("checks replaced session content strictly", async () => {
     const outcome = await runCustomTool(
       contextWith(fakeClient({}).client),
@@ -701,6 +722,132 @@ describe("create_plan_proposal", () => {
       code: "tool_unavailable",
       message: toolErrorMessages.tool_unavailable,
     });
+  });
+});
+
+describe("extend_plan", () => {
+  const raceId = "44444444-4444-4444-8444-444444444444";
+  const step = (minutes: number, intensity: "easy" | "threshold") => ({
+    type: "work" as const,
+    minutes,
+    intensity,
+    target: intensity === "easy" ? "hr 130-145" : "pace 4:10-4:20",
+  });
+  const session = (date: string, kind: "easy" | "race", minutes: number) => ({
+    date,
+    sport: "run" as const,
+    kind,
+    title: kind === "race" ? "Trail de novembre" : "Footing",
+    purpose: kind === "race" ? "Course ajoutée" : "Entretenir",
+    key: kind === "race",
+    km: kind === "race" ? 21 : 7,
+    elevationGainMeters: null,
+    terrain: "road" as const,
+    steps: [step(minutes, kind === "race" ? "threshold" : "easy")],
+  });
+  const extension = {
+    title: "Ajoute le trail de novembre",
+    summary: "Le plan continue jusqu’au 22/11/2026.",
+    rationale: "Course ajoutée deux semaines après le marathon.",
+    raceId,
+    role: "secondary",
+    endsOn: "2026-11-22",
+    weeks: [
+      {
+        weekStart: "2026-11-09",
+        phase: "recovery",
+        notes: null,
+        sessions: [session("2026-11-11", "easy", 35)],
+      },
+      {
+        weekStart: "2026-11-16",
+        phase: "race",
+        notes: null,
+        sessions: [
+          session("2026-11-18", "easy", 30),
+          session("2026-11-22", "race", 110),
+        ],
+      },
+    ],
+    specialist_opinions: [],
+  };
+
+  beforeEach(() => {
+    const input = planningInputFixture();
+    sources.loadPlanningInput.mockResolvedValue({
+      today: fixtureToday,
+      input: {
+        ...input,
+        races: [
+          ...input.races,
+          {
+            id: raceId,
+            name: "Trail de novembre",
+            date: "2026-11-22",
+            distanceKm: 21,
+            elevationGainM: null,
+            kind: "road",
+            priority: "B",
+            targetSeconds: null,
+          },
+        ],
+      },
+    });
+  });
+
+  it("stores the extension as a plan-scope proposal", async () => {
+    const { client } = fakeClient(
+      {},
+      { data: { id: proposalId, status: "ready" }, error: null },
+    );
+    const outcome = await runCustomTool(
+      contextWith(client),
+      "extend_plan",
+      extension,
+    );
+    expect(outcome).toMatchObject({
+      ok: true,
+      content: { proposalId, addedWeeks: 2, addedSessions: 3 },
+    });
+    expect(client.rpc).toHaveBeenCalledWith(
+      "submit_plan_proposal",
+      expect.objectContaining({
+        p_scope: "plan",
+        p_origin: "race",
+        p_base_version: 3,
+        p_target_keys: ["plan:end"],
+        p_operations: [
+          expect.objectContaining({
+            op: "extend_plan",
+            previousEndsOn: "2026-11-08",
+            endsOn: "2026-11-22",
+            raceId,
+            role: "secondary",
+          }),
+        ],
+      }),
+    );
+  });
+
+  it("rejects a race that is not after the current end", async () => {
+    const outcome = await runCustomTool(
+      contextWith(fakeClient({}).client),
+      "extend_plan",
+      { ...extension, raceId: "22222222-2222-4222-8222-222222222222" },
+    );
+    expect(outcome.content).toMatchObject({
+      code: "validation_failed",
+      details: { reason: "race_outside_extension" },
+    });
+  });
+
+  it("returns invalid_plan for malformed weeks", async () => {
+    const outcome = await runCustomTool(
+      contextWith(fakeClient({}).client),
+      "extend_plan",
+      { ...extension, weeks: [{ weekStart: "2026-11-09" }] },
+    );
+    expect(outcome.content).toMatchObject({ code: "invalid_plan" });
   });
 });
 

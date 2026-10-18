@@ -13,14 +13,14 @@ import { defineTool } from "./define";
 import { toolError } from "./errors";
 import { submitProposal } from "./plan-proposal";
 
-function issuesOf(error: z.ZodError) {
+export function issuesOf(error: z.ZodError) {
   return error.issues.slice(0, 20).map((issue) => ({
     path: issue.path.join("."),
     message: issue.message,
   }));
 }
 
-function describeRule(result: RuleResult) {
+export function describeRule(result: RuleResult) {
   return {
     rule: result.ruleId,
     strong: result.strong,
@@ -31,7 +31,7 @@ function describeRule(result: RuleResult) {
   };
 }
 
-const ruleSchema = z.strictObject({
+export const ruleSchema = z.strictObject({
   rule: z.string(),
   strong: z.boolean(),
   issues: z.array(z.string()),

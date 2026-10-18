@@ -83,7 +83,31 @@ const createPlanSchema = z.object({
   }),
 });
 
+const extendPlanSchema = z.object({
+  op: z.literal("extend_plan"),
+  previousEndsOn: z.string(),
+  endsOn: z.string(),
+  raceId: z.string(),
+  role: z.string(),
+  weeks: z.array(z.unknown()),
+  sessions: z.array(z.unknown()),
+});
+
 export function summarizeOperation(operation: unknown) {
+  const extended = extendPlanSchema.safeParse(operation);
+  if (extended.success) {
+    const { previousEndsOn, endsOn, raceId, role, weeks, sessions } =
+      extended.data;
+    return {
+      op: "extend_plan",
+      previousEndsOn,
+      endsOn,
+      raceId,
+      role,
+      addedWeeks: weeks.length,
+      addedSessions: sessions.length,
+    };
+  }
   const created = createPlanSchema.safeParse(operation);
   if (!created.success) return operation;
   const { plan, weeks, sessions } = created.data.state;

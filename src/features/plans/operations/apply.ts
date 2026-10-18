@@ -1,8 +1,9 @@
-import { addDays } from "../model/dates";
+import { addDays, mondayOf } from "../model/dates";
 import { sessionKey as nextSessionKey } from "../model/keys";
 import {
   sessionSchema,
   type Plan,
+  type RaceRole,
   type PlanBlock,
   type PlanSession,
   type PlanState,
@@ -114,6 +115,42 @@ export function computeChangeset(
   };
 }
 
+function withRaceRole(plan: Plan, raceId: string, role: RaceRole | null) {
+  const previousPrimary =
+    role === "primary" && plan.primaryRaceId && plan.primaryRaceId !== raceId
+      ? plan.primaryRaceId
+      : null;
+  const roles = plan.raceRoles
+    .filter((entry) => entry.raceId !== raceId)
+    .map((entry) =>
+      entry.raceId === previousPrimary
+        ? { ...entry, role: "preparation" as const }
+        : entry,
+    );
+  if (
+    previousPrimary &&
+    !roles.some((entry) => entry.raceId === previousPrimary)
+  )
+    roles.push({ raceId: previousPrimary, role: "preparation" });
+  return {
+    ...plan,
+    primaryRaceId:
+      role === "primary"
+        ? raceId
+        : plan.primaryRaceId === raceId
+          ? null
+          : plan.primaryRaceId,
+    raceRoles: role ? [...roles, { raceId, role }] : roles,
+  };
+}
+
+function mondaysBetween(first: string, last: string) {
+  const mondays: string[] = [];
+  for (let monday = first; monday <= last; monday = addDays(monday, 7))
+    mondays.push(monday);
+  return mondays;
+}
+
 function targetKeys(operation: PlanOperation, state: PlanState | null) {
   switch (operation.op) {
     case "move_session":
@@ -138,6 +175,8 @@ function targetKeys(operation: PlanOperation, state: PlanState | null) {
         .map((session) => `session:${session.sessionKey}`);
     case "set_race_role":
       return [`race:${operation.raceId}`];
+    case "extend_plan":
+      return ["plan:end", `race:${operation.raceId}`];
     default:
       return [];
   }
@@ -203,6 +242,7 @@ export function applyOperations(
   if (overlaps.length > 0) return { ok: false, errors: overlaps };
 
   let plan = state.plan;
+  const blocks = new Map(state.blocks.map((block) => [block.blockKey, block]));
   const sessions = new Map(
     state.sessions.map((session) => [session.sessionKey, session]),
   );
@@ -336,15 +376,53 @@ export function applyOperations(
         operation.sessions.forEach(place);
         return;
       }
-      case "set_race_role": {
-        const others = plan.raceRoles.filter(
-          (entry) => entry.raceId !== operation.raceId,
+      case "set_race_role":
+        plan = withRaceRole(plan, operation.raceId, operation.role);
+        return;
+      case "extend_plan": {
+        if (operationIndex !== 0 || operation.previousEndsOn !== plan.endsOn)
+          return fail("invalid_operation");
+        if (operation.endsOn < context.today) return fail("past_date");
+        if (operation.endsOn <= plan.endsOn) return fail("outside_plan");
+        const previousEnd = plan.endsOn;
+        const after = (date: string) =>
+          date > previousEnd && date <= operation.endsOn;
+        for (const block of operation.blocks) {
+          if (
+            blocks.has(block.blockKey) ||
+            !after(block.startsOn) ||
+            !after(block.endsOn)
+          )
+            return fail("invalid_operation", block.blockKey);
+          blocks.set(block.blockKey, block);
+        }
+        const expected = mondaysBetween(
+          addDays(mondayOf(previousEnd), 7),
+          mondayOf(operation.endsOn),
         );
+        const given = operation.weeks.map((week) => week.weekStart).sort();
+        if (expected.join() !== given.join())
+          return fail("invalid_operation", "weeks");
+        for (const week of operation.weeks) {
+          if (weeks.has(week.weekKey) || !blocks.has(week.blockKey))
+            return fail("invalid_operation", week.weekKey);
+          weeks.set(week.weekKey, week);
+        }
+        for (const session of operation.sessions) {
+          if (sessions.has(session.sessionKey))
+            return fail("invalid_operation", session.sessionKey);
+          if (
+            !after(session.scheduledOn) ||
+            !given.includes(mondayOf(session.scheduledOn))
+          )
+            return fail("outside_plan", session.sessionKey);
+          if (session.scheduledOn < context.today)
+            return fail("past_date", session.sessionKey);
+          sessions.set(session.sessionKey, session);
+        }
         plan = {
-          ...plan,
-          raceRoles: operation.role
-            ? [...others, { raceId: operation.raceId, role: operation.role }]
-            : others,
+          ...withRaceRole(plan, operation.raceId, operation.role),
+          endsOn: operation.endsOn,
         };
         return;
       }
@@ -356,8 +434,10 @@ export function applyOperations(
   if (errors.length > 0) return { ok: false, errors };
   const next: PlanState = {
     plan,
-    blocks: state.blocks,
-    weeks: state.weeks.map((week) => weeks.get(week.weekKey) ?? week),
+    blocks: [...blocks.values()],
+    weeks: [...weeks.values()].sort((first, second) =>
+      first.weekStart.localeCompare(second.weekStart),
+    ),
     sessions: [...sessions.values()].sort(bySchedule),
   };
   return { ok: true, state: next, changeset: computeChangeset(state, next) };

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   compactPlanSchema,
   compactToPlanState,
+  compactWeeksToRows,
   parseTarget,
   type CompactPlan,
 } from "@/features/plans/compact/compact";
@@ -168,5 +169,38 @@ describe("compactToPlanState", () => {
       level: "low",
       reasons: ["Historique court"],
     });
+  });
+});
+
+describe("compactWeeksToRows", () => {
+  it("continues block ordinals and session keys after an existing plan", () => {
+    const existing = compactToPlanState(compactPlan(), "Europe/Paris");
+    const week = compactPlan().weeks[0];
+    const rows = compactWeeksToRows(
+      [
+        {
+          ...week,
+          weekStart: "2026-11-02",
+          sessions: week.sessions.map((session) => ({
+            ...session,
+            date: "2026-11-04",
+          })),
+        },
+      ],
+      { startsOn: "2026-11-02", endsOn: "2026-11-08", existing },
+    );
+    const existingKeys = existing.blocks.map((block) => block.blockKey);
+    expect(existingKeys).toContain("b-recovery-1");
+    expect(rows.blocks.map((block) => block.blockKey)).toEqual([
+      "b-recovery-2",
+    ]);
+    expect(rows.blocks[0]).toMatchObject({
+      startsOn: "2026-11-02",
+      endsOn: "2026-11-08",
+    });
+    expect(rows.weeks.map((item) => item.weekKey)).toEqual(["w-2026-11-02"]);
+    expect(rows.sessions.map((session) => session.sessionKey)).toEqual(
+      week.sessions.map((_, index) => `s-2026-11-04-${index + 1}`),
+    );
   });
 });
