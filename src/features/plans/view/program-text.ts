@@ -119,7 +119,7 @@ function formatMeters(meters: number) {
 }
 
 function plural(count: number, one: string, many: string) {
-  return `${count} ${count === 1 ? one : many}`;
+  return `${count} ${Math.abs(count) < 2 ? one : many}`;
 }
 
 function stepEnd(step: SimpleStep) {
@@ -272,7 +272,6 @@ function weekLines(
 
 function raceLine(race: ProgramRace, role: RaceRole | null) {
   const facts = [
-    race.priority ? `priorité ${race.priority}` : null,
     role ? roleLabels[role] : null,
     race.date ? formatFrenchDate(race.date) : "date à définir",
     race.distanceKm !== null ? `${formatDecimal(race.distanceKm)} km` : null,

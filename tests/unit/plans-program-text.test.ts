@@ -24,7 +24,7 @@ const week = (
     durationSeconds,
     distanceMeters: null,
     elevationGainMeters: 600,
-    qualitySessions: 1,
+    qualitySessions: weekType === "recovery" ? 0 : 1,
     longRunSeconds: 7_200,
     intensitySplit: { easyPct: 80, moderatePct: 10, hardPct: 10 },
   },
@@ -229,10 +229,10 @@ describe("program text", () => {
 
   it("describes the plan races, dates and version", () => {
     expect(text).toContain(
-      "- **10 km de Boulogne** · priorité C · course de préparation · 15/11/2026 · 10,0 km · sans objectif de temps",
+      "- **10 km de Boulogne** · course de préparation · 15/11/2026 · 10,0 km · sans objectif de temps",
     );
     expect(text).toContain(
-      "- **EcoTrail Paris 120K** · priorité A · objectif principal · 20/03/2027 · 120,0 km · 1 450 m D+ · 12 m D+/km · objectif 18 h 00",
+      "- **EcoTrail Paris 120K** · objectif principal · 20/03/2027 · 120,0 km · 1 450 m D+ · 12 m D+/km · objectif 18 h 00",
     );
     expect(text.indexOf("10 km de Boulogne")).toBeLessThan(
       text.indexOf("EcoTrail Paris 120K"),
@@ -270,6 +270,8 @@ describe("program text", () => {
       "- Répartition visée : 80 % facile · 10 % modéré · 10 % intense",
     );
     expect(text).toContain("- Note : Semaine plus légère pour assimiler.");
+    expect(text).toContain("0 séance de qualité");
+    expect(text).not.toContain("0 séances");
   });
 
   it("details every session with its structure", () => {
