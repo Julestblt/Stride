@@ -470,31 +470,41 @@ export function RouteMap({
           engine === "map" ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
-      {modes.length > 0 && (
-        <ToggleGroup
-          variant="segment"
-          type="single"
-          aria-label="Colorer le tracé par"
-          value={mode}
-          onValueChange={(value) => {
-            if (modes.includes(value as ColorMode))
-              onModeChange(value as ColorMode);
-          }}
-          className="absolute top-3 left-3 max-w-[calc(100%-4rem)] flex-wrap gap-0.5 rounded-surface border border-border bg-surface/90 p-0.5"
-        >
-          {colorModes
-            .filter((item) => modes.includes(item.mode))
-            .map((item) => (
-              <ToggleGroupItem
-                key={item.mode}
-                value={item.mode}
-                className="min-h-6.5 rounded-control border-0 px-2.5 py-0 text-xs data-[state=on]:bg-surface-raised"
-              >
-                {item.label}
-              </ToggleGroupItem>
-            ))}
-        </ToggleGroup>
-      )}
+      <div className="absolute top-3 left-3 flex max-w-[calc(100%-4rem)] flex-col items-start gap-2">
+        {modes.length > 0 && (
+          <ToggleGroup
+            variant="segment"
+            type="single"
+            aria-label="Colorer le tracé par"
+            value={mode}
+            onValueChange={(value) => {
+              if (modes.includes(value as ColorMode))
+                onModeChange(value as ColorMode);
+            }}
+            className="flex-wrap gap-0.5 rounded-surface border border-border bg-surface/90 p-0.5"
+          >
+            {colorModes
+              .filter((item) => modes.includes(item.mode))
+              .map((item) => (
+                <ToggleGroupItem
+                  key={item.mode}
+                  value={item.mode}
+                  className="min-h-6.5 rounded-control border-0 px-2.5 py-0 text-xs data-[state=on]:bg-surface-raised"
+                >
+                  {item.label}
+                </ToggleGroupItem>
+              ))}
+          </ToggleGroup>
+        )}
+        {engine === "fallback" && (
+          <span
+            role="status"
+            className="rounded-control bg-surface px-2 py-1 text-xs text-muted"
+          >
+            Carte indisponible · tracé GPS affiché
+          </span>
+        )}
+      </div>
       {engine === "map" && (
         <div className="absolute top-3 right-3 flex flex-col overflow-hidden rounded-surface border border-border bg-surface/90">
           <Button
@@ -638,14 +648,6 @@ export function RouteMap({
         </a>
         {" · MapLibre"}
       </span>
-      {engine === "fallback" && (
-        <span
-          role="status"
-          className="absolute top-14 left-3 rounded-control bg-surface px-2 py-1 text-xs text-muted"
-        >
-          Carte indisponible · tracé GPS affiché
-        </span>
-      )}
       {engine === "loading" && (
         <span className="sr-only">Chargement de la carte</span>
       )}
