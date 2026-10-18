@@ -5,6 +5,9 @@ commit 510b2d52966d817b87e42af6273b16854e77e148:
 - status-reports/SKILL.md, derived from skills/today, skills/week and skills/race
 - explain-decision/SKILL.md, derived from skills/why
 - garmin-data-access/SKILL.md, derived from skills/garmin-sync-efficiency and skills/today
+- season-calendar/SKILL.md and agents/director.md, derived from agents/sports-director.md
+- race-strategy/SKILL.md and agents/strategist.md, derived from agents/course-strategist.md
+- daily-nutrition/SKILL.md and agents/nutritionist.md, derived from agents/nutritionist.md
 
 ai-running-coach is distributed under the following license:
 

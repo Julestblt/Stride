@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { specialistAgents } from "@/features/coach/staff";
 import {
   compactWeeksSchema,
   compactWeeksToRows,
@@ -25,7 +26,7 @@ import { submitProposal } from "./plan-proposal";
 import { describeRule, issuesOf, ruleSchema } from "./submit-plan";
 
 export const opinionSchema = z.strictObject({
-  specialist: z.literal("medical"),
+  specialist: z.enum(specialistAgents),
   verdict: z.string().min(1).max(64),
   summary: z.string().min(1).max(1000),
 });
