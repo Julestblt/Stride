@@ -1,4 +1,4 @@
-export const thresholdsVersion = "2026-10-14";
+export const thresholdsVersion = "2026-10-18";
 
 export const thresholds = {
   spikeStrongRatio: 1.3,
@@ -11,6 +11,12 @@ export const thresholds = {
   elevationIncreaseRatio: 1.15,
   longRunShare: 0.35,
   longRunShareMinimumRuns: 4,
+  ultraProfileKm: 60,
+  ultraLongRunShare: 0.6,
+  ultraLongBlockShare: 0.7,
+  ultraBlockSecondMinimumSeconds: 3_600,
+  ultraProvenReferenceShare: 0.9,
+  ultraLongEffortWindowDays: 90,
   hardShare: 0.25,
   taperWeeks: 2,
   taperReductionMin: 0.4,

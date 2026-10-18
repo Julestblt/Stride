@@ -257,9 +257,6 @@ export function compactWeeksToRows(
         mondayOf(session.scheduledOn) === week.weekStart &&
         (session.sport === "run" || session.sport === "trail"),
     );
-    const weekSessions = sessions.filter(
-      (session) => mondayOf(session.scheduledOn) === week.weekStart,
-    );
     const longRuns = running.filter((session) => session.kind === "long");
     weeks.push({
       weekKey: weekKey(week.weekStart),
@@ -267,7 +264,7 @@ export function compactWeeksToRows(
       blockKey: block.blockKey,
       weekType: weekTypes[week.phase],
       targets: {
-        durationSeconds: weekSessions.reduce(
+        durationSeconds: running.reduce(
           (total, session) => total + session.targets.durationSeconds,
           0,
         ),

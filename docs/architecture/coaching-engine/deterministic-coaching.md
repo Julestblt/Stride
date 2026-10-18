@@ -62,6 +62,19 @@ Severity: `block` makes a proposal invalid; `warn` is shown to the athlete with 
 
 Thresholds live in one versioned configuration module. Changing a default is a reviewed pull request with an evaluation run.
 
+### Ultra profile
+
+When the plan's primary race is 60 km or longer, the validator applies an ultra profile that relaxes conventions for time-on-feet training. It never relaxes integrity, athlete-constraint or health rules, and it is off while an unresolved pain report of 4/10 or more is present.
+
+| Rule  | Ultra profile                                                                                                                                                                            |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1/E2 | Thresholds unchanged. For long runs only, the reference is the longest run or race of the previous 90 days, so rebuilding to an already-run duration is not a spike.                     |
+| P1    | The reference is the highest of the 4-week mean, the last full (non-recovery) week and 90% of the proven weekly volume, so recovery weeks and a post-race trough do not cap the rebuild. |
+| P3    | Long run up to 60% of weekly running time; a back-to-back weekend (long run followed the next day by a long or easy run of at least 60 minutes) up to 70% as one block.                  |
+| D1    | Race demands add a weekend block of 40% of the expected race duration and a peak week at the template minimum.                                                                           |
+
+Proven weekly volume is the mean of the four highest weeks of the last 12, ignoring weeks above twice the 12-week median (usually race weeks).
+
 ## Evidence notes
 
 - **Single-session spikes.** In 5,205 adult runners followed for 18 months with Garmin data, a session exceeding the longest run of the previous 30 days by more than 10–30% was associated with a higher overuse injury rate (hazard rate ratio 1.64), more than 30–100% with 1.52, and more than 100% with 2.28. The acute:chronic ratio showed a negative dose-response and the week-to-week ratio no relationship ([Frandsen et al., Br J Sports Med 2025](https://doi.org/10.1136/bjsports-2024-109380)). This is observational evidence of association, not proof that capping spikes prevents injury, but it is the best-matched evidence for Stride's population and data source.
@@ -75,15 +88,16 @@ Thresholds live in one versioned configuration module. Changing a default is a r
 
 ## Plan construction defaults (conventions)
 
-| Topic                | Default                                                                                                           | Source of the choice                                      |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Peak volume          | Average of the last four complete weeks × template factor (100 / first-week share of peak, about 1.09–1.21)       | Reference project rule; keeps progression within warnings |
-| Lead-in ramp         | +4% per week, capped by P1 and availability, recovery week every fourth week                                      | Convention                                                |
-| Recovery week        | Every 4 weeks at 80% of the last full week by default; the Coach adapts the cadence to the athlete's own recovery | Reference project default; recovery is individual         |
-| Long-run progression | Respects E1/E2 against the rolling 30-day maximum                                                                 | Evidence-led                                              |
-| Detail horizon       | Every week fully detailed at creation; the weekly review re-checks the coming week and proposes changes           | Product decision D6                                       |
-| Intensity targets    | Heart rate from Stride zones when calibrated; pace from recent comparable efforts; otherwise RPE and talk test    | Data availability                                         |
-| Event families       | Road 5–10 km, half, marathon; trail of every distance, with a low-confidence label above 60 km; base building     | Product decision D8                                       |
+| Topic                | Default                                                                                                                                                                                                                                                                  | Source of the choice                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Peak volume          | Average of the last four complete weeks × template factor (100 / first-week share of peak, about 1.09–1.21)                                                                                                                                                              | Reference project rule; keeps progression within warnings |
+| Ultra rebuild        | From 60 km: start from 85% of proven weekly volume when higher than the held volume; peak aims at the template minimum; each full week stays within P1 and each long run within 10% of the longest one in the previous 90 days; long-run share 45% in the specific phase | Stride convention for time-on-feet preparation            |
+| Lead-in ramp         | +4% per week, capped by P1 and availability, recovery week every fourth week                                                                                                                                                                                             | Convention                                                |
+| Recovery week        | Every 4 weeks at 80% of the last full week by default; the Coach adapts the cadence to the athlete's own recovery                                                                                                                                                        | Reference project default; recovery is individual         |
+| Long-run progression | Respects E1/E2 against the rolling 30-day maximum                                                                                                                                                                                                                        | Evidence-led                                              |
+| Detail horizon       | Every week fully detailed at creation; the weekly review re-checks the coming week and proposes changes                                                                                                                                                                  | Product decision D6                                       |
+| Intensity targets    | Heart rate from Stride zones when calibrated; pace from recent comparable efforts; otherwise RPE and talk test                                                                                                                                                           | Data availability                                         |
+| Event families       | Road 5–10 km, half, marathon; trail of every distance, with a low-confidence label above 60 km; base building                                                                                                                                                            | Product decision D8                                       |
 
 ## Validation pipeline
 

@@ -148,7 +148,7 @@ describe("compactToPlanState", () => {
       ["build", "2026-10-26", "2026-11-01"],
     ]);
     const [first, second] = state.weeks;
-    expect(first.targets.durationSeconds).toBe(60 * 60);
+    expect(first.targets.durationSeconds).toBe(40 * 60);
     expect(first.targets.distanceMeters).toBe(6000);
     expect(second.targets.qualitySessions).toBe(1);
     expect(second.targets.durationSeconds).toBe((15 + 5 * 5 + 10) * 60);
