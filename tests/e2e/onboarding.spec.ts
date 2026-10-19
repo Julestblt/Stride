@@ -30,9 +30,9 @@ async function makeAthlete() {
 }
 async function signIn(page: Page, email: string, destination = "welcome") {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill(email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL(
     destination === "application"
       ? "http://127.0.0.1:3110/today"
@@ -111,19 +111,19 @@ test("first entry, locked URLs, refresh/relogin and second context preserve dura
   const second = await browser.newContext();
   const secondPage = await second.newPage();
   await secondPage.goto("http://127.0.0.1:3110/sign-in");
-  await secondPage.getByLabel("Email", { exact: true }).fill(user.email);
-  await secondPage.getByLabel("Password", { exact: true }).fill(password);
+  await secondPage.getByLabel("E-mail", { exact: true }).fill(user.email);
+  await secondPage.getByLabel("Mot de passe", { exact: true }).fill(password);
   await secondPage
-    .getByRole("button", { name: "Sign in", exact: true })
+    .getByRole("button", { name: "Se connecter", exact: true })
     .click();
   await expect(secondPage).toHaveURL(/\/onboarding\/about$/);
   expect(await read(user.id)).toEqual(before);
   await page.context().clearCookies();
   await page.goto("/onboarding/about");
   await expect(page).toHaveURL(/\/sign-in$/);
-  await page.getByLabel("Email", { exact: true }).fill(user.email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill(user.email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL(/\/onboarding\/about$/);
   expect(await read(user.id)).toEqual(before);
   await second.close();
@@ -724,10 +724,10 @@ test("About you autosaves, restores across refresh and devices, and completes on
   const second = await browser.newContext();
   const secondPage = await second.newPage();
   await secondPage.goto("http://127.0.0.1:3110/sign-in");
-  await secondPage.getByLabel("Email", { exact: true }).fill(user.email);
-  await secondPage.getByLabel("Password", { exact: true }).fill(password);
+  await secondPage.getByLabel("E-mail", { exact: true }).fill(user.email);
+  await secondPage.getByLabel("Mot de passe", { exact: true }).fill(password);
   await secondPage
-    .getByRole("button", { name: "Sign in", exact: true })
+    .getByRole("button", { name: "Se connecter", exact: true })
     .click();
   await expect(secondPage).toHaveURL(/\/onboarding\/about$/);
   await expect(secondPage.getByLabel("Prénom")).toHaveValue("Ada");

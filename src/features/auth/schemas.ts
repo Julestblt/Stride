@@ -6,20 +6,20 @@ export const emailSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .email("Enter a valid email address.")
+    .email("Saisis une adresse e-mail valide.")
     .max(254),
 });
 
 export const signInSchema = emailSchema.extend({
-  password: z.string().min(1, "Enter your password.").max(128),
+  password: z.string().min(1, "Saisis ton mot de passe.").max(128),
 });
 
 export const passwordSchema = z
   .object({
     password: z
       .string()
-      .min(10, "Use at least 10 characters.")
-      .max(128, "Use no more than 128 characters."),
+      .min(10, "Utilise au moins 10 caractères.")
+      .max(128, "Utilise 128 caractères au maximum."),
     confirmation: z.string(),
   })
   .superRefine(({ password, confirmation }, context) => {
@@ -27,13 +27,13 @@ export const passwordSchema = z
       context.addIssue({
         code: "custom",
         path: ["password"],
-        message: "Choose a less common password.",
+        message: "Choisis un mot de passe moins courant.",
       });
     if (password !== confirmation)
       context.addIssue({
         code: "custom",
         path: ["confirmation"],
-        message: "Passwords don't match yet.",
+        message: "Les mots de passe ne correspondent pas encore.",
       });
   });
 
@@ -42,12 +42,12 @@ export const signUpSchema = emailSchema
     fullName: z
       .string()
       .trim()
-      .min(2, "Enter your full name.")
-      .max(100, "Use no more than 100 characters."),
+      .min(2, "Saisis ton nom complet.")
+      .max(100, "Utilise 100 caractères au maximum."),
     password: z
       .string()
-      .min(10, "Use at least 10 characters.")
-      .max(128, "Use no more than 128 characters."),
+      .min(10, "Utilise au moins 10 caractères.")
+      .max(128, "Utilise 128 caractères au maximum."),
     confirmation: z.string(),
   })
   .superRefine(({ email, password, confirmation }, context) => {
@@ -55,13 +55,13 @@ export const signUpSchema = emailSchema
       context.addIssue({
         code: "custom",
         path: ["password"],
-        message: "Don't use your email or a common password.",
+        message: "N’utilise ni ton e-mail ni un mot de passe courant.",
       });
     if (password !== confirmation)
       context.addIssue({
         code: "custom",
         path: ["confirmation"],
-        message: "Passwords don't match yet.",
+        message: "Les mots de passe ne correspondent pas encore.",
       });
   });
 

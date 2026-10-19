@@ -33,10 +33,10 @@ export function passwordPolicy(password: string, email = "") {
       password.length === 0
         ? ""
         : !valid
-          ? "Needs work"
+          ? "À renforcer"
           : password.length >= 14
-            ? "Strong"
-            : "Good",
+            ? "Fort"
+            : "Bien",
     score:
       password.length === 0 ? 0 : !valid ? 1 : password.length >= 14 ? 4 : 3,
   };

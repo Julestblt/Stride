@@ -36,11 +36,11 @@ export function ConfirmationResend({
         disabled={pending || seconds > 0}
         className="w-full"
       >
-        {pending ? "Sending…" : "Resend email"}
+        {pending ? "Envoi…" : "Renvoyer l’e-mail"}
       </Button>
       {seconds > 0 && (
         <p className="text-center text-sm text-muted">
-          Resend available in 0:{String(seconds).padStart(2, "0")}
+          Renvoi possible dans 0:{String(seconds).padStart(2, "0")}
         </p>
       )}
       <FormFeedback state={state} />

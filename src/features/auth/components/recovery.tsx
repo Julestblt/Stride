@@ -20,7 +20,7 @@ export function RecoveryShell({ children }: { children: ReactNode }) {
           <span aria-hidden="true" className="max-md:hidden">
             ←
           </span>
-          Back to sign in
+          Retour à la connexion
         </Link>
         <div className="ml-auto md:ml-0">
           <Wordmark compactOnMobile />
@@ -29,10 +29,10 @@ export function RecoveryShell({ children }: { children: ReactNode }) {
       <div className="flex flex-1 flex-col md:mx-2 md:mb-2 md:rounded-surface md:border md:border-border md:bg-surface-inset">
         <div className="flex flex-col gap-2 px-5 pt-5 pb-5.5 md:px-8 md:pt-10 md:pb-2">
           <MonoLabel className="text-micro md:text-label">
-            Password recovery · three moments
+            Mot de passe oublié · trois étapes
           </MonoLabel>
           <h1 className="text-[28px] leading-[1.08] font-semibold tracking-[-0.025em] md:text-[32px] md:leading-tight">
-            Back on your feet in a minute.
+            Retour sur pied en une minute.
           </h1>
         </div>
         {children}

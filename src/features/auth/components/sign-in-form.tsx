@@ -50,8 +50,8 @@ export function SignInForm({
   return (
     <div className="flex flex-1 flex-col gap-4 md:flex-none">
       <FormHeading
-        title="Welcome back"
-        description="Sign in to see today's session."
+        title="Content de te revoir"
+        description="Connecte-toi pour voir la séance du jour."
       />
       {state.status === "unconfirmed" &&
         latest === "password" &&
@@ -61,7 +61,7 @@ export function SignInForm({
             role="status"
           >
             <p className="font-semibold text-warning">
-              Confirm your email to continue
+              Confirme ton e-mail pour continuer
             </p>
             <p className="mt-1 text-muted">{state.message}</p>
             <div className="mt-3">
@@ -80,7 +80,7 @@ export function SignInForm({
                 setLatest(null);
               }}
             >
-              Use a different email
+              Utiliser un autre e-mail
             </button>
           </div>
         )}
@@ -104,8 +104,8 @@ export function SignInForm({
             state={{
               status: "error",
               message: missingRecoveryVerifier
-                ? "We couldn't find the verification state for this recovery link. Request a fresh link from this browser and open the newest message here. If you already did that, an email preview or link tracker may have used the one-time link first."
-                : "This link is invalid or has expired. Request a fresh link to continue.",
+                ? "Impossible de vérifier ce lien de réinitialisation. Demande un nouveau lien depuis ce navigateur et ouvre le message le plus récent ici. Si c’est déjà fait, un aperçu d’e-mail ou un outil de suivi a peut-être déjà utilisé ce lien à usage unique."
+                : "Ce lien n’est plus valide ou a expiré. Demande un nouveau lien pour continuer.",
             }}
           />
         )}
@@ -132,7 +132,7 @@ export function SignInForm({
                 href="/forgot-password"
                 className="text-[13px] text-accent hover:underline"
               >
-                Forgot password?
+                Mot de passe oublié ?
               </Link>
             }
           />
@@ -148,7 +148,7 @@ export function SignInForm({
               htmlFor="remember"
               className="text-sm font-normal text-muted"
             >
-              Keep me signed in on this device
+              Rester connecté sur cet appareil
             </FieldLabel>
           </Field>
         </FieldGroup>
@@ -160,12 +160,12 @@ export function SignInForm({
           }
         />
         <Button type="submit" disabled={busy} className="w-full">
-          {pending ? "Signing in…" : "Sign in"}
+          {pending ? "Connexion…" : "Se connecter"}
         </Button>
         <div className="hidden items-center gap-3 md:flex">
           <Separator className="flex-1" />
           <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-            or
+            ou
           </span>
           <Separator className="flex-1" />
         </div>
@@ -178,12 +178,12 @@ export function SignInForm({
           variant="outline"
           className="w-full"
         >
-          {magicPending ? "Requesting link…" : "Email me a sign-in link"}
+          {magicPending ? "Envoi du lien…" : "M’envoyer un lien de connexion"}
         </Button>
         <p className="mt-auto pt-4 text-center text-sm text-muted md:mt-0 md:pt-0">
-          New to Stride?{" "}
+          Nouveau sur Stride ?{" "}
           <Link href="/sign-up" className="text-accent hover:underline">
-            Create an account
+            Créer un compte
           </Link>
         </p>
       </form>
