@@ -5,9 +5,9 @@ export type Confidence = "low" | "moderate" | "high";
 const filled: Record<Confidence, number> = { low: 1, moderate: 2, high: 3 };
 
 const labels: Record<Confidence, string> = {
-  low: "Low",
-  moderate: "Moderate",
-  high: "High",
+  low: "Faible",
+  moderate: "Modérée",
+  high: "Élevée",
 };
 
 export function ConfidenceMeter({
@@ -42,7 +42,7 @@ export function ConfidenceMeter({
       <span className={hideLabel ? "sr-only" : "text-xs text-muted"}>
         {label ?? (
           <>
-            <span className="sr-only">Confidence: </span>
+            <span className="sr-only">Confiance : </span>
             {labels[level]}
           </>
         )}

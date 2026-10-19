@@ -195,7 +195,7 @@ function Sidebar({
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>
             <SheetDescription>
-              Training destinations and context.
+              Destinations d’entraînement et contexte.
             </SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
@@ -269,7 +269,7 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle sidebar</span>
+      <span className="sr-only">Afficher ou masquer la barre latérale</span>
     </Button>
   );
 }
@@ -281,10 +281,10 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
-      aria-label="Toggle sidebar"
+      aria-label="Afficher ou masquer la barre latérale"
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle sidebar"
+      title="Afficher ou masquer la barre latérale"
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
