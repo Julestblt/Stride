@@ -32,7 +32,7 @@ test("keyboard help is searchable, platform-aware and available from the account
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   await page.goto("/activities");
-  await page.getByRole("button", { name: "Jules Athlète" }).click();
+  await page.getByRole("button", { name: /^Jules Profil/ }).click();
   await page.getByRole("menuitem", { name: "Raccourcis clavier" }).click();
 
   const dialog = page.getByRole("dialog", { name: "Raccourcis clavier" });
@@ -85,7 +85,7 @@ test("mobile account menu opens gesture help and a connected keyboard opens shor
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
     .first()
     .click();
-  await page.getByRole("button", { name: "Jules Athlète" }).click();
+  await page.getByRole("button", { name: /^Jules Profil/ }).click();
   await page.getByRole("menuitem", { name: "Gestes et commandes" }).click();
 
   const gestures = page.getByRole("dialog", { name: "Gestes et commandes" });
@@ -312,7 +312,7 @@ test("desktop settings keep the account footer fixed and aligned with the app", 
   await signIn(page);
   await page.goto("/activities");
   const appAvatar = await page
-    .getByRole("button", { name: "Jules Athlète" })
+    .getByRole("button", { name: /^Jules Profil/ })
     .locator("span")
     .first()
     .boundingBox();

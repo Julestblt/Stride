@@ -20,7 +20,9 @@ import {
 } from "../../src/features/activities/activities";
 import {
   localToday,
+  readinessBadge,
   shellAthlete,
+  shellProfileDetail,
   shellGoal,
   syncLabel,
 } from "../../src/features/app-shell/shell";
@@ -246,10 +248,33 @@ describe("application shell", () => {
   it("names the athlete from the profile, then the email", () => {
     expect(shellAthlete("jules", "jules@example.com")).toEqual({
       name: "jules",
-      initials: "J",
+      initials: "JU",
       detail: "jules@example.com",
     });
     expect(shellAthlete(null, "runner@example.com").name).toBe("runner");
+    expect(shellAthlete("Jean-Pierre", null).initials).toBe("JP");
+    expect(shellAthlete(null, "jules.tblt@example.com").initials).toBe("JT");
+  });
+
+  it("sums up profile progress for the athlete menu", () => {
+    const account = { profilePercent: 72, questions: 2, garminSince: null };
+    expect(shellProfileDetail(account)).toBe("Profil 72\u00a0% · 2 questions");
+    expect(shellProfileDetail({ ...account, questions: 1 })).toBe(
+      "Profil 72\u00a0% · 1 question",
+    );
+    expect(
+      shellProfileDetail({ ...account, profilePercent: 100, questions: 0 }),
+    ).toBe("Profil 100\u00a0%");
+  });
+
+  it("flags today's readiness in the sidebar unless it is high", () => {
+    expect(readinessBadge(58.4)).toEqual({
+      value: "58",
+      label: "Disponibilité Garmin 58 sur 100",
+      attention: true,
+    });
+    expect(readinessBadge(80)?.attention).toBe(false);
+    expect(readinessBadge(null)).toBeNull();
   });
 
   it("shows sync freshness in Paris time with a French date when older", () => {
