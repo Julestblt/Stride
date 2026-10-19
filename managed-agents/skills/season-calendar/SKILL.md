@@ -22,7 +22,7 @@ description: Season calendar for a running athlete. Race roles, recovery and tap
 `read_season_calendar` applies them and returns the table it used; quote the number you applied as « règle provisoire du projet ». Never make up another threshold.
 
 - km-effort = distance in km + D+ in m / 100; D+ counts as 0 on road.
-- Recovery after a race before another race run hard, and taper before a main objective, by km-effort: up to 15 → 2 weeks and 10 days; 15–30 → 3 and 2 weeks; 30–60 → 4 and 2 weeks; over 60 → 6 and 3 weeks.
+- Recovery after a race before another race run hard, and taper before a main objective, by km-effort: up to 15 → 2 weeks and 10 days; 15–30 → 3 and 2 weeks; 30–60 → 4 and 2 weeks; over 60 → 6 and 3 weeks. The recovery window spaces races only: it does not block training, where easy running resumes within days and the coach sets the return of quality and long runs.
 - No race at all inside the main objective's taper, Plaisir included.
 - A Préparation race has its full recovery done before the main objective's taper begins.
 - A Plaisir race needs one week before the next race run hard, and may follow a race once half that race's recovery has passed.
