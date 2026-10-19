@@ -164,7 +164,7 @@ test("the whole program is copied as text for another AI", async ({
   ).toBeVisible();
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text).toMatch(/^# Programme d’entraînement · /);
-  expect(text).toMatch(/- \*\*Marathon de Paris\*\* · priorité A · /);
+  expect(text).toMatch(/- \*\*Marathon de Paris\*\* · objectif principal · /);
   expect(text).toMatch(/- Du \d{2}\/\d{2}\/\d{4} au \d{2}\/\d{2}\/\d{4} · /);
   expect(text).toContain("## Structure en blocs");
   expect(text).toMatch(/### Semaine 1 · \d{2}\/\d{2}\/\d{4} → /);
