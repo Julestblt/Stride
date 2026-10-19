@@ -322,7 +322,9 @@ test("desktop settings keep the account footer fixed and aligned with the app", 
     await page.goto(`/settings/${section}`);
     const footer = page.locator('[data-slot="settings-account"]');
     const before = await footer.boundingBox();
-    const settingsAvatar = await footer.locator("span").first().boundingBox();
+    const settingsAvatar = await footer
+      .getByText("JU", { exact: true })
+      .boundingBox();
     expect(before).not.toBeNull();
     expect(settingsAvatar).not.toBeNull();
     expect(Math.abs(settingsAvatar!.x - appAvatar!.x)).toBeLessThanOrEqual(1);

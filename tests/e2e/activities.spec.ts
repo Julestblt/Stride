@@ -289,10 +289,7 @@ test("mobile shows the list, then the activity alone, without overflow", async (
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole("navigation", { name: "Fil d’Ariane" })
-    .getByRole("link", { name: "Activités" })
-    .click();
+  await page.getByRole("link", { name: "Retour aux activités" }).click();
   await expect(page).toHaveURL(/\/activities$/);
   await page
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
