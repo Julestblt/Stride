@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ChevronLeftIcon } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
@@ -34,15 +33,9 @@ export default async function PlanHistoryPage({
   return (
     <PlanFrame
       crumbs={[{ label: "Plan", href: "/plan" }, { label: "Historique" }]}
+      back={{ href: "/plan", label: "Retour au plan" }}
       className="max-w-260 gap-5 sm:gap-5 sm:pt-7"
     >
-      <Link
-        href="/plan"
-        className="-mt-2 -mb-2 flex min-h-11 items-center gap-1.5 self-start text-sm text-muted hover:text-foreground sm:hidden"
-      >
-        <ChevronLeftIcon aria-hidden="true" className="size-4" />
-        Retour au plan
-      </Link>
       <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-[26px] leading-[1.1] font-semibold tracking-[-0.02em] sm:text-[30px]">

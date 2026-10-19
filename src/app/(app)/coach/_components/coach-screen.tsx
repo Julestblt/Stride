@@ -10,14 +10,13 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
-import { DataActivityThread } from "@/features/data-activity/components/status";
+import { AppHeader } from "@/features/app-shell/components/app-header";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetClose,
@@ -607,24 +606,11 @@ export function CoachScreen({
 
   return (
     <>
-      <header className="relative hidden min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-5 min-[980px]:flex">
-        <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
-        <Separator
-          orientation="vertical"
-          className="data-vertical:h-4 data-vertical:self-center"
-        />
-        <nav
-          aria-label="Fil d’Ariane"
-          className="flex min-w-0 flex-1 items-center gap-2 text-sm"
-        >
-          <span className="text-muted-foreground">Coach</span>
-          <span aria-hidden="true" className="text-muted-foreground">
-            /
-          </span>
-          <span aria-current="page">Conversations</span>
-        </nav>
-        <DataActivityThread />
-      </header>
+      <AppHeader
+        title="Coach"
+        crumbs={[{ label: "Coach" }, { label: "Conversations" }]}
+        className="max-[980px]:hidden"
+      />
       <div className="flex min-h-0 flex-1">
         <div
           className={cn(
@@ -638,10 +624,6 @@ export function CoachScreen({
             mobileHeader={
               <div className="flex flex-col gap-4 min-[980px]:hidden">
                 <div className="flex min-h-11 items-center gap-2.5">
-                  <SidebarTrigger
-                    aria-label="Afficher ou masquer la barre latérale"
-                    className="-ml-2"
-                  />
                   <h1 className="text-title font-semibold tracking-[-0.02em]">
                     Coach
                   </h1>
@@ -658,6 +640,10 @@ export function CoachScreen({
                       <PlusIcon aria-hidden="true" />
                     </Link>
                   </Button>
+                  <SidebarTrigger
+                    aria-label="Afficher ou masquer la barre latérale"
+                    className="-mr-2 size-11"
+                  />
                 </div>
                 <section
                   aria-label="Ton staff"

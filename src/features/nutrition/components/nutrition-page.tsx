@@ -77,15 +77,7 @@ export function NutritionPage({
   return (
     <div className="flex flex-col gap-6.5 sm:gap-12">
       <section className="flex max-w-205 flex-col gap-2.5 sm:gap-3">
-        <MonoLabel className="max-sm:hidden">
-          Nutrition · {today.dateLabel}
-        </MonoLabel>
-        <div className="flex min-h-11 items-center sm:hidden">
-          <p className="text-[28px] font-semibold tracking-[-0.025em]">
-            Nutrition
-          </p>
-          <MonoLabel className="ml-auto">{today.dateLabel}</MonoLabel>
-        </div>
+        <MonoLabel>Nutrition · {today.dateLabel}</MonoLabel>
         <h1 className="text-[25px] leading-[1.12] font-semibold tracking-[-0.025em] text-balance sm:text-[clamp(32px,4vw,46px)] sm:leading-[1.05] sm:tracking-[-0.03em]">
           {today.headline}
         </h1>
@@ -321,11 +313,6 @@ export function NutritionPage({
 export function NutritionMissing({ missing }: { missing: string[] }) {
   return (
     <div className="flex flex-col gap-6.5">
-      <div className="flex min-h-11 items-center sm:hidden">
-        <p className="text-[28px] font-semibold tracking-[-0.025em]">
-          Nutrition
-        </p>
-      </div>
       <section className="flex max-w-140 flex-col gap-3 rounded-panel border border-border bg-surface-raised p-4.5">
         <MonoLabel tone="warning">Données manquantes</MonoLabel>
         <h1 className="text-[22px] leading-[1.15] font-semibold tracking-[-0.02em]">
