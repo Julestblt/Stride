@@ -27,7 +27,7 @@ export function EmailField({
 }) {
   return (
     <Field data-invalid={Boolean(error)}>
-      <FieldLabel htmlFor="email">Email</FieldLabel>
+      <FieldLabel htmlFor="email">E-mail</FieldLabel>
       <Input
         id="email"
         name="email"
@@ -48,7 +48,7 @@ export function EmailField({
 
 export function PasswordField({
   name = "password",
-  label = "Password",
+  label = "Mot de passe",
   value,
   onChange,
   error,
@@ -96,7 +96,7 @@ export function PasswordField({
         />
         <InputGroupAddon align="inline-end">
           <InputGroupButton
-            aria-label={`${visible ? "Hide" : "Show"} ${label.toLowerCase()}`}
+            aria-label={`${visible ? "Masquer" : "Afficher"} ${name === "confirmation" ? "la confirmation" : "le mot de passe"}`}
             aria-pressed={visible}
             aria-controls={name}
             disabled={disabled}
@@ -107,7 +107,7 @@ export function PasswordField({
               input.current?.focus();
             }}
           >
-            {visible ? "Hide" : "Show"}
+            {visible ? "Masquer" : "Afficher"}
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
@@ -125,12 +125,12 @@ export function PasswordGuidance({
 }) {
   const policy = passwordPolicy(password, email);
   const rules = [
-    { met: policy.lengthMet, label: "At least 10 characters" },
+    { met: policy.lengthMet, label: "10 caractères minimum" },
     {
       met: policy.distinct && password.length > 0,
-      label: "Not your email or a common password",
+      label: "Ni ton e-mail ni un mot de passe courant",
     },
-    { met: password.length >= 14, label: "14+ characters for “Strong”" },
+    { met: password.length >= 14, label: "14+ caractères pour « Fort »" },
   ];
   return (
     <div id="password-guidance" className="flex flex-col gap-3 text-[13px]">
@@ -167,7 +167,9 @@ export function PasswordGuidance({
             >
               {rule.met ? "✓" : "○"}
             </span>
-            <span className="sr-only">{rule.met ? "Met: " : "Not met: "}</span>
+            <span className="sr-only">
+              {rule.met ? "Respecté : " : "Non respecté : "}
+            </span>
             {rule.label}
           </li>
         ))}

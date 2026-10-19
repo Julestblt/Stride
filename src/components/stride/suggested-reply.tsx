@@ -30,7 +30,7 @@ export function SuggestedReplies({
           variant="outline"
           disabled={disabled}
           onClick={() => onSelect(reply)}
-          className="h-auto min-h-11 rounded-full px-3.5 text-meta text-muted hover:text-foreground motion-reduce:transition-none md:min-h-8 md:rounded-surface md:px-2.5"
+          className="h-auto min-h-11 rounded-full px-3.5 text-meta text-muted hover:text-foreground motion-reduce:transition-none md:h-auto md:min-h-8 md:rounded-surface md:px-2.5"
         >
           {reply}
         </Button>

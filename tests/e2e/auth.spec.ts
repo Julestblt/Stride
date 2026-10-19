@@ -5,50 +5,56 @@ test("auth navigation, accessible controls, focus and blank initial state", asyn
 }) => {
   await page.goto("/sign-in");
   await expect(
-    page.getByRole("heading", { name: "Welcome back" }),
+    page.getByRole("heading", { name: "Content de te revoir" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Email", { exact: true })).toHaveValue("");
-  await page.getByLabel("Password", { exact: true }).fill("a-test-password");
+  await expect(page.getByLabel("E-mail", { exact: true })).toHaveValue("");
   await page
-    .getByRole("button", { name: "Show password", exact: true })
-    .click();
-  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
-    "type",
-    "text",
-  );
-  await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("a-test-password");
   await page
-    .getByRole("button", { name: "Hide password", exact: true })
+    .getByRole("button", { name: "Afficher le mot de passe", exact: true })
     .click();
-  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
-    "type",
-    "password",
-  );
-  await page.getByRole("link", { name: "Create an account" }).click();
   await expect(
-    page.getByRole("heading", { name: "Create your account" }),
+    page.getByLabel("Mot de passe", { exact: true }),
+  ).toHaveAttribute("type", "text");
+  await expect(page.getByLabel("Mot de passe", { exact: true })).toBeFocused();
+  await page
+    .getByRole("button", { name: "Masquer le mot de passe", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Mot de passe", { exact: true }),
+  ).toHaveAttribute("type", "password");
+  await page.getByRole("link", { name: "Créer un compte" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Crée ton compte" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Create account", exact: true }),
+    page.getByRole("button", { name: "Créer un compte", exact: true }),
   ).toBeDisabled();
-  await page.getByLabel("Full name").fill("Jules Thibault");
-  await page.getByLabel("Email", { exact: true }).fill("runner@example.com");
+  await page.getByLabel("Nom complet").fill("Jules Thibault");
+  await page.getByLabel("E-mail", { exact: true }).fill("runner@example.com");
   await page
-    .getByLabel("Password", { exact: true })
+    .getByLabel("Mot de passe", { exact: true })
     .fill("a-quiet-trail-at-dawn");
-  await page.getByLabel("Confirm password", { exact: true }).fill("different");
-  await expect(page.getByText("Passwords don't match yet.")).toBeVisible();
+  await page
+    .getByLabel("Confirmer le mot de passe", { exact: true })
+    .fill("different");
   await expect(
-    page.getByLabel("Confirm password", { exact: true }),
+    page.getByText("Les mots de passe ne correspondent pas encore."),
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Confirmer le mot de passe", { exact: true }),
   ).toHaveAttribute("aria-invalid", "true");
   await page
-    .getByLabel("Confirm password", { exact: true })
+    .getByLabel("Confirmer le mot de passe", { exact: true })
     .fill("a-quiet-trail-at-dawn");
   await expect(
-    page.getByRole("button", { name: "Create account", exact: true }),
+    page.getByRole("button", { name: "Créer un compte", exact: true }),
   ).toBeEnabled();
-  await page.getByText("Terms", { exact: true }).click();
-  await expect(page.getByText(/terms are not published yet/)).toBeVisible();
+  await page.getByText("Conditions", { exact: true }).click();
+  await expect(
+    page.getByText(/conditions de Stride ne sont pas encore publiées/),
+  ).toBeVisible();
 });
 
 test("recovery stages start gated and reset rejects anonymous sessions", async ({
@@ -56,18 +62,20 @@ test("recovery stages start gated and reset rejects anonymous sessions", async (
 }) => {
   await page.goto("/forgot-password");
   await expect(
-    page.getByRole("button", { name: "Send reset link" }),
+    page.getByRole("button", { name: "Envoyer le lien" }),
   ).toBeVisible();
-  await expect(page.getByText("Resend", { exact: false })).not.toBeVisible();
-  await expect(page.getByLabel("New password", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Renvoyer", { exact: false })).not.toBeVisible();
+  await expect(
+    page.getByLabel("Nouveau mot de passe", { exact: true }),
+  ).toHaveCount(0);
   await page.goto("/reset-password");
   await expect(
     page.getByText(
-      "Sign in or open a fresh recovery link from your inbox before choosing a new password.",
+      "Connecte-toi ou ouvre un nouveau lien de réinitialisation depuis ta boîte mail avant de choisir un nouveau mot de passe.",
     ),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Save and sign in" }),
+    page.getByRole("button", { name: "Enregistrer et se connecter" }),
   ).toHaveCount(0);
 });
 
@@ -79,7 +87,7 @@ test("invalid callback redirects safely without echoing tokens", async ({
   );
   await expect(page).toHaveURL(/\/sign-in\?error=link$/);
   await expect(
-    page.getByText(/This link is invalid or has expired/),
+    page.getByText(/Ce lien n’est plus valide ou a expiré/),
   ).toBeVisible();
   await expect(page.getByText("private-token")).toHaveCount(0);
 });
@@ -108,8 +116,8 @@ for (const route of ["forgot-password", "reset-password"]) {
   test(`${route} follows the mobile recovery layout`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/${route}`);
-    const back = page.getByRole("link", { name: "Back to sign in" });
-    const wordmark = page.getByRole("link", { name: "Stride sign in" });
+    const back = page.getByRole("link", { name: "Retour à la connexion" });
+    const wordmark = page.getByRole("link", { name: "Stride, se connecter" });
     const backBox = await back.boundingBox();
     const wordmarkBox = await wordmark.boundingBox();
     expect(backBox && wordmarkBox && backBox.x < wordmarkBox.x).toBe(true);

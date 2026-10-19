@@ -30,9 +30,11 @@ function observation(
 }
 async function signIn(page: Page) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
 }
 async function pollNow(page: Page) {
@@ -312,6 +314,7 @@ test("collapsed desktop navigation keeps the data panel accessible", async ({
   await signIn(page);
   await page.goto("/progress");
   await page
+    .locator("header")
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
     .click();
   const status = page
@@ -559,7 +562,7 @@ test("a blocked server navigation starts the header thread before its response",
         .getByRole("button", { name: /État des données/ })
         .filter({ visible: true })
         .first(),
-    ).toContainText("reconnecter");
+    ).toContainText("Reconnecter");
     await page.screenshot({
       path: "test-results/activity-pending-navigation.png",
     });

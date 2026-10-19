@@ -123,7 +123,7 @@ export function StepNavigation({
                   label={
                     <button
                       type="button"
-                      className="rounded-control text-left disabled:cursor-default"
+                      className="rounded-control text-left disabled:cursor-default disabled:opacity-100"
                       aria-disabled={!isStepAllowed(progress, target)}
                       disabled={pending || !isStepAllowed(progress, target)}
                       onClick={() => navigate(target)}

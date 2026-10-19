@@ -11,9 +11,11 @@ test("a populated race opens every workspace section on desktop and mobile", asy
     `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}/__test__/race-course`,
   );
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
 
   for (const viewport of [
@@ -168,9 +170,11 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
     `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}/__test__/race-road`,
   );
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
   await page.goto("/races");
   await page.getByRole("link", { name: "Ouvrir la course" }).click();

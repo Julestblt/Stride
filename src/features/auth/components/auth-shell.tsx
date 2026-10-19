@@ -10,7 +10,7 @@ export function Wordmark({
   return (
     <Link
       href="/sign-in"
-      aria-label="Stride sign in"
+      aria-label="Stride, se connecter"
       className={cn(
         "relative inline-flex w-fit items-center text-foreground",
         compactOnMobile ? "gap-2 md:gap-2.5" : "gap-2.5",
@@ -121,16 +121,16 @@ export function AuthShell({
         <div className="relative hidden max-w-130 flex-col gap-5 md:flex">
           <p className="text-[clamp(34px,3.6vw,48px)] leading-[1.04] font-semibold tracking-[-0.03em]">
             {signup
-              ? "About six minutes to a coach that has read your whole training history."
-              : "Your coach already knows where you've been."}
+              ? "Six minutes environ pour avoir un coach qui a lu tout ton historique."
+              : "Ton coach sait déjà d’où tu viens."}
           </p>
           {signup ? (
             <ol className="flex flex-col gap-2.5 text-[15px] text-muted">
               {[
-                "Create your account",
-                "Connect Garmin — we import your history",
-                "Fill the few gaps Garmin can't",
-                "Meet your athlete profile",
+                "Crée ton compte",
+                "Connecte Garmin — on importe ton historique",
+                "Complète ce que Garmin ne sait pas",
+                "Découvre ton profil d’athlète",
               ].map((label, index) => (
                 <li key={label} className="flex gap-3">
                   <span
@@ -147,13 +147,13 @@ export function AuthShell({
             </ol>
           ) : (
             <p className="font-mono text-[11px] tracking-widest text-muted-foreground uppercase">
-              Road &amp; trail · Built on your Garmin history
+              Route &amp; trail · Basé sur ton historique Garmin
             </p>
           )}
         </div>
       </section>
       <section
-        aria-label={signup ? "Create account" : "Sign in"}
+        aria-label={signup ? "Créer un compte" : "Se connecter"}
         className="flex flex-1 flex-col px-6 pb-8 md:m-2 md:justify-center md:rounded-surface md:border md:border-border md:bg-surface-inset md:py-12"
       >
         <div className="mx-auto flex w-full max-w-95 flex-1 flex-col md:flex-none">

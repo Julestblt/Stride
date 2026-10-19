@@ -134,7 +134,10 @@ test("the desktop sidebar collapses to an icon rail with tooltips", async ({
     "aria-current",
     "page",
   );
-  await page.getByRole("button", { name: "Toggle sidebar" }).first().click();
+  await page
+    .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+    .first()
+    .click();
   await expect(sidebar).toHaveAttribute("data-state", "collapsed");
   const container = page.locator('[data-slot="sidebar-container"]');
   await expect
@@ -159,7 +162,9 @@ test("mobile navigation uses a sheet and thumb-reachable tabs", async ({
   await expect(
     tabs.getByRole("link", { name: "Coach, 2 questions en attente" }),
   ).toHaveAttribute("aria-current", "page");
-  await page.getByRole("button", { name: "Toggle sidebar" }).click();
+  await page
+    .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+    .click();
   const sheet = page.getByRole("dialog", { name: "Navigation" });
   await expect(sheet).toBeVisible();
   await expect(sheet.getByRole("link", { name: "Plan" })).toBeVisible();

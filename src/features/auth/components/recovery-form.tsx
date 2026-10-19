@@ -43,10 +43,10 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
   }, [sent, cooldownUntil]);
   return (
     <div className="grid flex-1 content-start md:grid-cols-3 md:content-stretch">
-      <RecoveryStage number={1} title="Ask for a link" active={!sent}>
+      <RecoveryStage number={1} title="Demande un lien" active={!sent}>
         <p className="text-sm leading-relaxed text-muted">
-          Enter the email you signed up with. Use the reset link in your inbox
-          before it expires.
+          Saisis l’e-mail de ton inscription. On t’envoie un lien à utiliser
+          avant qu’il n’expire.
         </p>
         <form
           id="recovery-request"
@@ -67,11 +67,11 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
             state={sent || hideFeedback ? initialAuthState : state}
           />
           <Button type="submit" disabled={pending || sent} className="w-full">
-            {pending ? "Requesting link…" : "Send reset link"}
+            {pending ? "Envoi du lien…" : "Envoyer le lien"}
           </Button>
         </form>
       </RecoveryStage>
-      <RecoveryStage number={2} title="Check your inbox" active={sent}>
+      <RecoveryStage number={2} title="Vérifie ta boîte mail" active={sent}>
         {sent ? (
           <>
             <div
@@ -80,14 +80,15 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
             >
               <EnvelopeMark />
               <p className="text-body">
-                If an account exists for{" "}
+                Si un compte existe pour{" "}
                 <strong className="font-semibold break-all">
                   {inbox?.email}
                 </strong>
-                , you&apos;ll receive a reset link.
+                , tu vas recevoir un lien de réinitialisation.
               </p>
               <p className="text-meta text-muted-foreground">
-                Nothing after a few minutes? Check spam, or resend.
+                Rien après quelques minutes ? Regarde dans les spams, ou renvoie
+                le lien.
               </p>
             </div>
             <FormFeedback
@@ -104,16 +105,16 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
                 className="h-12 w-full text-body disabled:text-muted-foreground disabled:opacity-100 md:h-11.5"
               >
                 {pending ? (
-                  "Requesting link…"
+                  "Envoi du lien…"
                 ) : remaining > 0 ? (
                   <>
-                    Resend in{" "}
+                    Renvoyer dans{" "}
                     <span className="font-metric text-[17px] font-semibold tabular-nums">
                       0:{String(remaining).padStart(2, "0")}
                     </span>
                   </>
                 ) : (
-                  "Resend reset link"
+                  "Renvoyer le lien"
                 )}
               </Button>
             </form>
@@ -129,20 +130,24 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
                 setEmail("");
               }}
             >
-              Use a different email
+              Utiliser un autre e-mail
             </Button>
           </>
         ) : (
           <p className="text-sm leading-relaxed text-muted-foreground">
-            After requesting a link, check your inbox and spam folder. This step
-            becomes available when the request is accepted.
+            Après ta demande, regarde dans ta boîte mail et tes spams. Cette
+            étape s’active quand la demande est acceptée.
           </p>
         )}
       </RecoveryStage>
-      <RecoveryStage number={3} title="Choose a new password" active={false}>
+      <RecoveryStage
+        number={3}
+        title="Choisis un nouveau mot de passe"
+        active={false}
+      >
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Open the recovery link to verify your account and choose a new
-          password.
+          Ouvre le lien reçu pour vérifier ton compte et choisir un nouveau mot
+          de passe.
         </p>
       </RecoveryStage>
     </div>

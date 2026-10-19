@@ -59,7 +59,7 @@ export function SignUpForm({
     return (
       <div className="flex flex-1 flex-col gap-6 md:flex-none">
         <p className="font-mono text-xs tracking-widest text-accent uppercase">
-          Step 1 of 4 · Confirm your email
+          Étape 1 sur 4 · Confirme ton e-mail
         </p>
         <div
           className="grid size-12 place-items-center rounded-control border border-border text-2xl text-accent"
@@ -68,14 +68,14 @@ export function SignUpForm({
           ✉
         </div>
         <FormHeading
-          title="Check your inbox"
-          description={`We sent a confirmation link to ${state.email}. Open it to activate your account.`}
+          title="Vérifie ta boîte mail"
+          description={`On a envoyé un lien de confirmation à ${state.email}. Ouvre-le pour activer ton compte.`}
         />
         <ol className="flex flex-col gap-3 rounded-surface border border-border bg-surface-raised p-4 text-sm text-muted">
           {[
-            "Open the email from Stride",
-            "Select “Confirm email”",
-            "Come back here, signed in",
+            "Ouvre l’e-mail de Stride",
+            "Clique sur « Confirmer l’adresse e-mail »",
+            "Tu reviens ici, connecté, prêt à configurer ton coach",
           ].map((step, index) => (
             <li key={step} className="flex items-start gap-3">
               <span className="grid size-6 shrink-0 place-items-center rounded-full border border-border font-mono text-xs text-foreground">
@@ -91,19 +91,19 @@ export function SignUpForm({
           sentAt={state.sentAt}
         />
         <form action="/sign-up" method="get" className="text-sm text-muted">
-          Wrong address?{" "}
+          Mauvaise adresse ?{" "}
           <button type="submit" className="text-accent hover:underline">
-            Change email
+            Changer d’e-mail
           </button>
         </form>
         <p className="text-sm text-muted">
-          Can&apos;t find it? Check spam or promotions. Use the most recent
-          link.
+          Introuvable ? Regarde dans les spams ou promotions. Les liens expirent
+          : utilise l’e-mail le plus récent.
         </p>
         <p className="mt-auto border-t border-border pt-5 text-center text-sm text-muted md:mt-0">
-          Already confirmed?{" "}
+          Déjà confirmé ?{" "}
           <Link href="/sign-in" className="text-accent hover:underline">
-            Sign in
+            Se connecter
           </Link>
         </p>
       </div>
@@ -117,14 +117,14 @@ export function SignUpForm({
       aria-busy={pending}
     >
       <FormHeading
-        title="Create your account"
-        description="Just the basics. Your coach will ask the rest."
+        title="Crée ton compte"
+        description="Juste l’essentiel. Ton coach te posera le reste."
       />
       <FieldGroup>
         <Field
           data-invalid={Boolean(!edited.fullName && state.errors?.fullName)}
         >
-          <FieldLabel htmlFor="fullName">Full name</FieldLabel>
+          <FieldLabel htmlFor="fullName">Nom complet</FieldLabel>
           <Input
             id="fullName"
             name="fullName"
@@ -146,7 +146,7 @@ export function SignUpForm({
             }
           />
           <p id="full-name-help" className="text-xs text-muted">
-            This is how your coach will address you.
+            C’est ainsi que ton coach t’appellera.
           </p>
           {!edited.fullName && state.errors?.fullName && (
             <FieldError id="full-name-error">
@@ -183,7 +183,7 @@ export function SignUpForm({
         </div>
         <PasswordField
           name="confirmation"
-          label="Confirm password"
+          label="Confirmer le mot de passe"
           value={confirmation}
           onChange={(value) => {
             setConfirmation(value);
@@ -192,7 +192,7 @@ export function SignUpForm({
           newPassword
           error={
             mismatch
-              ? "Passwords don't match yet."
+              ? "Les mots de passe ne correspondent pas encore."
               : edited.confirmation || edited.password
                 ? undefined
                 : state.errors?.confirmation
@@ -202,35 +202,40 @@ export function SignUpForm({
       </FieldGroup>
       <FormFeedback state={state} />
       <Button type="submit" disabled={pending || !valid} className="w-full">
-        {pending ? "Creating account…" : "Create account"}
+        {pending ? "Création du compte…" : "Créer un compte"}
       </Button>
       <p className="text-xs text-muted">
-        We&apos;ll email you a link to confirm your address.
+        On t’envoie un lien par e-mail pour confirmer ton adresse.
       </p>
       <div className="text-xs leading-relaxed text-muted-foreground">
-        <p>Review the account policies before continuing.</p>
+        <p>
+          En créant un compte, tu acceptes les conditions et la politique de
+          confidentialité. Tes données ne sont jamais vendues.
+        </p>
         <details className="mt-1">
-          <summary className="w-fit cursor-pointer text-accent">Terms</summary>
+          <summary className="w-fit cursor-pointer text-accent">
+            Conditions
+          </summary>
           <p className="mt-2">
-            Stride&apos;s terms are not published yet. This product foundation
-            is not ready for public launch.
+            Les conditions de Stride ne sont pas encore publiées. Cette version
+            n’est pas prête pour un lancement public.
           </p>
         </details>
         <details className="mt-1">
           <summary className="w-fit cursor-pointer text-accent">
-            Privacy policy
+            Politique de confidentialité
           </summary>
           <p className="mt-2">
-            Stride&apos;s privacy policy is not published yet. Account
-            authentication is handled by Supabase. A complete privacy policy is
-            required before public launch.
+            La politique de confidentialité de Stride n’est pas encore publiée.
+            L’authentification du compte est gérée par Supabase. Une politique
+            complète est requise avant le lancement public.
           </p>
         </details>
       </div>
       <p className="text-center text-sm text-muted">
-        Already have an account?{" "}
+        Déjà un compte ?{" "}
         <Link href="/sign-in" className="text-accent hover:underline">
-          Sign in
+          Se connecter
         </Link>
       </p>
     </form>

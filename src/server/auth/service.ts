@@ -25,9 +25,9 @@ type AuthProvider = Pick<
 >;
 
 export const unavailableMessage =
-  "We couldn't connect right now. Please try again in a moment.";
+  "Connexion impossible pour le moment. Réessaie dans un instant.";
 const inboxMessage =
-  "If this email can receive a link, check your inbox and spam folder. Follow the link to continue.";
+  "Si cette adresse peut recevoir un lien, regarde dans ta boîte mail et tes spams. Ouvre le lien pour continuer.";
 
 export async function authenticate(
   provider: AuthProvider,
@@ -69,8 +69,8 @@ export async function authenticate(
         email,
         sentAt: resent.error ? undefined : Date.now(),
         message: resent.error
-          ? "Confirm your email to continue. Open the newest confirmation link or request another one."
-          : "Your address isn't confirmed yet. We sent a new confirmation link. Open the newest email to continue.",
+          ? "Confirme ton e-mail pour continuer. Ouvre le lien de confirmation le plus récent ou demandes-en un nouveau."
+          : "Ton adresse n’est pas encore confirmée. On vient d’envoyer un nouveau lien de confirmation. Ouvre l’e-mail le plus récent pour continuer.",
       };
     }
     if (response.error)
@@ -79,8 +79,8 @@ export async function authenticate(
         email,
         message:
           mode === "sign-in"
-            ? "Unable to sign in. Check your email and password, or request a reset link."
-            : "Unable to create your account. Try again, or sign in if you already have an account.",
+            ? "Connexion impossible. Vérifie ton e-mail et ton mot de passe, ou demande un lien de réinitialisation."
+            : "Impossible de créer ton compte. Réessaie, ou connecte-toi si tu as déjà un compte.",
       };
     if (response.data.session) return { status: "authenticated" };
     if (mode === "sign-in")
@@ -114,14 +114,14 @@ export async function resendConfirmation(
         status: "error",
         email,
         message:
-          "We couldn't send a new link. Please wait a minute and try again.",
+          "Impossible d’envoyer un nouveau lien. Attends une minute et réessaie.",
       };
     return {
       status: "success",
       email,
       sentAt: Date.now(),
       message:
-        "If this address needs confirmation, check your inbox for the newest link.",
+        "Si cette adresse doit être confirmée, regarde dans ta boîte mail le lien le plus récent.",
     };
   } catch {
     return { status: "error", email, message: unavailableMessage };
@@ -161,7 +161,7 @@ export async function requestEmail(
         status: "error",
         email,
         message:
-          "We couldn't request a link. Please wait a minute and try again.",
+          "Impossible de demander un lien. Attends une minute et réessaie.",
       };
     }
     return {
@@ -187,12 +187,14 @@ export async function changePassword(
       return {
         status: "error",
         message:
-          "Sign in or open a fresh recovery link from your inbox before choosing a new password.",
+          "Connecte-toi ou ouvre un nouveau lien de réinitialisation depuis ta boîte mail avant de choisir un nouveau mot de passe.",
       };
     if (!passwordPolicy(result.data.password, userData.user.email).distinct)
       return {
         status: "error",
-        errors: { password: "Don't use your email or a common password." },
+        errors: {
+          password: "N’utilise ni ton e-mail ni un mot de passe courant.",
+        },
       };
     const { error } = await provider.updateUser({
       password: result.data.password,
@@ -201,7 +203,7 @@ export async function changePassword(
       return {
         status: "error",
         message:
-          "Unable to save this password. Try another password or request a fresh recovery link.",
+          "Impossible d’enregistrer ce mot de passe. Essaie-en un autre ou demande un nouveau lien de réinitialisation.",
       };
     try {
       const { error: revokeError } = await provider.signOut({
@@ -211,13 +213,13 @@ export async function changePassword(
         return {
           status: "success",
           message:
-            "Your password was saved, but other sessions could not be signed out. You can continue with this session.",
+            "Ton mot de passe est enregistré, mais les autres sessions n’ont pas pu être déconnectées. Tu peux continuer avec cette session.",
         };
     } catch {
       return {
         status: "success",
         message:
-          "Your password was saved, but other sessions could not be signed out. You can continue with this session.",
+          "Ton mot de passe est enregistré, mais les autres sessions n’ont pas pu être déconnectées. Tu peux continuer avec cette session.",
       };
     }
     return { status: "authenticated" };

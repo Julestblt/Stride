@@ -9,8 +9,8 @@ import {
 import { redirectIfAuthenticated } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: "Sign in · Stride",
-  description: "Sign in to your Stride account.",
+  title: "Se connecter · Stride",
+  description: "Connecte-toi à ton compte Stride.",
 };
 
 export default async function SignInPage({

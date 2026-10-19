@@ -16,9 +16,11 @@ async function connectGarmin() {
 
 async function signIn(page: Page) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("sync@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("sync@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
 }
 

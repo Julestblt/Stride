@@ -258,7 +258,7 @@ describe("password reset authorization", () => {
     provider.signOut.mockRejectedValue(new Error("offline"));
     const result = await changePassword(provider, data(credentials));
     expect(result.status).toBe("success");
-    expect(result.message).toContain("password was saved");
+    expect(result.message).toContain("mot de passe est enregistré");
   });
 });
 

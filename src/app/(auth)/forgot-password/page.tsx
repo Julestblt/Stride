@@ -5,8 +5,8 @@ import { sendRecoveryLink } from "@/server/auth/actions";
 import { redirectIfAuthenticated } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: "Password recovery · Stride",
-  description: "Request a link to reset your Stride password.",
+  title: "Mot de passe oublié · Stride",
+  description: "Demande un lien pour réinitialiser ton mot de passe Stride.",
 };
 
 export default async function ForgotPasswordPage() {

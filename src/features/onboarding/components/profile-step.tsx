@@ -17,6 +17,7 @@ import {
   type ProfileFact,
   type WeekBar,
 } from "@/features/onboarding/athlete-profile";
+import { formatFrenchDate } from "@/features/onboarding/dates";
 import type { OnboardingStep } from "@/features/onboarding/progress";
 import { cn } from "@/lib/utils";
 import {
@@ -135,7 +136,7 @@ export function ProfileStep({
               </dl>
               <p className="text-sm text-muted">
                 {profile.heartRateZones.method === "karvonen"
-                  ? `Estimation Stride · Karvonen (réserve cardiaque). FC max observée : ${profile.heartRateZones.maximum} bpm. FC au repos : ${profile.heartRateZones.resting} bpm, médiane de ${profile.heartRateZones.restingSamples} observations Garmin du ${profile.heartRateZones.windowStart} au ${profile.heartRateZones.windowEnd}.`
+                  ? `Estimation Stride · Karvonen (réserve cardiaque). FC max observée : ${profile.heartRateZones.maximum} bpm. FC au repos : ${profile.heartRateZones.resting} bpm, médiane de ${profile.heartRateZones.restingSamples} observations Garmin du ${formatFrenchDate(profile.heartRateZones.windowStart)} au ${formatFrenchDate(profile.heartRateZones.windowEnd)}.`
                   : `Estimation Stride · Pourcentage de la FC max observée (${profile.heartRateZones.maximum} bpm). Karvonen nécessite au moins sept observations récentes de FC au repos ; cette base n’est pas encore disponible.`}
               </p>
               <p className="text-meta text-muted-foreground">

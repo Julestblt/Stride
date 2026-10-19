@@ -2,9 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function signIn(page: Page) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
 }
 
@@ -399,10 +401,14 @@ for (const mode of ["empty", "failure", "goal-failure"] as const) {
   test(`Records displays explicit ${mode} state`, async ({ page }) => {
     await page.goto("/sign-in");
     await page
-      .getByLabel("Email", { exact: true })
+      .getByLabel("E-mail", { exact: true })
       .fill(`records-${mode}@example.com`);
-    await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page
+      .getByLabel("Mot de passe", { exact: true })
+      .fill("TrailMiles2026!");
+    await page
+      .getByRole("button", { name: "Se connecter", exact: true })
+      .click();
     await expect(page).toHaveURL("/");
     await page.goto("/progress/records");
     await expect(

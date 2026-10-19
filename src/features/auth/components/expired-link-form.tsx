@@ -14,15 +14,15 @@ export function ExpiredLinkForm({ action }: { action: AuthAction }) {
   return (
     <div className="flex flex-1 flex-col gap-5 md:flex-none">
       <p className="font-mono text-xs tracking-widest text-warning uppercase">
-        Link expired
+        Lien expiré
       </p>
       <FormHeading
-        title="This link is no longer valid"
-        description="Confirmation links expire and work only once. Request a new one and we'll email it right away."
+        title="Ce lien n’est plus valide"
+        description="Les liens de confirmation expirent et ne servent qu’une fois. Demande-en un nouveau, on te l’envoie tout de suite."
       />
       <form action={formAction} className="flex flex-col gap-5">
         <Field data-invalid={Boolean(state.errors?.email)}>
-          <FieldLabel htmlFor="expired-email">Email</FieldLabel>
+          <FieldLabel htmlFor="expired-email">E-mail</FieldLabel>
           <Input
             id="expired-email"
             name="email"
@@ -38,17 +38,17 @@ export function ExpiredLinkForm({ action }: { action: AuthAction }) {
           {state.errors?.email && <FieldError>{state.errors.email}</FieldError>}
         </Field>
         <Button type="submit" disabled={pending}>
-          {pending ? "Sending…" : "Send a new link"}
+          {pending ? "Envoi…" : "Envoyer un nouveau lien"}
         </Button>
         <FormFeedback state={state} />
       </form>
       <p className="text-center text-sm">
         <Link href="/sign-in" className="text-accent hover:underline">
-          Back to sign in
+          Retour à la connexion
         </Link>
       </p>
       <p className="mt-auto text-center text-sm text-muted md:mt-0">
-        Already confirmed? Just sign in.
+        Déjà confirmé ? Connecte-toi simplement.
       </p>
     </div>
   );

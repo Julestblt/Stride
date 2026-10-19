@@ -2,9 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 
 async function signIn(page: Page) {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
 }
 
@@ -287,10 +289,7 @@ test("mobile shows the list, then the activity alone, without overflow", async (
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page
-    .getByRole("navigation", { name: "Fil d’Ariane" })
-    .getByRole("link", { name: "Activités" })
-    .click();
+  await page.getByRole("link", { name: "Retour aux activités" }).click();
   await expect(page).toHaveURL(/\/activities$/);
   await page
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })

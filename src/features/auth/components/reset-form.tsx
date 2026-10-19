@@ -29,23 +29,28 @@ export function ResetForm({
     passwordPolicy(password, email).valid && password === confirmation;
   return (
     <div className="grid flex-1 content-start md:grid-cols-3 md:content-stretch">
-      <RecoveryStage number={1} title="Ask for a link" active={false}>
+      <RecoveryStage number={1} title="Demande un lien" active={false}>
         <p className="text-sm leading-relaxed text-muted">
-          Need another link? Request a fresh one with your account email.
+          Besoin d’un autre lien ? Demande-en un nouveau avec l’e-mail de ton
+          compte.
         </p>
         <Link
           href="/forgot-password"
           className="text-sm text-accent hover:underline"
         >
-          Request a recovery link
+          Demander un lien de réinitialisation
         </Link>
       </RecoveryStage>
-      <RecoveryStage number={2} title="Check your inbox" active={false}>
+      <RecoveryStage number={2} title="Vérifie ta boîte mail" active={false}>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Follow the recovery link from your email to verify your account.
+          Ouvre le lien reçu par e-mail pour vérifier ton compte.
         </p>
       </RecoveryStage>
-      <RecoveryStage number={3} title="Choose a new password" active={verified}>
+      <RecoveryStage
+        number={3}
+        title="Choisis un nouveau mot de passe"
+        active={verified}
+      >
         {verified ? (
           <form
             action={formAction}
@@ -54,7 +59,7 @@ export function ResetForm({
             aria-busy={pending}
           >
             <PasswordField
-              label="New password"
+              label="Nouveau mot de passe"
               value={password}
               onChange={(value) => {
                 setPassword(value);
@@ -68,7 +73,7 @@ export function ResetForm({
             <PasswordGuidance password={password} email={email ?? ""} />
             <PasswordField
               name="confirmation"
-              label="Confirm"
+              label="Confirmer"
               value={confirmation}
               onChange={(value) => {
                 setConfirmation(value);
@@ -77,7 +82,7 @@ export function ResetForm({
               newPassword
               error={
                 mismatch
-                  ? "Passwords don't match yet."
+                  ? "Les mots de passe ne correspondent pas encore."
                   : edited.confirmation || edited.password
                     ? undefined
                     : state.errors?.confirmation
@@ -94,7 +99,7 @@ export function ResetForm({
                   className="size-3"
                   strokeWidth={3}
                 />
-                Passwords match
+                Les mots de passe correspondent
               </p>
             )}
             <FormFeedback state={state} />
@@ -103,16 +108,16 @@ export function ResetForm({
               disabled={pending || !valid || state.status === "success"}
               className="w-full"
             >
-              {pending ? "Saving password…" : "Save and sign in"}
+              {pending ? "Enregistrement…" : "Enregistrer et se connecter"}
             </Button>
             {state.status === "success" && (
               <Link href="/" className="text-sm text-accent hover:underline">
-                Continue to Stride
+                Continuer vers Stride
               </Link>
             )}
             <p className="text-xs leading-relaxed text-muted-foreground">
-              We&apos;ll request sign-out on other devices after saving.
-              Existing access tokens may remain valid until they expire.
+              Tu seras déconnecté des autres appareils après l’enregistrement.
+              Les accès déjà ouverts restent valides jusqu’à leur expiration.
             </p>
           </form>
         ) : (
@@ -121,14 +126,14 @@ export function ResetForm({
               state={{
                 status: "error",
                 message:
-                  "Sign in or open a fresh recovery link from your inbox before choosing a new password.",
+                  "Connecte-toi ou ouvre un nouveau lien de réinitialisation depuis ta boîte mail avant de choisir un nouveau mot de passe.",
               }}
             />
             <Link
               href="/forgot-password"
               className="text-sm text-accent hover:underline"
             >
-              Get a fresh link
+              Obtenir un nouveau lien
             </Link>
           </>
         )}

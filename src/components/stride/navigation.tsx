@@ -215,7 +215,7 @@ export function NavUser({
             >
               <span
                 aria-hidden="true"
-                className="grid size-7 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold text-foreground"
+                className="grid size-8 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold text-foreground"
               >
                 {initials}
               </span>

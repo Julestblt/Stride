@@ -1,3 +1,4 @@
+import { ChevronRightIcon } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { ConfidenceMeter } from "@/components/stride/confidence-meter";
 import { StrideMark } from "@/components/stride/stride-mark";
@@ -36,7 +37,7 @@ export function RoadRecords({
         Meilleurs efforts sur route et piste, recalculés depuis les activités
         importées.
       </p>
-      <div className="hidden grid-cols-[1fr_1fr_1fr_1.8fr_1.4fr] gap-3 px-4 sm:grid">
+      <div className="hidden grid-cols-[minmax(0,1fr)_7rem_6rem_minmax(0,1.6fr)_12rem_2rem] gap-4 px-4 sm:grid">
         <MonoLabel size="nano">Distance</MonoLabel>
         <MonoLabel size="nano">Record</MonoLabel>
         <MonoLabel size="nano">Allure</MonoLabel>
@@ -52,9 +53,9 @@ export function RoadRecords({
               key={record.key}
               className="group min-w-0 rounded-card border border-border bg-surface"
             >
-              <summary className="grid min-h-16 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[1fr_1fr_1fr_1.8fr_1.4fr]">
+              <summary className="grid min-h-16 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_2rem] items-center gap-x-3 gap-y-1 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-[minmax(0,1fr)_7rem_6rem_minmax(0,1.6fr)_12rem_2rem] sm:gap-x-4">
                 <span className="text-sm font-semibold">{record.label}</span>
-                <span className="font-metric text-[28px] leading-none font-semibold tabular-nums">
+                <span className="text-right font-metric text-metric-lg font-semibold tabular-nums sm:text-left">
                   {current ? formatClock(current.value) : "—"}
                 </span>
                 <span className="hidden text-xs text-muted sm:block">
@@ -62,7 +63,7 @@ export function RoadRecords({
                     ? `${formatPace(current.value / (record.meters / 1000))}/km`
                     : "—"}
                 </span>
-                <span className="min-w-0 text-xs text-muted max-sm:col-start-1">
+                <span className="min-w-0 text-xs text-muted max-sm:col-span-2 max-sm:col-start-1 max-sm:row-start-2">
                   {current ? (
                     <>
                       {formatRecordDate(current.day)}
@@ -79,12 +80,15 @@ export function RoadRecords({
                     "Aucun effort documenté"
                   )}
                 </span>
-                <span className="text-xs text-muted max-sm:col-start-2 max-sm:row-start-2">
+                <span className="flex items-center gap-2 text-xs whitespace-nowrap text-muted max-sm:col-span-2 max-sm:col-start-1 max-sm:row-start-3">
                   {prediction ? (
                     <>
-                      {formatClock(prediction.seconds)}
+                      <span className="sm:hidden">prév.</span>
+                      <span className="font-metric text-sm font-semibold tabular-nums sm:text-metric-sm">
+                        {formatClock(prediction.seconds)}
+                      </span>
                       {prediction.gap !== null && (
-                        <span className="ml-1 text-warning">
+                        <span className="text-warning">
                           {prediction.gap >= 0 ? "+" : "−"}
                           {Math.round(Math.abs(prediction.gap))} s
                         </span>
@@ -92,18 +96,18 @@ export function RoadRecords({
                       <ConfidenceMeter
                         level={prediction.confidence}
                         label={recordConfidenceLabels[prediction.confidence]}
-                        className="mt-1 flex"
+                        hideLabel
                       />
                     </>
                   ) : (
                     "Pas d’estimation"
                   )}
-                  <span
-                    aria-hidden="true"
-                    className="ml-2 inline-block group-open:rotate-90"
-                  >
-                    ›
-                  </span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="col-start-3 row-span-3 row-start-1 grid size-8 place-items-center self-center justify-self-end rounded-control border border-border text-muted-foreground sm:col-start-6 sm:row-span-1"
+                >
+                  <ChevronRightIcon className="size-3.5 transition-transform group-open:rotate-90 motion-reduce:transition-none" />
                 </span>
               </summary>
               <div className="flex flex-col gap-4 border-t border-border p-4">

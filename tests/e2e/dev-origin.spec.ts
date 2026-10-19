@@ -6,28 +6,30 @@ test("remote dev origin loads signup scripts and password guidance", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://stride.test:3100/sign-up");
-  const password = page.getByLabel("Password", { exact: true });
-  const confirmation = page.getByLabel("Confirm password", { exact: true });
+  const password = page.getByLabel("Mot de passe", { exact: true });
+  const confirmation = page.getByLabel("Confirmer le mot de passe", {
+    exact: true,
+  });
   const createAccount = page.getByRole("button", {
-    name: "Create account",
+    name: "Créer un compte",
     exact: true,
   });
   await expect(createAccount).toBeDisabled();
-  await page.getByLabel("Full name").fill("Jules Thibault");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
+  await page.getByLabel("Nom complet").fill("Jules Thibault");
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
   await password.fill("LongTrailAtSunrise2026!");
   await page
-    .getByRole("button", { name: "Show password", exact: true })
+    .getByRole("button", { name: "Afficher le mot de passe", exact: true })
     .click();
   await expect(password).toHaveAttribute("type", "text");
   await page
-    .getByRole("button", { name: "Hide password", exact: true })
+    .getByRole("button", { name: "Masquer le mot de passe", exact: true })
     .click();
   await expect(password).toHaveAttribute("type", "password");
-  await expect(page.getByText("Strong", { exact: true })).toBeVisible();
+  await expect(page.getByText("Fort", { exact: true })).toBeVisible();
   const rules = page.locator("#password-guidance li");
   for (const rule of await rules.all()) {
-    await expect(rule.locator(".sr-only")).toHaveText("Met:");
+    await expect(rule.locator(".sr-only")).toHaveText("Respecté :");
     expect(
       await rule.locator(".sr-only").evaluate((element) => {
         const style = getComputedStyle(element);
@@ -43,7 +45,7 @@ test("remote dev origin loads signup scripts and password guidance", async ({
   await confirmation.fill("LongTrailAtSunrise2026!");
   await expect(createAccount).toBeEnabled();
   await page
-    .getByRole("button", { name: "Show confirm password", exact: true })
+    .getByRole("button", { name: "Afficher la confirmation", exact: true })
     .click();
   await expect(confirmation).toHaveAttribute("type", "text");
   expect(errors).toEqual([]);

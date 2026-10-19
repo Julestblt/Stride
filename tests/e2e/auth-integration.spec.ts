@@ -5,9 +5,11 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
   request,
 }) => {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL("/");
   await expect(
     page.getByText("Connecté en tant que :", { exact: false }),
@@ -38,7 +40,7 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
   await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
   await page.goto("/sign-in");
   await expect(
-    page.getByRole("heading", { name: "Welcome back" }),
+    page.getByRole("heading", { name: "Content de te revoir" }),
   ).toBeVisible();
   await page.goto("/missing-route");
   await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
@@ -57,10 +59,16 @@ for (const remember of [true, false]) {
     context,
   }) => {
     await page.goto("/sign-in");
-    await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-    await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
+    await page
+      .getByLabel("E-mail", { exact: true })
+      .fill("athlete@example.com");
+    await page
+      .getByLabel("Mot de passe", { exact: true })
+      .fill("TrailMiles2026!");
     if (!remember) await page.getByRole("checkbox").uncheck();
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Se connecter", exact: true })
+      .click();
     await expect(page).toHaveURL("/");
     const cookies = (await context.cookies()).filter((cookie) =>
       cookie.name.includes("auth-token"),
@@ -76,37 +84,41 @@ for (const remember of [true, false]) {
 
 test("rejected credentials give safe feedback", async ({ page }) => {
   await page.goto("/sign-in");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("WrongPassword2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("WrongPassword2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(
-    page.getByText("Unable to sign in.", { exact: false }),
+    page.getByText("Connexion impossible.", { exact: false }),
   ).toBeVisible();
 });
 
 test("signup requiring confirmation shows inbox feedback", async ({ page }) => {
   await page.goto("/sign-up");
-  await page.getByLabel("Full name").fill("Jules Thibault");
+  await page.getByLabel("Nom complet").fill("Jules Thibault");
   await page
-    .getByLabel("Email", { exact: true })
+    .getByLabel("E-mail", { exact: true })
     .fill("confirmation@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
   await page
-    .getByLabel("Confirm password", { exact: true })
+    .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByLabel("Confirmer le mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page
+    .getByRole("button", { name: "Créer un compte", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Check your inbox" }),
+    page.getByRole("heading", { name: "Vérifie ta boîte mail" }),
   ).toBeVisible();
   await expect(page).toHaveURL("/sign-up");
   await expect(
-    page.getByRole("button", { name: "Resend email" }),
+    page.getByRole("button", { name: "Renvoyer l’e-mail" }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "Change email" }).click();
+  await page.getByRole("button", { name: "Changer d’e-mail" }).click();
   await expect(
-    page.getByRole("heading", { name: "Create your account" }),
+    page.getByRole("heading", { name: "Crée ton compte" }),
   ).toBeVisible();
 });
 
@@ -116,13 +128,17 @@ test("unconfirmed sign-in resends a confirmation link", async ({
 }) => {
   await page.goto("/sign-in");
   await page
-    .getByLabel("Email", { exact: true })
+    .getByLabel("E-mail", { exact: true })
     .fill("confirmation@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByText("Confirm your email to continue")).toBeVisible();
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Resend email" }),
+    page.getByText("Confirme ton e-mail pour continuer"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Renvoyer l’e-mail" }),
   ).toBeDisabled();
   const events = await (
     await request.get("http://127.0.0.1:3200/__test__/events")
@@ -138,7 +154,7 @@ test("confirmed signup link reaches the confirmed page", async ({ page }) => {
   );
   await expect(page).toHaveURL("/email-confirmed");
   await expect(
-    page.getByRole("heading", { name: "You're in, Jules." }),
+    page.getByRole("heading", { name: "C’est validé, Jules." }),
   ).toBeVisible();
 });
 
@@ -155,23 +171,23 @@ test("expired signup link offers a replacement", async ({ page }) => {
   );
   await expect(page).toHaveURL("/link-expired");
   await expect(
-    page.getByRole("heading", { name: "This link is no longer valid" }),
+    page.getByRole("heading", { name: "Ce lien n’est plus valide" }),
   ).toBeVisible();
-  await page.getByLabel("Email").fill("confirmation@example.com");
-  await page.getByRole("button", { name: "Send a new link" }).click();
+  await page.getByLabel("E-mail").fill("confirmation@example.com");
+  await page.getByRole("button", { name: "Envoyer un nouveau lien" }).click();
   await expect(
-    page.getByText("If this address needs confirmation", { exact: false }),
+    page.getByText("Si cette adresse doit être confirmée", { exact: false }),
   ).toBeVisible();
 });
 
 test("recovery reports the first provider failure", async ({ page }) => {
   await page.goto("/forgot-password");
   await page
-    .getByLabel("Email", { exact: true })
+    .getByLabel("E-mail", { exact: true })
     .fill("unavailable@example.com");
-  await page.getByRole("button", { name: "Send reset link" }).click();
+  await page.getByRole("button", { name: "Envoyer le lien" }).click();
   await expect(
-    page.getByText("We couldn't request a link.", { exact: false }),
+    page.getByText("Impossible de demander un lien.", { exact: false }),
   ).toBeVisible();
 });
 
@@ -180,9 +196,11 @@ test("recovery exchanges a code, saves a password and revokes other sessions", a
   request,
 }) => {
   await page.goto("/forgot-password");
-  await page.getByLabel("Email", { exact: true }).fill("athlete@example.com");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByRole("button", { name: /Resend in/ })).toBeDisabled();
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page.getByRole("button", { name: "Envoyer le lien" }).click();
+  await expect(
+    page.getByRole("button", { name: /Renvoyer dans/ }),
+  ).toBeDisabled();
   const link = await (
     await request.get(
       "http://127.0.0.1:3200/__test__/link?email=athlete@example.com",
@@ -191,12 +209,14 @@ test("recovery exchanges a code, saves a password and revokes other sessions", a
   await page.goto(link.url);
   await expect(page).toHaveURL("/reset-password");
   await page
-    .getByLabel("New password", { exact: true })
+    .getByLabel("Nouveau mot de passe", { exact: true })
     .fill("LongTrailAtSunrise2026!");
   await page
-    .getByLabel("Confirm", { exact: true })
+    .getByLabel("Confirmer", { exact: true })
     .fill("LongTrailAtSunrise2026!");
-  await page.getByRole("button", { name: "Save and sign in" }).click();
+  await page
+    .getByRole("button", { name: "Enregistrer et se connecter" })
+    .click();
   await expect(page).toHaveURL("/");
   const events = await (
     await request.get("http://127.0.0.1:3200/__test__/events")
@@ -228,14 +248,18 @@ for (const remember of [true, false]) {
     });
     await page.goto("/sign-in");
     await page
-      .getByLabel("Email", { exact: true })
+      .getByLabel("E-mail", { exact: true })
       .fill(
         remember ? "magic-persistent@example.com" : "magic-session@example.com",
       );
     if (!remember) await page.getByRole("checkbox").uncheck();
-    await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+    await page
+      .getByRole("button", { name: "M’envoyer un lien de connexion" })
+      .click();
     await expect(
-      page.getByText("If this email can receive a link", { exact: false }),
+      page.getByText("Si cette adresse peut recevoir un lien", {
+        exact: false,
+      }),
     ).toBeVisible();
     const link = await (
       await request.get(
@@ -260,7 +284,7 @@ for (const remember of [true, false]) {
     ]);
     const response = await page.goto("/reset-password");
     await expect(
-      page.getByLabel("New password", { exact: true }),
+      page.getByLabel("Nouveau mot de passe", { exact: true }),
     ).toBeVisible();
     expect(response?.headers()["cache-control"]).toContain("no-store");
     const refreshed = (await context.cookies()).find((item) =>
@@ -292,20 +316,26 @@ test("overlapping recovery requests retain the earlier link verifier", async ({
   context,
 }) => {
   await page.goto("/forgot-password");
-  await page.getByLabel("Email", { exact: true }).fill("earlier@example.com");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByRole("button", { name: /Resend in/ })).toBeDisabled();
+  await page.getByLabel("E-mail", { exact: true }).fill("earlier@example.com");
+  await page.getByRole("button", { name: "Envoyer le lien" }).click();
+  await expect(
+    page.getByRole("button", { name: /Renvoyer dans/ }),
+  ).toBeDisabled();
   const earlier = await (
     await request.get(
       "http://127.0.0.1:3200/__test__/link?email=earlier@example.com",
     )
   ).json();
-  await page.getByRole("button", { name: "Use a different email" }).click();
-  await page.getByLabel("Email", { exact: true }).fill("later@example.com");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByRole("button", { name: /Resend in/ })).toBeDisabled();
+  await page.getByRole("button", { name: "Utiliser un autre e-mail" }).click();
+  await page.getByLabel("E-mail", { exact: true }).fill("later@example.com");
+  await page.getByRole("button", { name: "Envoyer le lien" }).click();
+  await expect(
+    page.getByRole("button", { name: /Renvoyer dans/ }),
+  ).toBeDisabled();
   await page.goto(earlier.url);
-  await expect(page.getByLabel("New password", { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel("Nouveau mot de passe", { exact: true }),
+  ).toBeVisible();
   const isolated = await context.browser()!.newContext();
   const anonymous = await isolated.newPage();
   const later = await (
@@ -322,36 +352,42 @@ test("failed resend keeps the accepted inbox state", async ({ page }) => {
   await page.clock.install();
   await page.goto("/forgot-password");
   await page
-    .getByLabel("Email", { exact: true })
+    .getByLabel("E-mail", { exact: true })
     .fill("resend-failure@example.com");
-  await page.getByRole("button", { name: "Send reset link" }).click();
-  await expect(page.getByRole("button", { name: /Resend in/ })).toBeDisabled();
-  await page.clock.fastForward(61_000);
-  await page.getByRole("button", { name: "Resend reset link" }).click();
+  await page.getByRole("button", { name: "Envoyer le lien" }).click();
   await expect(
-    page.getByText("We couldn't request a link.", { exact: false }),
+    page.getByRole("button", { name: /Renvoyer dans/ }),
+  ).toBeDisabled();
+  await page.clock.fastForward(61_000);
+  await page.getByRole("button", { name: "Renvoyer le lien" }).click();
+  await expect(
+    page.getByText("Impossible de demander un lien.", { exact: false }),
   ).toBeVisible();
   await expect(
     page.getByText("resend-failure@example.com", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Send reset link" }),
+    page.getByRole("button", { name: "Envoyer le lien" }),
   ).toBeDisabled();
-  await expect(page.getByRole("button", { name: /Resend in/ })).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: /Renvoyer dans/ }),
+  ).toBeDisabled();
 });
 
 test("signup with a provider session returns to Stride", async ({ page }) => {
   await page.goto("/sign-up");
-  await page.getByLabel("Full name").fill("Jules Thibault");
+  await page.getByLabel("Nom complet").fill("Jules Thibault");
   await page
-    .getByLabel("Email", { exact: true })
+    .getByLabel("E-mail", { exact: true })
     .fill("new-account@example.com");
-  await page.getByLabel("Password", { exact: true }).fill("TrailMiles2026!");
   await page
-    .getByLabel("Confirm password", { exact: true })
+    .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page
-    .getByRole("button", { name: "Create account", exact: true })
+    .getByLabel("Confirmer le mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page
+    .getByRole("button", { name: "Créer un compte", exact: true })
     .click();
   await expect(page).toHaveURL("/");
 });
