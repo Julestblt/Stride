@@ -131,9 +131,31 @@ test("a populated race opens every workspace section on desktop and mobile", asy
       ).toBeVisible();
     }
     await page.goto("/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/waypoints");
+    const list = page.getByRole("heading", { name: /Points de passage/ });
+    await expect(list).toBeVisible();
+    if (viewport.width < 500) await expect(list).toContainText("4 points");
+    await expect(page.getByRole("button", { name: /Départ/ })).toHaveCount(0);
+    const row = page.getByRole("button", { name: /Ravito du Bois/ });
+    await expect(row).toContainText("km 10,0");
+    await expect(row).toContainText("Alerte");
+    await row.click();
+    await expect(row).toHaveAttribute("aria-current", "true");
+    const editor = page.getByRole("region", {
+      name: "Modifier Ravito du Bois",
+    });
     await expect(
-      page.getByRole("heading", { name: /Points de passage/ }).first(),
+      editor.getByRole("heading", { name: "Modifier · Ravito du Bois" }),
     ).toBeVisible();
+    await expect(
+      editor.getByRole("button", { name: "Ravitaillement" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await expect(editor.getByRole("checkbox", { name: "Eau" })).toBeChecked();
+    await expect(editor.getByText("Accroché au tracé")).toBeVisible();
+    await expect(editor.getByText("Dans 500 m")).toBeVisible();
+    await page.screenshot({
+      path: `test-results/race-waypoints-${viewport.width}.png`,
+      fullPage: true,
+    });
   }
 });
 
