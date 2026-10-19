@@ -73,6 +73,45 @@ test("a populated race opens every workspace section on desktop and mobile", asy
         chart.evaluate((element) => getComputedStyle(element).outlineStyle),
       )
       .toBe("none");
+    const map = page
+      .getByRole("img", { name: /^Carte du parcours/ })
+      .filter({ visible: true })
+      .first();
+    await map.scrollIntoViewIfNeeded();
+    const marker = map.getByRole("button", { name: "Arrivée, km 30,0" });
+    await expect(marker).toBeVisible();
+    const centre = () =>
+      marker.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const bounds = element.closest('[role="img"]')!.getBoundingClientRect();
+        return {
+          x: box.x + box.width / 2 - bounds.x,
+          y: box.y + box.height / 2 - bounds.y,
+        };
+      });
+    await expect
+      .poll(async () => {
+        const first = await centre();
+        await page.waitForTimeout(200);
+        const second = await centre();
+        return Math.hypot(second.x - first.x, second.y - first.y);
+      })
+      .toBeLessThan(0.5);
+    const before = await centre();
+    const box = await marker.boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await expect
+      .poll(() =>
+        marker
+          .locator("span")
+          .evaluate((element) => getComputedStyle(element).scale),
+      )
+      .toBe("1.1");
+    const after = await centre();
+    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+    await page.mouse.move(0, 0);
     await page.screenshot({
       path: `test-results/race-course-${viewport.width}.png`,
       fullPage: true,

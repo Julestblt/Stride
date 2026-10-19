@@ -53,14 +53,18 @@ function markerElement(marker: MapMarker, active: boolean) {
     "aria-label",
     `${marker.name}, km ${formatKm(marker.distanceM)}`,
   );
+  const visual = document.createElement("span");
+  visual.setAttribute("aria-hidden", "true");
   const { mark } = marker;
+  const root = "group focus-visible:outline-2 focus-visible:outline-ring";
   const base =
-    "grid place-items-center font-metric text-xs leading-none font-bold transition-transform duration-150 ease-stride hover:scale-110 focus-visible:outline-2 focus-visible:outline-ring";
+    "grid size-full place-items-center font-metric text-xs leading-none font-bold transition-transform duration-150 ease-stride group-hover:scale-110";
   if (mark.shape === "circle") {
     const filled = mark.tone !== "station" || active;
-    element.className = cn(
+    element.className = cn(root, "size-5.5 rounded-full");
+    visual.className = cn(
       base,
-      "size-5.5 rounded-full",
+      "rounded-full",
       mark.tone === "finish" || active
         ? "bg-accent text-accent-foreground"
         : mark.tone === "start"
@@ -68,20 +72,22 @@ function markerElement(marker: MapMarker, active: boolean) {
           : "border-[1.6px] border-foreground bg-background text-foreground",
       filled && "border-0",
     );
-    element.textContent = mark.label;
+    visual.textContent = mark.label;
   } else if (mark.shape === "square") {
-    element.className = cn(
+    element.className = cn(root, "size-5.5 rounded-tag");
+    visual.className = cn(
       base,
-      "size-5.5 rounded-tag",
+      "rounded-tag",
       active
         ? "bg-accent text-accent-foreground"
         : "border-[1.6px] border-provider bg-background text-foreground",
     );
-    element.textContent = mark.label;
+    visual.textContent = mark.label;
   } else {
-    element.className = cn(
+    element.className = cn(root, "size-3.5");
+    visual.className = cn(
       base,
-      "size-3.5 rotate-45 border-[1.6px] bg-background",
+      "rotate-45 border-[1.6px] bg-background",
       mark.shape === "triangle"
         ? "border-muted"
         : mark.tone === "caution"
@@ -89,6 +95,7 @@ function markerElement(marker: MapMarker, active: boolean) {
           : "border-night",
     );
   }
+  element.append(visual);
   return element;
 }
 
