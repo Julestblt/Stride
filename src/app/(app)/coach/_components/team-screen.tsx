@@ -397,7 +397,7 @@ export function TeamScreen({
   return (
     <>
       <AppHeader
-        title="Coach / L’équipe"
+        title="L’équipe"
         back={{ href: "/coach", label: "Retour aux conversations" }}
         crumbs={[{ label: "Coach", href: "/coach" }, { label: "L’équipe" }]}
       />

@@ -126,6 +126,7 @@ export function activityStatusLabel({
   const time = synced?.replace(/^Synchronisé (le )?/, "") ?? null;
   if (state === "complete" && synced)
     return short ? `Garmin ${time}` : `Garmin ${synced.toLowerCase()}`;
+  if (state === "reconnect" && short) return "Garmin déconnecté";
   if (state === "offline" && synced)
     return `Hors ligne · données ${synced.includes(" le ") ? "du" : "de"} ${time}`;
   if (

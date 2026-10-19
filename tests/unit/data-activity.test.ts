@@ -116,6 +116,9 @@ describe("data activity", () => {
       "Garmin déconnecté · Reconnecter",
     );
     expect(
+      activityStatusLabel({ ...base, state: "reconnect", short: true }),
+    ).toBe("Garmin déconnecté");
+    expect(
       activityStatusLabel({
         ...base,
         state: "unavailable",

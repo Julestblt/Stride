@@ -87,7 +87,7 @@ export default async function PlanPage({
     >
       <div className="flex items-start gap-3 max-sm:flex-col-reverse max-sm:items-stretch">
         <ProgramTabs programs={programs} active={program} />
-        <div className="ml-auto flex shrink-0 gap-2 max-sm:-mt-11 max-sm:self-end">
+        <div className="ml-auto flex shrink-0 gap-2 max-sm:self-end">
           <CopyProgramButton
             text={programText({
               state: overview.plan.state,
