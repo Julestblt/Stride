@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { EmptyState, RaceCard } from "@/features/races/components/race-ui";
 import { WaypointWorkspace } from "@/features/races/components/waypoint-workspace";
+import { mapData } from "@/features/races/map";
 import { profileData } from "@/features/races/profile";
 import { loadRace } from "@/server/races/load";
 import { planFor } from "@/server/races/views";
@@ -45,6 +46,7 @@ export default async function WaypointsPage({
       waypoints={model.waypoints}
       marks={model.marks}
       profile={profile}
+      map={mapData(model.course, profile)}
       passages={planned?.simulation.passages ?? []}
       distanceM={model.course.distanceM}
     />
