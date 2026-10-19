@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { GarminConnectionLabel } from "@/features/data-activity/components/connection-status";
 import {
   SettingsGroup,
   SettingsHeading,
@@ -16,12 +17,6 @@ export default async function ConnexionsSettingsPage() {
     readSettingsConnection(context),
     readStoredCounts(context),
   ]);
-  const connected = state.connection?.status === "connected";
-  const status = connected
-    ? "Connecté"
-    : state.connection
-      ? "À vérifier"
-      : "Indisponible";
   return (
     <>
       <SettingsHeading
@@ -35,12 +30,7 @@ export default async function ConnexionsSettingsPage() {
           </span>
           <div className="flex-1">
             <h2 className="text-lg font-semibold">Garmin</h2>
-            <p className="text-sm text-muted">
-              État de la connexion :{" "}
-              <span className={connected ? "text-success" : "text-warning"}>
-                {status}
-              </span>
-            </p>
+            <GarminConnectionLabel status={state.connection?.status ?? null} />
           </div>
           <Button variant="secondary" asChild>
             <Link href="/settings/connections/garmin">Gérer</Link>

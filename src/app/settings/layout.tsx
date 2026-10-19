@@ -1,3 +1,4 @@
+import { DataActivityProvider } from "@/features/data-activity/components/provider";
 import { SettingsShell } from "@/features/settings/components/settings-shell";
 import { getShell } from "@/server/app/shell";
 
@@ -9,5 +10,9 @@ export default async function SettingsLayout({
   children: React.ReactNode;
 }) {
   const shell = await getShell();
-  return <SettingsShell athlete={shell.athlete}>{children}</SettingsShell>;
+  return (
+    <DataActivityProvider initial={shell.initialActivity}>
+      <SettingsShell athlete={shell.athlete}>{children}</SettingsShell>
+    </DataActivityProvider>
+  );
 }

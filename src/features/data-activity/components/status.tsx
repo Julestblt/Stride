@@ -16,7 +16,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PulseDot } from "@/components/stride/marks";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { syncLabel } from "@/features/app-shell/shell";
 import {
   garminSyncCategories,
   type GarminSyncCategory,
@@ -26,7 +25,8 @@ import {
 } from "@/features/garmin/sync";
 import {
   activityLabels,
-  requestedSyncLabel,
+  activityStatusLabel,
+  activityTone,
   requestedSyncShare,
 } from "../model";
 import { useDataActivity } from "./provider";
@@ -97,24 +97,24 @@ function CategoryMark({ state }: { state: GarminSyncState }) {
 export function DataActivityStatus({
   className,
   compact = false,
+  short = false,
 }: {
   className?: string;
   compact?: boolean;
+  short?: boolean;
 }) {
   const activity = useDataActivity();
   const isMobile = useIsMobile();
   if (!activity) return null;
   const { state, observation } = activity;
   const progress = activity.sync.progress;
-  const lastSync = observation?.sync.lastSyncAt;
-  const synchronized = lastSync ? syncLabel(lastSync, new Date()) : null;
-  const label = progress
-    ? requestedSyncLabel(progress)
-    : state === "complete" && synchronized
-      ? `Garmin ${synchronized.toLowerCase()}`
-      : state === "syncing"
-        ? "Garmin · synchro…"
-        : activityLabels[state];
+  const label = activityStatusLabel({
+    state,
+    observation,
+    progress,
+    now: new Date(),
+    short,
+  });
   const completed = observation
     ? garminSyncCategories.filter(
         (key) => observation.sync.categories[key].state === "complete",
@@ -138,15 +138,7 @@ export function DataActivityStatus({
             />
           )}
           <PulseDot
-            tone={
-              state === "syncing"
-                ? "provider"
-                : state === "complete"
-                  ? "success"
-                  : state === "reconnect"
-                    ? "danger"
-                    : "warning"
-            }
+            tone={activityTone(state)}
             breathing={state === "syncing"}
           />
           <span
@@ -353,7 +345,7 @@ export function DataActivityFeedback() {
         <div className="mx-4 mt-2 shrink-0">
           <Alert>
             <AlertDescription>
-              Garmin doit être reconnecté.{" "}
+              Garmin déconnecté : les nouvelles données n’arrivent plus.{" "}
               <Link href="/settings/connections/garmin" className="underline">
                 Reconnecter Garmin
               </Link>

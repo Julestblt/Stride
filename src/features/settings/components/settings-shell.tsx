@@ -6,6 +6,10 @@ import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PulseDot } from "@/components/stride/marks";
+import { useDataActivity } from "@/features/data-activity/components/provider";
+import { DataActivityStatus } from "@/features/data-activity/components/status";
+import { activityTone } from "@/features/data-activity/model";
 import { settingsHref, settingsSections } from "../navigation";
 
 export function SettingsShell({
@@ -16,6 +20,7 @@ export function SettingsShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const activity = useDataActivity();
   const search = useSearchParams().toString();
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -73,9 +78,20 @@ export function SettingsShell({
                           "rounded-control px-2 py-2 text-sm text-muted hover:bg-surface-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
                           active?.slug === section.slug &&
                             "bg-surface-raised font-medium text-foreground",
+                          section.slug === "connections" &&
+                            "flex items-center gap-2",
                         )}
                       >
                         {section.label}
+                        {section.slug === "connections" && activity && (
+                          <span className="ml-auto flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+                            <PulseDot
+                              tone={activityTone(activity.state)}
+                              breathing={false}
+                            />
+                            Garmin
+                          </span>
+                        )}
                       </Link>
                     );
                   })}
@@ -83,9 +99,13 @@ export function SettingsShell({
             </div>
           ))}
         </div>
-        <div data-slot="settings-account" className="mt-auto p-2">
+        <div
+          data-slot="settings-account"
+          className="mt-auto flex flex-col gap-1.5 p-2"
+        >
+          <DataActivityStatus className="px-2.5" />
           <div className="flex min-h-12 items-center gap-2.5 px-1.5 text-sm">
-            <span className="grid size-7 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold">
+            <span className="grid size-8 shrink-0 place-items-center rounded-control bg-border text-xs font-semibold">
               {athlete.initials}
             </span>
             <span className="flex min-w-0 flex-col text-left">
