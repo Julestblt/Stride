@@ -314,6 +314,7 @@ test("collapsed desktop navigation keeps the data panel accessible", async ({
   await signIn(page);
   await page.goto("/progress");
   await page
+    .locator("header")
     .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
     .click();
   const status = page
@@ -561,7 +562,7 @@ test("a blocked server navigation starts the header thread before its response",
         .getByRole("button", { name: /État des données/ })
         .filter({ visible: true })
         .first(),
-    ).toContainText("reconnecter");
+    ).toContainText("Reconnecter");
     await page.screenshot({
       path: "test-results/activity-pending-navigation.png",
     });

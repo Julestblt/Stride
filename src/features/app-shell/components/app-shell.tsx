@@ -40,8 +40,10 @@ import {
 } from "@/components/ui/sidebar";
 import { NavGoalSwitcher, NavUser } from "@/components/stride/navigation";
 import {
+  shellProfileDetail,
   shellRaceDate,
   type ShellAccount,
+  type ShellBadge,
   type ShellAthlete,
   type ShellGoal,
   type ShellRaceLink,
@@ -73,6 +75,7 @@ export function AppShell({
   planNav = null,
   planHistoryCount = null,
   coachAttention = null,
+  todayBadge = null,
   staffFaces = defaultStaffFaces,
   children,
 }: {
@@ -85,6 +88,7 @@ export function AppShell({
   planNav?: ProgramNav | null;
   planHistoryCount?: number | null;
   coachAttention?: { questions: number; proposals: number } | null;
+  todayBadge?: ShellBadge | null;
   staffFaces?: StaffFaces;
   defaultOpen: boolean;
   children: React.ReactNode;
@@ -119,6 +123,7 @@ export function AppShell({
                     href="/today"
                     icon={<NavTodayIcon />}
                     label="Aujourd’hui"
+                    badge={todayBadge}
                   />
                   <CoachNavItem attention={coachAttention} />
                   <ShellNavItem
@@ -135,11 +140,6 @@ export function AppShell({
                     href="/progress"
                     icon={<NavProgressIcon />}
                     label="Progression"
-                  />
-                  <ShellNavItem
-                    href="/nutrition"
-                    icon={<NavNutritionIcon />}
-                    label="Nutrition"
                   />
                   <ShellNavItem
                     href="/races"
@@ -176,6 +176,16 @@ export function AppShell({
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>
+              <SidebarGroup>
+                <SidebarGroupLabel>Athlète</SidebarGroupLabel>
+                <SidebarMenu>
+                  <ShellNavItem
+                    href="/nutrition"
+                    icon={<NavNutritionIcon />}
+                    label="Nutrition"
+                  />
+                </SidebarMenu>
+              </SidebarGroup>
             </SidebarContent>
             <SidebarFooter>
               <DataActivityStatus
@@ -184,7 +194,7 @@ export function AppShell({
               />
               <NavUser
                 name={athlete.name}
-                detail="Athlète"
+                detail={shellProfileDetail(account)}
                 initials={athlete.initials}
                 sync={
                   initialActivity !== undefined ? (

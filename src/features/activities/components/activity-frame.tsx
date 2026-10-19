@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
+import { AppHeader } from "@/features/app-shell/components/app-header";
 import { DataActivityLink } from "@/features/data-activity/components/navigation";
 import {
   DataActivityStatus,
   DataActivityThread,
 } from "@/features/data-activity/components/status";
-import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -64,12 +64,16 @@ export function ActivityListHeader({
       <div className="flex items-center gap-2">
         <SidebarTrigger
           aria-label="Afficher ou masquer la barre latérale"
-          className="-ml-2 lg:hidden"
+          className="-ml-2 max-md:hidden lg:hidden"
         />
         <Heading className="flex-1 text-headline font-semibold lg:text-base">
           Activités
         </Heading>
         <DataActivityStatus />
+        <SidebarTrigger
+          aria-label="Afficher ou masquer la barre latérale"
+          className="-mr-2 size-11 md:hidden"
+        />
       </div>
       {loading ? (
         <>
@@ -104,26 +108,23 @@ export function ActivityToolbar({
   children?: ReactNode;
 }) {
   return (
-    <header className="relative flex min-h-14 shrink-0 items-center gap-3 border-b border-border-subtle px-4">
-      <SidebarTrigger aria-label="Afficher ou masquer la barre latérale" />
-      <Separator
-        orientation="vertical"
-        className="data-vertical:h-4 data-vertical:self-center"
-      />
-      <nav
-        aria-label="Fil d’Ariane"
-        className="flex min-w-0 flex-1 items-center gap-2 text-sm"
-      >
-        <DataActivityLink
-          href={href}
-          className="text-muted-foreground hover:text-foreground"
+    <AppHeader
+      title="Activités"
+      back={{ href, label: "Retour aux activités" }}
+      breadcrumb={
+        <nav
+          aria-label="Fil d’Ariane"
+          className="flex min-w-0 items-center gap-2 text-sm"
         >
-          Activités
-        </DataActivityLink>
-        {children}
-      </nav>
-      <DataActivityStatus className="ml-auto md:hidden" />
-      <DataActivityThread />
-    </header>
+          <DataActivityLink
+            href={href}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Activités
+          </DataActivityLink>
+          {children}
+        </nav>
+      }
+    />
   );
 }

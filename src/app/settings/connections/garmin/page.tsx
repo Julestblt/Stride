@@ -1,6 +1,6 @@
 import { CheckIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DataActivityProvider } from "@/features/data-activity/components/provider";
+import { GarminConnectionLabel } from "@/features/data-activity/components/connection-status";
 import {
   SyncNowButton,
   SyncRequestMessage,
@@ -62,17 +62,6 @@ const metricLabels: Record<string, string> = {
   sleep_score: "Score de sommeil",
   stress_level: "Niveau de stress",
   body_battery: "Body Battery",
-};
-const connectionLabels: Record<GarminConnectionStatus, string> = {
-  disconnected: "Déconnecté",
-  connecting: "Connexion en cours",
-  mfa_required: "Validation nécessaire",
-  connected: "Connecté · synchronisation automatique",
-  expired: "Connexion expirée",
-  reconnect_required: "Reconnexion requise",
-  rate_limited: "Garmin temporairement indisponible",
-  provider_unavailable: "Garmin indisponible",
-  error: "Connexion à vérifier",
 };
 const reconnectStatuses = new Set<GarminConnectionStatus>([
   "expired",
@@ -260,24 +249,11 @@ export default async function GarminSettingsPage() {
             <h1 className="text-3xl leading-tight font-semibold tracking-tight">
               Garmin
             </h1>
-            <span
-              className={cn(
-                "flex items-center gap-2 text-sm",
-                connected && "text-success",
-                !connected && reconnect && "text-danger",
-                !connected && !reconnect && "text-warning",
-              )}
-            >
-              <span
-                className={cn(
-                  "size-1.75 rounded-full bg-current",
-                  connected && "animate-pulse motion-reduce:animate-none",
-                )}
-              />
-              {status
-                ? connectionLabels[status]
-                : "État de la connexion indisponible"}
-            </span>
+            <GarminConnectionLabel
+              status={status}
+              connectedSuffix="synchronisation automatique"
+              breathing
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -610,11 +586,9 @@ export default async function GarminSettingsPage() {
     </div>
   );
 
-  const observation = status && sync ? { connection: status, sync } : null;
-
   if (reconnect) {
     return (
-      <DataActivityProvider initial={observation}>
+      <>
         <div className="flex flex-col gap-4.5 md:hidden">
           <div className="flex items-center gap-3.5">
             <span className="grid size-13 place-items-center rounded-surface border border-border-strong bg-surface-raised">
@@ -624,10 +598,7 @@ export default async function GarminSettingsPage() {
               <h1 className="text-[1.625rem] leading-tight font-semibold tracking-tight">
                 Garmin
               </h1>
-              <span className="flex items-center gap-2 text-sm text-danger">
-                <span className="size-1.5 rounded-full bg-danger" />
-                Reconnexion requise
-              </span>
+              <GarminConnectionLabel status={status} />
             </div>
           </div>
           <div className="flex flex-col gap-2.5 rounded-card border border-danger-border bg-danger-surface p-4">
@@ -686,11 +657,9 @@ export default async function GarminSettingsPage() {
           </div>
         </div>
         <div className="max-md:hidden">{desktop}</div>
-      </DataActivityProvider>
+      </>
     );
   }
 
-  return (
-    <DataActivityProvider initial={observation}>{desktop}</DataActivityProvider>
-  );
+  return desktop;
 }

@@ -1,4 +1,5 @@
 import type { GoalFocus } from "@/features/onboarding/goals";
+import { readinessLevel } from "@/features/progress/recovery";
 import { focusLabels } from "@/features/onboarding/athlete-profile";
 import {
   isAnswered,
@@ -24,6 +25,7 @@ export type ShellAccount = {
   garminSince: string | null;
 };
 export type ShellAthlete = { name: string; initials: string; detail: string };
+export type ShellBadge = { value: string; label: string; attention: boolean };
 
 export const displayTimeZone = "Europe/Paris";
 const dayMs = 86_400_000;
@@ -87,9 +89,12 @@ export function shellAthlete(
   email: string | null,
 ): ShellAthlete {
   const name = firstName?.trim() || email?.split("@")[0] || "Athlète";
+  const words = name.split(/[\s._-]+/).filter(Boolean);
+  const initials =
+    words.length > 1 ? `${words[0][0]}${words[1][0]}` : name.slice(0, 2);
   return {
     name,
-    initials: name.charAt(0).toUpperCase(),
+    initials: initials.toUpperCase(),
     detail: email ?? "Compte Stride",
   };
 }
@@ -135,6 +140,22 @@ export function shortSince(iso: string | null, now: Date) {
   if (minutes < 60) return `${Math.max(1, minutes)} min`;
   const hours = Math.floor(minutes / 60);
   return hours < 24 ? `${hours} h` : `${Math.floor(hours / 24)} j`;
+}
+
+export function shellProfileDetail(account: ShellAccount) {
+  const profile = `Profil ${account.profilePercent}\u00a0%`;
+  if (account.questions === 0) return profile;
+  return `${profile} · ${account.questions} question${account.questions > 1 ? "s" : ""}`;
+}
+
+export function readinessBadge(score: number | null): ShellBadge | null {
+  if (score === null) return null;
+  const value = Math.round(score);
+  return {
+    value: String(value),
+    label: `Disponibilité Garmin ${value} sur 100`,
+    attention: readinessLevel(value) !== "high",
+  };
 }
 
 export function shellAccount(

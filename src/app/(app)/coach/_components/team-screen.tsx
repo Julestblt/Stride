@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRightIcon, CheckIcon, ChevronLeftIcon } from "lucide-react";
+import { ArrowRightIcon, CheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { MonoLabel } from "@/components/stride/mono-label";
-import { DataActivityThread } from "@/features/data-activity/components/status";
+import { AppHeader } from "@/features/app-shell/components/app-header";
 import { useStaff } from "@/features/coach/components/staff-context";
 import {
   StaffPortrait,
@@ -398,40 +396,11 @@ export function TeamScreen({
   const coach = useStaff().coach;
   return (
     <>
-      <header className="relative flex min-h-14 shrink-0 items-center gap-1.5 py-2 pr-2.5 pl-1.5 md:gap-3 md:border-b md:border-border-subtle md:px-5 md:py-0">
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="size-11 text-muted md:hidden"
-        >
-          <Link href="/coach" aria-label="Retour aux conversations">
-            <ChevronLeftIcon aria-hidden="true" />
-          </Link>
-        </Button>
-        <span className="text-base font-semibold md:hidden">L’équipe</span>
-        <SidebarTrigger
-          aria-label="Afficher ou masquer la barre latérale"
-          className="max-md:hidden"
-        />
-        <Separator
-          orientation="vertical"
-          className="max-md:hidden data-vertical:h-4 data-vertical:self-center"
-        />
-        <nav
-          aria-label="Fil d’Ariane"
-          className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground max-md:hidden"
-        >
-          <Link href="/coach" className="hover:text-foreground">
-            Coach
-          </Link>
-          <span aria-hidden="true">/</span>
-          <span aria-current="page" className="text-foreground">
-            L’équipe
-          </span>
-        </nav>
-        <DataActivityThread />
-      </header>
+      <AppHeader
+        title="L’équipe"
+        back={{ href: "/coach", label: "Retour aux conversations" }}
+        crumbs={[{ label: "Coach", href: "/coach" }, { label: "L’équipe" }]}
+      />
       <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
         <main className="mx-auto flex w-full max-w-280 flex-col gap-4 px-4 pt-1 pb-14 md:gap-7 md:px-[clamp(20px,3vw,44px)] md:pt-8">
           <div className="flex flex-col gap-2 md:gap-2.5">
