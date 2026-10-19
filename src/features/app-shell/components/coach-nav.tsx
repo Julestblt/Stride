@@ -32,7 +32,7 @@ export function CoachNavItem({
   return (
     <NavItem
       href="/coach"
-      icon={<StrideMark className="stroke-current" />}
+      icon={<StrideMark className="stroke-current" strokeWidth="1.8" />}
       label="Coach"
       isActive={active}
       attention={waiting > 0}

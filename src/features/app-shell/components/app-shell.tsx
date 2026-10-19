@@ -8,15 +8,15 @@ import {
 } from "@/features/data-activity/components/status";
 import type { DataActivityObservation } from "@/features/data-activity/model";
 import Link from "next/link";
+import { PlusIcon } from "lucide-react";
 import {
-  ActivityIcon,
-  ChartColumnIcon,
-  CircleDotIcon,
-  AppleIcon,
-  FlagIcon,
-  PlusIcon,
-  TrendingUpIcon,
-} from "lucide-react";
+  NavActivitiesIcon,
+  NavNutritionIcon,
+  NavPlanIcon,
+  NavProgressIcon,
+  NavRacesIcon,
+  NavTodayIcon,
+} from "@/components/stride/nav-icons";
 import {
   DropdownMenuContent,
   DropdownMenuItem,
@@ -117,33 +117,33 @@ export function AppShell({
                 <SidebarMenu>
                   <ShellNavItem
                     href="/today"
-                    icon={<CircleDotIcon />}
+                    icon={<NavTodayIcon />}
                     label="Aujourd’hui"
                   />
                   <CoachNavItem attention={coachAttention} />
                   <ShellNavItem
                     href="/plan"
-                    icon={<ChartColumnIcon />}
+                    icon={<NavPlanIcon />}
                     label="Plan"
                   />
                   <ShellNavItem
                     href="/activities"
-                    icon={<ActivityIcon />}
+                    icon={<NavActivitiesIcon />}
                     label="Activités"
                   />
                   <ShellNavItem
                     href="/progress"
-                    icon={<TrendingUpIcon />}
+                    icon={<NavProgressIcon />}
                     label="Progression"
                   />
                   <ShellNavItem
                     href="/nutrition"
-                    icon={<AppleIcon />}
+                    icon={<NavNutritionIcon />}
                     label="Nutrition"
                   />
                   <ShellNavItem
                     href="/races"
-                    icon={<FlagIcon />}
+                    icon={<NavRacesIcon />}
                     label="Courses"
                   />
                 </SidebarMenu>
