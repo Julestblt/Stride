@@ -23,9 +23,11 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=infisical/cli:0.44.2 /bin/infisical /usr/local/bin/infisical
 COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/package.json /app/next.config.ts ./
 COPY --from=build --chown=node:node /app/.next ./.next
 USER node
 EXPOSE 3000
-CMD ["node_modules/.bin/next", "start"]
+CMD ["sh", "-c", "INFISICAL_TOKEN=\"$(infisical login --method=universal-auth --silent --plain)\" && export INFISICAL_TOKEN && exec infisical run --env=prod --silent -- node_modules/.bin/next start"]

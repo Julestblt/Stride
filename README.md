@@ -23,12 +23,19 @@ The landing page runs without external credentials. Copy `.env.example` to `.env
 
 ## Docker
 
-The `Dockerfile` builds a production image that serves the app with `next start` on port 3000. Public Supabase values are inlined into the browser bundle at build time, so pass them as build arguments. Provide server-only values (`SITE_URL`, `GARMIN_API_URL`, `ANTHROPIC_API_KEY`, and the others in `.env.example`) as runtime environment variables.
+The `Dockerfile` builds a production image that serves the app with `next start` on port 3000. Public Supabase values are inlined into the browser bundle at build time, so pass them as build arguments. At startup the container signs in to Infisical with a machine identity (universal auth) and injects the `prod` environment of the Stride project into `next start`. Server-only values (`SITE_URL`, `GARMIN_API_URL`, `ANTHROPIC_API_KEY`, and the others in `.env.example`) live in Infisical; the container only receives the identity credentials. The container does not start the app if authentication fails.
 
     docker build \
       --build-arg NEXT_PUBLIC_SUPABASE_URL=... \
       --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=... \
       -t stride .
+
+    docker run -p 3000:3000 \
+      -e INFISICAL_DOMAIN=https://infisical.julez.cat \
+      -e INFISICAL_PROJECT_ID=... \
+      -e INFISICAL_UNIVERSAL_AUTH_CLIENT_ID=... \
+      -e INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET=... \
+      stride
 
 ## Local database
 
