@@ -1,12 +1,16 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
-  ActivityIcon,
-  ChartNoAxesColumnIcon,
-  CircleDotIcon,
-  FlagIcon,
-  TrendingUpIcon,
-} from "lucide-react";
+  NavActivitiesIcon,
+  NavPlanIcon,
+  NavProgressIcon,
+  NavRacesIcon,
+  NavTodayIcon,
+  TabActivitiesIcon,
+  TabPlanIcon,
+  TabProgressIcon,
+  TabTodayIcon,
+} from "@/components/stride/nav-icons";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenuContent,
@@ -71,7 +75,7 @@ export default async function ShellPage() {
             <SidebarMenu>
               <NavItem
                 href={shell}
-                icon={<CircleDotIcon />}
+                icon={<NavTodayIcon />}
                 label="Today"
                 isActive
                 attention
@@ -83,29 +87,31 @@ export default async function ShellPage() {
               />
               <NavItem
                 href={`${shell}#coach`}
-                icon={<StrideMark className="stroke-current" />}
+                icon={
+                  <StrideMark className="stroke-current" strokeWidth="1.8" />
+                }
                 label="Coach"
                 attention
                 badge={<NavBadge kind="count">2</NavBadge>}
               />
               <NavItem
                 href={`${shell}#plan`}
-                icon={<ChartNoAxesColumnIcon />}
+                icon={<NavPlanIcon />}
                 label="Plan"
               />
               <NavItem
                 href={`${shell}#activities`}
-                icon={<ActivityIcon />}
+                icon={<NavActivitiesIcon />}
                 label="Activities"
               />
               <NavItem
                 href={`${shell}#progress`}
-                icon={<TrendingUpIcon />}
+                icon={<NavProgressIcon />}
                 label="Progress"
               />
               <NavItem
                 href={`${shell}#races`}
-                icon={<FlagIcon />}
+                icon={<NavRacesIcon />}
                 label="Races"
               />
             </SidebarMenu>
@@ -209,12 +215,8 @@ export default async function ShellPage() {
         </div>
       </SidebarInset>
       <MobileTabBar className="fixed inset-x-0 bottom-0 z-20 md:hidden">
-        <MobileTab href={shell} icon={<CircleDotIcon />} label="Aujourd’hui" />
-        <MobileTab
-          href={`${shell}#plan`}
-          icon={<ChartNoAxesColumnIcon />}
-          label="Plan"
-        />
+        <MobileTab href={shell} icon={<TabTodayIcon />} label="Aujourd’hui" />
+        <MobileTab href={`${shell}#plan`} icon={<TabPlanIcon />} label="Plan" />
         <MobileAskAction
           href={`${shell}#coach`}
           label="Coach, 2 questions en attente"
@@ -230,12 +232,12 @@ export default async function ShellPage() {
         />
         <MobileTab
           href={`${shell}#activities`}
-          icon={<ActivityIcon />}
+          icon={<TabActivitiesIcon />}
           label="Activités"
         />
         <MobileTab
           href={`${shell}#progress`}
-          icon={<TrendingUpIcon />}
+          icon={<TabProgressIcon />}
           label="Progression"
         />
       </MobileTabBar>

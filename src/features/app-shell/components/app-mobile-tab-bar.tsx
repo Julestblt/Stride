@@ -2,11 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import {
-  ActivityIcon,
-  ChartColumnIcon,
-  CircleDotIcon,
-  TrendingUpIcon,
-} from "lucide-react";
+  TabActivitiesIcon,
+  TabPlanIcon,
+  TabProgressIcon,
+  TabTodayIcon,
+} from "@/components/stride/nav-icons";
 import {
   MobileAskAction,
   MobileTab,
@@ -38,8 +38,8 @@ export function AppMobileTabBar({
   );
   return (
     <MobileTabBar className="relative z-10 shrink-0 md:hidden print:hidden">
-      {tab("/today", <CircleDotIcon />, "Aujourd’hui")}
-      {tab("/plan", <ChartColumnIcon />, "Plan")}
+      {tab("/today", <TabTodayIcon />, "Aujourd’hui")}
+      {tab("/plan", <TabPlanIcon />, "Plan")}
       <MobileAskAction
         href="/coach"
         label={coachActionLabel(attention)}
@@ -55,8 +55,8 @@ export function AppMobileTabBar({
           ) : undefined
         }
       />
-      {tab("/activities", <ActivityIcon />, "Activités")}
-      {tab("/progress", <TrendingUpIcon />, "Progression")}
+      {tab("/activities", <TabActivitiesIcon />, "Activités")}
+      {tab("/progress", <TabProgressIcon />, "Progression")}
     </MobileTabBar>
   );
 }
