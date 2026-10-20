@@ -126,7 +126,7 @@ function Chips<T extends string>({
       <legend className="pb-2 text-meta text-muted">{legend}</legend>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
-          <label key={option} className="cursor-pointer">
+          <label key={option} className="relative cursor-pointer">
             <input
               className="peer sr-only"
               type="radio"
