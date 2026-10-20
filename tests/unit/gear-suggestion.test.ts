@@ -74,3 +74,19 @@ describe("form parsing", () => {
     );
   });
 });
+
+describe("suggested fields", () => {
+  it("dedupes repeated fields instead of refusing the pair", async () => {
+    const { suggestedFieldsSchema } = await import("@/features/gear/model");
+    expect(
+      suggestedFieldsSchema.parse([
+        "terrain",
+        "category",
+        "description",
+        "category",
+        "terrain",
+        "description",
+      ]),
+    ).toEqual(["category", "terrain", "description"]);
+  });
+});

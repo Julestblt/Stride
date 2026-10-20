@@ -35,6 +35,7 @@ import {
   garminDefaults,
   shoeCategories,
   shoeTerrains,
+  suggestedFields,
   terrainLabels,
   type GarminDefault,
   type ShoeCategory,
@@ -273,13 +274,10 @@ export function ShoeForm({
         return;
       }
       const found = result.suggestion;
-      const fields: SuggestedField[] = [];
+      const fields = suggestedFields.filter((field) => found[field] !== null);
       setDraft((current) => {
         const category = found.category ?? current.category;
         const terrain = found.terrain ?? current.terrain;
-        if (found.category) fields.push("category");
-        if (found.terrain) fields.push("terrain");
-        if (found.description) fields.push("description");
         return {
           ...current,
           brand: found.brand ?? current.brand,

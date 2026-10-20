@@ -68,7 +68,10 @@ export const isoDateSchema = z.iso.date();
 
 export const suggestedFieldsSchema = z
   .array(z.enum(suggestedFields))
-  .max(suggestedFields.length);
+  .max(12)
+  .transform((fields) =>
+    suggestedFields.filter((field) => fields.includes(field)),
+  );
 
 export const newShoeSchema = z.strictObject({
   spec: shoeSpecSchema,
