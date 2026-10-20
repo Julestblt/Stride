@@ -178,9 +178,31 @@ export function GearDetail({
 
       <div className="grid grid-cols-1 items-start gap-3.5 lg:grid-cols-2">
         <section className="flex flex-col gap-3 rounded-panel border border-border bg-surface p-5">
-          <h2 className="text-lead font-semibold">Fiche technique</h2>
+          <h2 className="text-lead font-semibold">La paire</h2>
+          {shoe.spec.description && (
+            <div className="flex flex-col gap-1.5 rounded-card border border-border bg-surface-panel px-4 py-3.5">
+              <MonoLabel
+                size="nano"
+                className="inline-flex items-center gap-1.5"
+              >
+                <SourceMark
+                  source={
+                    shoe.suggested.includes("description")
+                      ? "estimate"
+                      : "manual"
+                  }
+                />
+                {shoe.suggested.includes("description")
+                  ? "Suggestion Stride"
+                  : "Toi"}
+              </MonoLabel>
+              <p className="text-[15px] leading-normal">
+                {shoe.spec.description}
+              </p>
+            </div>
+          )}
           <dl className="grid grid-cols-2 gap-x-5">
-            {specRows(shoe.spec).map((row) => (
+            {specRows(shoe.spec, shoe.suggested).map((row) => (
               <div
                 key={row.label}
                 className="flex flex-col gap-0.5 border-t border-border py-2.5"
@@ -192,7 +214,7 @@ export function GearDetail({
                     row.value === null && "text-muted-foreground",
                   )}
                 >
-                  {row.value ?? "Non renseigné"}
+                  {row.value ?? "Non renseignée"}
                 </dd>
               </div>
             ))}

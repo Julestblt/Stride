@@ -27,6 +27,7 @@ function shoeInput(
   return {
     id: shoe.id,
     spec: shoe.spec,
+    suggested: shoe.suggested,
     startingDistanceM: shoe.startingDistanceM,
     firstUseDate: shoe.firstUseDate,
     retiredOn: shoe.retiredOn,

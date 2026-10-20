@@ -1,9 +1,9 @@
 import { formatFrenchDate } from "@/features/onboarding/dates";
 import {
   categoryLabels,
-  plateLabels,
   terrainLabels,
   type ShoeSpec,
+  type SuggestedField,
 } from "./model";
 import {
   pairWear,
@@ -16,6 +16,7 @@ import {
 export type ShoeInput = {
   id: string;
   spec: ShoeSpec;
+  suggested: SuggestedField[];
   startingDistanceM: number;
   firstUseDate: string;
   retiredOn: string | null;
@@ -70,25 +71,6 @@ export function modelName(spec: Pick<ShoeSpec, "model" | "version">) {
   return [spec.model, spec.version].filter(Boolean).join(" ");
 }
 
-export function specSummary(spec: ShoeSpec) {
-  return [
-    spec.dropMm !== null
-      ? `Drop ${decimalFormat.format(spec.dropMm)} mm`
-      : null,
-    spec.lugDepthMm !== null && spec.lugDepthMm > 0
-      ? `crampons ${decimalFormat.format(spec.lugDepthMm)} mm`
-      : null,
-    spec.weightG !== null ? `${spec.weightG} g` : null,
-    spec.plate !== null
-      ? spec.plate === "none"
-        ? "sans plaque"
-        : `plaque ${plateLabels[spec.plate].toLowerCase()}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 function wearOf(shoe: ShoeInput) {
   return pairWear({
     startingDistanceM: shoe.startingDistanceM,
@@ -113,7 +95,7 @@ export function pairCard(shoe: ShoeInput, today: string): PairCardView {
     id: shoe.id,
     brand: shoe.spec.brand,
     model: modelName(shoe.spec),
-    category: categoryLabels[shoe.spec.category],
+    category: `${categoryLabels[shoe.spec.category]} · ${terrainLabels[shoe.spec.terrain]}`,
     terrain: terrainLabels[shoe.spec.terrain],
     wear,
     high: wearIsHigh(wear),
@@ -121,7 +103,7 @@ export function pairCard(shoe: ShoeInput, today: string): PairCardView {
     lifespanKm: formatKm(wear.lifespanKm),
     percent: `${wear.percent} %`,
     remaining: remainingText(wear, replacement),
-    specs: specSummary(shoe.spec),
+    specs: shoe.spec.description ?? "",
     lastRun: last
       ? `${formatDay(last.day)} · ${last.name ?? "Sortie"} ${decimalFormat.format(last.distanceM / 1000)} km`
       : null,
@@ -152,37 +134,38 @@ export function pairList(shoes: ShoeInput[], today: string): PairListView {
   };
 }
 
-export type SpecRow = { label: string; value: string | null };
+export type SpecRow = {
+  label: string;
+  value: string | null;
+  source: "manual" | "estimate";
+};
 
-export function specRows(spec: ShoeSpec): SpecRow[] {
-  const mm = (value: number | null) =>
-    value === null ? null : `${decimalFormat.format(value)} mm`;
+export function specRows(
+  spec: ShoeSpec,
+  suggested: SuggestedField[],
+): SpecRow[] {
+  const source = (field: SuggestedField) =>
+    suggested.includes(field) ? ("estimate" as const) : ("manual" as const);
   return [
-    { label: "Catégorie", value: categoryLabels[spec.category] },
-    { label: "Mousse", value: spec.foam },
     {
-      label: "Hauteur talon / avant-pied",
-      value:
-        spec.stackHeelMm !== null && spec.stackForefootMm !== null
-          ? `${decimalFormat.format(spec.stackHeelMm)} / ${decimalFormat.format(spec.stackForefootMm)} mm`
-          : null,
-    },
-    { label: "Drop", value: mm(spec.dropMm) },
-    {
-      label: "Poids",
-      value:
-        spec.weightG === null
-          ? null
-          : spec.sizeEu === null
-            ? `${spec.weightG} g`
-            : `${spec.weightG} g · pointure ${decimalFormat.format(spec.sizeEu)}`,
+      label: "Type",
+      value: categoryLabels[spec.category],
+      source: source("category"),
     },
     {
-      label: "Plaque",
-      value: spec.plate === null ? null : plateLabels[spec.plate],
+      label: "Terrain",
+      value: terrainLabels[spec.terrain],
+      source: source("terrain"),
     },
-    { label: "Profondeur des crampons", value: mm(spec.lugDepthMm) },
-    { label: "Terrain", value: terrainLabels[spec.terrain] },
-    { label: "Durée de vie", value: `${formatKm(spec.lifespanKm)} km` },
+    {
+      label: "Durée de vie",
+      value: `${formatKm(spec.lifespanKm)} km`,
+      source: "manual",
+    },
+    {
+      label: "Pointure",
+      value: spec.sizeEu === null ? null : decimalFormat.format(spec.sizeEu),
+      source: "manual",
+    },
   ];
 }

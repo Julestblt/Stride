@@ -34,6 +34,7 @@ export default async function EditShoeRoute({
         mode="edit"
         id={shoe.id}
         spec={shoe.spec}
+        suggested={shoe.suggested}
         today={localToday(new Date())}
       />
     </GearFrame>

@@ -14,9 +14,11 @@ import { gearErrorMessage, parseKm } from "../form";
 import {
   categoryLabels,
   defaultLifespanKm,
-  defaultTerrain,
   shoeCategories,
+  shoeTerrains,
+  terrainLabels,
   type ShoeCategory,
+  type ShoeTerrain,
 } from "../model";
 
 export type ImportableGear = {
@@ -32,6 +34,7 @@ type Row = {
   selected: boolean;
   currentKm: string;
   category: ShoeCategory;
+  terrain: ShoeTerrain;
 };
 
 const kmFormat = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
@@ -45,9 +48,10 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
         {
           selected: !item.retired,
           currentKm: String(Math.round(item.garminKm)),
-          category: /trail|speedgoat|zegama|glide/i.test(item.name)
+          category: "daily",
+          terrain: /trail|speedgoat|zegama|glide|mafate|xodus/i.test(item.name)
             ? "trail"
-            : "daily",
+            : "road",
         },
       ]),
     ),
@@ -81,8 +85,8 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
             brand: item.brand,
             model: item.model,
             category: row.category,
-            terrain: defaultTerrain[row.category],
-            lifespanKm: defaultLifespanKm[row.category],
+            terrain: row.terrain,
+            lifespanKm: defaultLifespanKm(row.category, row.terrain),
             currentKm: parseKm(row.currentKm) ?? item.garminKm,
           };
         }),
@@ -152,22 +156,40 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
                       : "active dans Garmin"}
                   </span>
                 </label>
-                <select
-                  aria-label={`Catégorie de ${item.name}`}
-                  value={row.category}
-                  onChange={(event) =>
-                    update(item.gearUuid, {
-                      category: event.target.value as ShoeCategory,
-                    })
-                  }
-                  className="h-9 w-fit rounded-control border border-border-strong bg-surface-panel px-2.5 text-meta text-foreground"
-                >
-                  {shoeCategories.map((category) => (
-                    <option key={category} value={category}>
-                      {categoryLabels[category]}
-                    </option>
-                  ))}
-                </select>
+                <span className="flex flex-wrap gap-2">
+                  <select
+                    aria-label={`Type de ${item.name}`}
+                    value={row.category}
+                    onChange={(event) =>
+                      update(item.gearUuid, {
+                        category: event.target.value as ShoeCategory,
+                      })
+                    }
+                    className="h-9 w-fit rounded-control border border-border-strong bg-surface-panel px-2.5 text-meta text-foreground"
+                  >
+                    {shoeCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {categoryLabels[category]}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    aria-label={`Terrain de ${item.name}`}
+                    value={row.terrain}
+                    onChange={(event) =>
+                      update(item.gearUuid, {
+                        terrain: event.target.value as ShoeTerrain,
+                      })
+                    }
+                    className="h-9 w-fit rounded-control border border-border-strong bg-surface-panel px-2.5 text-meta text-foreground"
+                  >
+                    {shoeTerrains.map((terrain) => (
+                      <option key={terrain} value={terrain}>
+                        {terrainLabels[terrain]}
+                      </option>
+                    ))}
+                  </select>
+                </span>
               </div>
               <span className="col-start-2 flex items-center gap-2 sm:col-start-auto sm:flex-col sm:items-end sm:gap-0.5">
                 <span className="font-metric text-[19px] font-semibold tabular-nums">

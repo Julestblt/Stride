@@ -6,24 +6,17 @@ create table public.athlete_shoes (
   model text not null check (char_length(model) between 1 and 80),
   version text check (char_length(version) between 1 and 20),
   category text not null
-    check (category in ('daily', 'tempo', 'race', 'trail', 'recovery')),
-  terrain text not null check (terrain in ('road', 'trail', 'mixed', 'track')),
-  foam text check (char_length(foam) between 1 and 60),
-  stack_heel_mm numeric(4, 1) check (stack_heel_mm between 5 and 60),
-  stack_forefoot_mm numeric(4, 1) check (stack_forefoot_mm between 5 and 60),
-  drop_mm numeric(3, 1) check (drop_mm between 0 and 20),
-  weight_g smallint check (weight_g between 80 and 600),
-  plate text check (plate in ('none', 'nylon', 'tpu', 'carbon')),
-  lug_depth_mm numeric(3, 1) check (lug_depth_mm between 0 and 10),
+    check (category in ('daily', 'tempo', 'race', 'recovery')),
+  terrain text not null check (terrain in ('road', 'trail', 'mixed')),
+  description text check (char_length(description) between 1 and 240),
+  suggested_fields text[] not null default '{}'
+    check (suggested_fields <@ array['category', 'terrain', 'description']),
   size_eu numeric(3, 1) check (size_eu between 30 and 52),
   lifespan_km smallint not null check (lifespan_km between 100 and 3000),
   starting_distance_m integer not null default 0
     check (starting_distance_m between 0 and 5000000),
   first_use_date date not null,
   retired_on date,
-  field_sources jsonb not null default '{}'::jsonb
-    check (jsonb_typeof(field_sources) = 'object'),
-  notes text check (char_length(notes) <= 500),
   revision integer not null default 1 check (revision > 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -52,14 +45,11 @@ create policy athlete_shoes_owner_delete on public.athlete_shoes
 revoke all on public.athlete_shoes from anon, authenticated;
 grant select, delete on public.athlete_shoes to authenticated;
 grant insert (
-  user_id, garmin_gear_uuid, brand, model, version, category, terrain, foam,
-  stack_heel_mm, stack_forefoot_mm, drop_mm, weight_g, plate, lug_depth_mm,
-  size_eu, lifespan_km, starting_distance_m, first_use_date, retired_on,
-  field_sources, notes
+  user_id, garmin_gear_uuid, brand, model, version, category, terrain,
+  description, suggested_fields, size_eu, lifespan_km, starting_distance_m,
+  first_use_date, retired_on
 ) on public.athlete_shoes to authenticated;
 grant update (
-  brand, model, version, category, terrain, foam, stack_heel_mm,
-  stack_forefoot_mm, drop_mm, weight_g, plate, lug_depth_mm, size_eu,
-  lifespan_km, starting_distance_m, first_use_date, retired_on, field_sources,
-  notes
+  brand, model, version, category, terrain, description, suggested_fields,
+  size_eu, lifespan_km, starting_distance_m, first_use_date, retired_on
 ) on public.athlete_shoes to authenticated;

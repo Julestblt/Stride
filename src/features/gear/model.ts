@@ -1,41 +1,26 @@
 import { z } from "zod";
 
-export const shoeCategories = [
-  "daily",
-  "tempo",
-  "race",
-  "trail",
-  "recovery",
-] as const;
-export const shoeTerrains = ["road", "trail", "mixed", "track"] as const;
-export const shoePlates = ["none", "nylon", "tpu", "carbon"] as const;
+export const shoeCategories = ["daily", "tempo", "race", "recovery"] as const;
+export const shoeTerrains = ["road", "trail", "mixed"] as const;
+export const suggestedFields = ["category", "terrain", "description"] as const;
 export const garminDefaults = ["none", "running", "trail_running"] as const;
 
 export type ShoeCategory = (typeof shoeCategories)[number];
 export type ShoeTerrain = (typeof shoeTerrains)[number];
-export type ShoePlate = (typeof shoePlates)[number];
+export type SuggestedField = (typeof suggestedFields)[number];
 export type GarminDefault = (typeof garminDefaults)[number];
 
 export const categoryLabels: Record<ShoeCategory, string> = {
   daily: "Quotidienne",
-  tempo: "Quotidienne rapide",
-  race: "Course · plaque",
-  trail: "Trail",
+  tempo: "Rapide / tempo",
+  race: "Course carbone",
   recovery: "Récupération",
 };
 
 export const terrainLabels: Record<ShoeTerrain, string> = {
   road: "Route",
   trail: "Trail",
-  mixed: "Route et chemins",
-  track: "Piste",
-};
-
-export const plateLabels: Record<ShoePlate, string> = {
-  none: "Aucune",
-  nylon: "Nylon",
-  tpu: "TPU",
-  carbon: "Carbone",
+  mixed: "Mixte",
 };
 
 export const garminDefaultLabels: Record<GarminDefault, string> = {
@@ -44,21 +29,18 @@ export const garminDefaultLabels: Record<GarminDefault, string> = {
   trail_running: "Trail",
 };
 
-export const defaultLifespanKm: Record<ShoeCategory, number> = {
-  daily: 800,
-  tempo: 700,
-  race: 400,
-  trail: 700,
-  recovery: 800,
-};
+export function defaultLifespanKm(
+  category: ShoeCategory,
+  terrain: ShoeTerrain,
+) {
+  if (category === "race") return 400;
+  if (category === "tempo" || terrain === "trail") return 700;
+  return 800;
+}
 
-export const defaultTerrain: Record<ShoeCategory, ShoeTerrain> = {
-  daily: "road",
-  tempo: "road",
-  race: "road",
-  trail: "trail",
-  recovery: "road",
-};
+export function defaultGarminActivity(terrain: ShoeTerrain): GarminDefault {
+  return terrain === "trail" ? "trail_running" : "running";
+}
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 const optionalText = (max: number) =>
@@ -68,8 +50,6 @@ const optionalText = (max: number) =>
     .max(max)
     .transform((value) => value || null)
     .nullable();
-const optionalNumber = (min: number, max: number) =>
-  z.number().min(min).max(max).nullable();
 
 export const shoeSpecSchema = z.strictObject({
   brand: text(60),
@@ -77,50 +57,25 @@ export const shoeSpecSchema = z.strictObject({
   version: optionalText(20),
   category: z.enum(shoeCategories),
   terrain: z.enum(shoeTerrains),
-  foam: optionalText(60),
-  stackHeelMm: optionalNumber(5, 60),
-  stackForefootMm: optionalNumber(5, 60),
-  dropMm: optionalNumber(0, 20),
-  weightG: z.number().int().min(80).max(600).nullable(),
-  plate: z.enum(shoePlates).nullable(),
-  lugDepthMm: optionalNumber(0, 10),
-  sizeEu: optionalNumber(30, 52),
+  description: optionalText(240),
+  sizeEu: z.number().min(30).max(52).nullable(),
   lifespanKm: z.number().int().min(100).max(3000),
-  notes: optionalText(500),
 });
 
 export type ShoeSpec = z.output<typeof shoeSpecSchema>;
 
 export const isoDateSchema = z.iso.date();
 
-export const specSourceFields = [
-  "brand",
-  "model",
-  "version",
-  "category",
-  "terrain",
-  "foam",
-  "stackHeelMm",
-  "stackForefootMm",
-  "dropMm",
-  "weightG",
-  "plate",
-  "lugDepthMm",
-] as const;
-
-export const specSourcesSchema = z.strictObject({
-  url: z.url().max(500),
-  fields: z.array(z.enum(specSourceFields)).max(specSourceFields.length),
-});
-
-export type SpecSources = z.output<typeof specSourcesSchema>;
+export const suggestedFieldsSchema = z
+  .array(z.enum(suggestedFields))
+  .max(suggestedFields.length);
 
 export const newShoeSchema = z.strictObject({
   spec: shoeSpecSchema,
   currentKm: z.number().min(0).max(5000),
   firstUseDate: isoDateSchema,
   garminDefault: z.enum(garminDefaults),
-  sources: specSourcesSchema.nullable(),
+  suggested: suggestedFieldsSchema,
 });
 
 export type NewShoe = z.output<typeof newShoeSchema>;

@@ -41,7 +41,7 @@ select throws_ok(
 select throws_ok(
   $$insert into public.athlete_shoes
       (user_id, brand, model, category, terrain, lifespan_km, first_use_date)
-    values ('b2000000-0000-4000-8000-00000000000b', 'Nike', 'Zegama', 'trail', 'trail', 700, '2026-05-01')$$,
+    values ('b2000000-0000-4000-8000-00000000000b', 'Nike', 'Zegama', 'daily', 'trail', 700, '2026-05-01')$$,
   '42501', null, 'athlete cannot add a pair for someone else'
 );
 reset role;

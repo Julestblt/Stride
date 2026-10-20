@@ -8,6 +8,7 @@ import {
   importShoesSchema,
   newShoeSchema,
   shoeSpecSchema,
+  suggestedFieldsSchema,
   type GarminDefault,
 } from "@/features/gear/model";
 import {
@@ -17,9 +18,8 @@ import {
 import type { GarminFailure } from "@/features/garmin/connection";
 import { getGarminClient } from "@/server/garmin/session";
 import { getOnboardingContext } from "@/server/onboarding/context";
-import { extractShoeSpec } from "@/server/ai/skills/shoe-spec-extraction";
-import type { PageSpec } from "@/features/gear/product-page";
-import { fetchProductPage } from "./product-page";
+import { suggestShoeFromName } from "@/server/ai/skills/shoe-suggestion";
+import type { ShoeSuggestion } from "@/features/gear/suggestion";
 import { readGarminGear, readShoe, shoeColumns } from "./shoes";
 
 export type GearActionResult =
@@ -65,7 +65,8 @@ export async function createShoe(input: unknown): Promise<GearActionResult> {
   if (!parsed.success) return { status: "invalid" };
   const athlete = await context();
   if (!athlete) return { status: "session-expired" };
-  const { spec, currentKm, firstUseDate, garminDefault, sources } = parsed.data;
+  const { spec, currentKm, firstUseDate, garminDefault, suggested } =
+    parsed.data;
   const startingDistanceM = startingDistanceFor(currentKm, 0);
   const created = await getGarminClient()
     .createGear(
@@ -93,7 +94,7 @@ export async function createShoe(input: unknown): Promise<GearActionResult> {
       ...shoeColumns(spec),
       starting_distance_m: startingDistanceM,
       first_use_date: firstUseDate,
-      field_sources: sources ? { url: sources.url, page: sources.fields } : {},
+      suggested_fields: suggested,
     })
     .select("id")
     .single();
@@ -149,7 +150,11 @@ export async function importShoes(input: unknown): Promise<GearActionResult> {
   return { status: "saved", count };
 }
 
-const updateSchema = z.strictObject({ id: z.uuid(), spec: shoeSpecSchema });
+const updateSchema = z.strictObject({
+  id: z.uuid(),
+  spec: shoeSpecSchema,
+  suggested: suggestedFieldsSchema,
+});
 
 export async function updateShoe(input: unknown): Promise<GearActionResult> {
   const parsed = updateSchema.safeParse(input);
@@ -158,7 +163,7 @@ export async function updateShoe(input: unknown): Promise<GearActionResult> {
   if (!athlete) return { status: "session-expired" };
   const shoe = await readShoe(athlete, parsed.data.id);
   if (!shoe) return { status: "not-found" };
-  const { spec } = parsed.data;
+  const { spec, suggested } = parsed.data;
   if (shoe.garminGearUuid) {
     const updated = await getGarminClient()
       .updateGear({ accessToken: athlete.accessToken }, shoe.garminGearUuid, {
@@ -174,7 +179,7 @@ export async function updateShoe(input: unknown): Promise<GearActionResult> {
   }
   const { error } = await athlete.client
     .from("athlete_shoes")
-    .update(shoeColumns(spec))
+    .update({ ...shoeColumns(spec), suggested_fields: suggested })
     .eq("id", shoe.id);
   if (error) return { status: "error" };
   refresh(shoe.id);
@@ -255,35 +260,16 @@ export async function setShoeRetired(
   return { status: "saved", id: shoe.id };
 }
 
-export type LinkExtraction =
-  | { status: "extracted"; url: string; spec: PageSpec }
-  | {
-      status:
-        | "invalid-url"
-        | "blocked"
-        | "unreachable"
-        | "unreadable"
-        | "empty"
-        | "unavailable"
-        | "session-expired";
-    };
+export type SuggestionOutcome =
+  | { status: "suggested"; suggestion: ShoeSuggestion }
+  | { status: "unknown" | "unavailable" | "invalid" | "session-expired" };
 
-const linkSchema = z.strictObject({ url: z.string().trim().min(8).max(500) });
+const nameSchema = z.strictObject({ name: z.string().trim().min(3).max(120) });
 
-export async function extractShoeFromLink(
-  input: unknown,
-): Promise<LinkExtraction> {
-  const parsed = linkSchema.safeParse(input);
-  if (!parsed.success) return { status: "invalid-url" };
+export async function suggestShoe(input: unknown): Promise<SuggestionOutcome> {
+  const parsed = nameSchema.safeParse(input);
+  if (!parsed.success) return { status: "invalid" };
   const athlete = await context();
   if (!athlete) return { status: "session-expired" };
-  const page = await fetchProductPage(parsed.data.url);
-  if (!page.ok)
-    return {
-      status: page.reason === "invalid" ? "invalid-url" : page.reason,
-    };
-  const spec = await extractShoeSpec(page.text);
-  if (!spec) return { status: "unavailable" };
-  if (Object.keys(spec).length === 0) return { status: "empty" };
-  return { status: "extracted", url: page.url, spec };
+  return suggestShoeFromName(parsed.data.name);
 }

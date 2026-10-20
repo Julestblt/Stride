@@ -2,8 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { key: "link", label: "Depuis un lien", href: "/gear/new" },
-  { key: "hand", label: "À la main", href: "/gear/new?via=main" },
+  { key: "name", label: "Par son nom", href: "/gear/new" },
   { key: "garmin", label: "Depuis Garmin", href: "/gear/import" },
 ] as const;
 
@@ -15,7 +14,7 @@ export function AddTabs({
   return (
     <nav
       aria-label="Façon d’ajouter"
-      className="flex max-w-130 gap-1 rounded-card border border-border bg-surface p-1"
+      className="flex max-w-105 gap-1 rounded-card border border-border bg-surface p-1"
     >
       {tabs.map((tab) => (
         <Link

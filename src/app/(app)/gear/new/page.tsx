@@ -7,13 +7,8 @@ import { requireAthlete } from "@/server/app/session";
 
 export const metadata: Metadata = { title: "Ajouter une paire" };
 
-export default async function NewShoeRoute({
-  searchParams,
-}: {
-  searchParams: Promise<{ via?: string }>;
-}) {
+export default async function NewShoeRoute() {
   await requireAthlete();
-  const manual = (await searchParams).via === "main";
   return (
     <GearFrame
       crumbs={[
@@ -27,18 +22,12 @@ export default async function NewShoeRoute({
           Ajouter une paire
         </h1>
         <p className="max-w-155 text-sm text-muted">
-          {manual
-            ? "Renseigne la paire : Stride la crée dans Garmin Connect, qui comptera ses kilomètres."
-            : "Colle le lien de la page produit : Stride lit la page et remplit la fiche. Tu relis avant de valider."}
+          Donne le nom de la paire : Stride propose son type, son terrain et une
+          phrase pour la décrire. Tu corriges si besoin.
         </p>
       </section>
-      <AddTabs current={manual ? "hand" : "link"} />
-      <ShoeForm
-        key={manual ? "hand" : "link"}
-        mode="create"
-        today={localToday(new Date())}
-        withLink={!manual}
-      />
+      <AddTabs current="name" />
+      <ShoeForm mode="create" today={localToday(new Date())} />
     </GearFrame>
   );
 }

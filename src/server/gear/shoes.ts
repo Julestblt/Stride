@@ -2,9 +2,10 @@ import "server-only";
 import { z } from "zod";
 import {
   shoeCategories,
-  shoePlates,
   shoeTerrains,
+  suggestedFields,
   type ShoeSpec,
+  type SuggestedField,
 } from "@/features/gear/model";
 import type { DatedDistance } from "@/features/gear/mileage";
 import type { OnboardingContext } from "@/server/onboarding/context";
@@ -21,19 +22,13 @@ const shoeRowSchema = z.object({
   version: z.string().nullable(),
   category: z.enum(shoeCategories),
   terrain: z.enum(shoeTerrains),
-  foam: z.string().nullable(),
-  stack_heel_mm: numeric,
-  stack_forefoot_mm: numeric,
-  drop_mm: numeric,
-  weight_g: z.number().int().nullable(),
-  plate: z.enum(shoePlates).nullable(),
-  lug_depth_mm: numeric,
+  description: z.string().nullable(),
+  suggested_fields: z.array(z.enum(suggestedFields)),
   size_eu: numeric,
   lifespan_km: z.number().int(),
   starting_distance_m: z.number().int(),
   first_use_date: z.iso.date(),
   retired_on: z.iso.date().nullable(),
-  notes: z.string().nullable(),
   created_at: z.string(),
 });
 
@@ -55,6 +50,7 @@ export type StoredShoe = {
   id: string;
   garminGearUuid: string | null;
   spec: ShoeSpec;
+  suggested: SuggestedField[];
   startingDistanceM: number;
   firstUseDate: string;
   retiredOn: string | null;
@@ -81,17 +77,11 @@ function storedShoe(
       version: row.version,
       category: row.category,
       terrain: row.terrain,
-      foam: row.foam,
-      stackHeelMm: row.stack_heel_mm,
-      stackForefootMm: row.stack_forefoot_mm,
-      dropMm: row.drop_mm,
-      weightG: row.weight_g,
-      plate: row.plate,
-      lugDepthMm: row.lug_depth_mm,
+      description: row.description,
       sizeEu: row.size_eu,
       lifespanKm: row.lifespan_km,
-      notes: row.notes,
     },
+    suggested: row.suggested_fields,
     startingDistanceM: row.starting_distance_m,
     firstUseDate: row.first_use_date,
     retiredOn: row.retired_on,
@@ -107,16 +97,9 @@ export function shoeColumns(spec: ShoeSpec) {
     version: spec.version,
     category: spec.category,
     terrain: spec.terrain,
-    foam: spec.foam,
-    stack_heel_mm: spec.stackHeelMm,
-    stack_forefoot_mm: spec.stackForefootMm,
-    drop_mm: spec.dropMm,
-    weight_g: spec.weightG,
-    plate: spec.plate,
-    lug_depth_mm: spec.lugDepthMm,
+    description: spec.description,
     size_eu: spec.sizeEu,
     lifespan_km: spec.lifespanKm,
-    notes: spec.notes,
   };
 }
 
