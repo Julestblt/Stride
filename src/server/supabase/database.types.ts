@@ -235,6 +235,70 @@ export type Database = {
         };
         Relationships: [];
       };
+      athlete_shoes: {
+        Row: {
+          brand: string;
+          category: string;
+          created_at: string;
+          description: string | null;
+          first_use_date: string;
+          garmin_gear_uuid: string | null;
+          id: string;
+          lifespan_km: number;
+          model: string;
+          retired_on: string | null;
+          revision: number;
+          size_eu: number | null;
+          starting_distance_m: number;
+          suggested_fields: string[];
+          terrain: string;
+          updated_at: string;
+          user_id: string;
+          version: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          brand: string;
+          category: string;
+          created_at?: string;
+          description?: string | null;
+          first_use_date: string;
+          garmin_gear_uuid?: string | null;
+          id?: string;
+          lifespan_km: number;
+          model: string;
+          retired_on?: string | null;
+          revision?: number;
+          size_eu?: number | null;
+          starting_distance_m?: number;
+          suggested_fields?: string[];
+          terrain: string;
+          updated_at?: string;
+          user_id: string;
+          version?: string | null;
+        };
+        Update: {
+          brand?: string;
+          category?: string;
+          created_at?: string;
+          description?: string | null;
+          first_use_date?: string;
+          garmin_gear_uuid?: string | null;
+          id?: string;
+          lifespan_km?: number;
+          model?: string;
+          retired_on?: string | null;
+          revision?: number;
+          size_eu?: number | null;
+          starting_distance_m?: number;
+          suggested_fields?: string[];
+          terrain?: string;
+          updated_at?: string;
+          user_id?: string;
+          version?: string | null;
+        };
+        Relationships: [];
+      };
       athlete_unavailability: {
         Row: {
           created_at: string;
@@ -1006,6 +1070,42 @@ export type Database = {
           },
         ];
       };
+      provider_activity_gear: {
+        Row: {
+          connection_id: string;
+          gear_uuid: string;
+          provider: string;
+          provider_activity_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          connection_id: string;
+          gear_uuid: string;
+          provider?: string;
+          provider_activity_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          connection_id?: string;
+          gear_uuid?: string;
+          provider?: string;
+          provider_activity_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_activity_gear_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "provider_connections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       provider_activity_segments: {
         Row: {
           activity_id: string;
@@ -1174,6 +1274,69 @@ export type Database = {
           user_id?: string;
         };
         Relationships: [];
+      };
+      provider_gear: {
+        Row: {
+          brand: string | null;
+          connection_id: string;
+          display_name: string | null;
+          first_use_date: string | null;
+          gear_type: string;
+          gear_uuid: string;
+          maximum_meters: number | null;
+          model: string | null;
+          provider: string;
+          retired_on: string | null;
+          status: string;
+          total_activities: number;
+          total_distance_meters: number;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          brand?: string | null;
+          connection_id: string;
+          display_name?: string | null;
+          first_use_date?: string | null;
+          gear_type: string;
+          gear_uuid: string;
+          maximum_meters?: number | null;
+          model?: string | null;
+          provider?: string;
+          retired_on?: string | null;
+          status: string;
+          total_activities?: number;
+          total_distance_meters?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          brand?: string | null;
+          connection_id?: string;
+          display_name?: string | null;
+          first_use_date?: string | null;
+          gear_type?: string;
+          gear_uuid?: string;
+          maximum_meters?: number | null;
+          model?: string | null;
+          provider?: string;
+          retired_on?: string | null;
+          status?: string;
+          total_activities?: number;
+          total_distance_meters?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "provider_gear_connection_id_fkey";
+            columns: ["connection_id"];
+            isOneToOne: false;
+            referencedRelation: "provider_connections";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       provider_heart_rate_zones: {
         Row: {

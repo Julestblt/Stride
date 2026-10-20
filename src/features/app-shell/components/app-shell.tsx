@@ -11,6 +11,7 @@ import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import {
   NavActivitiesIcon,
+  NavGearIcon,
   NavNutritionIcon,
   NavPlanIcon,
   NavProgressIcon,
@@ -76,6 +77,7 @@ export function AppShell({
   planHistoryCount = null,
   coachAttention = null,
   todayBadge = null,
+  gearBadge = null,
   staffFaces = defaultStaffFaces,
   children,
 }: {
@@ -89,6 +91,7 @@ export function AppShell({
   planHistoryCount?: number | null;
   coachAttention?: { questions: number; proposals: number } | null;
   todayBadge?: ShellBadge | null;
+  gearBadge?: ShellBadge | null;
   staffFaces?: StaffFaces;
   defaultOpen: boolean;
   children: React.ReactNode;
@@ -179,6 +182,12 @@ export function AppShell({
               <SidebarGroup>
                 <SidebarGroupLabel>Athlète</SidebarGroupLabel>
                 <SidebarMenu>
+                  <ShellNavItem
+                    href="/gear"
+                    icon={<NavGearIcon />}
+                    label="Matériel"
+                    badge={gearBadge}
+                  />
                   <ShellNavItem
                     href="/nutrition"
                     icon={<NavNutritionIcon />}

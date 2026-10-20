@@ -13,7 +13,7 @@ Athletes want each pair's mileage, wear alerts and a pair recommended for every 
 - A pair's mileage is its starting km, stored in Stride, plus Garmin's total distance for that gear. Stride does not keep its own per-activity ledger.
 - Stride creates pairs in Garmin, updates their wear limit and status, and sets the pair of an activity through garmin_mcp. Garmin's wear limit is the lifespan minus the starting km, so Garmin's alert fires at the real end of life. Stride sends no wear alert of its own.
 - After a sync, an activity matched to a planned session without a Garmin pair receives the recommended pair, written to Garmin. When Garmin's pair differs from the planned one, the athlete chooses; any change is written to Garmin and marked as an athlete correction that later syncs do not overwrite.
-- Spec sheets are extracted from a product page the athlete links, read on the server with SSRF guards and the existing JSON completion. Absent fields stay empty. Spec sheets are owned by each athlete.
+- A pair is described by its name, type (daily, tempo, carbon race, recovery), terrain, lifespan and one sentence. From the name, Claude Haiku 5.5 suggests the type, terrain and sentence from its own knowledge, or says it does not know the model; nothing is fetched from external sites. Suggested fields are marked until the athlete changes them. Technical specs (stack, drop, weight) are not stored: they do not change the pair recommended for a session.
 - Recommendations are deterministic domain functions computed on read, with reasons as codes. An athlete override is stored per plan `session_key`.
 - These writes run only from the athlete's own requests or the activity check of their own data. Agents keep read-only access.
 
@@ -21,7 +21,7 @@ Athletes want each pair's mileage, wear alerts and a pair recommended for every 
 
 - A Stride-side ledger summing every activity, independent of Garmin: duplicates Garmin's count and drifts whenever links change in Garmin Connect.
 - Seeding from Strava through an integration: not justified for a one-time value the athlete can type.
-- Web search for specs: more cost and a higher risk of invented values than reading a page the athlete chose.
+- Reading a product page or searching the web for specs: depends on external sites that often block automated reads, and the exact figures do not change the recommendation.
 
 ## Trade-offs
 

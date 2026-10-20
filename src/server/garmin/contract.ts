@@ -279,3 +279,24 @@ export const watchReconcileSchema = z
 export const watchRemovalSchema = z.object({
   removed: z.number().int().nonnegative(),
 });
+
+export const gearRowSchema = z
+  .object({
+    gear_uuid: z.string().regex(/^[0-9a-f]{32}$/),
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    display_name: z.string().nullable(),
+    status: z.enum(["active", "retired"]),
+    first_use_date: z.iso.date().nullable(),
+    maximum_meters: z.number().nullable(),
+    total_distance_meters: z.number(),
+    total_activities: z.number().int(),
+  })
+  .transform((value) => ({
+    gearUuid: value.gear_uuid,
+    status: value.status,
+    maximumMeters: value.maximum_meters,
+    totalDistanceMeters: value.total_distance_meters,
+  }));
+
+export const gearResponseSchema = z.object({ gear: gearRowSchema });

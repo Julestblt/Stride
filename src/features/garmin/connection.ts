@@ -40,6 +40,9 @@ export const garminErrorCodes = [
   "disconnected",
   "connection_replaced",
   "sync_throttled",
+  "gear_not_found",
+  "activity_not_found",
+  "gear_starts_after_activity",
 ] as const;
 
 export type GarminErrorCode = (typeof garminErrorCodes)[number];
