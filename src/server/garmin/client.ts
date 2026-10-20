@@ -13,6 +13,7 @@ import {
   authOutcomeSchema,
   connectionSchema,
   parseFailure,
+  gearResponseSchema,
   syncRequestSchema,
   syncSchema,
   watchReconcileSchema,
@@ -26,6 +27,32 @@ import type {
 import type { WellnessDay } from "@/features/garmin/wellness";
 
 export type GarminRequestContext = { accessToken: string };
+
+type GarminActivityType = "running" | "trail_running" | "treadmill_running";
+
+export type GarminGearCreate = {
+  brand: string;
+  model: string;
+  name: string;
+  first_use_date: string;
+  max_distance_meters: number;
+  default_activity_types: GarminActivityType[];
+};
+
+export type GarminGearUpdate = {
+  name?: string;
+  max_distance_meters?: number;
+  default_activity_types?: GarminActivityType[];
+  status?: "active" | "retired";
+};
+
+export type GarminGear = z.output<typeof gearResponseSchema>["gear"];
+
+function unwrapGear(
+  result: GarminResult<z.output<typeof gearResponseSchema>>,
+): GarminResult<GarminGear> {
+  return result.ok ? { ok: true, value: result.value.gear } : result;
+}
 
 type GarminClientOptions = {
   baseUrl: string;
@@ -52,7 +79,7 @@ export function createGarminClient({
     schema: Schema,
     timeoutMs: number,
     body?: unknown,
-    method: "GET" | "POST" | "PUT" | "DELETE" = body ? "POST" : "GET",
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" = body ? "POST" : "GET",
   ): Promise<GarminResult<z.output<Schema>>> {
     let response: Response;
     try {
@@ -179,6 +206,32 @@ export function createGarminClient({
         body,
         "PUT",
       );
+    },
+    createGear(
+      context: GarminRequestContext,
+      body: GarminGearCreate,
+    ): Promise<GarminResult<GarminGear>> {
+      return request(
+        context,
+        "/v1/connections/garmin/gear",
+        gearResponseSchema,
+        workoutTimeoutMs,
+        body,
+      ).then(unwrapGear);
+    },
+    updateGear(
+      context: GarminRequestContext,
+      gearUuid: string,
+      body: GarminGearUpdate,
+    ): Promise<GarminResult<GarminGear>> {
+      return request(
+        context,
+        `/v1/connections/garmin/gear/${encodeURIComponent(gearUuid)}`,
+        gearResponseSchema,
+        workoutTimeoutMs,
+        body,
+        "PATCH",
+      ).then(unwrapGear);
     },
     removeWorkouts(
       context: GarminRequestContext,
