@@ -12,5 +12,6 @@ These documents define capability boundaries and expected outcomes. They do not 
 | [E-05 Stride Coach](E-05-stride-coach.md)                                             | Context-aware, structured coaching interaction                        | E-01, E-03; E-04 for plan changes           |
 | [E-06 Race intelligence](E-06-race-intelligence.md)                                   | Course-aware preparation and race strategy                            | E-01, E-03, and relevant parts of E-04/E-05 |
 | [E-07 Athlete identity and first-run onboarding](E-07-athlete-identity-onboarding.md) | Authentication, persistent resumable onboarding and Garmin connection | E-01 context decisions, E-02 Garmin service |
+| [E-08 Gear](E-08-gear.md)                                                             | Running shoes, Garmin-counted mileage and a pair for every session    | E-02, E-04                                  |
 
 Epic order is a dependency suggestion, not a release commitment. Discovery may split, reorder, or drop epics. Each epic should receive an epic-level GitHub Issue only when it is approved for execution; story-sized work is represented by child issues or linked issues.
