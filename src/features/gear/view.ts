@@ -1,0 +1,188 @@
+import { formatFrenchDate } from "@/features/onboarding/dates";
+import {
+  categoryLabels,
+  plateLabels,
+  terrainLabels,
+  type ShoeSpec,
+} from "./model";
+import {
+  pairWear,
+  replacementDate,
+  wearIsHigh,
+  type DatedDistance,
+  type Wear,
+} from "./mileage";
+
+export type ShoeInput = {
+  id: string;
+  spec: ShoeSpec;
+  startingDistanceM: number;
+  firstUseDate: string;
+  retiredOn: string | null;
+  garmin: {
+    totalDistanceM: number;
+    totalActivities: number;
+    isDefault?: boolean;
+  } | null;
+  activities: (DatedDistance & {
+    activityId: string;
+    name: string | null;
+  })[];
+};
+
+export type PairCardView = {
+  id: string;
+  brand: string;
+  model: string;
+  category: string;
+  terrain: string;
+  wear: Wear;
+  high: boolean;
+  totalKm: string;
+  lifespanKm: string;
+  percent: string;
+  remaining: string;
+  specs: string;
+  lastRun: string | null;
+  garminLinked: boolean;
+};
+
+const kmFormat = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+const decimalFormat = new Intl.NumberFormat("fr-FR", {
+  maximumFractionDigits: 1,
+});
+const shortDay = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "UTC",
+});
+
+export function formatKm(value: number) {
+  return kmFormat.format(Math.round(value));
+}
+
+export function formatDay(day: string) {
+  return shortDay.format(new Date(`${day}T00:00:00Z`));
+}
+
+export function modelName(spec: Pick<ShoeSpec, "model" | "version">) {
+  return [spec.model, spec.version].filter(Boolean).join(" ");
+}
+
+export function specSummary(spec: ShoeSpec) {
+  return [
+    spec.dropMm !== null
+      ? `Drop ${decimalFormat.format(spec.dropMm)} mm`
+      : null,
+    spec.lugDepthMm !== null && spec.lugDepthMm > 0
+      ? `crampons ${decimalFormat.format(spec.lugDepthMm)} mm`
+      : null,
+    spec.weightG !== null ? `${spec.weightG} g` : null,
+    spec.plate !== null
+      ? spec.plate === "none"
+        ? "sans plaque"
+        : `plaque ${plateLabels[spec.plate].toLowerCase()}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function wearOf(shoe: ShoeInput) {
+  return pairWear({
+    startingDistanceM: shoe.startingDistanceM,
+    garminDistanceM: shoe.garmin?.totalDistanceM ?? 0,
+    lifespanKm: shoe.spec.lifespanKm,
+  });
+}
+
+function remainingText(wear: Wear, replacement: string | null) {
+  if (wear.worn) return "Durée de vie atteinte";
+  const left = `${formatKm(wear.remainingKm)} km restants`;
+  return replacement
+    ? `${left} · à remplacer vers le ${formatFrenchDate(replacement)}`
+    : left;
+}
+
+export function pairCard(shoe: ShoeInput, today: string): PairCardView {
+  const wear = wearOf(shoe);
+  const replacement = replacementDate(wear, shoe.activities, today);
+  const last = shoe.activities[0];
+  return {
+    id: shoe.id,
+    brand: shoe.spec.brand,
+    model: modelName(shoe.spec),
+    category: categoryLabels[shoe.spec.category],
+    terrain: terrainLabels[shoe.spec.terrain],
+    wear,
+    high: wearIsHigh(wear),
+    totalKm: formatKm(wear.totalKm),
+    lifespanKm: formatKm(wear.lifespanKm),
+    percent: `${wear.percent} %`,
+    remaining: remainingText(wear, replacement),
+    specs: specSummary(shoe.spec),
+    lastRun: last
+      ? `${formatDay(last.day)} · ${last.name ?? "Sortie"} ${decimalFormat.format(last.distanceM / 1000)} km`
+      : null,
+    garminLinked: shoe.garmin !== null,
+  };
+}
+
+export type PairListView = {
+  active: PairCardView[];
+  retired: { id: string; name: string; km: string; retiredOn: string }[];
+  totalKm: string;
+};
+
+export function pairList(shoes: ShoeInput[], today: string): PairListView {
+  const active = shoes.filter((shoe) => shoe.retiredOn === null);
+  const cards = active.map((shoe) => pairCard(shoe, today));
+  return {
+    active: cards,
+    retired: shoes
+      .filter((shoe) => shoe.retiredOn !== null)
+      .map((shoe) => ({
+        id: shoe.id,
+        name: `${shoe.spec.brand} ${modelName(shoe.spec)}`,
+        km: `${formatKm(wearOf(shoe).totalKm)} km`,
+        retiredOn: formatFrenchDate(shoe.retiredOn),
+      })),
+    totalKm: formatKm(cards.reduce((sum, card) => sum + card.wear.totalKm, 0)),
+  };
+}
+
+export type SpecRow = { label: string; value: string | null };
+
+export function specRows(spec: ShoeSpec): SpecRow[] {
+  const mm = (value: number | null) =>
+    value === null ? null : `${decimalFormat.format(value)} mm`;
+  return [
+    { label: "Catégorie", value: categoryLabels[spec.category] },
+    { label: "Mousse", value: spec.foam },
+    {
+      label: "Hauteur talon / avant-pied",
+      value:
+        spec.stackHeelMm !== null && spec.stackForefootMm !== null
+          ? `${decimalFormat.format(spec.stackHeelMm)} / ${decimalFormat.format(spec.stackForefootMm)} mm`
+          : null,
+    },
+    { label: "Drop", value: mm(spec.dropMm) },
+    {
+      label: "Poids",
+      value:
+        spec.weightG === null
+          ? null
+          : spec.sizeEu === null
+            ? `${spec.weightG} g`
+            : `${spec.weightG} g · pointure ${decimalFormat.format(spec.sizeEu)}`,
+    },
+    {
+      label: "Plaque",
+      value: spec.plate === null ? null : plateLabels[spec.plate],
+    },
+    { label: "Profondeur des crampons", value: mm(spec.lugDepthMm) },
+    { label: "Terrain", value: terrainLabels[spec.terrain] },
+    { label: "Durée de vie", value: `${formatKm(spec.lifespanKm)} km` },
+  ];
+}

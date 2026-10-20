@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import {
+  gearBadge,
   localToday,
   readinessBadge,
   shellAccount,
@@ -18,6 +19,7 @@ import { countPlanProposals } from "@/server/plans/proposals";
 import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
+import { countActiveShoes } from "@/server/gear/load";
 import { requireAthlete } from "./session";
 
 async function readTodayReadiness(context: OnboardingContext, now: Date) {
@@ -45,6 +47,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     planHistoryCount,
     coachAttention,
     readiness,
+    shoeCount,
   ] = await Promise.all([
     context.client
       .from("athlete_profiles")
@@ -57,6 +60,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     countPlanProposals(context).catch(() => null),
     countCoachAttention(context).catch(() => null),
     readTodayReadiness(context, now).catch(() => null),
+    countActiveShoes(context).catch(() => null),
   ]);
   const parsed = profileRowSchema.safeParse(profile.data);
   const values = profileValues(parsed.success ? parsed.data : null);
@@ -96,6 +100,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     planHistoryCount,
     coachAttention,
     todayBadge: readinessBadge(readiness),
+    gearBadge: gearBadge(shoeCount),
     staffFaces: staffFacesOf(profile.data),
   };
 }

@@ -27,6 +27,12 @@ export type ShellAccount = {
 export type ShellAthlete = { name: string; initials: string; detail: string };
 export type ShellBadge = { value: string; label: string; attention: boolean };
 
+export function gearBadge(count: number | null): ShellBadge | null {
+  if (!count) return null;
+  const label = count > 1 ? `${count} paires` : "1 paire";
+  return { value: label, label, attention: false };
+}
+
 export const displayTimeZone = "Europe/Paris";
 const dayMs = 86_400_000;
 const priorityRank: Record<string, number> = { A: 0, B: 1, C: 2 };
