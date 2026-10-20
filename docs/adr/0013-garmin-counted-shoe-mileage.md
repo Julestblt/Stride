@@ -13,7 +13,7 @@ Athletes want each pair's mileage, wear alerts and a pair recommended for every 
 - A pair's mileage is its starting km, stored in Stride, plus Garmin's total distance for that gear. Stride does not keep its own per-activity ledger.
 - Stride creates pairs in Garmin, updates their wear limit and status, and sets the pair of an activity through garmin_mcp. Garmin's wear limit is the lifespan minus the starting km, so Garmin's alert fires at the real end of life. Stride sends no wear alert of its own.
 - After a sync, an activity matched to a planned session without a Garmin pair receives the recommended pair, written to Garmin. When Garmin's pair differs from the planned one, the athlete chooses; any change is written to Garmin and marked as an athlete correction that later syncs do not overwrite.
-- Spec sheets are extracted from a product page the athlete links, read on the server with SSRF guards and the existing JSON completion. Absent fields stay empty. Spec sheets are owned by each athlete.
+- Spec sheets are extracted from a product page the athlete links, read on the server with SSRF guards, by Claude Haiku 5.5 through the Anthropic SDK with a structured output. Each value comes with a quote from the page and is kept only if the quote is on the page and holds the value; absent fields stay empty. Spec sheets are owned by each athlete.
 - Recommendations are deterministic domain functions computed on read, with reasons as codes. An athlete override is stored per plan `session_key`.
 - These writes run only from the athlete's own requests or the activity check of their own data. Agents keep read-only access.
 
