@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AddTabs } from "@/features/gear/components/add-tabs";
 import { GearFrame } from "@/features/gear/components/gear-frame";
 import { ImportForm } from "@/features/gear/components/import-form";
 import { requireAthlete } from "@/server/app/session";
@@ -27,23 +27,7 @@ export default async function ImportShoesRoute() {
           dans Garmin, saisis son vrai total.
         </p>
       </section>
-      <nav
-        aria-label="Façon d’ajouter"
-        className="flex max-w-130 gap-1 rounded-card border border-border bg-surface p-1"
-      >
-        <Link
-          href="/gear/new"
-          className="flex min-h-10 flex-1 items-center justify-center rounded-control text-sm text-muted-foreground hover:text-foreground"
-        >
-          À la main
-        </Link>
-        <span
-          aria-current="page"
-          className="flex min-h-10 flex-1 items-center justify-center rounded-control bg-border text-sm font-semibold"
-        >
-          Depuis Garmin
-        </span>
-      </nav>
+      <AddTabs current="garmin" />
       <ImportForm
         gear={gear.map((row) => {
           const brand = row.brand ?? row.display_name ?? "Garmin";

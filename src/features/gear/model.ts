@@ -93,11 +93,34 @@ export type ShoeSpec = z.output<typeof shoeSpecSchema>;
 
 export const isoDateSchema = z.iso.date();
 
+export const specSourceFields = [
+  "brand",
+  "model",
+  "version",
+  "category",
+  "terrain",
+  "foam",
+  "stackHeelMm",
+  "stackForefootMm",
+  "dropMm",
+  "weightG",
+  "plate",
+  "lugDepthMm",
+] as const;
+
+export const specSourcesSchema = z.strictObject({
+  url: z.url().max(500),
+  fields: z.array(z.enum(specSourceFields)).max(specSourceFields.length),
+});
+
+export type SpecSources = z.output<typeof specSourcesSchema>;
+
 export const newShoeSchema = z.strictObject({
   spec: shoeSpecSchema,
   currentKm: z.number().min(0).max(5000),
   firstUseDate: isoDateSchema,
   garminDefault: z.enum(garminDefaults),
+  sources: specSourcesSchema.nullable(),
 });
 
 export type NewShoe = z.output<typeof newShoeSchema>;
