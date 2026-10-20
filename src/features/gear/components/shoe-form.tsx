@@ -20,7 +20,13 @@ import {
   updateShoe,
   type SuggestionOutcome,
 } from "@/server/gear/actions";
-import { gearErrorMessage, parseKm, parseOptionalNumber } from "../form";
+import {
+  gearErrorMessage,
+  invalidFieldsMessage,
+  parseKm,
+  parseOptionalNumber,
+  parseShoeSize,
+} from "../form";
 import {
   categoryLabels,
   defaultGarminActivity,
@@ -308,7 +314,7 @@ export function ShoeForm({
     const lifespan = parseOptionalNumber(draft.lifespanKm, 100, 3000);
     if (lifespan === undefined || lifespan === null)
       nextErrors.push("lifespanKm");
-    const sizeEu = parseOptionalNumber(draft.sizeEu, 30, 52);
+    const sizeEu = parseShoeSize(draft.sizeEu);
     if (sizeEu === undefined) nextErrors.push("sizeEu");
     const firstUseDate = parseFrenchDate(firstUse);
     const km = worn ? parseKm(currentKm) : 0;
@@ -318,7 +324,7 @@ export function ShoeForm({
     }
     if (nextErrors.length || !draft.category || !draft.terrain) {
       setErrors(nextErrors);
-      setMessage("Vérifie les champs en rouge.");
+      setMessage(invalidFieldsMessage(nextErrors));
       return;
     }
     const shoe: ShoeSpec = {

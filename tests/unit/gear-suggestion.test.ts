@@ -55,3 +55,22 @@ describe("shoe suggestion", () => {
     expect(defaultGarminActivity("mixed")).toBe("running");
   });
 });
+
+describe("form parsing", () => {
+  it("accepts whole, decimal and fractional shoe sizes", async () => {
+    const { parseShoeSize } = await import("@/features/gear/form");
+    expect(parseShoeSize("42")).toBe(42);
+    expect(parseShoeSize("42,5")).toBe(42.5);
+    expect(parseShoeSize("42 2/3")).toBe(42.7);
+    expect(parseShoeSize("44⅓")).toBe(44.3);
+    expect(parseShoeSize("")).toBeNull();
+    expect(parseShoeSize("US 9")).toBeUndefined();
+  });
+
+  it("names the fields to fix", async () => {
+    const { invalidFieldsMessage } = await import("@/features/gear/form");
+    expect(invalidFieldsMessage(["sizeEu", "firstUse"])).toBe(
+      "À corriger : la pointure (par exemple 42 ou 42 2/3), la date de première sortie (JJ/MM/AAAA, pas dans le futur).",
+    );
+  });
+});
