@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-revision="${GARMIN_MCP_REVISION:-56b06070da1a4f119141f2e1653ab8b4f2dcba2c}"
+revision="${GARMIN_MCP_REVISION:-b3d1838acd4e45fa09b68bf0998f9408fdcdea0d}"
 container="${SUPABASE_DB_CONTAINER:-supabase_db_stride}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
