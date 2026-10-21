@@ -9,16 +9,16 @@
     "./agents/coach.md": {
       "kind": "agent",
       "id": "agent_01KnNH1A58RfAggYG7AkUmRR",
-      "version": "15",
-      "hash": "8de87122bce76bd1d9d424f8e68990dc",
-      "remote_hash": "c470972680f28b54d1a9d4ade56ff9d8"
+      "version": "16",
+      "hash": "b95451ee000303d4da0b8fcd35e4d6d6",
+      "remote_hash": "d9db2aa21df5cc967f2d426241c0d893"
     },
     "./agents/director.md": {
       "kind": "agent",
       "id": "agent_017vonN4KirZUgE4TdC7eept",
-      "version": "1",
-      "hash": "77a14fb552047d431f71c25facf8c79f",
-      "remote_hash": "55c4a76dff3fdb31a595ed3713a7f31b"
+      "version": "2",
+      "hash": "6dc0a263b9fea8a4ca38124a1cbc0ad5",
+      "remote_hash": "2a72898f696bac080530723c0a50862c"
     },
     "./agents/medical.md": {
       "kind": "agent",
@@ -37,9 +37,9 @@
     "./agents/strategist.md": {
       "kind": "agent",
       "id": "agent_015ajAPp18SxHnnA4QEcQ8st",
-      "version": "1",
-      "hash": "8140353710fe4e9c3881e706bdc3fb05",
-      "remote_hash": "1b7c45f155aa2bf45c9e8e6875a80a4a"
+      "version": "2",
+      "hash": "978f08a14ad5730117160e7c210ee6ea",
+      "remote_hash": "cebd53bbfdefcfcf7a0aff9cfe4f8f5b"
     },
     "./environments/coaching.yaml": {
       "kind": "environment",
@@ -70,6 +70,12 @@
       "id": "skill_01DUdrTJ4ZWGvHdqoVeoGiw4",
       "version": "skver_01EvGTmbrckwYxLF3kRyGtDN",
       "hash": "de9418328fc9c4e3906f5a4a003ac730"
+    },
+    "./skills/gear-rotation": {
+      "kind": "skill",
+      "id": "skill_01KW6E5Lo9UCWbEz7SX4VVpB",
+      "version": "skver_01BLDdhjYDWt9UctB2UD8ViK",
+      "hash": "68a73727473889940ce0c1516dc56e7e"
     },
     "./skills/health-recovery": {
       "kind": "skill",
@@ -104,8 +110,8 @@
     "./skills/season-calendar": {
       "kind": "skill",
       "id": "skill_01QWi4yaJZQLoZAfGZU5aBBF",
-      "version": "skver_01NZU4Dvs9gaJ97GvEmKbyWn",
-      "hash": "33fabc1895e8595ace56be8954924544"
+      "version": "skver_012CnsUSC949PdRT325BHLn2",
+      "hash": "10a9ed6a6eb35b9b66786cf46f0fe41a"
     },
     "./skills/session-design": {
       "kind": "skill",
