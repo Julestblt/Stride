@@ -11,6 +11,7 @@ import { useDataActivity } from "@/features/data-activity/components/provider";
 import { DataActivityStatus } from "@/features/data-activity/components/status";
 import { activityTone } from "@/features/data-activity/model";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { ThemeSwitcher } from "@/features/theme/components/theme-switcher";
 import { settingsHref, settingsSections } from "../navigation";
 
 export function SettingsShell({
@@ -193,11 +194,12 @@ export function SettingsShell({
                 </ProvenanceLabel>
               </div>
             )}
-            <NotificationBell
+            <ThemeSwitcher
               className={
                 profile ? "max-md:ml-auto" : goals ? undefined : "ml-auto"
               }
             />
+            <NotificationBell />
           </header>
           <div
             ref={scroller}

@@ -29,6 +29,10 @@ Stride's approved visual direction is **Night Track**. The `Foundations` artboar
 
 Values live once in `src/app/globals.css` and are exposed through `@theme inline`. Use Volt sparingly. Success, warning, danger, provider, and training-zone states have distinct semantic tokens; do not conflate status meaning with the brand accent. Do not scatter raw color values through components. Add or adjust semantic tokens only when a reference or actual state requires them.
 
+### Light theme
+
+Night Track is dark by default. Athletes can switch to Clair, Sombre, or Système from the header theme menu (`src/features/theme`). The choice is stored per browser under `stride-theme`, and an inline script sets `data-theme` on `<html>` before first paint. `:root[data-theme="light"]` in `globals.css` redefines every color token, so components keep using semantic utilities and need no `dark:` variants. In light, Volt becomes a deep olive (`#4D6B00`) to stay readable on white. Maps switch between the CARTO Dark Matter and Positron styles. The light palette is on the board artboard `Foundations · Theme · Light palette`.
+
 ## Typography
 
 - **Instrument Sans** is the UI, body, and coach voice.
