@@ -24,7 +24,7 @@ export function NotificationEmpty({
       <p className="max-w-80 text-sm leading-normal text-muted-foreground">
         {filtered
           ? "Aucune notification de ce type sur les 30 derniers jours."
-          : "Les messages du staff et les changements de ton plan arriveront ici."}
+          : "Les messages du staff, les imports Garmin et les changements de ton plan arriveront ici."}
       </p>
     </div>
   );

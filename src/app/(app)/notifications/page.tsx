@@ -38,8 +38,8 @@ export default async function NotificationsPage({
                 Notifications
               </h1>
               <p className="text-meta text-muted-foreground">
-                Ce que le staff et ton plan ont fait pendant que tu courais. 30
-                derniers jours.
+                Ce que le staff, Garmin et ton plan ont fait pendant que tu
+                courais. 30 derniers jours.
               </p>
             </div>
             {unread > 0 && (

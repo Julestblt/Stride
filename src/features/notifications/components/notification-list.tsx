@@ -1,7 +1,12 @@
 "use client";
 
-import { CheckIcon } from "lucide-react";
-import { NavPlanIcon } from "@/components/stride/nav-icons";
+import { CheckIcon, RefreshCwIcon, WatchIcon } from "lucide-react";
+import type { ComponentType } from "react";
+import {
+  NavActivitiesIcon,
+  NavGearIcon,
+  NavPlanIcon,
+} from "@/components/stride/nav-icons";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { StaffPortrait } from "@/features/coach/components/staff-portrait";
 import { useStaff } from "@/features/coach/components/staff-context";
@@ -11,21 +16,53 @@ import {
   groupByDay,
   notificationView,
   type Notification,
+  type NotificationFamily,
   type NotificationStatus,
   type NotificationView,
 } from "../model";
+
+const familyIcons: Record<
+  Exclude<NotificationFamily, "staff">,
+  { icon: ComponentType<{ className?: string }>; className: string }
+> = {
+  plan: {
+    icon: NavPlanIcon,
+    className: "border-accent/30 bg-accent/14 text-accent",
+  },
+  activity: {
+    icon: NavActivitiesIcon,
+    className: "border-provider/30 bg-provider/14 text-provider",
+  },
+  sync: {
+    icon: RefreshCwIcon,
+    className: "border-danger/30 bg-danger/14 text-danger",
+  },
+  watch: {
+    icon: WatchIcon,
+    className: "border-muted/30 bg-muted/14 text-muted",
+  },
+  shoe: {
+    icon: NavGearIcon,
+    className: "border-warning/30 bg-warning/14 text-warning",
+  },
+};
 
 function NotificationIcon({ view }: { view: NotificationView }) {
   if (view.agent)
     return (
       <StaffPortrait agent={view.agent} size={32} className="rounded-surface" />
     );
+  const { icon: Icon, className } =
+    familyIcons[view.family === "staff" ? "plan" : view.family];
   return (
     <span
       aria-hidden="true"
-      className="grid size-8 place-items-center rounded-surface border border-accent/30 bg-accent/14 text-accent"
+      className={cn(
+        "grid size-8 place-items-center rounded-surface border",
+        className,
+      )}
     >
-      <NavPlanIcon className="size-4" />
+      <Icon className="size-4" />
     </span>
   );
 }
