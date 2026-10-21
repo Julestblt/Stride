@@ -55,8 +55,8 @@ Inputs are what the skill reads; scripts or files are what it runs or writes in 
 | `weather-forecast`             | Defer to Phase 4                     | Coach             | Open-Meteo already serves the race workspace; Today and the morning brief need a weather tool | None                            |
 | `session-parts-analyzer`       | Defer until streams tools exist      | Coach             | Needs activity streams tools; garmin `get_activity_splits` covers per-kilometre splits only   | None                            |
 | `course-comparison`            | Defer until streams tools exist      | Coach             | Needs activity streams tools                                                                  | None                            |
-| `gear-inspection`              | Defer, no gear model in Stride       | None              | None                                                                                          | None                            |
-| `inspection`                   | Defer, no gear model in Stride       | None              | None                                                                                          | None                            |
+| `gear-inspection`              | Defer, photo inspection not in E-08  | None              | None                                                                                          | None                            |
+| `inspection`                   | Defer, photo inspection not in E-08  | None              | None                                                                                          | None                            |
 | `arc-backfill`                 | Drop, owned by Stride                | None              | Supabase tables and migrations                                                                | None                            |
 | `workspace-data-contract`      | Drop, owned by Stride and garmin_mcp | None              | Zod schemas, database constraints, garmin_mcp normalized rows                                 | None                            |
 | `coach-doctor`                 | Drop, owned by Stride                | None              | Deployment health checks and observability                                                    | None                            |
@@ -71,11 +71,12 @@ Inputs are what the skill reads; scripts or files are what it runs or writes in 
 
 ## Ported skills
 
-| Stride skill         | Derived from                                   | Attached to       | What changed                                                                                                                                                         |
-| -------------------- | ---------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status-reports`     | `today`, `week`, `race`                        | Coach             | One skill for the three factual answers. File reads and scripts become Stride tools; weather, Trail Shape, load forecast, gear lines and guardrail runs are dropped. |
-| `explain-decision`   | `why`                                          | Coach             | The decision log becomes the plan proposal record (title, summary, rationale, operations, specialist opinions, status). The personal synthesis is dropped.           |
-| `garmin-data-access` | `garmin-sync-efficiency`, `today` morning rule | Coach and Medical | Persistence, sync markers, gear, weight and other sources are dropped. Stride context comes first and each agent stays within its garmin MCP allowlist.              |
+| Stride skill         | Derived from                                   | Attached to                 | What changed                                                                                                                                                                                  |
+| -------------------- | ---------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `status-reports`     | `today`, `week`, `race`                        | Coach                       | One skill for the three factual answers. File reads and scripts become Stride tools; weather, Trail Shape, load forecast, gear lines and guardrail runs are dropped.                          |
+| `explain-decision`   | `why`                                          | Coach                       | The decision log becomes the plan proposal record (title, summary, rationale, operations, specialist opinions, status). The personal synthesis is dropped.                                    |
+| `garmin-data-access` | `garmin-sync-efficiency`, `today` morning rule | Coach and Medical           | Persistence, sync markers, gear, weight and other sources are dropped. Stride context comes first and each agent stays within its garmin MCP allowlist.                                       |
+| `gear-rotation`      | Coach shoe mandates, Course Strategist shoes   | Coach and Course Strategist | The profile inventory and `arc_index.py gear` become `read_gear` (#227); Stride's deterministic recommendation replaces the agent's own pick; weather input and photo inspection are dropped. |
 
 None of the ported skills calls a Garmin write tool, sets a weight target or gives treatment advice.
 
@@ -83,24 +84,25 @@ None of the ported skills calls a Garmin write tool, sets a weight target or giv
 
 The reference's coaching substance is mostly in `agents/*.md`. Each section lands in an existing Stride skill, in the validator, or in a later specialist issue.
 
-| Reference agent and section                                                | Stride destination                                                                                                  |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Coach, guardrails mandate                                                  | Validator rules E1–E2, P1–P8 and the `plan-periodization` skill                                                     |
-| Coach, planning and execution; objective management                        | `plan-format`, `plan-periodization`, `race-specificity` and `session-design` skills; proposal lifecycle (ADR 0008)  |
-| Coach, morning health check (HRV, resting HR, readiness)                   | `garmin-data-access` (read together) and `health-recovery`; validator H3                                            |
-| Coach, injury-risk flag                                                    | `health-recovery` and the Medical agent; validator H1–H2                                                            |
-| Coach, heart rate recovery and FIT KPI mandates                            | Deferred until activity streams tools exist                                                                         |
-| Coach, weather-aware planning                                              | Deferred with `weather-forecast` (Phase 4)                                                                          |
-| Coach, Trail Shape score and load forecast                                 | Deferred; the feasibility reference in `read_athlete_context` and validator D1 cover race demands for now           |
-| Coach, session scheduling, Intervals.icu, shoe suggestion, gear inspection | Dropped (D5, other sources, no gear model)                                                                          |
-| Coach, performance index (ITRA, UTMB)                                      | Deferred; not part of the Course Strategist (#203)                                                                  |
-| Medical, health and recovery strategy; workflow                            | `health-recovery` skill and the Medical agent prompt                                                                |
-| Medical, targeted prevention from declared pain                            | Medical agent, non-diagnostic; prevention exercises stay out until a safety review                                  |
-| Medical, cycle context and RED-S vigilance                                 | `fueling` (no weight targets, RED-S); cycle context deferred, strict opt-in only                                    |
-| Sports Director, calendar check, roles, hard rules                         | Sports Director agent and `season-calendar` skill (#202); calendar check in `src/features/races/calendar.ts`        |
-| Course Strategist, eight-step workflow and golden rules                    | Course Strategist agent and `race-strategy` skill (#203), on top of the race workspace (E-06)                       |
-| Nutritionist, nutrition and weight strategy, energy model, Garmin push     | Nutritionist agent, `daily-nutrition` skill and calculator (#204–#206); no weight targets; Garmin push dropped (D5) |
-| All agents, configuration, data source, language and data management       | Dropped: Stride code, RLS-scoped tools and the agents' language rules replace them                                  |
+| Reference agent and section                                            | Stride destination                                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Coach, guardrails mandate                                              | Validator rules E1–E2, P1–P8 and the `plan-periodization` skill                                                     |
+| Coach, planning and execution; objective management                    | `plan-format`, `plan-periodization`, `race-specificity` and `session-design` skills; proposal lifecycle (ADR 0008)  |
+| Coach, morning health check (HRV, resting HR, readiness)               | `garmin-data-access` (read together) and `health-recovery`; validator H3                                            |
+| Coach, injury-risk flag                                                | `health-recovery` and the Medical agent; validator H1–H2                                                            |
+| Coach, heart rate recovery and FIT KPI mandates                        | Deferred until activity streams tools exist                                                                         |
+| Coach, weather-aware planning                                          | Deferred with `weather-forecast` (Phase 4)                                                                          |
+| Coach, Trail Shape score and load forecast                             | Deferred; the feasibility reference in `read_athlete_context` and validator D1 cover race demands for now           |
+| Coach, session scheduling, Intervals.icu, gear inspection              | Dropped (D5, other sources); photo inspection deferred                                                              |
+| Coach, shoe suggestion and shoe status; Course Strategist, race shoes  | `gear-rotation` skill and `read_gear` (#227, E-08)                                                                  |
+| Coach, performance index (ITRA, UTMB)                                  | Deferred; not part of the Course Strategist (#203)                                                                  |
+| Medical, health and recovery strategy; workflow                        | `health-recovery` skill and the Medical agent prompt                                                                |
+| Medical, targeted prevention from declared pain                        | Medical agent, non-diagnostic; prevention exercises stay out until a safety review                                  |
+| Medical, cycle context and RED-S vigilance                             | `fueling` (no weight targets, RED-S); cycle context deferred, strict opt-in only                                    |
+| Sports Director, calendar check, roles, hard rules                     | Sports Director agent and `season-calendar` skill (#202); calendar check in `src/features/races/calendar.ts`        |
+| Course Strategist, eight-step workflow and golden rules                | Course Strategist agent and `race-strategy` skill (#203), on top of the race workspace (E-06)                       |
+| Nutritionist, nutrition and weight strategy, energy model, Garmin push | Nutritionist agent, `daily-nutrition` skill and calculator (#204–#206); no weight targets; Garmin push dropped (D5) |
+| All agents, configuration, data source, language and data management   | Dropped: Stride code, RLS-scoped tools and the agents' language rules replace them                                  |
 
 ## Plan progress and history tools
 
