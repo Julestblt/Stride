@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import { MaximizeIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useResolvedTheme } from "@/features/theme/components/theme-store";
+import type { ResolvedTheme } from "@/features/theme/model";
 import { Button } from "@/components/ui/button";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { formatKm } from "../format";
@@ -15,8 +17,10 @@ import {
   type MapMarker,
 } from "../map";
 
-const styleUrl =
-  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const styleUrls = {
+  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+};
 const workerUrl = new URL(
   "../../../../node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
   import.meta.url,
@@ -99,7 +103,8 @@ function markerElement(marker: MapMarker, active: boolean) {
   return element;
 }
 
-export function RaceMap({
+function RaceMapView({
+  theme,
   data,
   layers,
   activeId = null,
@@ -108,6 +113,7 @@ export function RaceMap({
   label,
   className,
 }: {
+  theme: ResolvedTheme;
   data: MapData;
   layers: MapLayers;
   activeId?: string | null;
@@ -154,7 +160,7 @@ export function RaceMap({
         maplibre.setWorkerUrl(workerUrl);
         map = new maplibre.Map({
           container,
-          style: styleUrl,
+          style: styleUrls[theme],
           bounds: boundsOf(initial.route),
           fitBoundsOptions: { padding },
           attributionControl: false,
@@ -266,7 +272,7 @@ export function RaceMap({
       mapRef.current = null;
       setReady(false);
     };
-  }, [routeKey]);
+  }, [routeKey, theme]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -493,4 +499,11 @@ export function RaceMap({
       </span>
     </div>
   );
+}
+
+export function RaceMap(
+  props: Omit<React.ComponentProps<typeof RaceMapView>, "theme">,
+) {
+  const theme = useResolvedTheme();
+  return <RaceMapView key={theme} theme={theme} {...props} />;
 }

@@ -4,8 +4,9 @@ import {
   IBM_Plex_Mono,
   Instrument_Sans,
 } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeToaster } from "@/features/theme/components/theme-toaster";
+import { themeScript } from "@/features/theme/model";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={cn(
         instrumentSans.variable,
         barlowCondensed.variable,
@@ -44,9 +46,12 @@ export default function RootLayout({
         "h-full antialiased",
       )}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body suppressHydrationWarning className="min-h-full">
         <TooltipProvider>{children}</TooltipProvider>
-        <Toaster />
+        <ThemeToaster />
       </body>
     </html>
   );

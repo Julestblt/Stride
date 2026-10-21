@@ -70,6 +70,43 @@
   --stride-font-technical: var(--font-ibm-plex-mono), monospace;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f5f0;
+  --foreground: #161814;
+  --surface: #ffffff;
+  --surface-raised: #eceee7;
+  --surface-inset: #fafbf7;
+  --surface-panel: #f9faf6;
+  --surface-current: #eef0e8;
+  --border: #dcdfd5;
+  --border-strong: #c3c8bb;
+  --border-subtle: #e6e8e0;
+  --muted: #474c43;
+  --muted-foreground: #646a5f;
+  --dim: #a3a89c;
+  --accent: #4d6b00;
+  --accent-foreground: #ffffff;
+  --success: #1d7a45;
+  --success-surface: #e5f3ea;
+  --success-border: #bfdcc9;
+  --warning: #8a5a00;
+  --warning-border: #e6d3a8;
+  --danger: #b8401c;
+  --danger-surface: #fbece6;
+  --danger-border: #efc4b4;
+  --provider: #2f6690;
+  --provider-muted: #a9c3da;
+  --night: #4a5a8f;
+  --staff-medical: #13857b;
+  --staff-director: #33689f;
+  --staff-strategist: #7448c2;
+  --staff-nutritionist: #b35418;
+  --zone-1: #c3c8bb;
+  --zone-3: #8fb23a;
+  --zone-4: #d1b83a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

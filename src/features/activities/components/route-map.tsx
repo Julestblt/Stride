@@ -12,6 +12,8 @@ import {
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { CrosshairIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useResolvedTheme } from "@/features/theme/components/theme-store";
+import type { ResolvedTheme } from "@/features/theme/model";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
@@ -28,8 +30,10 @@ import {
 } from "@/features/activities/route-colors";
 import type { RouteView } from "@/features/activities/track";
 
-const styleUrl =
-  "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+const styleUrls = {
+  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+};
 const workerUrl = new URL(
   "../../../../node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
   import.meta.url,
@@ -91,7 +95,8 @@ function nearestVertex(points: Point[], x: number, y: number) {
   return best === -1 ? null : best;
 }
 
-export function RouteMap({
+function RouteMapView({
+  theme,
   view,
   mode,
   modes,
@@ -99,6 +104,7 @@ export function RouteMap({
   hover,
   onHover,
 }: {
+  theme: ResolvedTheme;
   view: RouteView;
   mode: ColorMode;
   modes: ColorMode[];
@@ -170,7 +176,7 @@ export function RouteMap({
         const longitudes = view.route.map((point) => point[1]);
         map = new maplibre.Map({
           container,
-          style: styleUrl,
+          style: styleUrls[theme],
           bounds: [
             [Math.min(...longitudes), Math.min(...latitudes)],
             [Math.max(...longitudes), Math.max(...latitudes)],
@@ -322,7 +328,7 @@ export function RouteMap({
       map?.remove();
       mapRef.current = null;
     };
-  }, [view]);
+  }, [view, theme]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -658,4 +664,11 @@ export function RouteMap({
       </span>
     </div>
   );
+}
+
+export function RouteMap(
+  props: Omit<React.ComponentProps<typeof RouteMapView>, "theme">,
+) {
+  const theme = useResolvedTheme();
+  return <RouteMapView key={theme} theme={theme} {...props} />;
 }
