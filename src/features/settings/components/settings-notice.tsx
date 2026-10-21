@@ -40,17 +40,14 @@ export function SettingsNotice({
   useEffect(() => {
     if (!status) return;
     if (status === "saved") {
-      toast.success(savedMessage, { id: "settings-notice", duration: 5000 });
+      toast.success(savedMessage, { id: "settings-notice" });
     } else if (successMessages[status]) {
-      toast.success(successMessages[status], {
-        id: "settings-notice",
-        duration: 5000,
-      });
+      toast.success(successMessages[status], { id: "settings-notice" });
     } else {
       toast.error(
         failureMessages[status] ??
           "Impossible d’enregistrer les modifications. Réessaie.",
-        { id: "settings-notice", duration: 8000 },
+        { id: "settings-notice" },
       );
     }
     router.replace(pathname, { scroll: false });
