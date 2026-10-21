@@ -311,7 +311,12 @@ export type RotationView = {
   rows: {
     id: string;
     name: string;
-    cells: { day: string; km: number | null; label: string | null }[];
+    cells: {
+      day: string;
+      km: number | null;
+      label: string | null;
+      pending: boolean;
+    }[];
   }[];
 };
 
@@ -323,7 +328,11 @@ const dayMonth = new Intl.DateTimeFormat("fr-FR", {
   timeZone: "UTC",
 });
 
-export function rotation(shoes: ShoeInput[], today: string): RotationView {
+export function rotation(
+  shoes: ShoeInput[],
+  today: string,
+  pending: { pairId: string; day: string }[] = [],
+): RotationView {
   const days = Array.from({ length: rotationDays }, (_, index) =>
     addDays(today, index - rotationDays),
   );
@@ -342,13 +351,17 @@ export function rotation(shoes: ShoeInput[], today: string): RotationView {
         const meters = shoe.activities
           .filter((activity) => activity.day === day)
           .reduce((sum, activity) => sum + activity.distanceM, 0);
+        const unconfirmed = pending.some(
+          (item) => item.pairId === shoe.id && item.day === day,
+        );
         return meters > 0
           ? {
               day,
               km: meters / 1000,
-              label: `${formatDay(day)} · ${decimal.format(meters / 1000)} km`,
+              label: `${formatDay(day)} · ${decimal.format(meters / 1000)} km${unconfirmed ? " · à confirmer" : ""}`,
+              pending: unconfirmed,
             }
-          : { day, km: null, label: null };
+          : { day, km: null, label: null, pending: false };
       }),
     })),
   };

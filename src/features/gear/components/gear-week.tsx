@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { NavGearIcon } from "@/components/stride/nav-icons";
+import { cn } from "@/lib/utils";
 import type { RotationView, WeekShoeRow } from "../planned";
 
 function PairChip({ name, href }: { name: string; href: string }) {
@@ -116,7 +117,12 @@ export function RotationStrip({ view }: { view: RotationView }) {
                     {cell.km !== null ? (
                       <span
                         title={cell.label ?? undefined}
-                        className="inline-block rounded-full bg-foreground align-middle"
+                        className={cn(
+                          "inline-block rounded-full align-middle",
+                          cell.pending
+                            ? "border-[1.5px] border-dashed border-warning"
+                            : "bg-foreground",
+                        )}
                         style={{
                           width: dotSize(cell.km),
                           height: dotSize(cell.km),
@@ -145,6 +151,15 @@ export function RotationStrip({ view }: { view: RotationView }) {
           />
           sortie · taille = km
         </span>
+        {view.rows.some((row) => row.cells.some((cell) => cell.pending)) && (
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-full border-[1.5px] border-dashed border-warning"
+            />
+            paire à confirmer
+          </span>
+        )}
       </div>
       <p className="text-[13px] leading-normal text-muted">
         Évite d’enchaîner deux jours la même paire : Stride en tient compte dans

@@ -302,3 +302,17 @@ describe("plan recommendations", () => {
     });
   });
 });
+
+describe("alternative order", () => {
+  it("explains an ineligible pair by its terrain before its rest", () => {
+    const result = recommendPair({
+      session: session({ kind: "threshold" }),
+      pairs: [evo, zegama],
+      uses: [{ pairId: "Zegama", day: "2026-10-06" }],
+      races: [],
+    });
+    expect(result.alternatives[0].reasons.map((reason) => reason.code)).toEqual(
+      ["terrain_mismatch", "used_yesterday"],
+    );
+  });
+});

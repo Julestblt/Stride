@@ -3,7 +3,9 @@ import { localToday } from "@/features/app-shell/shell";
 import { buildProgram } from "@/features/plans/view/program";
 import { buildToday, todaySessionKey } from "@/features/today/today";
 import { listActivities } from "@/server/activities/activities";
+import { pairQuestion } from "@/features/gear/check-view";
 import { loadWatchView } from "@/server/garmin/watch";
+import { loadPairChecks } from "@/server/gear/checks";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import {
   loadPlanOverview,
@@ -26,13 +28,17 @@ export async function loadToday(context: OnboardingContext, now: Date) {
   const today = overview?.today ?? localToday(now);
   const plan = overview?.plan.state ?? null;
   const sessionKey = todaySessionKey(plan, today);
-  const [panel, races] = await Promise.all([
+  const [panel, races, , checks] = await Promise.all([
     sessionKey ? loadSessionPanel(context, sessionKey) : null,
     overview ? overview.races : readPlanRaces(context),
     loadWatchView(context, overview?.plan ?? null),
+    loadPairChecks(context, latest?.id ?? null),
   ]);
+  const latestCheck = latest ? checks?.checks.get(latest.id) : null;
   return {
     checkin: recovery.checkin,
+    pairQuestion:
+      latestCheck && checks ? pairQuestion(latestCheck, checks.shoes) : null,
     view: buildToday({
       today,
       plan,

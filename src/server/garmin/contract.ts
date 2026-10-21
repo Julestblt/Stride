@@ -300,3 +300,16 @@ export const gearRowSchema = z
   }));
 
 export const gearResponseSchema = z.object({ gear: gearRowSchema });
+
+export const activityGearResponseSchema = z
+  .object({
+    provider_activity_id: z.string(),
+    gear_uuid: z
+      .string()
+      .regex(/^[0-9a-f]{32}$/)
+      .nullable(),
+  })
+  .transform((value) => ({
+    providerActivityId: value.provider_activity_id,
+    gearUuid: value.gear_uuid,
+  }));

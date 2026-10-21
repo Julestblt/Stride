@@ -203,7 +203,8 @@ function assess(
   const rest = last ? daysBetween(last, session.day) : null;
   if (rest !== null && rest <= 1) {
     score -= 5;
-    reasons.unshift({ code: "used_yesterday" });
+    if (eligible) reasons.unshift({ code: "used_yesterday" });
+    else reasons.push({ code: "used_yesterday" });
   } else if (rest !== null && rest >= restedDays) {
     score += 1;
     reasons.push({ code: "rested", days: rest });

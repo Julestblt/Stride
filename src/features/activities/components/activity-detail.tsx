@@ -17,11 +17,13 @@ export function ActivityDetail({
   view,
   current,
   detailHref,
+  pair = null,
 }: {
   activity: ActivityDetailData;
   view: ActivityView | null;
   current: boolean;
   detailHref: string;
+  pair?: React.ReactNode;
 }) {
   const Heading = current ? "h1" : "h2";
   const available = detailMetrics(activity);
@@ -58,6 +60,7 @@ export function ActivityDetail({
           Garmin n’a transmis aucune mesure pour cette activité.
         </p>
       )}
+      {pair}
       {view?.route ? (
         <RouteCard
           key={`route:${activity.id}`}

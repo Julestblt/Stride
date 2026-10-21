@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Aujourd’hui" };
 
 export default async function TodayPage() {
   const context = await requireAthlete();
-  const { view, checkin } = await loadToday(context, new Date());
+  const { view, checkin, pairQuestion } = await loadToday(context, new Date());
   return (
     <>
       <AppHeader title="Aujourd’hui" detail={view.header.date} />
@@ -40,7 +40,7 @@ export default async function TodayPage() {
                 />
               </div>
               <div className="max-xl:order-5">
-                <LatestSection latest={view.latest} />
+                <LatestSection latest={view.latest} question={pairQuestion} />
               </div>
               <div className="max-xl:order-4">
                 <UpcomingSection items={view.upcoming} />

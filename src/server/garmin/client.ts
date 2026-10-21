@@ -10,6 +10,7 @@ import type {
   GarminSyncStatus,
 } from "@/features/garmin/sync";
 import {
+  activityGearResponseSchema,
   authOutcomeSchema,
   connectionSchema,
   parseFailure,
@@ -232,6 +233,20 @@ export function createGarminClient({
         body,
         "PATCH",
       ).then(unwrapGear);
+    },
+    setActivityGear(
+      context: GarminRequestContext,
+      providerActivityId: string,
+      gearUuid: string | null,
+    ): Promise<GarminResult<z.output<typeof activityGearResponseSchema>>> {
+      return request(
+        context,
+        `/v1/connections/garmin/activities/${encodeURIComponent(providerActivityId)}/gear`,
+        activityGearResponseSchema,
+        workoutTimeoutMs,
+        { gear_uuid: gearUuid },
+        "PUT",
+      );
     },
     removeWorkouts(
       context: GarminRequestContext,

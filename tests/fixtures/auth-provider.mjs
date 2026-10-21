@@ -213,7 +213,7 @@ const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
 const planShoe = (id, brand, model, version, category, terrain, km) => ({
   id,
   user_id: planUser.id,
-  garmin_gear_uuid: null,
+  garmin_gear_uuid: `${id.slice(-1).repeat(8)}${"0".repeat(24)}`,
   brand,
   model,
   version,
@@ -261,6 +261,7 @@ const tables = {
     ),
   ],
   plan_session_shoe_choices: [],
+  activity_shoe_decisions: [],
   athlete_wellness_checkins: [],
   provider_activities: [
     activity(1, 1, {
@@ -825,9 +826,18 @@ tables.provider_activities.push({
     ).toISOString(),
   }),
   user_id: planUser.id,
+  provider_activity_id: "21894515000",
   started_at: new Date(planDoneStart).toISOString(),
   local_started_at: `${planDoneSession.scheduled_on} 19:12:00`,
 });
+tables.provider_activity_gear = [
+  {
+    user_id: planUser.id,
+    provider: "garmin",
+    provider_activity_id: "21894515000",
+    gear_uuid: `${"3".repeat(8)}${"0".repeat(24)}`,
+  },
+];
 tables.provider_activity_tracks.push({
   activity_id: planDoneActivityId,
   user_id: planUser.id,
@@ -1492,8 +1502,17 @@ function selectRows(table, params) {
         matcher.test(row.activity_name),
     );
   }
+  for (const key of ["id", "provider_activity_id"]) {
+    const listed = params.get(key)?.match(/^in\.\((.*)\)$/);
+    if (listed) {
+      const allowed = listed[1]
+        .split(",")
+        .map((item) => item.replace(/"/g, ""));
+      rows = rows.filter((row) => allowed.includes(String(row[key])));
+    }
+  }
   const id = params.get("id");
-  if (id) rows = rows.filter((row) => `eq.${row.id}` === id);
+  if (id?.startsWith("eq.")) rows = rows.filter((row) => `eq.${row.id}` === id);
   if (table.startsWith("plan_") || table === "session_activity_matches") {
     for (const key of ["plan_id", "version"]) {
       const filter = params.get(key);
@@ -2286,6 +2305,20 @@ createServer(async (request, response) => {
         );
         return send(204, undefined);
       }
+    }
+    if (
+      url.pathname === "/rest/v1/activity_shoe_decisions" &&
+      request.method === "POST"
+    ) {
+      const decision = Array.isArray(body) ? body[0] : body;
+      tables.activity_shoe_decisions = tables.activity_shoe_decisions
+        .filter(
+          (item) =>
+            item.user_id !== decision.user_id ||
+            item.provider_activity_id !== decision.provider_activity_id,
+        )
+        .concat(decision);
+      return send(201, undefined);
     }
     if (url.pathname === "/rest/v1/plan_session_shoe_choices") {
       const key = url.searchParams.get("session_key")?.slice(3);

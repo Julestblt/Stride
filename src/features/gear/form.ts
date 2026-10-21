@@ -68,6 +68,8 @@ export function gearErrorMessage(result: GearActionResult) {
       return "Garmin demande une reconnexion : va dans Réglages › Connexions.";
     case "not-found":
       return "Cette paire n’existe plus dans Garmin. Recharge la page.";
+    case "pair-too-recent":
+      return "Garmin refuse : cette paire a été mise en service après la sortie. Avance sa date de première utilisation.";
     case "garmin-unavailable":
       return "Garmin ne répond pas. Rien n’a été enregistré, réessaie dans un instant.";
     case "error":
