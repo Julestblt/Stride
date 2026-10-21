@@ -57,6 +57,20 @@ export function countUnread(context: OnboardingContext, now = new Date()) {
   return countWhere(context, now, "unread");
 }
 
+export async function countUnreadInThread(
+  context: OnboardingContext,
+  threadId: string,
+) {
+  const { count, error } = await context.client
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", context.userId)
+    .eq("payload->>threadId", threadId)
+    .is("read_at", null);
+  if (error) throw new Error("Unable to count the thread notifications");
+  return count ?? 0;
+}
+
 export function countTodo(context: OnboardingContext, now = new Date()) {
   return countWhere(context, now, "todo");
 }
