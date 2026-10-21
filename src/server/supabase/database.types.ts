@@ -1632,6 +1632,7 @@ export type Database = {
           position: number;
           race_id: string;
           revision: number;
+          shoe_id: string | null;
           start_date: string | null;
           status: string | null;
           updated_at: string;
@@ -1649,6 +1650,7 @@ export type Database = {
           position?: number;
           race_id: string;
           revision?: number;
+          shoe_id?: string | null;
           start_date?: string | null;
           status?: string | null;
           updated_at?: string;
@@ -1665,6 +1667,7 @@ export type Database = {
           position?: number;
           race_id?: string;
           revision?: number;
+          shoe_id?: string | null;
           start_date?: string | null;
           status?: string | null;
           updated_at?: string;
@@ -1677,6 +1680,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "athlete_races";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "race_checklist_items_shoe_fkey";
+            columns: ["shoe_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_shoes";
+            referencedColumns: ["id", "user_id"];
           },
         ];
       };
