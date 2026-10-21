@@ -105,7 +105,8 @@ These requirements are accepted. Phase 1 of the coaching engine delivers them de
 
 - V1 includes an in-app notification center: a bell with the unread count in every application header, a desktop panel and a `/notifications` history of the last 30 days filtered by Toutes, À traiter, Staff and Données.
 - The first sources are plan proposals ready for review and staff replies or questions in Coach threads. Database triggers on the existing plan and coach tables create and resolve notifications, so every call site is covered and the athlete's own decisions resolve a notification instead of creating one.
-- Garmin events, push and email delivery, notification preferences and a realtime badge are out of scope for V1.
+- Garmin sources follow: fresh running activities, connection problems, watch send failures and shoe questions. Stride detects them when the athlete opens the app, without changing the Garmin service.
+- Push and email delivery, notification preferences and a realtime badge are out of scope for V1.
 
 ### Future capabilities
 
