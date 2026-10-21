@@ -20,6 +20,7 @@ import { getGarminClient } from "@/server/garmin/session";
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { suggestShoeFromName } from "@/server/ai/skills/shoe-suggestion";
 import type { ShoeSuggestion } from "@/features/gear/suggestion";
+import { loadPlanShoes } from "./planned";
 import { readGarminGear, readShoe, shoeColumns } from "./shoes";
 
 export type GearActionResult =
@@ -272,4 +273,43 @@ export async function suggestShoe(input: unknown): Promise<SuggestionOutcome> {
   const athlete = await context();
   if (!athlete) return { status: "session-expired" };
   return suggestShoeFromName(parsed.data.name);
+}
+
+const sessionShoeSchema = z.strictObject({
+  sessionKey: z.string().regex(/^[a-z0-9][a-z0-9-]{0,63}$/),
+  shoeId: z.uuid(),
+});
+
+export async function chooseSessionShoe(
+  input: unknown,
+): Promise<GearActionResult> {
+  const parsed = sessionShoeSchema.safeParse(input);
+  if (!parsed.success) return { status: "invalid" };
+  const athlete = await context();
+  if (!athlete) return { status: "session-expired" };
+  const { sessionKey, shoeId } = parsed.data;
+  const plan = await loadPlanShoes(athlete);
+  const result = plan?.results.get(sessionKey);
+  if (!plan || !result || !plan.pairs.has(shoeId)) return { status: "invalid" };
+  const choices = athlete.client.from("plan_session_shoe_choices");
+  const { error } =
+    result.recommendation.pairId === shoeId
+      ? await choices
+          .delete()
+          .eq("user_id", athlete.userId)
+          .eq("session_key", sessionKey)
+      : await choices.upsert(
+          {
+            user_id: athlete.userId,
+            session_key: sessionKey,
+            shoe_id: shoeId,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,session_key" },
+        );
+  if (error) return { status: "error" };
+  revalidatePath("/plan");
+  revalidatePath("/today");
+  refresh();
+  return { status: "saved" };
 }
