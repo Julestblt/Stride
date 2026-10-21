@@ -5,6 +5,10 @@ import { MonoLabel } from "@/components/stride/mono-label";
 import { SessionKindTile } from "@/components/stride/session-kind-tile";
 import { SessionShape } from "@/components/stride/session-shape";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
+import {
+  TodayShoeChip,
+  TodayShoeRow,
+} from "@/features/gear/components/session-shoes";
 import type { Legs } from "@/features/progress/recovery";
 import { cn } from "@/lib/utils";
 import type {
@@ -227,13 +231,17 @@ function PlannedSession({
           className="h-10"
         />
       )}
+      {!done && panel.shoes && <TodayShoeRow shoes={panel.shoes} />}
       <div className="flex flex-wrap items-center gap-2">
         <Button asChild variant="outline" size="md">
           <Link href={session.href}>Voir les étapes</Link>
         </Button>
-        {session.terrain && (
-          <span className="ml-auto text-xs text-muted-foreground">
+        {(session.terrain || (!done && panel.shoes?.chosen)) && (
+          <span className="ml-auto flex items-center gap-2.5 text-xs text-muted-foreground">
             {session.terrain}
+            {!done && panel.shoes && (
+              <TodayShoeChip shoes={panel.shoes} href={session.href} />
+            )}
           </span>
         )}
       </div>
