@@ -29,12 +29,12 @@ test("the desktop bell opens the panel and marks everything read", async ({
   await page.setViewportSize({ width: 1440, height: 1165 });
   await signIn(page);
   const bell = page.getByRole("button", {
-    name: "Notifications, 2 non lues",
+    name: "Notifications, 3 non lues",
   });
   await expect(bell).toBeVisible();
   await bell.click();
   const panel = page.getByRole("dialog", { name: "Notifications" });
-  await expect(panel.getByText("2 non lues")).toBeVisible();
+  await expect(panel.getByText("3 non lues")).toBeVisible();
   await expect(
     panel.getByRole("region", { name: "Aujourd’hui" }),
   ).toBeVisible();
@@ -47,7 +47,7 @@ test("the desktop bell opens the panel and marks everything read", async ({
   await expect(panel.getByText("Hors de la fenêtre")).toHaveCount(0);
   await page.screenshot({ path: "test-results/notifications-panel.png" });
 
-  await panel.getByRole("button", { name: "À traiter · 2" }).click();
+  await panel.getByRole("button", { name: "À traiter · 3" }).click();
   await expect(panel.getByText("Claire a répondu")).toHaveCount(0);
   await panel.getByRole("button", { name: "Staff" }).click();
   await expect(panel.getByText(/Claire a répondu/)).toBeVisible();
@@ -79,7 +79,7 @@ test("the history page groups the last 30 days with filters", async ({
   const filters = page.getByRole("group", {
     name: "Filtrer les notifications",
   });
-  for (const name of ["Toutes", "À traiter · 2", "Staff", "Données"])
+  for (const name of ["Toutes", "À traiter · 3", "Staff", "Données"])
     await expect(filters.getByRole("link", { name })).toBeVisible();
   await expect(
     page.getByRole("region", { name: /^Aujourd’hui · / }),
@@ -91,7 +91,22 @@ test("the history page groups the last 30 days with filters", async ({
 
   await filters.getByRole("link", { name: "Données" }).click();
   await expect(page).toHaveURL("/notifications?filtre=donnees");
-  await expect(page.getByText("Rien dans ce filtre")).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: /Nouvelle activité : Footing · 50’/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Associée à ta séance · 8,32 km · 50:10 · 6:02 /km"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Choisir la paire" }),
+  ).toBeVisible();
+  await expect(page.getByText("Envoyée", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rétablie", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Raccourcir ton seuil/)).toHaveCount(0);
+  await expect(page.getByText(/Claire a répondu/)).toHaveCount(0);
+  await page.screenshot({ path: "test-results/notifications-garmin.png" });
 });
 
 test("opening a notification marks it read and follows its link", async ({
@@ -107,14 +122,41 @@ test("opening a notification marks it read and follows its link", async ({
   );
   await page.goto("/today");
   await expect(
-    page.getByRole("button", { name: "Notifications, 1 non lue" }),
+    page.getByRole("button", { name: "Notifications, 2 non lues" }),
+  ).toBeVisible();
+});
+
+test("a fresh Garmin run reaches the bell on the next load", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1020 });
+  await signIn(page);
+  await expect(
+    page.getByRole("button", { name: "Notifications, 3 non lues" }),
+  ).toBeVisible();
+  await fetch(`http://127.0.0.1:${authPort}/__test__/garmin-import`, {
+    method: "POST",
+  });
+  await page.goto("/plan");
+  await expect(async () => {
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: "Notifications, 4 non lues" }),
+    ).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
+  await page.goto("/notifications?filtre=donnees");
+  await expect(
+    page.getByRole("button", { name: /Nouvelle activité : Sortie longue/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Sans séance prévue · 21,0 km · 2:20:00 · 6:40 /km"),
   ).toBeVisible();
 });
 
 test("the mobile bell links to the list", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 1180 });
   await signIn(page);
-  const bell = page.getByRole("link", { name: "Notifications, 2 non lues" });
+  const bell = page.getByRole("link", { name: "Notifications, 3 non lues" });
   await expect(bell).toBeVisible();
   await bell.click();
   await expect(page).toHaveURL("/notifications");
@@ -141,10 +183,10 @@ test("settings screens carry the bell", async ({ page }) => {
   await signIn(page);
   await page.goto("/settings");
   await expect(
-    page.getByRole("button", { name: "Notifications, 2 non lues" }),
+    page.getByRole("button", { name: "Notifications, 3 non lues" }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
-    page.getByRole("link", { name: "Notifications, 2 non lues" }),
+    page.getByRole("link", { name: "Notifications, 3 non lues" }),
   ).toBeVisible();
 });

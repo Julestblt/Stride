@@ -1589,8 +1589,64 @@ tables.notifications = [
     },
     occurred_at: notificationAt(40, "08:00:00"),
   }),
+  notificationRow(6, {
+    kind: "garmin_activity",
+    dedupe_key: "garmin_activity:notif-6",
+    payload: {
+      activityId: "e8e8e8e8-0000-4000-8000-cdcdcdcd0006",
+      name: "Footing · 50’",
+      type: "running",
+      distanceMeters: 8320,
+      durationSeconds: 3010,
+      matched: true,
+    },
+    occurred_at: notificationAt(0, "06:12:00"),
+  }),
+  notificationRow(7, {
+    kind: "gear_mismatch",
+    dedupe_key: "gear_mismatch:notif-7",
+    payload: {
+      activityId: "e8e8e8e8-0000-4000-8000-cdcdcdcd0007",
+      activityName: "Footing d’hier",
+      sessionTitle: "Footing",
+      day: null,
+      garmin: "Zegama",
+      planned: "Evo SL 3",
+    },
+    occurred_at: notificationAt(0, "06:11:00"),
+    read_at: notificationAt(0, "06:30:00"),
+  }),
+  notificationRow(8, {
+    kind: "watch_workout",
+    dedupe_key: "watch_workout:notif-8",
+    payload: {
+      externalKey: "plan:notif-8",
+      scheduledOn: "2026-10-22",
+      status: "failed",
+      errorCode: "provider_unavailable",
+      sessionTitle: "Seuil",
+    },
+    occurred_at: notificationAt(1, "18:05:00"),
+    read_at: notificationAt(1, "18:30:00"),
+    resolved_at: notificationAt(1, "18:30:00"),
+    resolution: "sent",
+  }),
+  notificationRow(9, {
+    kind: "garmin_connection",
+    dedupe_key: "garmin_connection:notif-9",
+    payload: {
+      connectionId: "c8c8c8c8-0000-4000-8000-cdcdcdcd0009",
+      status: "error",
+      errorCode: "sync_failed",
+    },
+    occurred_at: notificationAt(2, "08:12:00"),
+    read_at: notificationAt(2, "08:40:00"),
+    resolved_at: notificationAt(2, "08:40:00"),
+    resolution: "restored",
+  }),
 ];
 const notificationSnapshot = structuredClone(tables.notifications);
+let pendingGarminImport = false;
 function matchesNotification(row, params) {
   for (const key of ["read_at", "resolved_at"])
     if (params.get(key) === "is.null" && row[key] !== null) return false;
@@ -1599,6 +1655,11 @@ function matchesNotification(row, params) {
     const allowed = kinds[1].split(",").map((item) => item.replace(/"/g, ""));
     if (!allowed.includes(row.kind)) return false;
   }
+  const either = params
+    .get("or")
+    ?.match(/^\(kind\.neq\.(\w+),payload->>status\.in\.\((.*)\)\)$/);
+  if (either && row.kind === either[1])
+    return either[2].split(",").includes(row.payload.status);
   return true;
 }
 function nameMatcher(filter) {
@@ -1982,7 +2043,12 @@ createServer(async (request, response) => {
     request.method === "DELETE"
   ) {
     tables.notifications = structuredClone(notificationSnapshot);
+    pendingGarminImport = false;
     return send(200, { reset: true });
+  }
+  if (url.pathname === "/__test__/garmin-import" && request.method === "POST") {
+    pendingGarminImport = true;
+    return send(200, { pending: true });
   }
   if (url.pathname === "/__test__/coach" && request.method === "DELETE") {
     const snapshot = structuredClone(coachSnapshot);
@@ -2261,6 +2327,37 @@ createServer(async (request, response) => {
     ) {
       const [status, value] = applyPlanProposal(request, body.p_proposal_id);
       return send(status, value);
+    }
+    if (
+      request.method === "POST" &&
+      url.pathname === "/rest/v1/rpc/reconcile_garmin_notifications"
+    ) {
+      const caller = recordsSession?.user.id ?? user.id;
+      const key = "garmin_activity:fresh-import";
+      if (
+        pendingGarminImport &&
+        caller === notificationUser.id &&
+        !tables.notifications.some((row) => row.dedupe_key === key)
+      )
+        tables.notifications.push({
+          id: "cdcdcdcd-0000-4000-8000-0000000000aa",
+          user_id: caller,
+          kind: "garmin_activity",
+          dedupe_key: key,
+          payload: {
+            activityId: "e8e8e8e8-0000-4000-8000-cdcdcdcd00aa",
+            name: "Sortie longue",
+            type: "trail_running",
+            distanceMeters: 21000,
+            durationSeconds: 8400,
+            matched: false,
+          },
+          occurred_at: new Date().toISOString(),
+          read_at: null,
+          resolved_at: null,
+          resolution: null,
+        });
+      return send(204, undefined);
     }
     if (
       request.method === "POST" &&
