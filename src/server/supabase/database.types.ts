@@ -2331,6 +2331,10 @@ export type Database = {
         Returns: number;
       };
       race_owned: { Args: { p_race_id: string }; Returns: boolean };
+      reconcile_garmin_notifications: {
+        Args: { p_gear_mismatches?: Json };
+        Returns: undefined;
+      };
       record_plan_proposal_outcome: {
         Args: { p_note?: string; p_outcome: string; p_proposal_id: string };
         Returns: undefined;
