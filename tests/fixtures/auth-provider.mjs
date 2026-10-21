@@ -210,7 +210,57 @@ const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
     availability: "available",
   }));
 }).flat();
+const planShoe = (id, brand, model, version, category, terrain, km) => ({
+  id,
+  user_id: planUser.id,
+  garmin_gear_uuid: null,
+  brand,
+  model,
+  version,
+  category,
+  terrain,
+  description: null,
+  suggested_fields: [],
+  size_eu: null,
+  lifespan_km: 800,
+  starting_distance_m: km * 1000,
+  first_use_date: "2026-03-01",
+  retired_on: null,
+  revision: 1,
+  created_at: "2026-03-01T00:00:00Z",
+  updated_at: "2026-03-01T00:00:00Z",
+});
 const tables = {
+  athlete_shoes: [
+    planShoe(
+      "d1000000-0000-4000-8000-000000000001",
+      "Adidas",
+      "Adizero Evo SL",
+      "3",
+      "daily",
+      "road",
+      594,
+    ),
+    planShoe(
+      "d1000000-0000-4000-8000-000000000002",
+      "Saucony",
+      "Endorphin Speed",
+      "4",
+      "tempo",
+      "road",
+      120,
+    ),
+    planShoe(
+      "d1000000-0000-4000-8000-000000000003",
+      "Nike",
+      "Zegama",
+      null,
+      "daily",
+      "trail",
+      241,
+    ),
+  ],
+  plan_session_shoe_choices: [],
   athlete_wellness_checkins: [],
   provider_activities: [
     activity(1, 1, {
@@ -2234,6 +2284,29 @@ createServer(async (request, response) => {
         tables.athlete_races = tables.athlete_races.filter(
           (item) => !ids.includes(item.id),
         );
+        return send(204, undefined);
+      }
+    }
+    if (url.pathname === "/rest/v1/plan_session_shoe_choices") {
+      const key = url.searchParams.get("session_key")?.slice(3);
+      if (request.method === "POST") {
+        const choice = Array.isArray(body) ? body[0] : body;
+        tables.plan_session_shoe_choices = tables.plan_session_shoe_choices
+          .filter(
+            (item) =>
+              item.user_id !== choice.user_id ||
+              item.session_key !== choice.session_key,
+          )
+          .concat(choice);
+        return send(201, undefined);
+      }
+      if (request.method === "DELETE") {
+        tables.plan_session_shoe_choices =
+          tables.plan_session_shoe_choices.filter(
+            (item) =>
+              `eq.${item.user_id}` !== url.searchParams.get("user_id") ||
+              item.session_key !== key,
+          );
         return send(204, undefined);
       }
     }
