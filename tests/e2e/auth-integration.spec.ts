@@ -10,19 +10,17 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
-  await expect(
-    page.getByText("Connecté en tant que :", { exact: false }),
-  ).toContainText("athlete@example.com");
+  await expect(page).toHaveURL("/today");
 
   for (const path of [
+    "/",
     "/sign-in",
     "/sign-up",
     "/forgot-password",
     "/link-expired",
   ]) {
     await page.goto(path);
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/today");
   }
 
   await page.goto("/missing-route");
@@ -31,17 +29,14 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "Se connecter" })).toHaveCount(0);
 
-  await page.goto("/");
+  await page.goto("/settings");
   await page.getByRole("button", { name: "Se déconnecter" }).click();
-  await expect(page).toHaveURL("/");
-  await expect(
-    page.getByText("Connecté en tant que :", { exact: false }),
-  ).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
-  await page.goto("/sign-in");
+  await expect(page).toHaveURL("/sign-in");
   await expect(
     page.getByRole("heading", { name: "Content de te revoir" }),
   ).toBeVisible();
+  await page.goto("/");
+  await expect(page).toHaveURL("/sign-in");
   await page.goto("/missing-route");
   await expect(page.getByRole("link", { name: "Se connecter" })).toBeVisible();
 
@@ -69,7 +64,7 @@ for (const remember of [true, false]) {
     await page
       .getByRole("button", { name: "Se connecter", exact: true })
       .click();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/today");
     const cookies = (await context.cookies()).filter((cookie) =>
       cookie.name.includes("auth-token"),
     );
@@ -217,7 +212,7 @@ test("recovery exchanges a code, saves a password and revokes other sessions", a
   await page
     .getByRole("button", { name: "Enregistrer et se connecter" })
     .click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
   const events = await (
     await request.get("http://127.0.0.1:3200/__test__/events")
   ).json();
@@ -233,7 +228,7 @@ test("verified token hash cannot redirect off site", async ({ page }) => {
   await page.goto(
     "/auth/callback?token_hash=valid-token&type=magiclink&next=https://evil.example",
   );
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 });
 
 for (const remember of [true, false]) {
@@ -267,7 +262,7 @@ for (const remember of [true, false]) {
       )
     ).json();
     await page.goto(link.url);
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/today");
     const cookie = (await context.cookies()).find((item) =>
       item.name.endsWith("auth-token"),
     );
@@ -389,5 +384,5 @@ test("signup with a provider session returns to Stride", async ({ page }) => {
   await page
     .getByRole("button", { name: "Créer un compte", exact: true })
     .click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 });

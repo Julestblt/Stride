@@ -7,7 +7,7 @@ async function signIn(page: Page) {
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 }
 
 test("signed-out visitors cannot open the race workspace", async ({ page }) => {

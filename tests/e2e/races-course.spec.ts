@@ -16,7 +16,7 @@ test("a populated race opens every workspace section on desktop and mobile", asy
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 
   for (const viewport of [
     { width: 1440, height: 900 },
@@ -175,7 +175,7 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
   await page.goto("/races");
   await page.getByRole("link", { name: "Ouvrir la course" }).click();
 

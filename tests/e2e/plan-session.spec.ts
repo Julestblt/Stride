@@ -7,7 +7,7 @@ async function signIn(page: Page) {
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 }
 
 const sessionLinks = (page: Page) =>
@@ -68,7 +68,7 @@ test("closing a session restores focus and history", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page).toHaveURL(/\/plan$/);
   await page.goBack();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/today$/);
 });
 
 test("a completed session shows planned versus completed", async ({ page }) => {

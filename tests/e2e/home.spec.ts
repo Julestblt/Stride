@@ -1,42 +1,21 @@
 import { expect, test } from "@playwright/test";
 
-test("the Stride foundation page presents the product clearly", async ({
+test("signed-out visitors opening the root are sent to sign-in", async ({
   page,
 }) => {
   await page.goto("/");
 
+  await expect(page).toHaveURL("/sign-in");
   await expect(page).toHaveTitle(/Stride/);
   await expect(
-    page.getByRole("heading", { name: /Your running, with context\./ }),
+    page.getByRole("heading", { name: "Content de te revoir" }),
   ).toBeVisible();
-  await expect(page.getByText("Road and trail, in one stride.")).toBeVisible();
 });
-
-for (const width of [320, 390, 768, 1440]) {
-  test(`the foundation stays readable and keyboard accessible at ${width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height: 1000 });
-    await page.goto("/");
-    await page.evaluate(() => document.fonts.ready);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= window.innerWidth,
-      ),
-    ).toBe(true);
-    await page.keyboard.press("Tab");
-    const home = page.getByRole("link", { name: "Stride home" });
-    await expect(home).toBeFocused();
-    await expect(home).toHaveCSS("outline-style", "solid");
-    await expect(home).toHaveCSS("outline-width", "2px");
-  });
-}
 
 test("Night Track utilities and global accessibility defaults resolve in the browser", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/sign-in");
   await page.evaluate(() => {
     const surface = document.createElement("div");
     surface.id = "theme-probe";

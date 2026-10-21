@@ -27,8 +27,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stride | Your running, with context",
-  description: "A thoughtful foundation for a more personal running coach.",
+  title: "Stride",
+  description: "Ton coach running personnel, sur route et en trail.",
 };
 
 export default function RootLayout({
