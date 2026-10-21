@@ -7,7 +7,7 @@ async function signIn(page: Page) {
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 }
 
 test("signed-out athletes are sent to sign-in", async ({ page }) => {
@@ -25,7 +25,9 @@ test("activities are grouped, filtered through the URL and opened in place", asy
     page.getByRole("heading", { level: 1, name: "Activités" }),
   ).toBeVisible();
   const sidebar = page.locator('[data-sidebar="sidebar"]').first();
-  await expect(sidebar.getByRole("link", { name: /A EcoTrail Paris 120K/ })).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: /A EcoTrail Paris 120K/ }),
+  ).toBeVisible();
   await expect(sidebar.getByText(/Course A · J-\d+/)).toBeVisible();
   await expect(
     sidebar.getByRole("link", { name: "Activités" }),

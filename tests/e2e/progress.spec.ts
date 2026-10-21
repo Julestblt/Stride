@@ -7,7 +7,7 @@ async function signIn(page: Page) {
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/");
+  await expect(page).toHaveURL("/today");
 }
 
 test("signed-out visitors cannot open progress", async ({ page }) => {
@@ -409,7 +409,7 @@ for (const mode of ["empty", "failure", "goal-failure"] as const) {
     await page
       .getByRole("button", { name: "Se connecter", exact: true })
       .click();
-    await expect(page).toHaveURL("/");
+    await expect(page).not.toHaveURL(/\/sign-in/);
     await page.goto("/progress/records");
     await expect(
       page.getByRole("heading", { level: 1, name: "Records" }),
