@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { chooseSessionShoe } from "@/server/gear/actions";
 import { gearErrorMessage } from "../form";
 import type { SessionShoesView } from "../planned";
+import { theModel } from "../view";
 
 function useChooseShoe(sessionKey: string) {
   const router = useRouter();
@@ -139,7 +140,7 @@ export function ShoePicker({
               else choose(option.id, option.name, () => onOpenChange(false));
             }}
           >
-            {option ? `Garder la ${option.name}` : "Choisir une paire"}
+            {option ? `Garder ${theModel(option.name)}` : "Choisir une paire"}
           </Button>
         </div>
       </SheetContent>
@@ -213,7 +214,7 @@ export function SessionShoesBlock({ shoes }: { shoes: SessionShoesView }) {
                     size="sm"
                     className="row-span-2 h-8"
                     disabled={pending}
-                    aria-label={`Choisir la ${item.name}`}
+                    aria-label={`Choisir ${theModel(item.name)}`}
                     onClick={() => choose(item.id, item.name)}
                   >
                     Choisir

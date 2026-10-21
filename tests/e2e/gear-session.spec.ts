@@ -33,7 +33,7 @@ test("a planned session shows its pair and keeps the athlete's choice", async ({
 
   const url = page.url();
   await shoes
-    .getByRole("button", { name: "Choisir la Adizero Evo SL 3" })
+    .getByRole("button", { name: "Choisir l’Adizero Evo SL 3" })
     .click();
   await expect(shoes.getByText("Ton choix", { exact: true })).toBeVisible();
   await expect(
@@ -47,11 +47,11 @@ test("a planned session shows its pair and keeps the athlete's choice", async ({
     timeout: 20_000,
   });
   await expect(
-    reloaded.getByText(/Stride conseillait la Endorphin Speed 4/),
+    reloaded.getByText(/Stride conseillait l’Endorphin Speed 4/),
   ).toBeVisible();
 
   await reloaded
-    .getByRole("button", { name: "Choisir la Endorphin Speed 4" })
+    .getByRole("button", { name: "Choisir l’Endorphin Speed 4" })
     .click();
   await expect(reloaded.getByText("Conseillée", { exact: true })).toBeVisible();
 });

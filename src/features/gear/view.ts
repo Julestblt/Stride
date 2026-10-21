@@ -67,6 +67,10 @@ export function formatDay(day: string) {
   return shortDay.format(new Date(`${day}T00:00:00Z`));
 }
 
+export function theModel(name: string) {
+  return /^[aeiouyàâéèêëîïôûùh]/i.test(name) ? `l’${name}` : `la ${name}`;
+}
+
 export function modelName(spec: Pick<ShoeSpec, "model" | "version">) {
   return [spec.model, spec.version].filter(Boolean).join(" ");
 }

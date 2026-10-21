@@ -17,7 +17,13 @@ import {
   type SessionNeed,
 } from "./recommendation";
 import { optionSentence, recommendationSentence } from "./reasons";
-import { formatDay, formatKm, modelName, type ShoeInput } from "./view";
+import {
+  formatDay,
+  formatKm,
+  modelName,
+  theModel,
+  type ShoeInput,
+} from "./view";
 
 export type PlanShoesInput = {
   sessions: PlanSession[];
@@ -214,7 +220,7 @@ export function sessionShoesView(
   const sentence = chosenPair
     ? overridden
       ? recommended
-        ? `Tu as choisi cette paire pour la séance. Stride conseillait la ${modelName(recommended.spec)}.`
+        ? `Tu as choisi cette paire pour la séance. Stride conseillait ${theModel(modelName(recommended.spec))}.`
         : "Tu as choisi cette paire pour la séance."
       : recommendationSentence(recommendation?.reasons ?? [], need)
     : plan.pairs.size === 0
