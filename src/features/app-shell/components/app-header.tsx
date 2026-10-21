@@ -5,6 +5,7 @@ import {
   DataActivityThread,
 } from "@/features/data-activity/components/status";
 import { MonoLabel } from "@/components/stride/mono-label";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -116,6 +117,7 @@ export function AppHeader({
         )}
       </div>
       {actions}
+      <NotificationBell />
       <DataActivityStatus short className="shrink-0 md:hidden" />
       <SidebarTrigger
         aria-label={sidebarLabel}

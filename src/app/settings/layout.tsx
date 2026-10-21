@@ -1,4 +1,6 @@
 import { DataActivityProvider } from "@/features/data-activity/components/provider";
+import { StaffProvider } from "@/features/coach/components/staff-context";
+import { NotificationsProvider } from "@/features/notifications/components/notifications-context";
 import { SettingsShell } from "@/features/settings/components/settings-shell";
 import { getShell } from "@/server/app/shell";
 
@@ -11,8 +13,15 @@ export default async function SettingsLayout({
 }) {
   const shell = await getShell();
   return (
-    <DataActivityProvider initial={shell.initialActivity}>
-      <SettingsShell athlete={shell.athlete}>{children}</SettingsShell>
-    </DataActivityProvider>
+    <StaffProvider faces={shell.staffFaces}>
+      <NotificationsProvider
+        feed={shell.notifications}
+        now={shell.notificationsAt}
+      >
+        <DataActivityProvider initial={shell.initialActivity}>
+          <SettingsShell athlete={shell.athlete}>{children}</SettingsShell>
+        </DataActivityProvider>
+      </NotificationsProvider>
+    </StaffProvider>
   );
 }
