@@ -1345,9 +1345,7 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
     );
     await device.getByRole("button", { name: /^Edited Athlete/ }).click();
     await device.getByRole("menuitem", { name: "Se déconnecter" }).click();
-    await expect(
-      device.getByRole("link", { name: "Se connecter", exact: true }),
-    ).toBeVisible();
+    await expect(device).toHaveURL(/\/sign-in$/);
     const signOutAction = await signOutRequest;
     await device.goto("/onboarding/about");
     await expect(device).toHaveURL(/\/sign-in$/);
@@ -1364,9 +1362,7 @@ test("unseeded six-screen journey survives refresh, another device, Back edits a
     expect((await races(user))[0].name).toBe("Journey Race");
     await device.getByRole("button", { name: /^Edited Athlete/ }).click();
     await device.getByRole("menuitem", { name: "Se déconnecter" }).click();
-    await expect(
-      device.getByRole("link", { name: "Se connecter", exact: true }),
-    ).toBeVisible();
+    await expect(device).toHaveURL(/\/sign-in$/);
     const interrupted = await makeAthlete();
     await signIn(device, interrupted.email);
     await device
