@@ -6,6 +6,7 @@ import { listActivities } from "@/server/activities/activities";
 import { pairQuestion } from "@/features/gear/check-view";
 import { loadWatchView } from "@/server/garmin/watch";
 import { loadPairChecks } from "@/server/gear/checks";
+import { reconcileGearNotificationsAfterResponse } from "@/server/notifications/garmin";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import {
   loadPlanOverview,
@@ -34,6 +35,7 @@ export async function loadToday(context: OnboardingContext, now: Date) {
     loadWatchView(context, overview?.plan ?? null),
     loadPairChecks(context, latest?.id ?? null),
   ]);
+  reconcileGearNotificationsAfterResponse(context, checks);
   const latestCheck = latest ? checks?.checks.get(latest.id) : null;
   return {
     checkin: recovery.checkin,

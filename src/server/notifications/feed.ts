@@ -4,6 +4,7 @@ import {
   notificationColumns,
   parseNotifications,
   todoKinds,
+  todoPayloadFilter,
   windowStart,
   type NotificationFeed,
   type NotificationFilter,
@@ -26,7 +27,8 @@ export async function readNotifications(
     .eq("user_id", context.userId)
     .gte("occurred_at", windowStart(now).toISOString())
     .in("kind", [...kinds]);
-  if (filter === "a-traiter") query = query.is("resolved_at", null);
+  if (filter === "a-traiter")
+    query = query.is("resolved_at", null).or(todoPayloadFilter);
   const { data, error } = await query
     .order("occurred_at", { ascending: false })
     .limit(limit);
@@ -47,7 +49,10 @@ async function countWhere(
   query =
     scope === "unread"
       ? query.is("read_at", null)
-      : query.is("resolved_at", null).in("kind", [...todoKinds]);
+      : query
+          .is("resolved_at", null)
+          .in("kind", [...todoKinds])
+          .or(todoPayloadFilter);
   const { count, error } = await query;
   if (error) throw new Error("Unable to count the notifications");
   return count ?? 0;

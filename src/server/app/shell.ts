@@ -21,6 +21,7 @@ import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { countActiveShoes } from "@/server/gear/load";
 import { readNotificationFeed } from "@/server/notifications/feed";
+import { reconcileGarminNotificationsAfterResponse } from "@/server/notifications/garmin";
 import { requireAthlete } from "./session";
 
 async function readTodayReadiness(context: OnboardingContext, now: Date) {
@@ -40,6 +41,7 @@ async function readTodayReadiness(context: OnboardingContext, now: Date) {
 }
 
 export async function loadShell(context: OnboardingContext, now: Date) {
+  reconcileGarminNotificationsAfterResponse(context);
   const [
     profile,
     goals,
