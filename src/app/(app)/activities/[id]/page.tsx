@@ -21,6 +21,7 @@ import {
 } from "@/features/gear/components/activity-pair";
 import { activityPairView, pairQuestion } from "@/features/gear/check-view";
 import { loadPairChecks } from "@/server/gear/checks";
+import { reconcileGearNotificationsAfterResponse } from "@/server/notifications/garmin";
 
 export default async function ActivityPage({
   params,
@@ -45,6 +46,7 @@ export default async function ActivityPage({
       loadPairChecks(context, id),
     ]);
   if (!detail) notFound();
+  reconcileGearNotificationsAfterResponse(context, checks);
   const check = checks?.checks.get(id) ?? null;
   const question = check && checks ? pairQuestion(check, checks.shoes) : null;
   return (

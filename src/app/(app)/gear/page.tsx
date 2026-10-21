@@ -11,6 +11,7 @@ import { rotation, weekShoes } from "@/features/gear/planned";
 import { pairList } from "@/features/gear/view";
 import { requireAthlete } from "@/server/app/session";
 import { loadPairChecks } from "@/server/gear/checks";
+import { reconcileGearNotificationsAfterResponse } from "@/server/notifications/garmin";
 import { loadGear, loadImportable } from "@/server/gear/load";
 import { loadPlanShoes } from "@/server/gear/planned";
 import { loadPlanOverview } from "@/server/plans/overview";
@@ -27,6 +28,7 @@ export default async function GearRoute() {
       loadPlanShoes(context),
       loadPairChecks(context),
     ]);
+  reconcileGearNotificationsAfterResponse(context, checks);
   const active = shoes.some((shoe) => shoe.retiredOn === null);
   const questions = checks
     ? pairQuestions(checks.checks.values(), checks.shoes)

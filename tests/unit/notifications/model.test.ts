@@ -130,6 +130,202 @@ describe("notification view", () => {
   });
 });
 
+describe("Garmin notification view", () => {
+  const activityId = "e8000000-0000-4000-8000-000000000001";
+  const resolved = {
+    resolved_at: "2026-10-07T05:00:00+00:00",
+    read_at: "2026-10-07T05:00:00+00:00",
+  };
+  const activity = {
+    activityId,
+    name: "Footing · 50’",
+    type: "running",
+    distanceMeters: 8320,
+    durationSeconds: 3010,
+    matched: true,
+  };
+
+  it("announces a run matched to its session", () => {
+    expect(view({ kind: "garmin_activity", payload: activity })).toMatchObject({
+      family: "activity",
+      agent: null,
+      title: "Nouvelle activité : Footing · 50’",
+      body: "Associée à ta séance · 8,32 km · 50:10 · 6:02 /km",
+      href: `/activities/${activityId}`,
+      todo: false,
+      status: null,
+      action: null,
+    });
+  });
+
+  it("names an unplanned run from its type when Garmin gives no name", () => {
+    expect(
+      view({
+        kind: "garmin_activity",
+        payload: {
+          ...activity,
+          name: null,
+          type: "trail_running",
+          matched: false,
+        },
+      }),
+    ).toMatchObject({
+      title: "Nouvelle activité : Trail",
+      body: "Sans séance prévue · 8,32 km · 50:10 · 6:02 /km",
+    });
+  });
+
+  it("asks to reconnect Garmin, then shows it restored", () => {
+    const payload = {
+      connectionId: "c8000000-0000-4000-8000-0000000000a8",
+      status: "reconnect_required",
+      errorCode: null,
+    };
+    expect(view({ kind: "garmin_connection", payload })).toMatchObject({
+      family: "sync",
+      title: "Reconnecte ton compte Garmin",
+      href: "/settings/connections/garmin",
+      todo: true,
+      status: { label: "À traiter", tone: "warning" },
+      action: "Reconnecter",
+    });
+    expect(
+      view({
+        kind: "garmin_connection",
+        payload,
+        ...resolved,
+        resolution: "restored",
+      }),
+    ).toMatchObject({
+      todo: false,
+      status: { label: "Rétablie", tone: "success" },
+      action: null,
+    });
+    expect(
+      view({
+        kind: "garmin_connection",
+        payload,
+        ...resolved,
+        resolution: "replaced",
+      }),
+    ).toMatchObject({ status: { label: "Remplacée", tone: "muted" } });
+  });
+
+  it("only informs when the sync is interrupted", () => {
+    expect(
+      view({
+        kind: "garmin_connection",
+        payload: {
+          connectionId: "c8000000-0000-4000-8000-0000000000a8",
+          status: "rate_limited",
+          errorCode: "rate_limited",
+        },
+      }),
+    ).toMatchObject({
+      title: "Synchronisation Garmin interrompue",
+      body: "Garmin limite les échanges pour le moment. Reprise automatique, rien à faire de ton côté.",
+      todo: false,
+      status: null,
+      action: null,
+    });
+  });
+
+  it("asks to review a watch send, then shows it sent", () => {
+    const payload = {
+      externalKey: "d8000000-0000-4000-8000-000000000001:s-2",
+      scheduledOn: "2026-10-22",
+      status: "failed",
+      errorCode: "unsupported_data",
+      sessionTitle: "Seuil",
+    };
+    expect(view({ kind: "watch_workout", payload })).toMatchObject({
+      family: "watch",
+      title: "Seuil du jeu. 22 oct. pas envoyée sur ta montre",
+      body: "Garmin a refusé cette séance. Réessaie, ou garde-la dans Stride.",
+      href: "/plan",
+      todo: true,
+      status: { label: "À traiter", tone: "warning" },
+      action: "Voir la séance",
+    });
+    expect(
+      view({
+        kind: "watch_workout",
+        payload: { ...payload, status: "needs_confirmation", errorCode: null },
+      }),
+    ).toMatchObject({
+      title: "Seuil du jeu. 22 oct. à confirmer pour ta montre",
+    });
+    expect(
+      view({ kind: "watch_workout", payload, ...resolved, resolution: "sent" }),
+    ).toMatchObject({
+      title: "Seuil du jeu. 22 oct. envoyée sur ta montre",
+      todo: false,
+      status: { label: "Envoyée", tone: "success" },
+      action: null,
+    });
+  });
+
+  it("asks which pair was worn, then shows it answered", () => {
+    const payload = {
+      activityId,
+      activityName: "Footing · 50’",
+      sessionTitle: "Footing",
+      day: "2026-10-06",
+      garmin: "Zegama",
+      planned: "Evo SL 3",
+    };
+    expect(view({ kind: "gear_mismatch", payload })).toMatchObject({
+      family: "shoe",
+      title: "Quelle paire pour Footing · 50’ ?",
+      body: "Garmin indique les Zegama, la séance prévoyait les Evo SL 3.",
+      href: `/activities/${activityId}`,
+      todo: true,
+      status: { label: "À traiter", tone: "warning" },
+      action: "Choisir la paire",
+    });
+    expect(
+      view({
+        kind: "gear_mismatch",
+        payload,
+        ...resolved,
+        resolution: "answered",
+      }),
+    ).toMatchObject({
+      todo: false,
+      status: { label: "Répondu", tone: "success" },
+      action: null,
+    });
+  });
+
+  it("lists Garmin sources under Données", () => {
+    const sources = parseNotifications([
+      row({ kind: "garmin_activity", payload: activity }),
+      row({
+        kind: "gear_mismatch",
+        payload: {
+          activityId,
+          activityName: null,
+          sessionTitle: null,
+          day: null,
+          garmin: null,
+          planned: null,
+        },
+      }),
+      row({}),
+    ]);
+    expect(sources.map((item) => matchesFilter(item, "donnees"))).toEqual([
+      true,
+      true,
+      false,
+    ]);
+    expect(sources.map((item) => matchesFilter(item, "a-traiter"))).toEqual([
+      false,
+      true,
+      true,
+    ]);
+  });
+});
+
 describe("notification target", () => {
   it("opens the notification link", () => {
     expect(notificationTarget(row({}))).toBe(`/plan?proposition=${proposalId}`);
@@ -165,6 +361,7 @@ describe("notification filters", () => {
     expect(matchesFilter(reply, "staff")).toBe(true);
     expect(matchesFilter(reply, "a-traiter")).toBe(false);
     expect(matchesFilter(reply, "donnees")).toBe(false);
+    expect(matchesFilter(proposal, "donnees")).toBe(false);
     expect(matchesFilter(reply, "toutes")).toBe(true);
   });
 });
