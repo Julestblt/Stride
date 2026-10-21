@@ -20,6 +20,7 @@ import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { countActiveShoes } from "@/server/gear/load";
+import { readNotificationFeed } from "@/server/notifications/feed";
 import { requireAthlete } from "./session";
 
 async function readTodayReadiness(context: OnboardingContext, now: Date) {
@@ -48,6 +49,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     coachAttention,
     readiness,
     shoeCount,
+    notifications,
   ] = await Promise.all([
     context.client
       .from("athlete_profiles")
@@ -61,6 +63,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     countCoachAttention(context).catch(() => null),
     readTodayReadiness(context, now).catch(() => null),
     countActiveShoes(context).catch(() => null),
+    readNotificationFeed(context, now).catch(() => null),
   ]);
   const parsed = profileRowSchema.safeParse(profile.data);
   const values = profileValues(parsed.success ? parsed.data : null);
@@ -102,6 +105,8 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     todayBadge: readinessBadge(readiness),
     gearBadge: gearBadge(shoeCount),
     staffFaces: staffFacesOf(profile.data),
+    notifications,
+    notificationsAt: now.toISOString(),
   };
 }
 

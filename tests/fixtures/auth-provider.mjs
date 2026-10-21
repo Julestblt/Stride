@@ -72,7 +72,13 @@ const watchUser = {
   id: "abababab-abab-4bab-8bab-abababababab",
   email: "watch@example.com",
 };
+const notificationUser = {
+  ...user,
+  id: "cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd",
+  email: "notifications@example.com",
+};
 const recordsSessions = [
+  notificationUser,
   watchUser,
   coachUser,
   recordsEmptyUser,
@@ -1470,6 +1476,131 @@ tables.athlete_profiles.push({
   watch_workouts_synced_at: null,
 });
 tables.provider_workouts = [];
+tables.athlete_profiles.push({
+  ...structuredClone(tables.athlete_profiles[0]),
+  user_id: notificationUser.id,
+});
+const parisParts = (date) =>
+  Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Paris",
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+const notificationAt = (days, time) => {
+  const today = parisParts(new Date());
+  const [hour, minute, second] = time.split(":").map(Number);
+  const wall = Date.UTC(
+    Number(today.year),
+    Number(today.month) - 1,
+    Number(today.day) - days,
+    hour,
+    minute,
+    second,
+  );
+  const shown = parisParts(new Date(wall));
+  const offset =
+    Date.UTC(
+      Number(shown.year),
+      Number(shown.month) - 1,
+      Number(shown.day),
+      Number(shown.hour),
+      Number(shown.minute),
+      Number(shown.second),
+    ) - wall;
+  return new Date(wall - offset).toISOString();
+};
+const notificationRow = (id, values) => ({
+  id: `cdcdcdcd-0000-4000-8000-00000000000${id}`,
+  user_id: notificationUser.id,
+  read_at: null,
+  resolved_at: null,
+  resolution: null,
+  ...values,
+});
+tables.notifications = [
+  notificationRow(1, {
+    kind: "plan_proposal",
+    dedupe_key: "plan_proposal:notif-1",
+    payload: {
+      proposalId: "eeeeeeee-eeee-4eee-8eee-cdcdcdcd0001",
+      title: "Raccourcir ton seuil",
+      summary: "5 × 6’ → 4 × 6’, même allure.",
+      scope: "session",
+      origin: "recovery",
+    },
+    occurred_at: notificationAt(0, "06:15:00"),
+  }),
+  notificationRow(2, {
+    kind: "staff_question",
+    dedupe_key: "staff_question:notif-2",
+    payload: {
+      threadId: "c0c0c0c0-0000-4000-8000-cdcdcdcd0002",
+      threadTitle: "Seuil de demain",
+      agent: "coach",
+      toolUseId: "toolu_legs",
+      question: "Et tes jambes ce matin, avant de valider le seuil ?",
+    },
+    occurred_at: notificationAt(0, "06:10:00"),
+  }),
+  notificationRow(3, {
+    kind: "staff_reply",
+    dedupe_key: "staff_reply:notif-3",
+    payload: {
+      threadId: "c0c0c0c0-0000-4000-8000-cdcdcdcd0003",
+      threadTitle: "Ravitaillements",
+      agent: "coach",
+      excerpt: "7 ravitos sur l’EcoTrail, 70 g de glucides par heure.",
+    },
+    occurred_at: notificationAt(1, "19:40:00"),
+    read_at: notificationAt(1, "20:00:00"),
+  }),
+  notificationRow(4, {
+    kind: "plan_proposal",
+    dedupe_key: "plan_proposal:notif-4",
+    payload: {
+      proposalId: "eeeeeeee-eeee-4eee-8eee-cdcdcdcd0004",
+      title: "Côtes de samedi déplacées à vendredi",
+      summary: null,
+      scope: "session",
+      origin: "schedule",
+    },
+    occurred_at: notificationAt(2, "17:30:00"),
+    read_at: notificationAt(2, "17:31:00"),
+    resolved_at: notificationAt(2, "17:31:00"),
+    resolution: "applied",
+  }),
+  notificationRow(5, {
+    kind: "staff_reply",
+    dedupe_key: "staff_reply:notif-5",
+    payload: {
+      threadId: "c0c0c0c0-0000-4000-8000-cdcdcdcd0005",
+      threadTitle: "Ancien fil",
+      agent: "coach",
+      excerpt: "Hors de la fenêtre de 30 jours.",
+    },
+    occurred_at: notificationAt(40, "08:00:00"),
+  }),
+];
+const notificationSnapshot = structuredClone(tables.notifications);
+function matchesNotification(row, params) {
+  for (const key of ["read_at", "resolved_at"])
+    if (params.get(key) === "is.null" && row[key] !== null) return false;
+  const kinds = params.get("kind")?.match(/^in\.\((.*)\)$/);
+  if (kinds) {
+    const allowed = kinds[1].split(",").map((item) => item.replace(/"/g, ""));
+    if (!allowed.includes(row.kind)) return false;
+  }
+  return true;
+}
 function nameMatcher(filter) {
   if (filter.startsWith("imatch.")) return new RegExp(filter.slice(7), "iu");
   const pattern = filter.slice(6).replaceAll("*", "%");
@@ -1549,6 +1680,10 @@ function selectRows(table, params) {
         rows = rows.filter((row) => String(row[key]) === filter.slice(3));
     }
   }
+  if (table === "notifications")
+    rows = rows
+      .filter((row) => matchesNotification(row, params))
+      .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at));
   if (table === "coach_sessions") {
     const status = params.get("status");
     if (status?.startsWith("eq."))
@@ -1840,6 +1975,13 @@ createServer(async (request, response) => {
     tables.athlete_unavailability = tables.athlete_unavailability.filter(
       (row) => row.user_id !== user.id,
     );
+    return send(200, { reset: true });
+  }
+  if (
+    url.pathname === "/__test__/notifications" &&
+    request.method === "DELETE"
+  ) {
+    tables.notifications = structuredClone(notificationSnapshot);
     return send(200, { reset: true });
   }
   if (url.pathname === "/__test__/coach" && request.method === "DELETE") {
@@ -2382,6 +2524,14 @@ createServer(async (request, response) => {
           );
         return send(204, undefined);
       }
+    }
+    if (
+      url.pathname === "/rest/v1/notifications" &&
+      request.method === "PATCH"
+    ) {
+      const { rows } = selectRows("notifications", url.searchParams);
+      for (const row of rows) Object.assign(row, { read_at: body.read_at });
+      return send(200, rows);
     }
     const { rows, total } = selectRows(url.pathname.slice(9), url.searchParams);
     return send(200, rows, {

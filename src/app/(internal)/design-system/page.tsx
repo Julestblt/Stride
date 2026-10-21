@@ -47,6 +47,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -723,6 +728,20 @@ export default function DesignSystemPage() {
               Coach panel <Kbd>⌘J</Kbd>
             </TooltipContent>
           </Tooltip>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="md" variant="outline">
+                Notification panel
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-80 gap-1 p-3.5">
+              <p className="text-[15px] font-semibold">Notifications</p>
+              <p className="text-xs text-muted-foreground">
+                Popover · 14px radius, strong hairline
+              </p>
+            </PopoverContent>
+          </Popover>
         </div>
       </GallerySection>
 

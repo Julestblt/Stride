@@ -101,6 +101,12 @@ These requirements are accepted. Phase 1 of the coaching engine delivers them de
 - FR-29 Régularité: Progression shows the share of planned and key sessions completed over the selected period once a plan exists, and keeps an honest empty state otherwise.
 - FR-30 Plan screens: the athlete can browse the plan by blocks and weeks and open any session to see its steps, targets, totals, purpose and contingency advice. A plan computed by Stride but not yet saved is labeled as a draft; sections without a data source are hidden rather than filled.
 
+### Notifications
+
+- V1 includes an in-app notification center: a bell with the unread count in every application header, a desktop panel and a `/notifications` history of the last 30 days filtered by Toutes, À traiter, Staff and Données.
+- The first sources are plan proposals ready for review and staff replies or questions in Coach threads. Database triggers on the existing plan and coach tables create and resolve notifications, so every call site is covered and the athlete's own decisions resolve a notification instead of creating one.
+- Garmin events, push and email delivery, notification preferences and a realtime badge are out of scope for V1.
+
 ### Future capabilities
 
 Activity analytics, training load, readiness, multiple specialist agents, course segmentation, race prediction, race roadbooks, and broad provider support are not required for the candidate first release unless discovery changes the priority. Garmin race-calendar lookup, GPX course upload, Stride-derived performance predictions such as threshold pace, climbing speed, race-time estimates and heart-rate zones, and generated import insights are deferred onboarding capabilities.
@@ -142,7 +148,7 @@ Do not optimize for recommendation acceptance alone; an informed decline can be 
 
 ## Out of scope
 
-- Native apps, billing, notifications, social features, and coach/team accounts
+- Native apps, billing, push and email notifications, social features, and coach/team accounts
 - Medical diagnoses or treatment plans
 - Unreviewed automated changes to a training plan
 - An exhaustive specialist-agent catalog

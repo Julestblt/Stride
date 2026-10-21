@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { staffFaceChoiceSchema } from "@/features/coach/staff";
+import { countUnreadInThread } from "@/server/notifications/feed";
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { managedClient } from "./managed/resources";
 import {
@@ -20,7 +21,11 @@ export async function markCoachThreadRead(input: unknown) {
   if (!parsed.success) return { ok: false } as const;
   const context = await getOnboardingContext({ writable: true });
   if (!context) return { ok: false } as const;
+  const unread = await countUnreadInThread(context, parsed.data.threadId).catch(
+    () => 0,
+  );
   await markThreadRead(context, parsed.data.threadId).catch(() => undefined);
+  if (unread > 0) revalidatePath("/", "layout");
   return { ok: true } as const;
 }
 

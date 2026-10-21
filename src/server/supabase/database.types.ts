@@ -547,6 +547,43 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          dedupe_key: string;
+          id: string;
+          kind: string;
+          occurred_at: string;
+          payload: NonNullable<Json>;
+          read_at: string | null;
+          resolution: string | null;
+          resolved_at: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          dedupe_key: string;
+          id?: string;
+          kind: string;
+          occurred_at?: string;
+          payload?: NonNullable<Json>;
+          read_at?: string | null;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          dedupe_key?: string;
+          id?: string;
+          kind?: string;
+          occurred_at?: string;
+          payload?: NonNullable<Json>;
+          read_at?: string | null;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       onboarding_progress: {
         Row: {
           about_completed_at: string | null;
