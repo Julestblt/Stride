@@ -31,6 +31,7 @@ type Seeded = {
   activityId: string;
   raceId: string;
   conditionId: string;
+  shoeId: string;
 };
 
 const createdUsers: string[] = [];
@@ -111,6 +112,15 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
     insert into public.athlete_races (user_id, name, race_date, distance_km, race_kind, priority)
     values (${userId}, ${`Course ajoutée ${label}`}, ${raceDay}, 10, 'road', 'B')
     returning id`;
+  const [shoe] = await sql<{ id: string }[]>`
+    insert into public.athlete_shoes (user_id, brand, model, category, terrain, lifespan_km,
+      starting_distance_m, first_use_date)
+    values (${userId}, 'Marque', ${`Paire ${label}`}, 'daily', 'road', 800,
+      ${label === "a" ? 120_000 : 30_000}, ${isoDay(-30)})
+    returning id`;
+  await sql`
+    insert into public.race_checklist_items (race_id, user_id, list, label, shoe_id)
+    values (${race.id}, ${userId}, 'gear_kit', 'Chaussures', ${shoe.id})`;
   await sql`
     insert into public.plan_decisions (user_id, proposal_id, decision, actor, note)
     values (${userId}, ${proposal.id}, 'rejected', 'athlete', ${`Note ${label}`})`;
@@ -168,6 +178,7 @@ async function seed(label: "a" | "b"): Promise<Seeded> {
     activityId: activity.data.id,
     raceId: race.id,
     conditionId: condition.id,
+    shoeId: shoe.id,
   };
 }
 
@@ -326,6 +337,7 @@ function inputFor(name: string) {
     update_condition_report: { id: a.conditionId, severity: 1 },
     read_season_calendar: { candidates: [] },
     read_race_strategy: { raceId: a.raceId },
+    read_gear: { from: null, to: null },
     read_nutrition_targets: {
       from: isoDay(0),
       days: 7,
@@ -344,6 +356,8 @@ function foreignMarkers() {
     b.activityId,
     b.sessionKey,
     b.conditionId,
+    b.shoeId,
+    "Paire b",
     "Douleur b",
     "s-b-next",
     "Proposition b",
@@ -442,6 +456,50 @@ describe("coaching tools run as athlete A", () => {
       raceId: b.raceId,
     });
     expect(strategy.content).toMatchObject({ code: "not_found" });
+  });
+
+  it("reads A's pairs, session pair and race pair break-in", async () => {
+    const gear = await runCustomTool(a.context, "read_gear", {
+      from: null,
+      to: null,
+    });
+    expect(gear.ok, JSON.stringify(gear.content)).toBe(true);
+    expect(gear.content).toMatchObject({
+      pairs: [expect.objectContaining({ id: a.shoeId, name: "Paire a" })],
+      sessions: [
+        expect.objectContaining({
+          sessionKey: "s-a-next",
+          pairId: a.shoeId,
+          choice: "recommended",
+        }),
+      ],
+      races: [
+        expect.objectContaining({
+          raceId: a.raceId,
+          pair: { id: a.shoeId, name: "Paire a", source: "checklist" },
+          breakIn: expect.objectContaining({
+            status: "broken_in",
+            totalKm: 120,
+          }),
+        }),
+      ],
+    });
+  });
+
+  it("cannot link or choose another athlete's pair", async () => {
+    const choice = await a.context.client
+      .from("plan_session_shoe_choices")
+      .insert({
+        user_id: a.context.userId,
+        session_key: "s-a-next",
+        shoe_id: b.shoeId,
+      });
+    expect(choice.error?.code).toBe("23503");
+    const link = await a.context.client
+      .from("race_checklist_items")
+      .update({ shoe_id: b.shoeId })
+      .eq("race_id", a.raceId);
+    expect(link.error?.code).toBe("23503");
   });
 
   it("stores A's proposals for A only", async () => {

@@ -21,6 +21,7 @@ The Coach and the specialists run on Claude Sonnet 5.5, except the Nutritionist 
 - `submit_plan`, `create_plan_proposal`, `extend_plan` and `rewrite_plan_range` (Coach), which store validated proposals only. `extend_plan` adds weeks after the active plan's end for a race added later, so the athlete keeps one plan (ADR 0008); `rewrite_plan_range` rebuilds the phases, weeks and sessions of a date range and keeps the weeks outside it unchanged;
 - `read_season_calendar` (Sports Director): every race with its weekday, km-effort, recovery and taper windows, the gaps and the conflicts, from the deterministic calendar check in `src/features/races/calendar.ts`; candidates the athlete mentions are tested without being saved;
 - `read_race_strategy` (Course Strategist): the race workspace analysis for one race, with the three scenarios simulated on the course, passages, cutoff margins, night sections, fueling totals and, within 14 days, the weather;
+- `read_gear` (Coach, Course Strategist): the athlete's active pairs with mileage, wear, longest run and replacement date, the pair Stride recommends or the athlete chose for each running session of a date range with reason codes, and each upcoming race's pair with its break-in status, from the deterministic rules in `src/features/gear`;
 - `read_nutrition_targets` (Nutritionist): daily energy and macro targets from the deterministic calculator in `src/features/nutrition/calculator.ts`, with the light-deficit verdict and missing profile fields;
 - `ask_athlete` (Coach and every specialist), which asks one question, with optional answer options, and pauses the turn until the athlete answers. The answer goes back to the agent that asked.
 
@@ -41,8 +42,9 @@ Garmin data comes from the read-only garmin_mcp MCP endpoint, with a tool allowl
 | `status-reports`: today's session, the current week, the next race        | Coach                                     |
 | `explain-decision`: why a proposal or change was made                     | Coach                                     |
 | `garmin-data-access`: bounded, read-only Garmin reads                     | Coach and Medical                         |
+| `gear-rotation`: shoe choice, rotation, wear, race pair break-in          | Coach and Course Strategist               |
 
-`status-reports`, `explain-decision`, `garmin-data-access`, `season-calendar`, `race-strategy`, `daily-nutrition` and the three specialist prompts are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and describes the `read_plan_progress` and `read_plan_history` tools.
+`status-reports`, `explain-decision`, `garmin-data-access`, `season-calendar`, `race-strategy`, `daily-nutrition`, `gear-rotation` and the three specialist prompts are derived from ai-running-coach v1.3.0 (MIT); see `skills/NOTICE` and the [skills inventory](../docs/architecture/coaching-engine/skills-inventory.md), which maps all 22 reference skills and describes the `read_plan_progress` and `read_plan_history` tools.
 
 ## Runtime
 

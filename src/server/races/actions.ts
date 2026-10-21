@@ -309,7 +309,7 @@ export async function updateChecklistItem(
   const race = idSchema.safeParse(raceId);
   const id = idSchema.safeParse(itemId);
   const parsed = checklistInputSchema
-    .extend({ checked: z.boolean() })
+    .extend({ checked: z.boolean(), shoeId: z.uuid().nullable() })
     .partial()
     .safeParse(input);
   if (!race.success || !id.success || !parsed.success)
@@ -326,6 +326,7 @@ export async function updateChecklistItem(
       ...(values.startDate !== undefined && { start_date: values.startDate }),
       ...(values.endDate !== undefined && { end_date: values.endDate }),
       ...(values.checked !== undefined && { checked: values.checked }),
+      ...(values.shoeId !== undefined && { shoe_id: values.shoeId }),
       ...(values.checked === true &&
         values.status === undefined && { status: "ready" as const }),
     })
@@ -334,7 +335,10 @@ export async function updateChecklistItem(
     .eq("id", id.data)
     .select("id")
     .maybeSingle();
-  if (error) return { status: error.code === "23514" ? "invalid" : "error" };
+  if (error)
+    return {
+      status: ["23514", "23503"].includes(error.code) ? "invalid" : "error",
+    };
   if (!data) return { status: "missing" };
   refresh(race.data);
   return { status: "saved" };

@@ -122,7 +122,11 @@ function terrainScore(ground: SessionTerrain, terrain: ShoeTerrain) {
   return terrain === "mixed" ? 2 : 1;
 }
 
-function reservation(pair: PairFacts, races: RaceFacts[], day: string) {
+export function reservedRace<Race extends RaceFacts>(
+  pair: Pick<PairFacts, "category" | "terrain">,
+  races: Race[],
+  day: string,
+): Race | null {
   if (pair.category !== "race") return null;
   return (
     races
@@ -168,7 +172,7 @@ function assess(
   score += fit * 2;
   if (fit >= 2) reasons.push({ code: "kind_fit" });
 
-  const race = reservation(pair, input.races, session.day);
+  const race = reservedRace(pair, input.races, session.day);
   if (race) {
     const keySession =
       session.isKey ||

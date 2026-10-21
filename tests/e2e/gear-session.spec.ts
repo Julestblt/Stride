@@ -147,7 +147,9 @@ test("a run with another pair in Garmin asks which one was worn", async ({
     .getByRole("group", { name: /^Garmin indique les Zegama/ })
     .getByRole("button", { name: "Oui, les Zegama" })
     .click();
-  await expect(shoes.getByText(/^Garmin · confirmée par toi/)).toBeVisible();
+  await expect(shoes.getByText(/^Garmin · confirmée par toi/)).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(
     page.getByRole("group", { name: /^Garmin indique les Zegama/ }),
   ).toHaveCount(0);
@@ -158,4 +160,41 @@ test("a run with another pair in Garmin asks which one was worn", async ({
   await expect(
     page.getByRole("group", { name: /^Garmin indique les Zegama/ }),
   ).toHaveCount(0);
+});
+
+test("the race gear list links the shoe line to a real pair", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1805 });
+  await page.goto("/sign-in");
+  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
+  await page
+    .getByLabel("Mot de passe", { exact: true })
+    .fill("TrailMiles2026!");
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
+  await expect(page).toHaveURL("/today", { timeout: 20_000 });
+  await page.goto("/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/gear");
+  const select = page.getByRole("combobox", {
+    name: "Paire pour Chaussures de course",
+  });
+  await expect(select).toBeVisible({ timeout: 20_000 });
+  await select.selectOption({ label: "Nike ACG Zegama" });
+  const pair = page.getByRole("link", { name: "Nike ACG Zegama" });
+  await expect(pair).toHaveAttribute(
+    "href",
+    "/gear/d1000000-0000-4000-8000-000000000004",
+  );
+  await expect(
+    page.getByText(
+      /^241 km · aucune sortie enregistrée\. Plan B : Hoka Speedgoat 7\.$/,
+    ),
+  ).toBeVisible();
+  await page.screenshot({
+    path: "test-results/gear-race-desktop.png",
+    fullPage: true,
+  });
+  await page.reload();
+  await expect(
+    page.getByRole("link", { name: "Nike ACG Zegama" }),
+  ).toBeVisible();
 });
