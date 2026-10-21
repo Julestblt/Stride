@@ -63,7 +63,7 @@ Stride's UI has three layers:
 2. **Stride patterns** in `src/components/stride`: reusable product compositions from the system references, built on the primitives. They take content and state through props and contain no data fetching or domain decisions.
 3. **Screens and features** in `src/app` and `src/features`: compose patterns and primitives. They do not recreate low-level styles.
 
-Installed primitives: Alert, AlertDialog, Badge, Button, Checkbox, Collapsible, DropdownMenu, Field, Input, InputGroup, Kbd, Label, Progress, Separator, Sheet, Sidebar, Skeleton, Tabs, Textarea, Toggle, ToggleGroup, and Tooltip. Night Track specifics:
+Installed primitives: Alert, AlertDialog, Badge, Button, Checkbox, Collapsible, DropdownMenu, Field, Input, InputGroup, Kbd, Label, Progress, Separator, Sheet, Sidebar, Skeleton, Sonner (`Toaster`), Tabs, Textarea, Toggle, ToggleGroup, and Tooltip. Night Track specifics:
 
 - `Button` variants are `default` (Volt), `outline`, `secondary`, `neutral` (chalk fill for draft application), `ghost`, `destructive`, and `link`; size `default`/`lg` is the full-size form action, `md` the compact 38px action used in cards, and `sm`/`xs` the inline actions.
 - `Badge` is the mono status tag (`outline`, `accent`, `success`, `warning`, `danger`). Counts and readiness values in navigation use `NavBadge`.
@@ -85,6 +85,12 @@ Before creating a new component or local style:
 4. Create a new abstraction only when the pattern is genuinely new, and put it in the right layer.
 
 Auth, onboarding, and application screens must compose this system rather than recreate local variants.
+
+### Feedback messages
+
+The outcome of an action is a sonner toast: `toast.success` after every successful mutation, upload, copy or sync request, and `toast.error` when an action, a mutation or a Coach turn fails. The `Toaster` is mounted once in the root layout with the Night Track surface, a close button and a single 6-second duration. Toasts carry one short French sentence; secondary detail goes in `description`. Pass an `id` when the same action can repeat, so a new toast replaces the previous one. Server actions that redirect report their result through a `?status=` parameter read by a client notice such as `SettingsNotice`, which shows the toast and clears the parameter.
+
+Keep a message inline when it belongs to the page rather than to the action: field and step validation, form validation summaries, form-level sign-in, sign-up, recovery and reset errors, Garmin credential and code notices, actionable conflicts, autosave indicators, persistent connection and review banners, empty states, loading states and error boundaries.
 
 ### Validation gallery
 

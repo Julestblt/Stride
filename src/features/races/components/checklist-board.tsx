@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -52,7 +53,6 @@ function ChecklistCard({
   const [label, setLabel] = useState("");
   const [detail, setDetail] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [error, setError] = useState("");
   const [pending, start] = useTransition();
   const hasTemplate = Boolean(checklistTemplates[list]);
   const router = useRouter();
@@ -76,11 +76,8 @@ function ChecklistCard({
       });
       if (result.status !== "saved") {
         setItems(before);
-        setError(errors[result.status]);
-      } else {
-        setError("");
-        router.refresh();
-      }
+        toast.error(errors[result.status], { id: "checklist-update" });
+      } else router.refresh();
     });
   }
 
@@ -99,17 +96,19 @@ function ChecklistCard({
         setLabel("");
         setDetail("");
         setStartDate("");
-        setError("");
+        toast.success("Élément ajouté.");
         router.refresh();
-      } else setError(errors[result.status]);
+      } else toast.error(errors[result.status]);
     });
   }
 
   function applyTemplate() {
     start(async () => {
       const result = await applyChecklistTemplate(raceId, list);
-      if (result.status === "saved") router.refresh();
-      else setError(errors[result.status]);
+      if (result.status === "saved") {
+        toast.success("Liste type ajoutée.");
+        router.refresh();
+      } else toast.error(errors[result.status]);
     });
   }
 
@@ -120,9 +119,9 @@ function ChecklistCard({
       const result = await deleteChecklistItem(raceId, item.id);
       if (result.status !== "saved") {
         setItems(before);
-        setError(errors[result.status]);
+        toast.error(errors[result.status]);
       } else {
-        setError("");
+        toast.success("Élément supprimé.");
         router.refresh();
       }
     });
@@ -143,11 +142,8 @@ function ChecklistCard({
       });
       if (result.status !== "saved") {
         setItems(before);
-        setError(errors[result.status]);
-      } else {
-        setError("");
-        router.refresh();
-      }
+        toast.error(errors[result.status], { id: "checklist-update" });
+      } else router.refresh();
     });
   }
 
@@ -311,11 +307,6 @@ function ChecklistCard({
           </div>
         )}
       </form>
-      {error && (
-        <p role="alert" className="text-xs text-danger">
-          {error}
-        </p>
-      )}
     </RaceCard>
   );
 }

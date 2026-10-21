@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -29,7 +30,6 @@ export function WalkCard({
 }) {
   const router = useRouter();
   const [value, setValue] = useState(threshold);
-  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const current = rows.find((row) => row.threshold === value) ?? rows[0];
   const around = [value - 2, value, value + 2]
@@ -46,11 +46,11 @@ export function WalkCard({
         walkGradePercent: next,
       });
       if (result.status !== "saved") {
-        setError(actionMessage(result.status));
+        toast.error(actionMessage(result.status), { id: "walk-grade" });
         setValue(threshold);
         return;
       }
-      setError(null);
+      toast.success("Seuil de marche enregistré.", { id: "walk-grade" });
       router.refresh();
     });
   }
@@ -124,11 +124,6 @@ export function WalkCard({
         Pente mesurée sur 100 m glissants du GPX. Marche comptée à{" "}
         {formatPace(paceSecondsPerKm)} /km dans la simulation.
       </p>
-      {error && (
-        <p role="alert" className="text-sm text-warning">
-          {error}
-        </p>
-      )}
     </RaceCard>
   );
 }

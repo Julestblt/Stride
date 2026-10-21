@@ -137,7 +137,11 @@ test("desktop settings reflect stored athlete data and expose every supported se
   await expect(page.getByLabel("Poids (kg)")).toHaveValue("68,2");
   await page.getByLabel("Poids (kg)").fill("69");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Profil enregistré." }),
+  ).toBeVisible();
   await page.reload();
   await expect(page.getByLabel("Poids (kg)")).toHaveValue("69");
   await page
@@ -379,7 +383,11 @@ test("profile desktop stages threshold and maximum edits, saves and cancels", as
   await page.getByLabel("FC max en bpm").fill("185");
   await page.getByRole("button", { name: "Appliquer", exact: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Profil enregistré." }),
+  ).toBeVisible();
   await page.reload();
   await page
     .getByRole("button", { name: "Modifier FC au seuil", exact: true })
@@ -415,7 +423,11 @@ test("profile desktop stages threshold and maximum edits, saves and cancels", as
     .getByRole("button", { name: "Revenir aux données Garmin" })
     .click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Profil enregistré." }),
+  ).toBeVisible();
   await page.reload();
   await page
     .getByRole("button", { name: "Modifier FC max", exact: true })
@@ -474,10 +486,16 @@ test("profile stale save preserves the draft and photo uploads persist", async (
   await other.goto("/settings/profile");
   await other.getByLabel("Prénom", { exact: true }).fill("Jules concurrent");
   await other.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(other.getByRole("status")).toHaveText("Profil enregistré.");
+  await expect(
+    other
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Profil enregistré." }),
+  ).toBeVisible();
   await page.getByLabel("Prénom", { exact: true }).fill("Brouillon conservé");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("autre onglet");
+  await expect(
+    page.locator("[data-sonner-toast]").filter({ hasText: "autre onglet" }),
+  ).toBeVisible();
   await expect(page.getByLabel("Prénom", { exact: true })).toHaveValue(
     "Brouillon conservé",
   );
@@ -496,7 +514,11 @@ test("profile stale save preserves the draft and photo uploads persist", async (
     page.getByRole("img", { name: "Ta photo de profil" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Profil enregistré.");
+  await expect(
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Profil enregistré." }),
+  ).toBeVisible();
   await page.reload();
   await expect(
     page.getByRole("img", { name: "Ta photo de profil" }),
@@ -544,14 +566,18 @@ test("profile preserves partial French dates and decimal input and rejects inval
     mimeType: "image/png",
     buffer: Buffer.from("invalid image"),
   });
-  await expect(page.getByRole("status")).toContainText("image valide");
+  await expect(
+    page.locator("[data-sonner-toast]").filter({ hasText: "image valide" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
   await page.getByLabel("Importer une photo de profil").setInputFiles({
     name: "huge.png",
     mimeType: "image/png",
     buffer: Buffer.alloc(2 * 1024 * 1024 + 1),
   });
-  await expect(page.getByRole("status")).toContainText("moins de 2 Mo");
+  await expect(
+    page.locator("[data-sonner-toast]").filter({ hasText: "moins de 2 Mo" }),
+  ).toBeVisible();
 });
 
 test("profile tablet layouts fit without clipping and edit in a sheet", async ({

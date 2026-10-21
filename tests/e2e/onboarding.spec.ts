@@ -150,7 +150,7 @@ test("explicit sidebar and Back navigation persist; a stale context reloads safe
   });
   await page.getByRole("button", { name: "Retour", exact: true }).click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "autre fenêtre" }),
+    page.locator("[data-sonner-toast]").filter({ hasText: "autre fenêtre" }),
   ).toBeVisible();
   expect((await read(user.id)).current_step).toBe("welcome");
 });
@@ -171,7 +171,9 @@ test("Welcome persists completion before moving on and stays reachable without r
   );
   await page.getByRole("button", { name: "C’est parti", exact: true }).click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "L’enregistrement a échoué" }),
+    page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "L’enregistrement a échoué" }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/onboarding\/welcome$/);
   expect((await read(user.id)).welcome_completed_at).toBeNull();
@@ -1055,7 +1057,7 @@ test("Athlete profile shows only real values, needs Garmin to finish, and ends o
   );
   await page.getByRole("button", { name: "Entrer dans Stride" }).click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "Garmin" }),
+    page.locator("[data-sonner-toast]").filter({ hasText: "Garmin" }),
   ).toBeVisible();
   expect((await read(user.id)).completed_at).toBeNull();
   await page.getByRole("button", { name: "Corriger quelque chose" }).click();

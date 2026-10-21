@@ -188,7 +188,7 @@ export function GarminStep({
       email={email || null}
       autoContinue={justConnected}
       pending={completion.pending}
-      message={completion.message}
+      failed={completion.failed}
       onContinue={onContinue}
     />
   );

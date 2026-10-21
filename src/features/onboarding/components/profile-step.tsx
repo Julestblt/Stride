@@ -47,7 +47,7 @@ export function ProfileStep({
   profile: AthleteProfileView;
   revision: number;
 }) {
-  const { pending, message, run } = useOnboardingTransition();
+  const { pending, run } = useOnboardingTransition();
   const insights = useImportInsights("profile", profile.habits);
   const habits = insights
     ? {
@@ -182,7 +182,6 @@ export function ProfileStep({
         </div>
         <div className="hidden flex-wrap items-center gap-3 lg:flex">
           <ProfileActions
-            message={message}
             pending={pending}
             onComplete={complete}
             onCorrect={correct}
@@ -191,7 +190,6 @@ export function ProfileStep({
       </section>
       <OnboardingActions className="static lg:hidden">
         <ProfileActions
-          message={message}
           pending={pending}
           onComplete={complete}
           onCorrect={correct}
@@ -202,23 +200,16 @@ export function ProfileStep({
 }
 
 function ProfileActions({
-  message,
   pending,
   onComplete,
   onCorrect,
 }: {
-  message: string | null;
   pending: boolean;
   onComplete: () => void;
   onCorrect: (step: OnboardingStep) => void;
 }) {
   return (
     <>
-      {message && (
-        <p role="alert" className="text-sm text-warning lg:basis-full">
-          {message}
-        </p>
-      )}
       <Button
         className="w-full lg:w-auto lg:px-5.5"
         disabled={pending}

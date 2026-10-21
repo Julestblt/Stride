@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EllipsisIcon, Trash2Icon } from "lucide-react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,11 +27,9 @@ import { deleteCoachThread } from "@/server/coaching/actions";
 export function ThreadMenu({
   threadId,
   busy,
-  onFailure,
 }: {
   threadId: string;
   busy: boolean;
-  onFailure: (message: string) => void;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -41,11 +40,14 @@ export function ThreadMenu({
       const result = await deleteCoachThread({ threadId });
       setConfirming(false);
       if (result.status === "deleted") {
+        toast.success("Conversation supprimée.", { id: "coach-thread-delete" });
         router.push("/coach");
         router.refresh();
         return;
       }
-      onFailure(deleteFailures[result.status] ?? deleteFailures.error);
+      toast.error(deleteFailures[result.status] ?? deleteFailures.error, {
+        id: "coach-thread-delete",
+      });
     });
   }
 

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
 import { CheckIcon, PlusIcon } from "lucide-react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -111,9 +112,14 @@ export function GoalsStep({
       const result = await addAthleteRace();
       if (result.status === "created")
         setRaces((current) => [...current, result.race]);
-      else setNotice("Impossible d’ajouter une course pour l’instant.");
+      else
+        toast.error("Impossible d’ajouter une course pour l’instant.", {
+          id: "goals-race-add",
+        });
     } catch {
-      setNotice("Impossible d’ajouter une course pour l’instant.");
+      toast.error("Impossible d’ajouter une course pour l’instant.", {
+        id: "goals-race-add",
+      });
     } finally {
       setBusy(null);
     }
@@ -128,9 +134,14 @@ export function GoalsStep({
         for (const id of ids)
           localStorage.removeItem(`stride:onboarding:race:${id}`);
         forget(ids);
-      } else setNotice("La suppression a échoué. Réessaie dans un instant.");
+      } else
+        toast.error("La suppression a échoué. Réessaie dans un instant.", {
+          id: "goals-race-remove",
+        });
     } catch {
-      setNotice("La suppression a échoué. Réessaie dans un instant.");
+      toast.error("La suppression a échoué. Réessaie dans un instant.", {
+        id: "goals-race-remove",
+      });
     } finally {
       setBusy(null);
     }
@@ -284,9 +295,9 @@ export function GoalsStep({
         )}
       </section>
       <OnboardingActions className="lg:border-t lg:border-border lg:pt-8">
-        {(notice || completion.message) && (
+        {notice && (
           <p role="alert" className="text-sm text-warning lg:basis-full">
-            {notice ?? completion.message}
+            {notice}
           </p>
         )}
         <Button

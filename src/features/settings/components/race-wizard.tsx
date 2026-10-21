@@ -271,7 +271,6 @@ export function RaceWizard({
           mode === "edit"
             ? "Course mise à jour."
             : "Course ajoutée à tes objectifs.",
-          { duration: 5000 },
         );
         router.refresh();
         setStep(3);
@@ -285,7 +284,6 @@ export function RaceWizard({
             : result.status === "invalid"
               ? "Vérifie les valeurs saisies et réessaie."
               : "Impossible d’enregistrer la course. Réessaie.",
-        { duration: 8000 },
       );
     });
   }

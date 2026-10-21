@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -269,6 +270,13 @@ export function ShoeForm({
     }));
     startSuggesting(async () => {
       const result = await suggestShoe({ name });
+      if (
+        result.status === "unavailable" ||
+        result.status === "session-expired"
+      ) {
+        toast.error(suggestionMessages[result.status]);
+        return;
+      }
       if (result.status !== "suggested") {
         setSuggestion(suggestionMessages[result.status]);
         return;
@@ -346,9 +354,12 @@ export function ShoeForm({
               suggested,
             })
           : await updateShoe({ id, spec: shoe, suggested });
-      if (response.status === "saved" && response.id)
+      if (response.status === "saved" && response.id) {
+        toast.success(
+          mode === "create" ? "Paire ajoutée." : "Paire enregistrée.",
+        );
         router.push(`/gear/${response.id}`);
-      else setMessage(gearErrorMessage(response));
+      } else toast.error(gearErrorMessage(response));
     });
   };
 

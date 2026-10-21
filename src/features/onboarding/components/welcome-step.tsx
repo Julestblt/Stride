@@ -24,7 +24,7 @@ const stages = [
   },
 ];
 export function WelcomeStep({ revision }: { revision: number }) {
-  const { pending, message, run } = useOnboardingTransition();
+  const { pending, failed, run } = useOnboardingTransition();
   function start() {
     run(
       () => completeOnboarding({ step: "welcome", revision }),
@@ -70,18 +70,13 @@ export function WelcomeStep({ revision }: { revision: number }) {
           ))}
         </ol>
         <OnboardingActions>
-          {message && (
-            <p role="alert" className="text-sm text-danger lg:basis-full">
-              {message}
-            </p>
-          )}
           <Button
             className="w-full lg:w-auto lg:px-5.5"
             disabled={pending}
             aria-busy={pending}
             onClick={start}
           >
-            {message ? "Réessayer" : "C’est parti"}
+            {failed ? "Réessayer" : "C’est parti"}
           </Button>
           <span className="text-center text-xs text-muted-foreground lg:text-left lg:text-meta">
             Je ne modifie jamais ton plan sans te demander.

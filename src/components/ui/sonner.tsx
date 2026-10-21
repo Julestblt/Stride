@@ -14,6 +14,7 @@ export function Toaster({ ...props }: ToasterProps) {
     <Sonner
       theme="dark"
       closeButton
+      duration={6000}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4 text-success" />,

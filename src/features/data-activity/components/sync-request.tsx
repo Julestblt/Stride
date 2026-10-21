@@ -60,13 +60,9 @@ export function SyncRequestMessage({ className }: { className?: string }) {
       ? "Hors ligne : la synchronisation reprendra avec le réseau."
       : sync.state === "reconnect" || sync.failure === "reconnect"
         ? "reconnect"
-        : sync.failure === "session-expired"
-          ? "Ta session a expiré. Reconnecte-toi pour synchroniser."
-          : sync.failure === "unavailable"
-            ? "Garmin ne répond pas. Réessaie dans quelques minutes."
-            : availableAt
-              ? `Synchronisation possible à ${availableAt}.`
-              : null;
+        : availableAt
+          ? `Synchronisation possible à ${availableAt}.`
+          : null;
   return (
     <p
       id="garmin-sync-message"

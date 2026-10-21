@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   initialAuthState,
@@ -23,10 +24,22 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
       setCooldownUntil(Date.now() + 60_000);
       setRemaining(60);
       const result = await action(previous, data);
+      const resend = data.get("intent") === "resend";
       if (result.status === "success") {
         setInbox(result);
         setCooldownUntil((result.sentAt ?? Date.now()) + 60_000);
-      }
+        if (resend)
+          toast.success("Nouveau lien demandé.", {
+            id: "recovery-resend",
+            description:
+              "Si un compte existe, regarde dans ta boîte mail et tes spams.",
+          });
+      } else if (resend)
+        toast.error(
+          result.message ??
+            "Impossible de demander un lien. Attends une minute et réessaie.",
+          { id: "recovery-resend" },
+        );
       return result;
     },
     initialAuthState,
@@ -91,13 +104,9 @@ export function RecoveryForm({ action }: { action: AuthAction }) {
                 le lien.
               </p>
             </div>
-            <FormFeedback
-              state={
-                !pending && state.status === "error" ? state : initialAuthState
-              }
-            />
             <form action={formAction}>
               <input type="hidden" name="email" value={inbox?.email} />
+              <input type="hidden" name="intent" value="resend" />
               <Button
                 type="submit"
                 variant="outline"

@@ -293,7 +293,7 @@ test("a refused turn shows a French message and keeps the draft", async ({
   await composer.press("Enter");
   await expect(
     page
-      .getByRole("alert")
+      .locator("[data-sonner-toast]")
       .filter({ hasText: "Le staff travaille déjà sur ta demande." }),
   ).toBeVisible();
   await expect(composer).toHaveValue("Et la semaine prochaine ?");
@@ -412,7 +412,7 @@ test("suggested replies scroll at 390 and restore a failed reply", async ({
   await row.getByRole("button", { name: "Pourquoi ce changement ?" }).click();
   await expect(
     page
-      .getByRole("alert")
+      .locator("[data-sonner-toast]")
       .filter({ hasText: "Le staff travaille déjà sur ta demande." }),
   ).toBeVisible();
   await expect(
@@ -506,7 +506,7 @@ test("context chips are picked with the keyboard, survive a failed send and reac
   await composer.fill("Analyse ça");
   await composer.press("Enter");
   await expect(
-    page.getByRole("alert").filter({
+    page.locator("[data-sonner-toast]").filter({
       hasText: "Le message n’a pas pu être envoyé.",
     }),
   ).toBeVisible();

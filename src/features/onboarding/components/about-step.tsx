@@ -393,9 +393,9 @@ export function AboutStep({
           </section>
         </div>
         <OnboardingActions className="lg:border-t lg:border-border lg:pt-8">
-          {(notice || completion.message) && (
+          {notice && (
             <p role="alert" className="text-sm text-warning lg:basis-full">
-              {notice ?? completion.message}
+              {notice}
             </p>
           )}
           <div className="flex w-full gap-2.5 lg:w-auto">

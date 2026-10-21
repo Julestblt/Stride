@@ -214,11 +214,6 @@ export function SessionSheet({
               onSend={watchSend.send}
               className={mobile ? "h-12 flex-1" : undefined}
             />
-            {watchSend.message && (
-              <p role="alert" className="basis-full text-xs text-danger">
-                {watchSend.message}
-              </p>
-            )}
           </footer>
         )}
       </SheetContent>

@@ -2,7 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, DownloadIcon, UploadIcon } from "lucide-react";
+import { DownloadIcon, UploadIcon } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -273,6 +274,7 @@ function WaypointEditor({
       (cutoff.trim() && minutes === null)
     )
       return setError("Vérifie le kilomètre et la barrière horaire.");
+    setError(null);
     startTransition(async () => {
       const result = await saveWaypoint(raceId, point?.id ?? null, {
         ...input,
@@ -280,9 +282,9 @@ function WaypointEditor({
         cutoffMinutes: minutes,
       });
       if (result.status === "saved") {
-        setError(null);
+        toast.success("Point enregistré.");
         onSaved(result.id ?? point?.id ?? null);
-      } else setError(actionMessage(result.status));
+      } else toast.error(actionMessage(result.status));
     });
   }
 
@@ -290,8 +292,10 @@ function WaypointEditor({
     if (!point) return;
     startTransition(async () => {
       const result = await deleteWaypoint(raceId, point.id);
-      if (result.status === "saved") onDeleted();
-      else setError(actionMessage(result.status));
+      if (result.status === "saved") {
+        toast.success("Point supprimé.");
+        onDeleted();
+      } else toast.error(actionMessage(result.status));
     });
   }
 
@@ -509,14 +513,9 @@ function RoadbookImport({ raceId, count }: { raceId: string; count: number }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [link, setLink] = useState("");
-  const [message, setMessage] = useState<{
-    text: string;
-    source: string | null;
-    ok: boolean;
-  } | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function importRoadbook(body: FormData, source: string | null) {
+  function importRoadbook(body: FormData) {
     setOpen(false);
     startTransition(async () => {
       const response = await fetch(`/api/races/${raceId}/roadbook`, {
@@ -538,18 +537,16 @@ function RoadbookImport({ raceId, count }: { raceId: string; count: number }) {
         const found = cutoffs
           ? `${counted(points, "point", "points")} et ${counted(cutoffs, "barrière", "barrières")}`
           : counted(points, "point", "points");
-        setMessage({
-          ok: true,
-          source,
-          text: `${found} ${points + cutoffs > 1 ? "trouvés et placés" : "trouvé et placé"} sur le tracé.${review.length ? ` ${counted(review.length, "position", "positions")} à vérifier (${review.join(", ")}).` : ""}`,
-        });
+        toast.success(
+          `${found} ${points + cutoffs > 1 ? "trouvés et placés" : "trouvé et placé"} sur le tracé.`,
+          review.length
+            ? {
+                description: `${counted(review.length, "position", "positions")} à vérifier (${review.join(", ")}).`,
+              }
+            : undefined,
+        );
         router.refresh();
-      } else
-        setMessage({
-          ok: false,
-          source: null,
-          text: importMessage(result.status),
-        });
+      } else toast.error(importMessage(result.status));
     });
   }
 
@@ -606,7 +603,7 @@ function RoadbookImport({ raceId, count }: { raceId: string; count: number }) {
           if (file) {
             const body = new FormData();
             body.set("file", file);
-            importRoadbook(body, file.name);
+            importRoadbook(body);
           }
         }}
       />
@@ -646,7 +643,7 @@ function RoadbookImport({ raceId, count }: { raceId: string; count: number }) {
               const body = new FormData();
               body.set("intent", "roadbook");
               body.set("link", link);
-              importRoadbook(body, null);
+              importRoadbook(body);
             }}
           >
             <Input
@@ -670,30 +667,6 @@ function RoadbookImport({ raceId, count }: { raceId: string; count: number }) {
           className="text-xs text-muted-foreground lg:basis-full"
         >
           Lecture du roadbook…
-        </p>
-      )}
-      {!pending && message && (
-        <p
-          role="status"
-          className={cn(
-            "flex items-start gap-2.5 text-xs lg:basis-full lg:rounded-surface lg:border lg:border-border-subtle lg:bg-surface-panel lg:px-3 lg:py-2.5 lg:text-meta lg:text-muted",
-            message.ok ? "text-success" : "text-danger",
-          )}
-        >
-          {message.ok && (
-            <CheckIcon
-              aria-hidden="true"
-              className="mt-0.5 size-3 shrink-0 text-success max-lg:hidden"
-            />
-          )}
-          <span>
-            {message.source && (
-              <b className="font-normal lg:font-semibold lg:text-foreground">
-                {message.source} ·{" "}
-              </b>
-            )}
-            {message.text}
-          </span>
         </p>
       )}
     </RaceCard>

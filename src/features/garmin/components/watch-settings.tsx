@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import type { WatchAction } from "@/features/garmin/watch";
@@ -16,21 +17,22 @@ export function WatchToggle({
 }) {
   const [checked, setChecked] = useState(enabled);
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
   function change(next: boolean) {
     setChecked(next);
-    setMessage(null);
     start(async () => {
       const result = await setWatchWorkoutsEnabled({ enabled: next }).catch(
         () => ({ status: "error" as const }),
       );
       if (result.status === "invalid" || result.status === "error") {
         setChecked(!next);
-        setMessage("Le réglage n’a pas pu être enregistré. Réessaie.");
+        toast.error("Le réglage n’a pas pu être enregistré. Réessaie.", {
+          id: "watch-toggle",
+        });
         return;
       }
       if (!next && result.status !== "disabled") setChecked(true);
-      setMessage(failureMessage(result));
+      const message = failureMessage(result);
+      if (message) toast.error(message, { id: "watch-toggle" });
     });
   }
   return (
@@ -53,11 +55,6 @@ export function WatchToggle({
           ? "Envoi vers ta montre…"
           : "Tes séances de course et de trail des 7 prochains jours, tenues à jour quand ton plan change. La seule chose que Stride écrit sur Garmin."}
       </span>
-      {message && (
-        <p role="alert" className="col-span-full text-xs text-danger">
-          {message}
-        </p>
-      )}
     </div>
   );
 }
@@ -71,24 +68,17 @@ export function WatchRowAction({
   action: WatchAction;
   label: string;
 }) {
-  const { pending, message, send } = useWatchSend(sessionKey);
+  const { pending, send } = useWatchSend(sessionKey);
   return (
-    <span className="flex flex-col items-end gap-1">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={pending}
-        onClick={() => send(action)}
-        className="rounded-control text-[13px] max-sm:h-11"
-      >
-        {pending ? "Envoi…" : label}
-      </Button>
-      {message && (
-        <span role="alert" className="text-xs text-danger">
-          {message}
-        </span>
-      )}
-    </span>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      onClick={() => send(action)}
+      className="rounded-control text-[13px] max-sm:h-11"
+    >
+      {pending ? "Envoi…" : label}
+    </Button>
   );
 }

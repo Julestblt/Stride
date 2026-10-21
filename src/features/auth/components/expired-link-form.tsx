@@ -2,14 +2,27 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { initialAuthState, type AuthAction } from "@/features/auth/schemas";
+import {
+  initialAuthState,
+  type AuthAction,
+  type AuthState,
+} from "@/features/auth/schemas";
 import { FormFeedback, FormHeading } from "./form-controls";
 
 export function ExpiredLinkForm({ action }: { action: AuthAction }) {
-  const [state, formAction, pending] = useActionState(action, initialAuthState);
+  const [state, formAction, pending] = useActionState(
+    async (previous: AuthState, data: FormData) => {
+      const result = await action(previous, data);
+      if (result.status === "success" && result.message)
+        toast.success(result.message, { id: "expired-link-resend" });
+      return result;
+    },
+    initialAuthState,
+  );
   const [email, setEmail] = useState("");
   return (
     <div className="flex flex-1 flex-col gap-5 md:flex-none">
@@ -40,7 +53,9 @@ export function ExpiredLinkForm({ action }: { action: AuthAction }) {
         <Button type="submit" disabled={pending}>
           {pending ? "Envoi…" : "Envoyer un nouveau lien"}
         </Button>
-        <FormFeedback state={state} />
+        <FormFeedback
+          state={state.status === "error" ? state : initialAuthState}
+        />
       </form>
       <p className="text-center text-sm">
         <Link href="/sign-in" className="text-accent hover:underline">

@@ -11,18 +11,18 @@ export function GarminConnected({
   email,
   autoContinue,
   pending,
-  message,
+  failed,
   onContinue,
 }: {
   email: string | null;
   autoContinue: boolean;
   pending: boolean;
-  message: string | null;
+  failed: boolean;
   onContinue: () => void;
 }) {
   const [remaining, setRemaining] = useState(garminAutoContinueSeconds);
   const continued = useRef(false);
-  const counting = autoContinue && !message;
+  const counting = autoContinue && !failed;
   useEffect(() => {
     if (!counting) return;
     const timer = setInterval(
@@ -92,11 +92,6 @@ export function GarminConnected({
         </li>
       </ul>
       <OnboardingActions>
-        {message && (
-          <p role="alert" className="text-sm text-warning lg:basis-full">
-            {message}
-          </p>
-        )}
         <Button
           className="w-full lg:w-auto lg:px-6"
           disabled={pending}
@@ -106,7 +101,7 @@ export function GarminConnected({
             onContinue();
           }}
         >
-          {message ? "Réessayer" : "Continuer vers l’import"}
+          {failed ? "Réessayer" : "Continuer vers l’import"}
         </Button>
         {counting && (
           <p

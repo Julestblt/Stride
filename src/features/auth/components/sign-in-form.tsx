@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
-import { initialAuthState, type AuthAction } from "@/features/auth/schemas";
+import {
+  initialAuthState,
+  type AuthAction,
+  type AuthState,
+} from "@/features/auth/schemas";
 import {
   EmailField,
   FormFeedback,
@@ -30,7 +35,12 @@ export function SignInForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initialAuthState);
   const [magicState, magicFormAction, magicPending] = useActionState(
-    magicAction,
+    async (previous: AuthState, data: FormData) => {
+      const result = await magicAction(previous, data);
+      if (result.status === "success" && result.message)
+        toast.success(result.message, { id: "magic-link" });
+      return result;
+    },
     initialAuthState,
   );
   const [email, setEmail] = useState("");
@@ -154,7 +164,9 @@ export function SignInForm({
         </FieldGroup>
         <FormFeedback
           state={
-            busy || feedback.status === "unconfirmed"
+            busy ||
+            feedback.status === "unconfirmed" ||
+            feedback.status === "success"
               ? initialAuthState
               : feedback
           }

@@ -1,14 +1,15 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import type { OnboardingActionResult } from "@/features/onboarding/schemas";
 
 export function useOnboardingTransition() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   function run(action: () => Promise<OnboardingActionResult>, failure: string) {
-    setMessage(null);
+    setFailed(false);
     startTransition(async () => {
       try {
         const result = await action();
@@ -19,13 +20,15 @@ export function useOnboardingTransition() {
           });
         else if (result.code === "session-expired") router.replace("/sign-in");
         else {
-          setMessage(result.message);
+          setFailed(true);
+          toast.error(result.message, { id: "onboarding-transition" });
           if (result.code === "conflict") router.refresh();
         }
       } catch {
-        setMessage(failure);
+        setFailed(true);
+        toast.error(failure, { id: "onboarding-transition" });
       }
     });
   }
-  return { pending, message, run };
+  return { pending, failed, run };
 }

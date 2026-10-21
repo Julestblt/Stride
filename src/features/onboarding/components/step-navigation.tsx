@@ -58,7 +58,7 @@ export function StepNavigation({
   connection: OnboardingConnection;
   children: React.ReactNode;
 }) {
-  const { pending, message, run } = useOnboardingTransition();
+  const { pending, run } = useOnboardingTransition();
   const { garminPhase, sync } = useOnboardingStatus();
   const notice = connectionNotice(connection);
   const live = notice === "connected" || garminPhase === "connected";
@@ -245,11 +245,6 @@ export function StepNavigation({
               <ArrowLeftIcon data-icon="inline-start" />
               Retour
             </Button>
-          )}
-          {message && (
-            <p role="alert" className="text-sm text-danger">
-              {message}
-            </p>
           )}
           {pending && (
             <p role="status" className="sr-only">

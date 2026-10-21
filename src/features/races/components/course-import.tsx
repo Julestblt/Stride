@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   ArrowUpRightIcon,
   CheckIcon,
@@ -77,13 +78,14 @@ export function CourseImport({
   const input = useRef<HTMLInputElement>(null);
   const pdfInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"link" | "activity" | null>(null);
   const [pending, startTransition] = useTransition();
   const base = `/races/${race.id}`;
 
   function done() {
-    setError(null);
+    toast.success("Parcours importé.");
+    setLinkError(null);
     setDialog(null);
     router.push(base);
     router.refresh();
@@ -91,14 +93,16 @@ export function CourseImport({
 
   function sendFile(file: File | undefined) {
     if (!file) return;
-    if (file.size > 20 * 1024 * 1024)
-      return setError(importMessage("too-large"));
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error(importMessage("too-large"));
+      return;
+    }
     const body = new FormData();
     body.set("file", file);
     startTransition(async () => {
       const result = await uploadTo(`/api/races/${race.id}/course`, body);
       if (result.status === "saved") done();
-      else setError(importMessage(result.status));
+      else toast.error(importMessage(result.status));
     });
   }
 
@@ -109,10 +113,10 @@ export function CourseImport({
     startTransition(async () => {
       const result = await uploadTo(`/api/races/${race.id}/roadbook`, body);
       if (result.status === "roadbook-saved") {
-        setError(null);
+        toast.success("Roadbook importé.");
         router.push(`${base}/waypoints`);
         router.refresh();
-      } else setError(importMessage(result.status));
+      } else toast.error(importMessage(result.status));
     });
   }
 
@@ -120,14 +124,22 @@ export function CourseImport({
     const body = new FormData();
     body.set("link", String(form.get("link") ?? ""));
     body.set("intent", "course");
+    setLinkError(null);
     startTransition(async () => {
       const result = await uploadTo(`/api/races/${race.id}/roadbook`, body);
       if (result.status === "course-saved") done();
       else if (result.status === "roadbook-saved") {
+        toast.success("Roadbook importé.");
+        setLinkError(null);
         setDialog(null);
         router.push(`${base}/waypoints`);
         router.refresh();
-      } else setError(importMessage(result.status));
+      } else if (
+        result.status === "invalid-link" ||
+        result.status === "unreachable"
+      )
+        setLinkError(importMessage(result.status));
+      else toast.error(importMessage(result.status));
     });
   }
 
@@ -135,7 +147,7 @@ export function CourseImport({
     startTransition(async () => {
       const result = await importCourseFromActivity(race.id, id);
       if (result.status === "saved") done();
-      else setError(actionMessage(result.status));
+      else toast.error(actionMessage(result.status));
     });
   }
 
@@ -243,11 +255,6 @@ export function CourseImport({
               Coller un lien
             </Button>
           </div>
-          {error && (
-            <p role="alert" className="text-sm text-warning">
-              {error}
-            </p>
-          )}
         </div>
         <div className="px-6 pb-5 max-sm:hidden">
           <MonoLabel>Autres façons de l’ajouter</MonoLabel>
@@ -333,9 +340,9 @@ export function CourseImport({
                 placeholder="https://"
               />
             </Field>
-            {error && (
+            {linkError && (
               <p role="alert" className="text-sm text-warning">
-                {error}
+                {linkError}
               </p>
             )}
             <DialogFooter>
@@ -389,11 +396,6 @@ export function CourseImport({
               </li>
             ))}
           </ul>
-          {error && (
-            <p role="alert" className="text-sm text-warning">
-              {error}
-            </p>
-          )}
         </DialogContent>
       </Dialog>
     </div>
