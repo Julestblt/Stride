@@ -35,6 +35,8 @@ The race profile keeps passage labels short so nearby waypoints remain readable.
 
 The secondary `/settings` area now links from the account menu and contains the overview, profile, training availability, goals and races, Garmin connection status, and data/privacy pages. Profile and training edits reuse the onboarding records and preserve Garmin provenance on unchanged values. Goal and race edits use the same persisted records and revision checks. Connection pages show observed integration status and stored counts, and the Garmin page offers "Synchroniser maintenant". They do not offer reconnect or disconnect until the Garmin service exposes those operations. Data/privacy provides an authenticated JSON copy of profile, goal and race records. Coach preferences, notifications, athlete-model percentages, Garmin activity export and deletion controls await their underlying capabilities.
 
+Notifications are not a sidebar destination. Every application header carries a bell with the unread count. On desktop it opens a panel with the 20 latest notifications of the last 30 days, the Toutes, À traiter, Staff and Données filters, "Tout marquer comme lu" and "Voir tout l’historique". On mobile the bell links to `/notifications`, which groups the last 30 days by day in Europe/Paris with the same filters kept in `?filtre=`. Activating a notification marks it read and opens its existing destination: `/plan?proposition=<id>` for a proposal and `/coach/<thread>` for a staff reply or question. Opening a Coach thread marks its notifications read.
+
 ## Primary navigation paths
 
 1. First session: Today explains the next step and guides the athlete to complete only the context needed to get value.
