@@ -4,6 +4,7 @@ import type { HeartRateZones } from "@/features/onboarding/heart-rate-zones";
 import Image from "next/image";
 import { profileValueSchemas } from "@/features/onboarding/profile";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -79,7 +80,7 @@ export function ProfileForm({
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
+  const [attempted, setAttempted] = useState(false);
   const [pending, startTransition] = useTransition();
   const [editor, setEditor] = useState<"maximum" | "threshold" | null>(null);
   const [mobile, setMobile] = useState(false);
@@ -278,9 +279,7 @@ export function ProfileForm({
       onSubmit={(event) => {
         event.preventDefault();
         if (!valid) {
-          setMessage(
-            "Vérifie le prénom, la date de naissance, la taille (100 à 250 cm) et le poids (25 à 250 kg).",
-          );
+          setAttempted(true);
           return;
         }
         if (editor || pending) return;
@@ -292,14 +291,16 @@ export function ProfileForm({
         if (photo) data.set("photo", photo);
         startTransition(async () => {
           const result = await updateSettingsProfile(data);
-          setMessage(result.message ?? "L’enregistrement a échoué.");
-          if (result.status === "saved") {
-            setSaved(result.snapshot);
-            setDraft(profileDraft(result.snapshot));
-            setRaw(rawFields(profileDraft(result.snapshot)));
-            setPhoto(null);
-            setPreview(null);
+          if (result.status !== "saved") {
+            toast.error(result.message, { id: "settings-profile" });
+            return;
           }
+          toast.success(result.message, { id: "settings-profile" });
+          setSaved(result.snapshot);
+          setDraft(profileDraft(result.snapshot));
+          setRaw(rawFields(profileDraft(result.snapshot)));
+          setPhoto(null);
+          setPreview(null);
         });
       }}
       className="flex flex-col gap-5.5 min-[1100px]:gap-9"
@@ -372,8 +373,9 @@ export function ProfileForm({
                         file.type,
                       )
                     ) {
-                      setMessage(
+                      toast.error(
                         "Choisis une image JPEG, PNG ou WebP de moins de 2 Mo.",
+                        { id: "settings-profile-photo" },
                       );
                       return;
                     }
@@ -382,9 +384,10 @@ export function ProfileForm({
                       image.close();
                       setPhoto(file);
                       setPreview(URL.createObjectURL(file));
-                      setMessage("");
                     } catch {
-                      setMessage("Choisis une image valide.");
+                      toast.error("Choisis une image valide.", {
+                        id: "settings-profile-photo",
+                      });
                     }
                   }}
                 />
@@ -529,9 +532,10 @@ export function ProfileForm({
           })}
         </div>
       </section>
-      {message && (
-        <p role="status" aria-live="polite" className="text-sm text-muted">
-          {message}
+      {attempted && !valid && (
+        <p role="alert" className="text-sm text-danger">
+          Vérifie le prénom, la date de naissance, la taille (100 à 250 cm) et
+          le poids (25 à 250 kg).
         </p>
       )}
       {count > 0 && (
@@ -557,7 +561,7 @@ export function ProfileForm({
               setRaw(rawFields(profileDraft(saved)));
               setPhoto(null);
               setPreview(null);
-              setMessage("");
+              setAttempted(false);
               closeEditor();
             }}
           >

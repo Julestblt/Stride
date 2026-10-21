@@ -9,6 +9,7 @@ import {
   ListIcon,
   PlusIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { AppHeader } from "@/features/app-shell/components/app-header";
 import { Button } from "@/components/ui/button";
@@ -350,7 +351,6 @@ export function CoachScreen({
     text: string;
     attachments: SentAttachment[];
   } | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
   const [suiviOpen, setSuiviOpen] = useState(false);
   const logEnd = useRef<HTMLDivElement>(null);
 
@@ -462,7 +462,6 @@ export function CoachScreen({
   ) {
     if (working) return false;
     const answering = pendingQuestion;
-    setFailure(null);
     setComposingSince(null);
     setBusy(true);
     setSending({
@@ -502,12 +501,13 @@ export function CoachScreen({
       });
       if (!response.ok) {
         const data: unknown = await response.json().catch(() => null);
-        setFailure(
+        toast.error(
           refusalText(
             data && typeof data === "object" && "code" in data
               ? data.code
               : null,
           ),
+          { id: "coach-turn" },
         );
         setSending(null);
       } else {
@@ -559,9 +559,10 @@ export function CoachScreen({
         }
       }
     } catch {
-      if (!started) setFailure(turnFailure);
+      if (!started) toast.error(turnFailure, { id: "coach-turn" });
     } finally {
-      if (turnError && !errorShown) setFailure(turnError);
+      if (turnError && !errorShown)
+        toast.error(turnError, { id: "coach-turn" });
       if (finished) setComposingSince(null);
       setSending(null);
       setBusy(false);
@@ -722,11 +723,7 @@ export function CoachScreen({
               </Button>
             )}
             {ids.threadId && state !== null && (
-              <ThreadMenu
-                threadId={ids.threadId}
-                busy={working}
-                onFailure={setFailure}
-              />
+              <ThreadMenu threadId={ids.threadId} busy={working} />
             )}
           </div>
           <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
@@ -759,14 +756,6 @@ export function CoachScreen({
             )}
             {working && !entries.some((entry) => entry.type === "typing") && (
               <StaffWorking composingSince={composingSince} now={clock} />
-            )}
-            {failure && (
-              <p
-                role="alert"
-                className="mx-auto w-full max-w-205 px-4 pb-4 text-sm text-danger sm:px-[clamp(20px,3vw,44px)]"
-              >
-                {failure}
-              </p>
             )}
             <div ref={logEnd} />
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { legsOptions, type Legs } from "@/features/progress/recovery";
 import { legsLabels } from "@/features/progress/recovery-view";
@@ -16,7 +17,6 @@ const order = [...legsOptions].reverse();
 
 export function LegsCheckin({ initial }: { initial: Legs | null }) {
   const [legs, setLegs] = useState<Legs | null>(initial);
-  const [error, setError] = useState("");
   const [, start] = useTransition();
 
   function answer(value: Legs) {
@@ -24,11 +24,12 @@ export function LegsCheckin({ initial }: { initial: Legs | null }) {
     setLegs(value);
     start(async () => {
       const result = await saveCheckin({ field: "legs", value });
-      if (result.status === "saved") setError("");
-      else {
-        setLegs(before);
-        setError(errors[result.status]);
+      if (result.status === "saved") {
+        toast.success("Ressenti enregistré.", { id: "today-legs" });
+        return;
       }
+      setLegs(before);
+      toast.error(errors[result.status], { id: "today-legs" });
     });
   }
 
@@ -54,11 +55,6 @@ export function LegsCheckin({ initial }: { initial: Legs | null }) {
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
-      {error && (
-        <p role="alert" className="text-meta text-danger">
-          {error}
-        </p>
-      )}
     </div>
   );
 }

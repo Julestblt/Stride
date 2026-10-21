@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { WatchIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { WatchAction, WatchCopy } from "@/features/garmin/watch";
@@ -77,17 +78,21 @@ export function WatchStatusBlock({
 
 export function useWatchSend(sessionKey: string) {
   const [pending, start] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
   function send(action: WatchAction) {
-    setMessage(null);
     start(async () => {
       const result = await sendSessionToWatch({ sessionKey, action }).catch(
         () => ({ status: "error" as const }),
       );
-      setMessage(failureMessage(result));
+      const id = `watch-send-${sessionKey}`;
+      if (result.status === "synced") {
+        toast.success("Séance envoyée vers ta montre.", { id });
+        return;
+      }
+      const message = failureMessage(result);
+      if (message) toast.error(message, { id });
     });
   }
-  return { pending, message, send };
+  return { pending, send };
 }
 
 export function WatchSendButton({

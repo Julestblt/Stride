@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { SourceMark } from "@/components/stride/marks";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -51,7 +52,6 @@ export function CheckinCard({ initial }: { initial: Checkin | null }) {
     stress: initial?.stress ?? null,
   });
   const [savedAt, setSavedAt] = useState(initial?.updatedAt ?? null);
-  const [error, setError] = useState("");
   const [, start] = useTransition();
 
   function answer(input: CheckinField) {
@@ -61,11 +61,10 @@ export function CheckinCard({ initial }: { initial: Checkin | null }) {
       const result = await saveCheckin(input);
       if (result.status === "saved") {
         setSavedAt(result.updatedAt);
-        setError("");
-      } else {
-        setAnswers(before);
-        setError(errors[result.status]);
+        return;
       }
+      setAnswers(before);
+      toast.error(errors[result.status], { id: "progress-checkin" });
     });
   }
 
@@ -116,11 +115,6 @@ export function CheckinCard({ initial }: { initial: Checkin | null }) {
           </ToggleGroup>
         </div>
       ))}
-      {error && (
-        <p role="alert" className="text-meta text-danger">
-          {error}
-        </p>
-      )}
       <p className="text-xs leading-normal text-muted-foreground">
         Stride lit les tendances pour guider ton entraînement, il ne pose pas de
         diagnostic. Une douleur qui change ta foulée ou qui dure plus de

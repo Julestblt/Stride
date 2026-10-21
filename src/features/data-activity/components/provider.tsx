@@ -10,6 +10,7 @@ import {
   useCallback,
 } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   activityState,
   dataActivitySchema,
@@ -26,8 +27,12 @@ import {
 } from "@/features/garmin/sync";
 import { requestGarminSync } from "@/server/garmin/actions";
 
-export type SyncRequestFailure =
-  "reconnect" | "unavailable" | "session-expired";
+export type SyncRequestFailure = "reconnect";
+
+const syncFailures = {
+  "session-expired": "Ta session a expiré. Reconnecte-toi pour synchroniser.",
+  unavailable: "Garmin ne répond pas. Réessaie dans quelques minutes.",
+} as const;
 
 export type SyncRequestControl = {
   pending: boolean;
@@ -129,6 +134,7 @@ export function DataActivityProvider({
       .then((result) => {
         setPending(false);
         if (result.status === "requested") {
+          toast.success("Synchronisation lancée.", { id: "garmin-sync" });
           const next = { baseline: result.sync, startedAt: Date.now() };
           if (requestedSyncProgress(next.baseline, next.baseline).settled)
             return;
@@ -138,7 +144,8 @@ export function DataActivityProvider({
         } else if (result.status === "throttled") {
           setThrottledUntil(Date.parse(result.availableAt));
           setClock(Date.now());
-        } else setFailure(result.status);
+        } else if (result.status === "reconnect") setFailure("reconnect");
+        else toast.error(syncFailures[result.status], { id: "garmin-sync" });
       });
   };
 

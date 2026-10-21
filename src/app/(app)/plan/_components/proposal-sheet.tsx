@@ -3,6 +3,7 @@
 import { useCallback, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { XIcon } from "lucide-react";
+import { toast } from "sonner";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,11 @@ export function ProposalLink({
   );
 }
 
+const outcomes: Partial<Record<ProposalActionResult["status"], string>> = {
+  applied: "Proposition appliquée au plan.",
+  rejected: "Proposition refusée.",
+};
+
 const failures: Partial<Record<ProposalActionResult["status"], string>> = {
   error: "Ta décision n’a pas pu être enregistrée. Réessaie dans un instant.",
   "session-expired": "Ta session a expiré. Reconnecte-toi pour décider.",
@@ -64,17 +70,19 @@ function Footer({
 }) {
   const [pending, startTransition] = useTransition();
   const [running, setRunning] = useState<"accept" | "reject" | null>(null);
-  const [failure, setFailure] = useState<string | null>(null);
 
   function run(
     kind: "accept" | "reject",
     action: (input: unknown) => Promise<ProposalActionResult>,
   ) {
-    setFailure(null);
     setRunning(kind);
     startTransition(async () => {
       const result = await action({ proposalId: review.id });
-      setFailure(failures[result.status] ?? null);
+      const id = `proposal-${review.id}`;
+      const outcome = outcomes[result.status];
+      const failure = failures[result.status];
+      if (outcome) toast.success(outcome, { id });
+      if (failure) toast.error(failure, { id });
       setRunning(null);
     });
   }
@@ -95,11 +103,6 @@ function Footer({
         mobile && "pb-[max(0.875rem,env(safe-area-inset-bottom))]",
       )}
     >
-      {failure && (
-        <p role="alert" className="text-meta text-danger">
-          {failure}
-        </p>
-      )}
       {decisionOpen ? (
         <div
           className={cn(
