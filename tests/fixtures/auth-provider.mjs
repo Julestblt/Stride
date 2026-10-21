@@ -259,8 +259,37 @@ const tables = {
       "trail",
       241,
     ),
+    {
+      ...planShoe(
+        "d1000000-0000-4000-8000-000000000004",
+        "Nike",
+        "ACG Zegama",
+        null,
+        "daily",
+        "trail",
+        241,
+      ),
+      user_id: "11111111-1111-4111-8111-111111111111",
+    },
   ],
   plan_session_shoe_choices: [],
+  race_checklist_items: [
+    {
+      id: "e1000000-0000-4000-8000-000000000001",
+      race_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+      user_id: "11111111-1111-4111-8111-111111111111",
+      list: "gear_kit",
+      label: "Chaussures de course",
+      detail: "Plan B : Hoka Speedgoat 7.",
+      status: "test",
+      checked: false,
+      start_date: null,
+      end_date: null,
+      position: 0,
+      revision: 1,
+      shoe_id: null,
+    },
+  ],
   activity_shoe_decisions: [],
   athlete_wellness_checkins: [],
   provider_activities: [
@@ -2319,6 +2348,17 @@ createServer(async (request, response) => {
         )
         .concat(decision);
       return send(201, undefined);
+    }
+    if (
+      url.pathname === "/rest/v1/race_checklist_items" &&
+      request.method === "PATCH"
+    ) {
+      const item = tables.race_checklist_items.find(
+        (row) => url.searchParams.get("id") === `eq.${row.id}`,
+      );
+      if (!item) return send(200, []);
+      Object.assign(item, body, { revision: item.revision + 1 });
+      return send(200, [{ id: item.id }]);
     }
     if (url.pathname === "/rest/v1/plan_session_shoe_choices") {
       const key = url.searchParams.get("session_key")?.slice(3);
