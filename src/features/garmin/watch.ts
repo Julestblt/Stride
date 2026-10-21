@@ -217,7 +217,7 @@ function sentAtLabel(iso: string | null) {
   return `${parts.weekday} ${parts.day} ${parts.month} à ${parts.hour}:${parts.minute}`;
 }
 
-function failureDetail(code: string | null) {
+export function watchFailureDetail(code: string | null) {
   if (code === "unsupported_data")
     return "Garmin a refusé cette séance. Réessaie, ou garde-la dans Stride.";
   if (code === "rate_limited")
@@ -271,7 +271,7 @@ export function watchCopy(
       return {
         tone: "danger",
         title: "Pas sur ta montre",
-        detail: failureDetail(state.errorCode),
+        detail: watchFailureDetail(state.errorCode),
         action: { kind: "retry", label: "Réessayer" },
       };
     case "needs_confirmation":

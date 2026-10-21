@@ -1,5 +1,12 @@
 import { z } from "zod";
+import {
+  activityTitle,
+  formatDistance,
+  formatDuration,
+  formatPace,
+} from "@/features/activities/activities";
 import { displayTimeZone } from "@/features/app-shell/shell";
+import { watchFailureDetail } from "@/features/garmin/watch";
 import {
   staffAgents,
   type Staff,
@@ -11,11 +18,19 @@ export const notificationKinds = [
   "plan_proposal",
   "staff_reply",
   "staff_question",
+  "garmin_activity",
+  "garmin_connection",
+  "watch_workout",
+  "gear_mismatch",
 ] as const;
 export type NotificationKind = (typeof notificationKinds)[number];
 
 const text = z.string().trim().min(1).max(400);
 const agent = z.enum(staffAgents).catch("coach");
+const optionalText = text.nullable().catch(null);
+const optionalNumber = z.number().nonnegative().nullable().catch(null);
+
+export const reconnectStatuses = ["reconnect_required", "expired"] as const;
 
 const payloads = {
   plan_proposal: z.object({
@@ -35,6 +50,39 @@ const payloads = {
     agent,
     question: text.nullable().catch(null),
   }),
+  garmin_activity: z.object({
+    activityId: z.uuid(),
+    name: optionalText,
+    type: optionalText,
+    distanceMeters: optionalNumber,
+    durationSeconds: optionalNumber,
+    matched: z.boolean().catch(false),
+  }),
+  garmin_connection: z.object({
+    connectionId: z.uuid(),
+    status: z.enum([
+      ...reconnectStatuses,
+      "error",
+      "rate_limited",
+      "provider_unavailable",
+    ]),
+    errorCode: optionalText,
+  }),
+  watch_workout: z.object({
+    externalKey: text,
+    scheduledOn: z.iso.date(),
+    status: z.enum(["failed", "needs_confirmation"]),
+    errorCode: optionalText,
+    sessionTitle: optionalText,
+  }),
+  gear_mismatch: z.object({
+    activityId: z.uuid(),
+    activityName: optionalText,
+    sessionTitle: optionalText,
+    day: z.iso.date().nullable().catch(null),
+    garmin: optionalText,
+    planned: optionalText,
+  }),
 } as const;
 
 export const notificationRowSchema = z.object({
@@ -50,7 +98,14 @@ export const notificationRowSchema = z.object({
 export const notificationColumns =
   "id, kind, payload, occurred_at, read_at, resolved_at, resolution";
 
-const resolutions = ["applied", "rejected", "replaced", "answered"] as const;
+const resolutions = [
+  "applied",
+  "rejected",
+  "replaced",
+  "answered",
+  "restored",
+  "sent",
+] as const;
 type Resolution = (typeof resolutions)[number];
 
 type Base = {
@@ -127,7 +182,12 @@ export function filterHref(filter: NotificationFilter) {
 export const todoKinds = [
   "plan_proposal",
   "staff_question",
+  "garmin_connection",
+  "watch_workout",
+  "gear_mismatch",
 ] as const satisfies readonly NotificationKind[];
+
+export const todoPayloadFilter = `kind.neq.garmin_connection,payload->>status.in.(${reconnectStatuses.join(",")})`;
 
 export const filterKinds: Record<
   NotificationFilter,
@@ -136,14 +196,23 @@ export const filterKinds: Record<
   toutes: notificationKinds,
   "a-traiter": todoKinds,
   staff: ["staff_reply", "staff_question"],
-  donnees: [],
+  donnees: [
+    "garmin_activity",
+    "garmin_connection",
+    "watch_workout",
+    "gear_mismatch",
+  ],
 };
 
+function needsReconnect(status: string) {
+  return (reconnectStatuses as readonly string[]).includes(status);
+}
+
 export function isTodo(notification: Notification) {
-  return (
-    notification.resolution === null &&
-    (todoKinds as readonly NotificationKind[]).includes(notification.kind)
-  );
+  if (notification.resolution !== null) return false;
+  if (notification.kind === "garmin_connection")
+    return needsReconnect(notification.payload.status);
+  return (todoKinds as readonly NotificationKind[]).includes(notification.kind);
 }
 
 export function matchesFilter(
@@ -155,9 +224,19 @@ export function matchesFilter(
 }
 
 export function notificationHref(notification: Notification) {
-  if (notification.kind === "plan_proposal")
-    return `/plan?proposition=${notification.payload.proposalId}`;
-  return `/coach/${notification.payload.threadId}`;
+  switch (notification.kind) {
+    case "plan_proposal":
+      return `/plan?proposition=${notification.payload.proposalId}`;
+    case "garmin_activity":
+    case "gear_mismatch":
+      return `/activities/${notification.payload.activityId}`;
+    case "garmin_connection":
+      return "/settings/connections/garmin";
+    case "watch_workout":
+      return "/plan";
+    default:
+      return `/coach/${notification.payload.threadId}`;
+  }
 }
 
 export function notificationTarget(row: unknown) {
@@ -170,9 +249,12 @@ export type NotificationStatus = {
   tone: "warning" | "success" | "muted";
 };
 
+export type NotificationFamily =
+  "plan" | "staff" | "activity" | "sync" | "watch" | "shoe";
+
 export type NotificationView = {
   id: string;
-  family: "plan" | "staff";
+  family: NotificationFamily;
   agent: StaffAgent | null;
   title: string;
   body: string | null;
@@ -190,7 +272,147 @@ const resolvedProposal: Record<Resolution, NotificationStatus> = {
   rejected: { label: "Refusée", tone: "muted" },
   replaced: { label: "Remplacée", tone: "muted" },
   answered: { label: "Remplacée", tone: "muted" },
+  restored: { label: "Remplacée", tone: "muted" },
+  sent: { label: "Remplacée", tone: "muted" },
 };
+
+const toReview: NotificationStatus = { label: "À traiter", tone: "warning" };
+
+const scheduledDay = new Intl.DateTimeFormat("fr-FR", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+function formatScheduledDay(day: string) {
+  return scheduledDay.format(new Date(`${day}T00:00:00Z`));
+}
+
+const pendingSync = "Reprise automatique, rien à faire de ton côté.";
+
+const syncDetails: Record<string, string> = {
+  rate_limited: `Garmin limite les échanges pour le moment. ${pendingSync}`,
+  provider_unavailable: `Garmin ne répond pas pour le moment. ${pendingSync}`,
+  error: `La dernière synchronisation a échoué. ${pendingSync}`,
+};
+
+type GarminView = Pick<
+  NotificationView,
+  "family" | "title" | "body" | "status" | "action"
+>;
+
+function activityBody({
+  distanceMeters,
+  durationSeconds,
+}: {
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+}) {
+  const parts = [
+    distanceMeters ? `${formatDistance(distanceMeters)} km` : null,
+    durationSeconds ? formatDuration(durationSeconds) : null,
+    distanceMeters && durationSeconds
+      ? `${formatPace(distanceMeters, durationSeconds)} /km`
+      : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : null;
+}
+
+type GarminNotification = Extract<
+  Notification,
+  {
+    kind:
+      | "garmin_activity"
+      | "garmin_connection"
+      | "watch_workout"
+      | "gear_mismatch";
+  }
+>;
+
+function garminView(notification: GarminNotification): GarminView {
+  const resolution = notification.resolution;
+  switch (notification.kind) {
+    case "garmin_activity": {
+      const { name, type, matched } = notification.payload;
+      return {
+        family: "activity",
+        title: `Nouvelle activité : ${activityTitle({ name, type, routeName: null })}`,
+        body: [
+          matched ? "Associée à ta séance" : "Sans séance prévue",
+          activityBody(notification.payload),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        status: null,
+        action: null,
+      };
+    }
+    case "garmin_connection": {
+      const { status } = notification.payload;
+      const restored: NotificationStatus | null =
+        resolution === "restored"
+          ? { label: "Rétablie", tone: "success" }
+          : resolution
+            ? { label: "Remplacée", tone: "muted" }
+            : null;
+      if (needsReconnect(status))
+        return {
+          family: "sync",
+          title: "Reconnecte ton compte Garmin",
+          body: "Garmin demande une nouvelle connexion : tes activités et ta récupération ne sont plus importées.",
+          status: restored ?? toReview,
+          action: resolution ? null : "Reconnecter",
+        };
+      return {
+        family: "sync",
+        title: "Synchronisation Garmin interrompue",
+        body: syncDetails[status] ?? syncDetails.error,
+        status: restored,
+        action: null,
+      };
+    }
+    case "watch_workout": {
+      const { scheduledOn, sessionTitle, status, errorCode } =
+        notification.payload;
+      const session = `${sessionTitle ?? "Séance"} du ${formatScheduledDay(scheduledOn)}`;
+      const failed = status === "failed";
+      return {
+        family: "watch",
+        title:
+          resolution === "sent"
+            ? `${session} envoyée sur ta montre`
+            : failed
+              ? `${session} pas envoyée sur ta montre`
+              : `${session} à confirmer pour ta montre`,
+        body: failed
+          ? watchFailureDetail(errorCode)
+          : "Ta montre ne peut pas afficher toute la séance : confirme l’envoi depuis ton plan.",
+        status:
+          resolution === "sent"
+            ? { label: "Envoyée", tone: "success" }
+            : resolution
+              ? { label: "Remplacée", tone: "muted" }
+              : toReview,
+        action: resolution ? null : "Voir la séance",
+      };
+    }
+    case "gear_mismatch": {
+      const { activityName, sessionTitle, garmin, planned } =
+        notification.payload;
+      return {
+        family: "shoe",
+        title: `Quelle paire pour ${activityName ?? sessionTitle ?? "ta sortie"} ?`,
+        body:
+          garmin && planned
+            ? `Garmin indique les ${garmin}, la séance prévoyait les ${planned}.`
+            : null,
+        status: resolution ? { label: "Répondu", tone: "success" } : toReview,
+        action: resolution ? null : "Choisir la paire",
+      };
+    }
+  }
+}
 
 const clock = new Intl.DateTimeFormat("fr-FR", {
   hour: "2-digit",
@@ -242,6 +464,8 @@ export function notificationView(
       action: notification.resolution ? null : "Répondre",
     };
   }
+  if (notification.kind !== "staff_reply")
+    return { ...base, ...garminView(notification), agent: null };
   const { agent, excerpt, threadTitle } = notification.payload;
   return {
     ...base,
