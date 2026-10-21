@@ -9,6 +9,7 @@ import {
 } from "./condition-reports";
 import type { CoachingTool, ToolContext } from "./define";
 import { ToolError, toolError, type ToolErrorBody } from "./errors";
+import { readGearTool } from "./gear";
 import { readHealthReportsTool } from "./health-reports";
 import { readPlanHistoryTool } from "./plan-history";
 import { readPlanProgressTool } from "./plan-progress";
@@ -42,6 +43,7 @@ export const coachingTools = [
   readSeasonCalendarTool,
   readRaceStrategyTool,
   readNutritionTargetsTool,
+  readGearTool,
 ] as const satisfies readonly RegisteredTool[];
 
 export type CoachingToolName = (typeof coachingTools)[number]["name"];
@@ -58,6 +60,7 @@ export const agentTools = {
     "create_plan_proposal",
     "extend_plan",
     "rewrite_plan_range",
+    "read_gear",
   ],
   medical: [
     "read_athlete_context",
@@ -79,6 +82,7 @@ export const agentTools = {
   strategist: [
     "read_athlete_context",
     "read_race_strategy",
+    "read_gear",
     "read_health_reports",
     "ask_athlete",
     "message_athlete",
