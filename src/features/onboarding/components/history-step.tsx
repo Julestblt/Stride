@@ -49,7 +49,7 @@ export function HistoryStep({
   reconnect: boolean;
 }) {
   const { sync } = useOnboardingStatus();
-  const { pending, message, run } = useOnboardingTransition();
+  const { pending, run } = useOnboardingTransition();
   const observation = sync.observation;
   const timeline = buildTimeline(observation, new Date());
   const running = isImportRunning(observation);
@@ -137,11 +137,6 @@ export function HistoryStep({
           </SyncStatus>
         )}
         <OnboardingActions className="lg:flex-col lg:items-start lg:gap-3.5">
-          {message && (
-            <p role="alert" className="text-sm text-warning">
-              {message}
-            </p>
-          )}
           <Button
             className="w-full lg:w-auto lg:px-5.5"
             disabled={pending}

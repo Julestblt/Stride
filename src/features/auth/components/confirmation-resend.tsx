@@ -1,9 +1,13 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { FormFeedback } from "./form-controls";
-import { initialAuthState, type AuthAction } from "@/features/auth/schemas";
+import {
+  initialAuthState,
+  type AuthAction,
+  type AuthState,
+} from "@/features/auth/schemas";
 
 export function ConfirmationResend({
   action,
@@ -14,7 +18,24 @@ export function ConfirmationResend({
   email: string;
   sentAt?: number;
 }) {
-  const [state, formAction, pending] = useActionState(action, initialAuthState);
+  const [state, formAction, pending] = useActionState(
+    async (previous: AuthState, data: FormData) => {
+      const result = await action(previous, data);
+      if (result.status === "success")
+        toast.success(
+          result.message ?? "Un nouveau lien de confirmation est parti.",
+          { id: "confirmation-resend" },
+        );
+      else
+        toast.error(
+          result.message ??
+            "Impossible d’envoyer un nouveau lien. Attends une minute et réessaie.",
+          { id: "confirmation-resend" },
+        );
+      return result;
+    },
+    initialAuthState,
+  );
   const [seconds, setSeconds] = useState(0);
   const latest = state.sentAt ?? sentAt;
 
@@ -43,7 +64,6 @@ export function ConfirmationResend({
           Renvoi possible dans 0:{String(seconds).padStart(2, "0")}
         </p>
       )}
-      <FormFeedback state={state} />
     </form>
   );
 }
