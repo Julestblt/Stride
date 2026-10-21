@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,29 +38,21 @@ export function RetireShoeButton({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
   const run = () =>
     startTransition(async () => {
       const result = await setShoeRetired({ id, retired: !retired });
       if (result.status === "saved") {
         setOpen(false);
-        setMessage("");
+        toast.success(retired ? "Paire remise en service." : "Paire retirée.");
         router.refresh();
-      } else setMessage(gearErrorMessage(result));
+      } else toast.error(gearErrorMessage(result));
     });
   if (retired)
     return (
-      <>
-        <Button variant="outline" size="md" disabled={pending} onClick={run}>
-          Remettre en service
-        </Button>
-        {message && (
-          <p role="alert" className="text-xs text-danger">
-            {message}
-          </p>
-        )}
-      </>
+      <Button variant="outline" size="md" disabled={pending} onClick={run}>
+        Remettre en service
+      </Button>
     );
   return (
     <>
@@ -73,11 +66,6 @@ export function RetireShoeButton({
             Elle passe dans les paires retirées, ici et dans Garmin Connect. Ses
             kilomètres et son historique sont conservés.
           </AlertDialogDescription>
-          {message && (
-            <p role="alert" className="text-sm text-danger">
-              {message}
-            </p>
-          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Annuler</AlertDialogCancel>
             <AlertDialogAction
@@ -126,8 +114,9 @@ export function CurrentKmButton({
       });
       if (result.status === "saved") {
         setOpen(false);
+        toast.success("Kilométrage mis à jour.");
         router.refresh();
-      } else setMessage(gearErrorMessage(result));
+      } else toast.error(gearErrorMessage(result));
     });
   };
   return (

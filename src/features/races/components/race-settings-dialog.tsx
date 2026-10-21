@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -73,6 +74,7 @@ export function RaceSettingsDialog({
       );
       return;
     }
+    setError(null);
     const labels = text("labels")
       .split(",")
       .map((label) => label.trim())
@@ -87,8 +89,10 @@ export function RaceSettingsDialog({
         cutoffSeconds: cutoff,
         labels,
       });
-      if (saved.status !== "saved")
-        return setError(actionMessage(saved.status));
+      if (saved.status !== "saved") {
+        toast.error(actionMessage(saved.status));
+        return;
+      }
       if (target !== targetSeconds || raceKind !== kind) {
         const result = await saveRaceTarget(
           raceId,
@@ -96,10 +100,12 @@ export function RaceSettingsDialog({
           target,
           raceKind,
         );
-        if (result.status !== "saved")
-          return setError(actionMessage(result.status));
+        if (result.status !== "saved") {
+          toast.error(actionMessage(result.status));
+          return;
+        }
       }
-      setError(null);
+      toast.success("Réglages de la course enregistrés.");
       setOpen(false);
       router.refresh();
     });

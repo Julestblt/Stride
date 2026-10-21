@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,7 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
       );
       return;
     }
+    setMessage("");
     startTransition(async () => {
       const result = await importShoes(
         selected.map((item) => {
@@ -91,8 +93,14 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
           };
         }),
       );
-      if (result.status === "saved") router.push("/gear");
-      else setMessage(gearErrorMessage(result));
+      if (result.status === "saved") {
+        toast.success(
+          selected.length > 1
+            ? `${selected.length} paires importées.`
+            : "Paire importée.",
+        );
+        router.push("/gear");
+      } else toast.error(gearErrorMessage(result));
     });
   };
 
