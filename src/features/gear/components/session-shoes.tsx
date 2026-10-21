@@ -50,24 +50,43 @@ function Badge({ label }: { label: string }) {
   );
 }
 
-export function ShoePicker({
-  shoes,
+export type PairSheetOption = {
+  id: string;
+  name: string;
+  detail: string;
+  sentence?: string;
+  badge?: string | null;
+};
+
+export function PairSheet({
+  title,
+  context,
+  note,
+  options,
+  initialId,
+  pending,
   open,
   onOpenChange,
+  onConfirm,
 }: {
-  shoes: SessionShoesView;
+  title: string;
+  context: string;
+  note: string;
+  options: PairSheetOption[];
+  initialId: string | null;
+  pending: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onConfirm: (option: PairSheetOption) => void;
 }) {
-  const [selected, setSelected] = useState(shoes.chosen?.id ?? null);
-  const { pending, choose } = useChooseShoe(shoes.sessionKey);
-  const option = shoes.options.find((item) => item.id === selected) ?? null;
+  const [selected, setSelected] = useState(initialId);
+  const option = options.find((item) => item.id === selected) ?? null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="gap-3.5 rounded-t-[18px] border-border-strong bg-surface px-5 pt-2.5 pb-[max(1.875rem,env(safe-area-inset-bottom))] text-foreground"
+        className="gap-3.5 rounded-t-[18px] border-border-strong bg-surface px-5 pt-2.5 pb-[max(1.875rem,env(safe-area-inset-bottom))] text-foreground sm:mx-auto sm:w-full sm:max-w-120"
       >
         <span
           aria-hidden="true"
@@ -75,15 +94,13 @@ export function ShoePicker({
         />
         <div className="flex flex-col gap-1">
           <MonoLabel size="nano" className="text-[9.5px]">
-            {shoes.context}
+            {context}
           </MonoLabel>
-          <SheetTitle className="text-xl font-semibold">
-            Quelle paire pour cette séance ?
-          </SheetTitle>
+          <SheetTitle className="text-xl font-semibold">{title}</SheetTitle>
         </div>
         <fieldset className="flex max-h-[55dvh] flex-col gap-2 overflow-y-auto">
           <legend className="sr-only">Paires actives</legend>
-          {shoes.options.map((item) => (
+          {options.map((item) => (
             <label
               key={item.id}
               className={cn(
@@ -93,7 +110,7 @@ export function ShoePicker({
             >
               <input
                 type="radio"
-                name={`pair-${shoes.sessionKey}`}
+                name="pair"
                 value={item.id}
                 checked={selected === item.id}
                 onChange={() => setSelected(item.id)}
@@ -111,16 +128,17 @@ export function ShoePicker({
                 <span className="text-xs text-muted-foreground">
                   {item.detail}
                 </span>
-                <span className="text-[13px] leading-[1.45] text-muted">
-                  {item.sentence}
-                </span>
+                {item.sentence && (
+                  <span className="text-[13px] leading-[1.45] text-muted">
+                    {item.sentence}
+                  </span>
+                )}
               </span>
             </label>
           ))}
         </fieldset>
         <SheetDescription className="text-xs leading-[1.45] text-muted-foreground">
-          Ton choix vaut pour cette séance. Stride en tient compte pour les
-          prochaines.
+          {note}
         </SheetDescription>
         <div className="flex gap-2">
           <Button
@@ -136,8 +154,8 @@ export function ShoePicker({
             aria-busy={pending}
             onClick={() => {
               if (!option) return;
-              if (option.id === shoes.chosen?.id) onOpenChange(false);
-              else choose(option.id, option.name, () => onOpenChange(false));
+              if (option.id === initialId) onOpenChange(false);
+              else onConfirm(option);
             }}
           >
             {option ? `Garder ${theModel(option.name)}` : "Choisir une paire"}
@@ -145,6 +163,33 @@ export function ShoePicker({
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+export function ShoePicker({
+  shoes,
+  open,
+  onOpenChange,
+}: {
+  shoes: SessionShoesView;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { pending, choose } = useChooseShoe(shoes.sessionKey);
+  return (
+    <PairSheet
+      title="Quelle paire pour cette séance ?"
+      context={shoes.context}
+      note="Ton choix vaut pour cette séance. Stride en tient compte pour les prochaines."
+      options={shoes.options}
+      initialId={shoes.chosen?.id ?? null}
+      pending={pending}
+      open={open}
+      onOpenChange={onOpenChange}
+      onConfirm={(option) =>
+        choose(option.id, option.name, () => onOpenChange(false))
+      }
+    />
   );
 }
 

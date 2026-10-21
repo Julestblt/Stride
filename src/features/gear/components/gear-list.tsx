@@ -86,10 +86,12 @@ function Legend() {
 export function GearList({
   view,
   importable,
+  alerts = null,
   children,
 }: {
   view: PairListView;
   importable: number;
+  alerts?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   const empty = view.active.length === 0 && view.retired.length === 0;
@@ -120,6 +122,8 @@ export function GearList({
           </Button>
         </div>
       </section>
+
+      {alerts}
 
       {empty ? (
         <section className="flex flex-col items-start gap-3 rounded-panel border border-border bg-surface p-6">

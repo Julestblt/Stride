@@ -5,6 +5,8 @@ import { MonoLabel } from "@/components/stride/mono-label";
 import { SessionKindTile } from "@/components/stride/session-kind-tile";
 import { SessionShape } from "@/components/stride/session-shape";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
+import type { PairQuestion } from "@/features/gear/check-view";
+import { PairQuestionCard } from "@/features/gear/components/activity-pair";
 import {
   TodayShoeChip,
   TodayShoeRow,
@@ -402,7 +404,13 @@ export function WeekSection({ week }: { week: TodayWeek }) {
   );
 }
 
-export function LatestSection({ latest }: { latest: TodayLatest | null }) {
+export function LatestSection({
+  latest,
+  question = null,
+}: {
+  latest: TodayLatest | null;
+  question?: PairQuestion | null;
+}) {
   return (
     <section aria-labelledby="today-latest" className={cn(card, "gap-2.5")}>
       <div className="flex items-baseline gap-2.5">
@@ -456,6 +464,7 @@ export function LatestSection({ latest }: { latest: TodayLatest | null }) {
           Aucune activité importée depuis Garmin pour l’instant.
         </p>
       )}
+      {question && <PairQuestionCard question={question} />}
     </section>
   );
 }
