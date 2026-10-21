@@ -21,6 +21,7 @@ export async function markCoachThreadRead(input: unknown) {
   const context = await getOnboardingContext({ writable: true });
   if (!context) return { ok: false } as const;
   await markThreadRead(context, parsed.data.threadId).catch(() => undefined);
+  revalidatePath("/", "layout");
   return { ok: true } as const;
 }
 
