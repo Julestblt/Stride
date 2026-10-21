@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pairCheck, type PairCheckInput } from "@/features/gear/check";
+import { activityPairView, pairQuestion } from "@/features/gear/check-view";
 
 const evo = {
   id: "evo",
@@ -127,5 +128,78 @@ describe("activity pair check", () => {
     expect(
       pairCheck(input({ decision: { decision: "assigned", shoeId: "evo" } })),
     ).toMatchObject({ state: "same", pairId: "evo", assignedByStride: true });
+  });
+});
+
+describe("activity pair copy", () => {
+  const shoe = (id: string, model: string, version: string | null) => ({
+    id,
+    spec: {
+      brand: id === "evo" ? "Adidas" : "Nike",
+      model,
+      version,
+      category: "daily" as const,
+      terrain: "road" as const,
+      description: null,
+      sizeEu: null,
+      lifespanKm: 800,
+    },
+    suggested: [],
+    startingDistanceM: 0,
+    firstUseDate: "2026-03-01",
+    retiredOn: null,
+    garmin: null,
+    activities: [],
+  });
+  const shoes = [
+    shoe("evo", "Adizero Evo SL", "3"),
+    shoe("zegama", "Zegama", null),
+  ];
+  const checked = (value: PairCheckInput) => ({
+    ...pairCheck(value),
+    activityId: "a1",
+    day: "2026-10-06",
+    distanceM: 11_300,
+    sessionTitle: "Footing",
+    garminName: null,
+  });
+
+  it("describes each state on the activity", () => {
+    expect(activityPairView(checked(input({})), shoes)).toMatchObject({
+      name: "Adidas Adizero Evo SL 3",
+      line: "Garmin · prévue par la séance · 11,3 km ajoutés",
+    });
+    expect(
+      activityPairView(
+        checked(input({ garminGearUuid: zegama.garminGearUuid })),
+        shoes,
+      ).line,
+    ).toBe("Garmin · la séance prévoyait les Adizero Evo SL 3");
+    expect(
+      activityPairView(
+        checked(input({ decision: { decision: "corrected", shoeId: "evo" } })),
+        shoes,
+      ).line,
+    ).toBe("Corrigée par toi · 11,3 km ajoutés");
+    expect(
+      activityPairView(
+        checked(input({ sessionKey: null, garminGearUuid: null })),
+        shoes,
+      ),
+    ).toMatchObject({ name: "Aucune paire", line: "sortie hors séance" });
+  });
+
+  it("asks only when Garmin and the session disagree", () => {
+    expect(pairQuestion(checked(input({})), shoes)).toBeNull();
+    expect(
+      pairQuestion(
+        checked(input({ garminGearUuid: zegama.garminGearUuid })),
+        shoes,
+      ),
+    ).toMatchObject({
+      text: "Garmin indique les Zegama, la séance prévoyait les Adizero Evo SL 3.",
+      garmin: { id: "zegama", name: "Zegama" },
+      planned: { id: "evo", name: "Adizero Evo SL 3" },
+    });
   });
 });

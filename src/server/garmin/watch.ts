@@ -202,7 +202,7 @@ export function watchNeedsSync({
   );
 }
 
-function tokenContext(context: WatchContext): WatchContext {
+export function tokenContext(context: WatchContext): WatchContext {
   const environment = getPublicEnvironment();
   if (
     !environment.NEXT_PUBLIC_SUPABASE_URL ||

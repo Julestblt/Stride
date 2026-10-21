@@ -20,6 +20,7 @@ import { getGarminClient } from "@/server/garmin/session";
 import { getOnboardingContext } from "@/server/onboarding/context";
 import { suggestShoeFromName } from "@/server/ai/skills/shoe-suggestion";
 import type { ShoeSuggestion } from "@/features/gear/suggestion";
+import { loadPairChecks, recordDecision } from "./checks";
 import { loadPlanShoes } from "./planned";
 import { readGarminGear, readShoe, shoeColumns } from "./shoes";
 
@@ -32,6 +33,7 @@ export type GearActionResult =
         | "reconnect"
         | "garmin-unavailable"
         | "not-found"
+        | "pair-too-recent"
         | "error";
     };
 
@@ -49,6 +51,8 @@ function garminFailure(failure: GarminFailure): GearActionResult {
   if (failure.code === "reconnect_required" || failure.code === "disconnected")
     return { status: "reconnect" };
   if (failure.code === "gear_not_found") return { status: "not-found" };
+  if (failure.code === "gear_starts_after_activity")
+    return { status: "pair-too-recent" };
   return { status: "garmin-unavailable" };
 }
 
@@ -311,5 +315,56 @@ export async function chooseSessionShoe(
   revalidatePath("/plan");
   revalidatePath("/today");
   refresh();
+  return { status: "saved" };
+}
+
+const activityPairSchema = z.strictObject({
+  activityId: z.uuid(),
+  shoeId: z.uuid().nullable(),
+});
+
+export async function setActivityPair(
+  input: unknown,
+): Promise<GearActionResult> {
+  const parsed = activityPairSchema.safeParse(input);
+  if (!parsed.success) return { status: "invalid" };
+  const athlete = await context();
+  if (!athlete) return { status: "session-expired" };
+  const { activityId, shoeId } = parsed.data;
+  const checks = await loadPairChecks(athlete, activityId);
+  const check = checks?.checks.get(activityId);
+  if (!check) return { status: "invalid" };
+  if (shoeId === null || shoeId === check.garminPairId) {
+    if (!check.garminGearUuid) return { status: "invalid" };
+    const { error } = await recordDecision(
+      athlete,
+      check.providerActivityId,
+      "confirmed",
+      check.garminPairId,
+    );
+    if (error) return { status: "error" };
+  } else {
+    const shoe = await readShoe(athlete, shoeId);
+    if (!shoe || shoe.retiredOn !== null) return { status: "invalid" };
+    const written = await getGarminClient()
+      .setActivityGear(
+        { accessToken: athlete.accessToken },
+        check.providerActivityId,
+        shoe.garminGearUuid,
+      )
+      .catch(() => null);
+    if (!written) return { status: "garmin-unavailable" };
+    if (!written.ok) return garminFailure(written.failure);
+    const { error } = await recordDecision(
+      athlete,
+      check.providerActivityId,
+      "corrected",
+      shoe.id,
+    );
+    if (error) return { status: "error" };
+  }
+  revalidatePath("/today");
+  revalidatePath(`/activities/${activityId}`);
+  refresh(shoeId ?? undefined);
   return { status: "saved" };
 }
