@@ -56,6 +56,8 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 - Name branches `feat/<issue>-<name>`, `fix/<issue>-<name>`, `refactor/<issue>-<name>`, `docs/<issue>-<name>`, or `chore/<issue>-<name>`.
 - Use Conventional Commits and keep commits small and atomic. Inspect the staged diff before every commit and leave unrelated files out.
 - Run the relevant lint, typecheck, unit, browser, and build checks for the change. Add meaningful domain unit tests; do not test implementation trivia.
+- Locally, run only the Playwright specs the change touches or directly affects, for example `npx playwright test tests/e2e/<area>.spec.ts --project=chromium`. Never run the full browser or onboarding suites locally; CI runs them on every pull request.
+- Prefer Vitest over Playwright for rules, formatting, and state logic. Keep new browser tests to user journeys, and select elements by role or label rather than CSS structure.
 - Update documentation when decisions, setup, boundaries, or user-visible behavior change.
 
 ## Product planning

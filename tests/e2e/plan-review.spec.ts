@@ -154,7 +154,9 @@ test("another athlete's proposal is never shown", async ({ page }) => {
   await signIn(page);
   for (const id of [foreign, "eeeeeeee-eeee-4eee-8eee-0000000000ff", "x"]) {
     await page.goto(`/plan?proposition=${id}`);
-    await expect(page.locator("main h1")).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.locator("main").getByRole("heading", { level: 1 }),
+    ).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("dialog")).toHaveCount(0);
   }
 });
