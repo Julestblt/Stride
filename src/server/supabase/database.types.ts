@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_shoe_decisions: {
+        Row: {
+          created_at: string;
+          decision: string;
+          provider_activity_id: string;
+          shoe_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          decision: string;
+          provider_activity_id: string;
+          shoe_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          decision?: string;
+          provider_activity_id?: string;
+          shoe_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_shoe_decisions_shoe_id_user_id_fkey";
+            columns: ["shoe_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_shoes";
+            referencedColumns: ["id", "user_id"];
+          },
+        ];
+      };
       athlete_condition_reports: {
         Row: {
           body_area: string | null;
