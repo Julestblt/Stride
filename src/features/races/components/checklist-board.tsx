@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "lucide-react";
@@ -24,10 +25,13 @@ import {
 } from "@/server/races/actions";
 import { RaceCard } from "./race-ui";
 
+type RacePair = { id: string; name: string; line: string };
+
 type Props = {
   raceId: string;
   lists: readonly ChecklistList[];
   items: ChecklistItem[];
+  pairs?: RacePair[];
   compact?: boolean;
 };
 
@@ -44,10 +48,12 @@ function ChecklistCard({
   raceId,
   list,
   initial,
+  pairs,
 }: {
   raceId: string;
   list: ChecklistList;
   initial: ChecklistItem[];
+  pairs: RacePair[];
 }) {
   const [items, setItems] = useState(initial);
   const [label, setLabel] = useState("");
@@ -55,6 +61,10 @@ function ChecklistCard({
   const [startDate, setStartDate] = useState("");
   const [pending, start] = useTransition();
   const hasTemplate = Boolean(checklistTemplates[list]);
+  const linked = (item: ChecklistItem) =>
+    item.shoeId
+      ? (pairs.find((pair) => pair.id === item.shoeId) ?? null)
+      : null;
   const router = useRouter();
 
   function toggle(item: ChecklistItem, checked: boolean) {
@@ -127,6 +137,25 @@ function ChecklistCard({
     });
   }
 
+  function linkPair(item: ChecklistItem, shoeId: string | null) {
+    const before = items;
+    setItems((current) =>
+      current.map((entry) =>
+        entry.id === item.id ? { ...entry, shoeId } : entry,
+      ),
+    );
+    start(async () => {
+      const result = await updateChecklistItem(raceId, item.id, { shoeId });
+      if (result.status !== "saved") {
+        setItems(before);
+        toast.error(errors[result.status], { id: "checklist-update" });
+      } else {
+        toast.success(shoeId ? "Paire liée." : "Paire retirée de la ligne.");
+        router.refresh();
+      }
+    });
+  }
+
   function changeStatus(item: ChecklistItem, status: ItemStatus | null) {
     const before = items;
     const checked = status === "ready";
@@ -194,19 +223,50 @@ function ChecklistCard({
               />
             )}
             <div className="min-w-0 flex-1">
-              <p
-                className={
-                  item.checked
-                    ? "text-sm text-muted line-through"
-                    : "text-sm font-medium"
-                }
-              >
-                {item.label}
-              </p>
-              {item.detail && (
-                <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
-                  {item.detail}
+              {linked(item) ? (
+                <Link
+                  href={`/gear/${linked(item)?.id}`}
+                  className={
+                    item.checked
+                      ? "text-sm text-muted line-through hover:text-foreground"
+                      : "text-sm font-medium hover:text-accent"
+                  }
+                >
+                  {linked(item)?.name}
+                </Link>
+              ) : (
+                <p
+                  className={
+                    item.checked
+                      ? "text-sm text-muted line-through"
+                      : "text-sm font-medium"
+                  }
+                >
+                  {item.label}
                 </p>
+              )}
+              {(linked(item) || item.detail) && (
+                <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
+                  {[linked(item)?.line, item.detail].filter(Boolean).join(". ")}
+                </p>
+              )}
+              {list === "gear_kit" && pairs.length > 0 && (
+                <select
+                  aria-label={`Paire pour ${item.label}`}
+                  value={item.shoeId ?? ""}
+                  disabled={pending}
+                  onChange={(event) =>
+                    linkPair(item, event.target.value || null)
+                  }
+                  className="mt-1.5 max-w-full rounded-control border border-border bg-surface-raised px-1.5 py-1 text-xs text-muted focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <option value="">Aucune paire liée</option>
+                  {pairs.map((pair) => (
+                    <option key={pair.id} value={pair.id}>
+                      {pair.name}
+                    </option>
+                  ))}
+                </select>
               )}
               {item.startDate && (
                 <span className="mt-1 block text-xs text-muted">
@@ -315,6 +375,7 @@ export function ChecklistBoard({
   raceId,
   lists,
   items,
+  pairs = [],
   compact = false,
 }: Props) {
   return (
@@ -329,10 +390,11 @@ export function ChecklistBoard({
         const initial = items.filter((item) => item.list === list);
         return (
           <ChecklistCard
-            key={`${list}-${initial.map((item) => `${item.id}:${item.revision}:${item.checked}:${item.status}`).join(",")}`}
+            key={`${list}-${initial.map((item) => `${item.id}:${item.revision}:${item.checked}:${item.status}:${item.shoeId}`).join(",")}`}
             raceId={raceId}
             list={list}
             initial={initial}
+            pairs={pairs}
           />
         );
       })}

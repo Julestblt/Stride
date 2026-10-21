@@ -10,6 +10,9 @@ import {
 } from "@/features/races/checklists";
 import { ChecklistBoard } from "@/features/races/components/checklist-board";
 import { RaceCard } from "@/features/races/components/race-ui";
+import { pairSummaries } from "@/features/gear/view";
+import { requireAthlete } from "@/server/app/session";
+import { loadGear } from "@/server/gear/load";
 import { loadRace } from "@/server/races/load";
 
 export default async function RaceGearPage({
@@ -18,8 +21,14 @@ export default async function RaceGearPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { data } = await loadRace(id);
+  const [{ data }, context] = await Promise.all([
+    loadRace(id),
+    requireAthlete(),
+  ]);
   if (data.race.kind === "road") redirect(`/races/${id}`);
+  const pairs = await loadGear(context)
+    .then(({ shoes }) => pairSummaries(shoes))
+    .catch(() => []);
   const items = data.checklist.filter((item) =>
     gearLists.some((list) => list === item.list),
   );
@@ -41,7 +50,11 @@ export default async function RaceGearPage({
             {missing.length > 0
               ? `${missing.length} élément${missing.length > 1 ? "s" : ""} à préparer : ${missing
                   .slice(0, 3)
-                  .map((item) => item.label)
+                  .map(
+                    (item) =>
+                      pairs.find((pair) => pair.id === item.shoeId)?.name ??
+                      item.label,
+                  )
                   .join(", ")}${missing.length > 3 ? "…" : "."}`
               : readiness.total > 0
                 ? "Ton équipement est prêt. Vérifie-le une dernière fois avant le départ."
@@ -55,7 +68,12 @@ export default async function RaceGearPage({
           Voir la préparation <ArrowRightIcon className="size-3.5" />
         </Link>
       </RaceCard>
-      <ChecklistBoard raceId={id} lists={gearLists} items={items} />
+      <ChecklistBoard
+        raceId={id}
+        lists={gearLists}
+        items={items}
+        pairs={pairs}
+      />
     </>
   );
 }

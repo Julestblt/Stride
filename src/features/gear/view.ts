@@ -173,3 +173,26 @@ export function specRows(
     },
   ];
 }
+
+export type PairSummary = { id: string; name: string; line: string };
+
+export function pairSummaries(shoes: ShoeInput[]): PairSummary[] {
+  return shoes
+    .filter((shoe) => shoe.retiredOn === null)
+    .map((shoe) => {
+      const longest = Math.max(
+        0,
+        ...shoe.activities.map((activity) => activity.distanceM),
+      );
+      return {
+        id: shoe.id,
+        name: `${shoe.spec.brand} ${modelName(shoe.spec)}`,
+        line: [
+          `${formatKm(wearOf(shoe).totalKm)} km`,
+          longest > 0
+            ? `plus longue sortie ${decimalFormat.format(longest / 1000)} km`
+            : "aucune sortie enregistrée",
+        ].join(" · "),
+      };
+    });
+}

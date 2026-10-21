@@ -71,10 +71,11 @@ export type ChecklistItem = {
   endDate: string | null;
   position: number;
   revision: number;
+  shoeId: string | null;
 };
 
 export const checklistColumns =
-  "id, list, label, detail, status, checked, start_date, end_date, position, revision";
+  "id, list, label, detail, status, checked, start_date, end_date, position, revision, shoe_id";
 
 export const checklistRowSchema = z
   .object({
@@ -88,6 +89,7 @@ export const checklistRowSchema = z
     end_date: z.iso.date().nullable(),
     position: z.number().int(),
     revision: z.number().int().positive(),
+    shoe_id: z.uuid().nullable().catch(null),
   })
   .transform((row): ChecklistItem => ({
     id: row.id,
@@ -100,6 +102,7 @@ export const checklistRowSchema = z
     endDate: row.end_date,
     position: row.position,
     revision: row.revision,
+    shoeId: row.shoe_id ?? null,
   }));
 
 export const checklistInputSchema = z.object({
