@@ -763,6 +763,39 @@ export type Database = {
           },
         ];
       };
+      plan_session_shoe_choices: {
+        Row: {
+          created_at: string;
+          session_key: string;
+          shoe_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          session_key: string;
+          shoe_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          session_key?: string;
+          shoe_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "plan_session_shoe_choices_shoe_id_user_id_fkey";
+            columns: ["shoe_id", "user_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_shoes";
+            referencedColumns: ["id", "user_id"];
+          },
+        ];
+      };
       plan_sessions: {
         Row: {
           contingencies: NonNullable<Json>;

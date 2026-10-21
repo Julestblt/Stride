@@ -1,4 +1,5 @@
 import type { Series } from "@/features/activities/track";
+import type { SessionShoesView } from "@/features/gear/planned";
 import {
   formatClock,
   formatDayMonthShort,
@@ -65,6 +66,7 @@ export type SessionPanelInput = {
   laps: PanelLap[];
   series: Series | null;
   paceRanges?: IntensityPaceRanges | null;
+  shoes?: SessionShoesView | null;
 };
 
 export type PanelStatus =
@@ -110,6 +112,7 @@ export type SessionPanel = {
   steps: StepView[];
   contingencies: string[];
   completion: PanelCompletion | null;
+  shoes: SessionShoesView | null;
 };
 
 const statusLabels: Record<Exclude<PanelStatus, null>, string> = {
@@ -431,5 +434,6 @@ export function buildSessionPanel(
     steps: stepViews(session, paceRanges),
     contingencies: session.contingencies,
     completion: match ? completion(input, session, match, paces) : null,
+    shoes: input.shoes ?? null,
   };
 }

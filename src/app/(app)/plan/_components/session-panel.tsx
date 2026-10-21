@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ProposalLink } from "./proposal-sheet";
 import type { WatchCopy } from "@/features/garmin/watch";
 import { WatchStatusBlock } from "@/features/garmin/components/watch-status";
+import { SessionShoesBlock } from "@/features/gear/components/session-shoes";
 import {
   panelStatusLabel,
   type PanelCompletion,
@@ -385,6 +386,7 @@ export function SessionPanelBody({
           {panel.contingencies.length > 0 && (
             <Contingencies items={panel.contingencies} />
           )}
+          {panel.shoes && <SessionShoesBlock shoes={panel.shoes} />}
         </>
       )}
     </div>

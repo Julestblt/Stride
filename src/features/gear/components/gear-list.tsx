@@ -86,9 +86,11 @@ function Legend() {
 export function GearList({
   view,
   importable,
+  children,
 }: {
   view: PairListView;
   importable: number;
+  children?: React.ReactNode;
 }) {
   const empty = view.active.length === 0 && view.retired.length === 0;
   return (
@@ -139,6 +141,8 @@ export function GearList({
           ))}
         </section>
       )}
+
+      {children}
 
       {view.retired.length > 0 && (
         <details className="group border-t border-border pt-3.5">
