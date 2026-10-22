@@ -165,7 +165,7 @@ async function readActivities(
 export const readPlanProgressTool = defineTool({
   name: "read_plan_progress",
   description:
-    "Read planned-versus-completed progress of the active plan for a date range: each session's key, date, title, kind, sport family, planned targets and status (completed, partial, substituted, missed, dismissed, upcoming or rest), with the matched activities' duration, distance and elevation. Matches come from Stride's automatic matching and the athlete's own choices. Returns JSON.",
+    "Read planned-versus-completed progress of the active plan for a date range: each session's key, date, title, kind, sport family, planned targets and status (completed, partial, substituted, missed, dismissed, checked_in, upcoming or rest; checked_in means the athlete marked an untracked mobility session as done without an activity), with the matched activities' duration, distance and elevation. Matches come from Stride's automatic matching and the athlete's own choices. Returns JSON.",
   class: "read",
   dataClasses: ["plan", "training"],
   input: dateRangeInput,

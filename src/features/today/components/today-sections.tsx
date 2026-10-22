@@ -209,6 +209,12 @@ function PlannedSession({
           {panel.completion.headline}
         </p>
       )}
+      {panel.checkIn?.done && (
+        <p className="flex items-center gap-2 text-[13px] text-success">
+          <CheckIcon aria-hidden="true" className="size-3" strokeWidth={2.5} />
+          Fait · noté par toi
+        </p>
+      )}
       {session.stats.length > 0 && (
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           {session.stats.map((stat) => (

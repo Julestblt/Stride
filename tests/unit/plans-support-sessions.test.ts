@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { planAdherence } from "@/features/plans/matching/adherence";
+import {
+  isDoneStatus,
+  matchStatuses,
+  planAdherence,
+  sessionStatuses,
+} from "@/features/plans/matching/adherence";
 import type { PlanState } from "@/features/plans/model/plan";
 import { buildProgram } from "@/features/plans/view/program";
-import { buildSessionPanel } from "@/features/plans/view/session-panel";
+import {
+  buildSessionPanel,
+  type PanelMatch,
+} from "@/features/plans/view/session-panel";
 import { planState, supportSession } from "./plan-fixture";
 
 function withSupport(): PlanState {
@@ -27,21 +35,28 @@ function withSupport(): PlanState {
 
 const today = "2026-10-21";
 
-function program() {
+const checkedIn = {
+  sessionKey: "s-2026-10-14-1",
+  activityId: null,
+  status: "checked_in",
+  compliance: { duration: null, distance: null },
+} satisfies PanelMatch;
+
+function program(matches: PanelMatch[] = []) {
   return buildProgram({
     state: withSupport(),
     today,
     summary: null,
-    matches: [],
+    matches,
     proposalKeys: [],
     races: [],
   });
 }
 
-function panel(sessionKey: string, matches = [] as never[]) {
+function panel(sessionKey: string, matches: PanelMatch[] = [], on = today) {
   return buildSessionPanel({
     state: withSupport(),
-    today,
+    today: on,
     sessionKey,
     matches,
     proposals: [],
@@ -116,5 +131,56 @@ describe("non-running sessions", () => {
     const run = panel("s-2026-10-13-1");
     expect(run).toMatchObject({ intensity: true, summary: null });
     expect(run.segments.length).toBeGreaterThan(0);
+  });
+
+  it("treats an athlete check-in as done without an activity", () => {
+    expect(matchStatuses).toContain("checked_in");
+    expect(
+      ["completed", "partial", "checked_in", "substituted", "dismissed"].map(
+        (status) => isDoneStatus(status as (typeof matchStatuses)[number]),
+      ),
+    ).toEqual([true, true, true, false, false]);
+    expect(isDoneStatus(undefined)).toBe(false);
+    expect(
+      sessionStatuses([
+        { sessionKey: "a", status: "completed" },
+        { sessionKey: "a", status: "checked_in" },
+      ]).get("a"),
+    ).toBe("checked_in");
+  });
+
+  it("counts a checked-in mobility session as done in adherence", () => {
+    expect(
+      planAdherence({
+        sessions: withSupport().sessions,
+        matches: [checkedIn],
+        start: "2026-10-12",
+        today,
+        windows: [],
+      }),
+    ).toMatchObject({ due: 5, done: 1, missed: 4 });
+  });
+
+  it("shows a checked-in mobility day as done in the week", () => {
+    const [past] = program([checkedIn]).weeks;
+    expect(past.days[2]).toMatchObject({ family: "mobility", state: "done" });
+  });
+
+  it("offers the check-in on a due mobility session only", () => {
+    expect(panel("s-2026-10-14-1").checkIn).toEqual({ done: false });
+    expect(panel("s-2026-10-14-1", [], "2026-10-14").checkIn).toEqual({
+      done: false,
+    });
+    expect(panel("s-2026-10-14-1", [], "2026-10-13").checkIn).toBeNull();
+    expect(panel("s-2026-10-16-1").checkIn).toBeNull();
+    expect(panel("s-2026-10-13-1").checkIn).toBeNull();
+  });
+
+  it("shows a checked-in mobility session as done with an undo", () => {
+    expect(panel("s-2026-10-14-1", [checkedIn])).toMatchObject({
+      status: "done",
+      checkIn: { done: true },
+      completion: null,
+    });
   });
 });

@@ -123,6 +123,7 @@ export default async function PlanPage({
       {panel && (
         <SessionSheet
           key={panel.sessionKey}
+          planId={planId}
           panel={panel}
           watch={
             sessionWatch &&

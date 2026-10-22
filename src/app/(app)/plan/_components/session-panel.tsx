@@ -255,9 +255,27 @@ function Untracked() {
   return (
     <p className="flex items-start gap-2 text-[12.5px] leading-normal text-muted-foreground">
       <InfoIcon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-      Séance libre, sans suivi Garmin : elle ne compte ni comme faite ni comme
-      manquée.
+      Séance libre, sans suivi Garmin. Marque-la faite une fois terminée pour
+      qu’elle compte dans ton suivi.
     </p>
+  );
+}
+
+function CheckedIn({ day }: { day: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-card border border-success-border bg-success-surface p-3.5">
+      <CheckIcon
+        aria-hidden="true"
+        className="size-4.5 shrink-0 text-success"
+        strokeWidth={2.5}
+      />
+      <span className="flex flex-1 flex-col gap-0.5">
+        <span className="text-[15px] font-semibold">Fait · noté par toi</span>
+        <span className="text-xs text-muted-foreground">
+          {day} · séance libre, sans suivi Garmin
+        </span>
+      </span>
+    </div>
   );
 }
 
@@ -427,7 +445,11 @@ export function SessionPanelBody({
             ) : (
               <Contents panel={panel} />
             ))}
-          {panel.untracked && <Untracked />}
+          {panel.checkIn?.done ? (
+            <CheckedIn day={panel.day} />
+          ) : (
+            panel.untracked && <Untracked />
+          )}
           {panel.contingencies.length > 0 && (
             <Contingencies items={panel.contingencies} />
           )}

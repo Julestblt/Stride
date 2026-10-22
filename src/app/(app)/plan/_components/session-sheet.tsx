@@ -14,6 +14,7 @@ import {
   useWatchSend,
   WatchSendButton,
 } from "@/features/garmin/components/watch-status";
+import { SessionCheckInButton } from "./session-check-in";
 import { SessionPanelBody } from "./session-panel";
 
 const iconButton =
@@ -31,9 +32,11 @@ export function markSessionOpened(event: React.MouseEvent) {
 }
 
 export function SessionSheet({
+  planId,
   panel,
   watch = null,
 }: {
+  planId: string;
   panel: SessionPanel;
   watch?: WatchCopy | null;
 }) {
@@ -199,7 +202,7 @@ export function SessionSheet({
             watchPending={watchSend.pending}
           />
         </div>
-        {watch?.action && (
+        {(watch?.action || panel.checkIn) && (
           <footer
             className={cn(
               "flex flex-wrap items-center gap-2 border-t border-border bg-background",
@@ -208,12 +211,22 @@ export function SessionSheet({
                 : "px-4 py-3.5",
             )}
           >
-            <WatchSendButton
-              action={watch.action}
-              pending={watchSend.pending}
-              onSend={watchSend.send}
-              className={mobile ? "h-12 flex-1" : undefined}
-            />
+            {panel.checkIn && (
+              <SessionCheckInButton
+                planId={planId}
+                sessionKey={panel.sessionKey}
+                checkIn={panel.checkIn}
+                className={mobile ? "h-12 flex-1" : undefined}
+              />
+            )}
+            {watch?.action && (
+              <WatchSendButton
+                action={watch.action}
+                pending={watchSend.pending}
+                onSend={watchSend.send}
+                className={mobile ? "h-12 flex-1" : undefined}
+              />
+            )}
           </footer>
         )}
       </SheetContent>
