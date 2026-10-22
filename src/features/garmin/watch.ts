@@ -138,6 +138,7 @@ export function buildWatchRequest({
       const chosenByAthlete = session.sessionKey === target?.sessionKey;
       if (chosenByAthlete && intent?.force) workout.force = true;
       if (
+        session.kind === "fartlek" ||
         confirmed.has(workout.key) ||
         (chosenByAthlete && intent?.allowSimplified)
       )

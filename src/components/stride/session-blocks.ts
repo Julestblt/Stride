@@ -4,6 +4,7 @@ export type SessionBlock = {
   minutes: number;
   zone: Zone;
   removed?: boolean;
+  free?: boolean;
 };
 
 export const zoneHeights: Record<Zone, number> = {
