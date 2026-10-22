@@ -8,8 +8,12 @@ export default async function NewCoachConversationPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { demande } = await searchParams;
+  const { demande, seance } = await searchParams;
   return (
-    <CoachPage current request={typeof demande === "string" ? demande : null} />
+    <CoachPage
+      current
+      request={typeof demande === "string" ? demande : null}
+      sessionKey={typeof seance === "string" ? seance : null}
+    />
   );
 }

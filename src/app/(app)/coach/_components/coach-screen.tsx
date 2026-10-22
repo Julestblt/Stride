@@ -104,6 +104,7 @@ function Composer({
   busy,
   closed,
   initialText,
+  initialAttachments,
   replies,
   options,
   today,
@@ -114,6 +115,7 @@ function Composer({
   busy: boolean;
   closed: boolean;
   initialText: string;
+  initialAttachments: AttachmentOption[];
   replies: readonly string[];
   options: AttachmentOptions;
   today: string;
@@ -126,7 +128,8 @@ function Composer({
   const staff = useStaff();
   const [text, setText] = useState(initialText);
   const [consult, setConsult] = useState(false);
-  const [attachments, setAttachments] = useState<AttachmentOption[]>([]);
+  const [attachments, setAttachments] =
+    useState<AttachmentOption[]>(initialAttachments);
   const [pickerOpen, setPickerOpen] = useState(false);
   const input = useRef<HTMLTextAreaElement>(null);
   const contextTrigger = useRef<HTMLButtonElement>(null);
@@ -305,6 +308,7 @@ export function CoachScreen({
   now: nowIso,
   timeZone,
   attachmentOptions,
+  initialAttachments = [],
 }: {
   conversations: ConversationSummary[];
   thread: CoachThreadProps | null;
@@ -313,6 +317,7 @@ export function CoachScreen({
   now: string;
   timeZone: string;
   attachmentOptions: AttachmentOptions;
+  initialAttachments?: AttachmentOption[];
 }) {
   const staff = useStaff();
   const router = useRouter();
@@ -766,6 +771,7 @@ export function CoachScreen({
             busy={working}
             closed={closed}
             initialText={thread ? "" : draft.text}
+            initialAttachments={thread ? [] : initialAttachments}
             replies={replies}
             options={attachmentOptions}
             today={localToday(now)}

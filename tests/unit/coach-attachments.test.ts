@@ -7,6 +7,7 @@ const reads = vi.hoisted(() => ({
   listActivities: vi.fn(),
   listRaces: vi.fn(),
   readActivePlan: vi.fn(),
+  loadSessionDebrief: vi.fn(),
 }));
 
 vi.mock("../../src/server/activities/activities", () => ({
@@ -18,6 +19,9 @@ vi.mock("../../src/server/races/races", () => ({
 }));
 vi.mock("../../src/server/plans/stored", () => ({
   readActivePlan: reads.readActivePlan,
+}));
+vi.mock("../../src/server/plans/debrief", () => ({
+  loadSessionDebrief: reads.loadSessionDebrief,
 }));
 
 import {
@@ -35,8 +39,13 @@ import {
   attachmentContextSchema,
   attachmentContextText,
   loadAttachmentOptions,
+  loadSessionOption,
   resolveAttachments,
 } from "../../src/server/coaching/attachments";
+import {
+  feelingView,
+  type DebriefView,
+} from "../../src/features/plans/debrief/view";
 import type { OnboardingContext } from "../../src/server/onboarding/context";
 
 const today = "2026-10-08";
@@ -207,6 +216,77 @@ describe("attachment resolution", () => {
     );
     reads.listRaces.mockResolvedValue([race]);
     reads.readActivePlan.mockResolvedValue({ state: { sessions: [session] } });
+    reads.loadSessionDebrief.mockResolvedValue(null);
+  });
+
+  it("adds the session debrief to the context block", async () => {
+    const debrief: DebriefView = {
+      sessionKey: session.sessionKey,
+      activityId: activity.id,
+      sessionTitle: "Seuil 3 × 10 min",
+      aligned: true,
+      verdict: {
+        tone: "warning",
+        title: "Fractions trop rapides",
+        body: "2 fractions sur 3 plus vite que la cible.",
+      },
+      alignment: "7 tours alignés sur les 7 étapes",
+      note: null,
+      steps: [
+        {
+          key: "1",
+          compact: false,
+          name: "Seuil 1",
+          detail: "10:00 · FC 166",
+          target: "4:38–4:42",
+          actual: "4:24",
+          actualTone: "danger",
+          status: { label: "Trop vite", tone: "danger", chip: true },
+          zone: 4,
+        },
+      ],
+      feeling: feelingView({ source: "athlete", effort: 8, feel: 25 }),
+      coachHref: "/coach/nouvelle?seance=w02-thu",
+      planHref: "/plan?seance=w02-thu",
+    };
+    reads.loadSessionDebrief.mockResolvedValue(debrief);
+    const resolved = await resolveAttachments(context, [
+      { kind: "session", id: session.sessionKey },
+    ]);
+    expect(reads.loadSessionDebrief).toHaveBeenCalledWith(context, {
+      sessionKey: session.sessionKey,
+    });
+    const block = attachmentContextSchema.parse(
+      JSON.parse(attachmentContextText(resolved)),
+    );
+    expect(block.attachments[0]).toMatchObject({
+      kind: "session",
+      debrief: {
+        activityId: activity.id,
+        verdict: { title: "Fractions trop rapides" },
+        stepsAligned: true,
+        steps: [
+          {
+            name: "Seuil 1",
+            target: "4:38–4:42",
+            actual: "4:24",
+            status: "Trop vite",
+          },
+        ],
+        feeling: { source: "athlete", effort: 8, feel: "Mal" },
+      },
+    });
+  });
+
+  it("preselects a session from the plan even outside the picker window", async () => {
+    const options = { session: [], activity: [], race: [] };
+    expect(
+      await loadSessionOption(context, options, session.sessionKey),
+    ).toMatchObject([
+      { kind: "session", id: session.sessionKey, title: "Seuil 3 × 10 min" },
+    ]);
+    expect(await loadSessionOption(context, options, "unknown")).toEqual([]);
+    expect(await loadSessionOption(context, options, "Bad Key!")).toEqual([]);
   });
 
   it("reads each record for the athlete and builds a typed context block", async () => {
