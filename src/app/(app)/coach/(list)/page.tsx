@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CoachPage } from "./_components/coach-page";
+import { CoachPage } from "../_components/coach-page";
 
 export const metadata: Metadata = { title: "Conversations · Coach" };
 

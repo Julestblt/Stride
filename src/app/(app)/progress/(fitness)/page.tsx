@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { localToday } from "@/features/app-shell/shell";
 import {
   LoadChart,
@@ -14,14 +13,8 @@ import {
 import { planAdherence } from "@/features/plans/matching/adherence";
 import { fitnessView } from "@/features/progress/fitness";
 import { sparklineWindows } from "@/features/progress/measures";
-import {
-  defaultPeriod,
-  parsePeriod,
-  periodLabels,
-  periodStart,
-  progressPeriods,
-} from "@/features/progress/period";
-import { cn } from "@/lib/utils";
+import { PeriodNav } from "@/features/progress/components/period-nav";
+import { parsePeriod, periodStart } from "@/features/progress/period";
 import { loadHeartRateZones } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
 import { loadPlanOverview } from "@/server/plans/overview";
@@ -69,29 +62,7 @@ export default async function ProgressFitnessPage({
             {view.summary}
           </p>
         </div>
-        <nav
-          aria-label="Période"
-          className="flex overflow-hidden rounded-surface border border-border"
-        >
-          {progressPeriods.map((item) => (
-            <Link
-              key={item}
-              href={
-                item === defaultPeriod
-                  ? "/progress"
-                  : `/progress?period=${item}`
-              }
-              aria-current={item === period ? "page" : undefined}
-              scroll={false}
-              className={cn(
-                "flex min-h-11 flex-1 items-center justify-center border-l border-border px-3.5 text-meta whitespace-nowrap text-muted-foreground transition-colors first:border-l-0 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:min-h-9 sm:flex-none",
-                item === period && "bg-surface-raised text-foreground",
-              )}
-            >
-              {periodLabels[item]}
-            </Link>
-          ))}
-        </nav>
+        <PeriodNav period={period} />
       </section>
       <section
         aria-labelledby="progress-load"

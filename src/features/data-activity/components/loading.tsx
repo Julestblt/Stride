@@ -208,6 +208,14 @@ export function ActivityFullDetailLoading() {
   );
 }
 
+export function ActivityEntryLoading() {
+  return usePathname().endsWith("/details") ? (
+    <ActivityFullDetailLoading />
+  ) : (
+    <ActivitiesLoading current />
+  );
+}
+
 const healthHeaderDate = new Intl.DateTimeFormat("fr-FR", {
   weekday: "short",
   day: "numeric",
