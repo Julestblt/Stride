@@ -15,6 +15,19 @@ export function isRunningSession(session: PlanSession) {
   return runningSports.has(session.sport) && !nonRunningKinds.has(session.kind);
 }
 
+const intensityFreeKinds = new Set<PlanSession["kind"]>([
+  "strength",
+  "mobility",
+]);
+
+export function hasIntensity(session: PlanSession) {
+  return !intensityFreeKinds.has(session.kind) && session.sport !== "strength";
+}
+
+export function isUntrackedSession(session: PlanSession) {
+  return session.kind === "mobility";
+}
+
 export function sessionDistance(
   session: PlanSession,
   paces: IntensityPaces | null = null,

@@ -11,7 +11,11 @@ import type { MatchStatus } from "../matching/adherence";
 import { addDays, mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
 import type { IntensityPaces } from "../model/structure";
-import { sessionDistance } from "../model/volume";
+import {
+  hasIntensity,
+  isUntrackedSession,
+  sessionDistance,
+} from "../model/volume";
 import { paceMidpoints, type IntensityPaceRanges } from "../targets/targets";
 import { formatDistance, formatDuration, formatLongDay } from "./format";
 import {
@@ -21,7 +25,7 @@ import {
   type ChartSegment,
   type StepView,
 } from "./plan-view";
-import { sessionFamilyOf, type SessionFamily } from "./program";
+import { familyLabels, sessionFamilyOf, type SessionFamily } from "./program";
 
 export type PanelMatch = {
   sessionKey: string;
@@ -102,6 +106,9 @@ export type SessionPanel = {
   previousKey: string | null;
   nextKey: string | null;
   family: SessionFamily;
+  intensity: boolean;
+  untracked: boolean;
+  summary: string | null;
   status: PanelStatus;
   title: string;
   purpose: string;
@@ -357,7 +364,9 @@ export function buildSessionPanel(
           ? "substituted"
           : session.scheduledOn === today
             ? "today"
-            : session.scheduledOn < today && session.kind !== "race"
+            : session.scheduledOn < today &&
+                session.kind !== "race" &&
+                !isUntrackedSession(session)
               ? "missed"
               : null;
   const proposal =
@@ -372,13 +381,16 @@ export function buildSessionPanel(
         ) ?? null);
   const paceRanges = input.paceRanges ?? null;
   const paces = paceRanges ? paceMidpoints(paceRanges) : null;
+  const intensity = hasIntensity(session);
+  const family = sessionFamilyOf(session);
+  const duration: PanelStat = {
+    key: "duration",
+    value: minutes(session.targets.durationSeconds),
+    label: "Durée",
+  };
   const stats = sessionStats(session, null, paces);
   const statList: PanelStat[] = [
-    {
-      key: "duration",
-      value: minutes(session.targets.durationSeconds),
-      label: "Durée",
-    },
+    duration,
     ...(stats.distance
       ? [{ key: "distance", value: stats.distance, label: "Distance" }]
       : []),
@@ -406,7 +418,8 @@ export function buildSessionPanel(
       ? [{ key: "terrain", value: stats.terrain, label: "Terrain" }]
       : []),
   ];
-  const segments = chartSegments(session);
+  const segments = intensity ? chartSegments(session) : [];
+  const steps = stepViews(session, paceRanges);
   const day = formatLongDay(session.scheduledOn);
   return {
     sessionKey: session.sessionKey,
@@ -415,7 +428,10 @@ export function buildSessionPanel(
     position: { index: index + 1, count: sessions.length },
     previousKey: sessions[index - 1]?.sessionKey ?? null,
     nextKey: sessions[index + 1]?.sessionKey ?? null,
-    family: sessionFamilyOf(session),
+    family,
+    intensity,
+    untracked: isUntrackedSession(session),
+    summary: intensity ? null : `${familyLabels[family]} · ${duration.value}`,
     status,
     title: session.title,
     purpose: session.purpose,
@@ -426,12 +442,16 @@ export function buildSessionPanel(
           text: proposal.summary ?? proposal.title,
         }
       : null,
-    stats: statList.slice(0, 6),
+    stats: intensity ? statList.slice(0, 6) : [duration],
     segments,
     structureLabel: `Déroulé de la séance sur ${formatDuration(
       segments.reduce((total, segment) => total + segment.seconds, 0),
     )}`,
-    steps: stepViews(session, paceRanges),
+    steps: intensity
+      ? steps
+      : steps
+          .filter((step) => step.cue !== null)
+          .map((step) => ({ ...step, target: "", pace: null })),
     contingencies: session.contingencies,
     completion: match ? completion(input, session, match, paces) : null,
     shoes: input.shoes ?? null,

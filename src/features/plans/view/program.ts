@@ -15,7 +15,9 @@ import type {
 } from "../model/plan";
 import { structureTotals, type IntensityPaces } from "../model/structure";
 import {
+  hasIntensity,
   isRunningSession,
+  isUntrackedSession,
   sessionDistance,
   type SessionDistance,
 } from "../model/volume";
@@ -52,9 +54,9 @@ export const familyLabels: Record<SessionFamily, string> = {
 export function sessionFamilyOf(session: PlanSession): SessionFamily {
   if (session.kind === "race") return "race";
   if (session.kind === "rest" || session.sport === "rest") return "rest";
+  if (session.kind === "mobility") return "mobility";
   if (session.kind === "strength" || session.sport === "strength")
     return "strength";
-  if (session.kind === "mobility") return "mobility";
   if (session.kind === "cross" || session.sport === "cross") return "cross";
   if (session.kind === "long")
     return session.sport === "trail" || session.terrain === "trail"
@@ -510,7 +512,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
               ? "substituted"
               : proposed && !isPast
                 ? "proposed"
-                : isPast && main.kind !== "race"
+                : isPast && main.kind !== "race" && !isUntrackedSession(main)
                   ? "missed"
                   : null;
       const distance = sessionDistance(main, paces);
@@ -539,7 +541,10 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
           main.targets.elevationGainMeters > 0
             ? `${formatElevation(main.targets.elevationGainMeters)} D+`
             : null,
-        blocks: main.kind === "race" ? [] : sessionBlocks(main),
+        blocks:
+          main.kind === "race" || !hasIntensity(main)
+            ? []
+            : sessionBlocks(main),
         state,
         compliancePct:
           state === "done" || state === "partial"
