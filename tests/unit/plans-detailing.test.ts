@@ -138,6 +138,7 @@ const qualityKinds = new Set([
   "threshold",
   "intervals",
   "hills",
+  "fartlek",
   "race_specific",
 ]);
 const isQuality = (session: PlanSession) => qualityKinds.has(session.kind);
@@ -188,6 +189,29 @@ describe("session library", () => {
       target: { kind: "rpe", min: 3, max: 4 },
       cue: "Tu peux parler en phrases complètes",
     });
+  });
+
+  it("builds the fartlek as a free block between easy warm-up and cool-down", () => {
+    const session = qualitySession({ targets, terrain: "trail" }, "fartlek", 0);
+    expect(session).toMatchObject({
+      kind: "fartlek",
+      sport: "trail",
+      title: "Fartlek · 20’ au feeling",
+      isKey: true,
+    });
+    expect(session.structure).toEqual([
+      expect.objectContaining({ type: "warmup", intensity: "easy" }),
+      expect.objectContaining({
+        type: "work",
+        end: { kind: "time", seconds: 1_200 },
+        target: { kind: "rpe", min: 5, max: 9 },
+        intensity: "threshold",
+      }),
+      expect.objectContaining({ type: "cooldown", intensity: "easy" }),
+    ]);
+    expect(
+      qualitySession({ targets, terrain: "road" }, "fartlek", 9).title,
+    ).toBe("Fartlek · 35’ au feeling");
   });
 
   it("fits quality sessions to the weekday limit", () => {
@@ -344,6 +368,51 @@ describe("buildDeterministicPlan", () => {
         ),
       ).toBe(true);
     }
+  });
+
+  it("alternates fartlek with hills in a trail base and with VO2 on road", () => {
+    const weekKinds = (plan: ReturnType<typeof build>, blockKind: string) => {
+      if (plan.status !== "ready") throw new Error("not ready");
+      const { state } = plan;
+      const blockKeys = new Set(
+        state.blocks
+          .filter((block) => block.kind === blockKind)
+          .map((block) => block.blockKey),
+      );
+      return state.weeks
+        .filter(
+          (week) => blockKeys.has(week.blockKey) && week.weekType !== "race",
+        )
+        .map((week) =>
+          state.sessions
+            .filter(
+              (session) =>
+                isQuality(session) &&
+                mondayOf(session.scheduledOn) === week.weekStart,
+            )
+            .map((session) => session.kind),
+        );
+    };
+    const trail = build(
+      [race(50, "2027-03-14", { kind: "trail", elevationGainM: 2_500 })],
+      history(420, "trail_running", 1_600),
+    );
+    const base = weekKinds(trail, "base").flat();
+    expect(base).toContain("fartlek");
+    expect(base).toContain("hills");
+    for (const blockKind of ["taper", "specific"])
+      expect(weekKinds(trail, blockKind).flat()).not.toContain("fartlek");
+    if (trail.status !== "ready") throw new Error("not ready");
+    for (const session of trail.state.sessions.filter(
+      (item) => item.kind === "fartlek",
+    ))
+      expect(session).toMatchObject({ sport: "trail", terrain: "trail" });
+
+    const road = build([race(42.2, "2027-03-07")], history(330));
+    const build_ = weekKinds(road, "build").flat();
+    expect(build_).toContain("fartlek");
+    expect(build_).toContain("intervals");
+    expect(weekKinds(road, "taper").flat()).not.toContain("fartlek");
   });
 
   it("progresses key sessions within a block and steps back in lighter weeks", () => {
