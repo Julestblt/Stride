@@ -7,6 +7,7 @@ export const matchStatuses = [
   "partial",
   "substituted",
   "dismissed",
+  "checked_in",
 ] as const;
 export type MatchStatus = (typeof matchStatuses)[number];
 
@@ -30,11 +31,18 @@ export type Adherence = AdherenceCounts & {
 };
 
 const statusRank: Record<MatchStatus, number> = {
+  checked_in: 4,
   dismissed: 3,
   completed: 2,
   partial: 1,
   substituted: 0,
 };
+
+export function isDoneStatus(status: MatchStatus | undefined) {
+  return (
+    status === "completed" || status === "partial" || status === "checked_in"
+  );
+}
 
 export function sessionStatuses(matches: SessionMatchRecord[]) {
   const statuses = new Map<string, MatchStatus>();
@@ -72,7 +80,7 @@ function count(
     if (isUntrackedSession(session) && !status) continue;
     if (session.scheduledOn > today) continue;
     if (session.scheduledOn === today && !status) continue;
-    const done = status === "completed" || status === "partial";
+    const done = isDoneStatus(status);
     counts.due += 1;
     if (done) counts.done += 1;
     else if (status === "substituted") counts.substituted += 1;

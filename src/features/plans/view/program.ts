@@ -504,7 +504,7 @@ export function buildProgram(input: ProgramInput): ProgramOverview {
         main.sessionKey,
       );
       const state: DayState =
-        matchStatus === "completed"
+        matchStatus === "completed" || matchStatus === "checked_in"
           ? "done"
           : matchStatus === "partial"
             ? "partial"

@@ -646,6 +646,22 @@ const planSessionTemplates = {
     elevationGainMeters: null,
     structure: [step(1_800, "easy")],
   }),
+  mobility: () => ({
+    sport: "strength",
+    kind: "mobility",
+    title: "Mobilité et marche",
+    purpose: "Détends les jambes.",
+    terrain: null,
+    durationSeconds: 1_200,
+    distanceMeters: null,
+    elevationGainMeters: null,
+    structure: [
+      {
+        ...step(1_200, "easy"),
+        cue: "Marche à pas souple puis mobilité des hanches et des chevilles.",
+      },
+    ],
+  }),
   hills: () => ({
     sport: "run",
     kind: "hills",
@@ -838,12 +854,37 @@ const planBlocks = planBlockDefinitions.map(
     };
   },
 );
+const planMobilityContent = planSessionTemplates.mobility();
+const planMobilitySession = {
+  plan_id: planId,
+  user_id: planUser.id,
+  valid_from_version: 1,
+  valid_to_version: null,
+  session_key: `s-${planStart}-1`,
+  scheduled_on: planStart,
+  sport: planMobilityContent.sport,
+  kind: planMobilityContent.kind,
+  title: planMobilityContent.title,
+  purpose: planMobilityContent.purpose,
+  is_key: false,
+  priority: "normal",
+  targets: {
+    durationSeconds: planMobilityContent.durationSeconds,
+    distanceMeters: null,
+    elevationGainMeters: null,
+  },
+  structure: planMobilityContent.structure,
+  terrain: null,
+  origin: "coach",
+  contingencies: [],
+};
 const pastPlanSessions = planSessions.filter(
   (session) => session.scheduled_on < planToday,
 );
 const planMatchedSessions = pastPlanSessions.filter(
   (session, index) => index !== 2,
 );
+planSessions.push(planMobilitySession);
 const planDoneSession = planMatchedSessions.findLast(
   (session) => session.kind === "easy",
 );
@@ -2362,6 +2403,63 @@ createServer(async (request, response) => {
           resolution: null,
         });
       return send(204, undefined);
+    }
+    if (
+      request.method === "POST" &&
+      [
+        "/rest/v1/rpc/check_in_session",
+        "/rest/v1/rpc/clear_session_match",
+      ].includes(url.pathname)
+    ) {
+      const caller = recordsSession?.user.id ?? user.id;
+      const plan = tables.training_plans.find(
+        (item) =>
+          item.id === body.p_plan_id &&
+          item.user_id === caller &&
+          item.status === "active",
+      );
+      const session = tables.plan_sessions.find(
+        (item) =>
+          plan &&
+          item.plan_id === plan.id &&
+          item.session_key === body.p_session_key &&
+          item.valid_to_version === null &&
+          item.kind !== "rest",
+      );
+      if (!plan || !session)
+        return send(404, { code: "PT404", message: "not_found" });
+      const others = tables.session_activity_matches.filter(
+        (row) =>
+          row.plan_id !== plan.id || row.session_key !== session.session_key,
+      );
+      if (url.pathname.endsWith("clear_session_match")) {
+        const kept = tables.session_activity_matches.filter(
+          (row) =>
+            row.plan_id !== plan.id ||
+            row.session_key !== session.session_key ||
+            row.method !== "athlete",
+        );
+        const removed = tables.session_activity_matches.length - kept.length;
+        tables.session_activity_matches = kept;
+        return send(200, removed);
+      }
+      if (session.kind !== "mobility")
+        return send(400, { code: "PT400", message: "not_checkable" });
+      if (session.scheduled_on > planToday)
+        return send(400, { code: "PT400", message: "not_due" });
+      const row = {
+        user_id: plan.user_id,
+        plan_id: plan.id,
+        session_key: session.session_key,
+        activity_id: null,
+        method: "athlete",
+        status: "checked_in",
+        confidence: 1,
+        compliance: {},
+        algorithm_version: null,
+      };
+      tables.session_activity_matches = [...others, row];
+      return send(200, [row]);
     }
     if (
       request.method === "POST" &&

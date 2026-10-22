@@ -98,6 +98,8 @@ export type PanelCompletion = {
   paceLabel: string | null;
 };
 
+export type PanelCheckIn = { done: boolean };
+
 export type SessionPanel = {
   sessionKey: string;
   day: string;
@@ -108,6 +110,7 @@ export type SessionPanel = {
   family: SessionFamily;
   intensity: boolean;
   untracked: boolean;
+  checkIn: PanelCheckIn | null;
   summary: string | null;
   status: PanelStatus;
   title: string;
@@ -356,7 +359,7 @@ export function buildSessionPanel(
     input.matches.find((item) => item.sessionKey === session.sessionKey) ??
     null;
   const status: PanelStatus =
-    match?.status === "completed"
+    match?.status === "completed" || match?.status === "checked_in"
       ? "done"
       : match?.status === "partial"
         ? "partial"
@@ -369,6 +372,12 @@ export function buildSessionPanel(
                 !isUntrackedSession(session)
               ? "missed"
               : null;
+  const checkIn: PanelCheckIn | null =
+    isUntrackedSession(session) &&
+    session.scheduledOn <= today &&
+    !match?.activityId
+      ? { done: match?.status === "checked_in" }
+      : null;
   const proposal =
     status === "done" || status === "partial"
       ? null
@@ -431,6 +440,7 @@ export function buildSessionPanel(
     family,
     intensity,
     untracked: isUntrackedSession(session),
+    checkIn,
     summary: intensity ? null : `${familyLabels[family]} · ${duration.value}`,
     status,
     title: session.title,

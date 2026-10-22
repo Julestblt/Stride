@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const authUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}`;
+
 async function signIn(page: Page) {
   await page.goto("/sign-in");
   await page.getByLabel("E-mail", { exact: true }).fill("plan@example.com");
@@ -164,4 +166,57 @@ test("a session opens as a bottom sheet on a phone", async ({ page }) => {
   await expect(
     page.getByRole("dialog").getByText(/^Séance \d+ \/ \d+ · glisse/),
   ).toBeVisible();
+});
+
+function lastMonday() {
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+  }).format(new Date());
+  const date = new Date(`${today}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7) - 7);
+  return date.toISOString().slice(0, 10);
+}
+
+test("a mobility session is checked in by hand and undone", async ({
+  page,
+}) => {
+  const reset = await fetch(`${authUrl}/__test__/plan-import`, {
+    method: "DELETE",
+  });
+  expect(reset.ok).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  const monday = lastMonday();
+  const strengthDay = new Date(`${monday}T00:00:00Z`);
+  strengthDay.setUTCDate(strengthDay.getUTCDate() + 4);
+  await page.goto(
+    `/plan?week=${monday}&seance=s-${strengthDay.toISOString().slice(0, 10)}-1`,
+  );
+  await expect(
+    page.getByRole("dialog").getByRole("heading", { level: 2 }),
+  ).toHaveText("Renfo haut du corps", { timeout: 20_000 });
+  await expect(
+    page.getByRole("button", { name: "C’est fait", exact: true }),
+  ).toHaveCount(0);
+
+  await page.goto(`/plan?week=${monday}&seance=s-${monday}-1`);
+  const panel = page.getByRole("dialog");
+  await expect(panel.getByRole("heading", { level: 2 })).toHaveText(
+    "Mobilité et marche",
+    { timeout: 20_000 },
+  );
+  const tile = sessionLinks(page).filter({ hasText: /Mobilité et marche/ });
+  await expect(tile).not.toContainText("Fait");
+  await panel.getByRole("button", { name: "C’est fait", exact: true }).click();
+  await expect(page.getByText("Séance notée comme faite")).toBeVisible();
+  await expect(panel.getByText("Fait · noté par toi")).toBeVisible();
+  await expect(tile).toContainText("Fait");
+
+  await panel.getByRole("button", { name: "Annuler « C’est fait »" }).click();
+  await expect(page.getByText("C’est fait annulé")).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "C’est fait", exact: true }),
+  ).toBeVisible();
+  await expect(panel.getByText("Fait · noté par toi")).toHaveCount(0);
+  await expect(tile).not.toContainText("Fait");
 });
