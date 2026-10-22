@@ -127,12 +127,9 @@ export function shellRaceDate(date: string | null) {
 }
 
 export function shellRaces<T extends ShellRaceLink>(races: T[], today: string) {
-  return [...races].sort((a, b) => {
-    const pastA = a.date !== null && a.date < today;
-    const pastB = b.date !== null && b.date < today;
-    if (pastA !== pastB) return pastA ? 1 : -1;
-    return (a.date ?? "9999").localeCompare(b.date ?? "9999");
-  });
+  return races
+    .filter((race) => race.date === null || race.date >= today)
+    .sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999"));
 }
 
 export function shortSince(iso: string | null, now: Date) {
