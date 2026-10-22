@@ -9,6 +9,40 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_feelings: {
+        Row: {
+          activity_id: string;
+          created_at: string;
+          effort: number;
+          feel: number | null;
+          id: string;
+          revision: number;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          activity_id: string;
+          created_at?: string;
+          effort: number;
+          feel?: number | null;
+          id?: string;
+          revision?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          activity_id?: string;
+          created_at?: string;
+          effort?: number;
+          feel?: number | null;
+          id?: string;
+          revision?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       activity_shoe_decisions: {
         Row: {
           created_at: string;
@@ -2352,6 +2386,10 @@ export type Database = {
           p_version: number;
         };
         Returns: number;
+      };
+      provider_activity_owned: {
+        Args: { p_activity_id: string };
+        Returns: boolean;
       };
       race_owned: { Args: { p_race_id: string }; Returns: boolean };
       reconcile_garmin_notifications: {
