@@ -8,10 +8,10 @@ Stride and garmin_mcp share one Supabase project. Each repository owns its table
 
 | Owner      | Tables                                                                                                                                                                                               |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stride     | `onboarding_progress`, `athlete_profiles`, `athlete_goals`, `athlete_races`, `athlete_unavailability`, race workspace tables, `athlete_wellness_checkins`                                            |
+| Stride     | `onboarding_progress`, `athlete_profiles`, `athlete_goals`, `athlete_races`, `athlete_unavailability`, race workspace tables, `athlete_wellness_checkins`, `activity_feelings`                       |
 | garmin_mcp | `provider_connections`, `provider_secrets`, `auth_challenges`, `auth_attempts`, `sync_jobs`, `provider_activities`, `provider_activity_segments`, `provider_observations`, `provider_training_weeks` |
 
-Stride may read garmin_mcp's normalized tables through their owner-only policies. It never writes them, references their internals in migrations, or reads secrets and challenges.
+Stride may read garmin_mcp's normalized tables through their owner-only policies. It never writes them, references their internals in migrations, or reads secrets and challenges. The one exception is `public.provider_activity_owned(uuid)`, a security-invoker plpgsql helper the `activity_feelings` RLS policies call to check that the athlete owns the activity; its body resolves `provider_activities` at run time, so Stride migrations still apply before garmin_mcp's.
 
 ## Migrations
 

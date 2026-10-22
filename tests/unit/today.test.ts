@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Activity } from "@/features/activities/activities";
+import { buildDebriefView, feelingView } from "@/features/plans/debrief/view";
 import { buildProgram, type ProgramRace } from "@/features/plans/view/program";
 import { buildSessionPanel } from "@/features/plans/view/session-panel";
 import { addDays } from "@/features/progress/period";
@@ -250,8 +251,49 @@ describe("today view", () => {
       family: "easy",
       detail: "8,32 km · 6:02 /km · FC 142",
       compliance: { pct: 98, partial: false },
+      verdict: null,
+      feelingPrompt: null,
       href: "/activities/activity-1",
     });
+  });
+
+  it("adds the debrief verdict and asks for a missing feeling", () => {
+    const debrief = buildDebriefView({
+      session: planState().sessions.find(
+        (item) => item.sessionKey === "s-2026-10-20-1",
+      )!,
+      activityId: "activity-1",
+      laps: [],
+      paceRanges: null,
+      match: {
+        status: "completed",
+        compliance: { duration: 0.98, intensity: 0.9 },
+      },
+      garmin: { rpe: null, feel: null },
+      athlete: null,
+    });
+    const { latest } = buildToday(
+      input({ today: "2026-10-21", panel: null, debrief }),
+    );
+    expect(latest).toMatchObject({
+      verdict: {
+        tone: "warning",
+        title: "Allure trop rapide",
+        body: "allure moyenne plus rapide que prévu.",
+      },
+      feelingPrompt: "activity-1",
+    });
+    const noted = buildToday(
+      input({
+        today: "2026-10-21",
+        panel: null,
+        debrief: debrief && {
+          ...debrief,
+          feeling: feelingView({ source: "athlete", effort: 6, feel: 75 }),
+        },
+      }),
+    );
+    expect(noted.latest?.feelingPrompt).toBeNull();
   });
 
   it("names an older activity by its date", () => {

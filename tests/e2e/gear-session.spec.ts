@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const authUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}`;
+
 async function signIn(page: Page) {
   await page.goto("/sign-in");
   await page.getByLabel("E-mail", { exact: true }).fill("plan@example.com");
@@ -118,8 +120,30 @@ test("today shows the pair of a running session", async ({ page }) => {
 test("a run with another pair in Garmin asks which one was worn", async ({
   page,
 }) => {
+  const reset = await fetch(
+    `${authUrl}/__test__/activity-feelings?activity=aaaaaaaa-aaaa-4aaa-8aaa-000000005000`,
+    { method: "DELETE" },
+  );
+  expect(reset.ok).toBe(true);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
+  const latest = page.getByRole("region", {
+    name: /^(Hier|Aujourd’hui|Dernière activité)/,
+  });
+  await expect(
+    page.getByRole("group", { name: /^Garmin indique les Zegama/ }),
+  ).toHaveCount(0);
+  await latest
+    .getByRole("radiogroup", {
+      name: "Comment c’était ? Effort perçu, de 1 à 10",
+    })
+    .getByRole("radio", { name: "4" })
+    .click();
+  await latest
+    .getByRole("radiogroup", { name: "Sensations" })
+    .getByRole("radio", { name: "Bien", exact: true })
+    .click();
+  await expect(page.getByText("Ressenti enregistré.")).toBeVisible();
   const card = page.getByRole("group", {
     name: "Garmin indique les Zegama, la séance prévoyait les Adizero Evo SL 3.",
   });

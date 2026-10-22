@@ -18,12 +18,14 @@ export function ActivityDetail({
   current,
   detailHref,
   pair = null,
+  debrief = null,
 }: {
   activity: ActivityDetailData;
   view: ActivityView | null;
   current: boolean;
   detailHref: string;
   pair?: React.ReactNode;
+  debrief?: React.ReactNode;
 }) {
   const Heading = current ? "h1" : "h2";
   const available = detailMetrics(activity);
@@ -33,7 +35,12 @@ export function ActivityDetail({
     ...available.filter((metric) => metric.key === "elevation"),
     ...available.filter((metric) => metric.key === "pace"),
   ].slice(0, 3);
-  const effort = effortStats(activity).slice(0, 4);
+  const effort = effortStats(activity)
+    .filter(
+      (stat) =>
+        !debrief || (stat.key !== "perceivedEffort" && stat.key !== "feel"),
+    )
+    .slice(0, 4);
   return (
     <article className="flex w-full max-w-240 flex-col gap-8 px-5 pt-8 pb-12 lg:px-10 2xl:mx-auto 2xl:max-w-360">
       <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
@@ -61,6 +68,7 @@ export function ActivityDetail({
         </p>
       )}
       {pair}
+      {debrief}
       {view?.route ? (
         <RouteCard
           key={`route:${activity.id}`}

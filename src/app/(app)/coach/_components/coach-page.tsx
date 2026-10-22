@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import { localToday } from "@/features/app-shell/shell";
 import { requireAthlete } from "@/server/app/session";
-import { loadAttachmentOptions } from "@/server/coaching/attachments";
+import {
+  loadAttachmentOptions,
+  loadSessionOption,
+} from "@/server/coaching/attachments";
 import {
   coachTimeZone,
   loadConversations,
@@ -15,10 +18,12 @@ export async function CoachPage({
   threadId = null,
   current,
   request = null,
+  sessionKey = null,
 }: {
   threadId?: string | null;
   current: boolean;
   request?: string | null;
+  sessionKey?: string | null;
 }) {
   const context = await requireAthlete();
   const now = new Date();
@@ -29,6 +34,9 @@ export async function CoachPage({
   ]);
   if (threadId && !thread) notFound();
   const plan = request === "plan";
+  const preselected = thread
+    ? []
+    : await loadSessionOption(context, attachmentOptions, sessionKey);
   return (
     <CoachScreen
       key={thread?.id ?? "new"}
@@ -42,6 +50,7 @@ export async function CoachPage({
       now={now.toISOString()}
       timeZone={coachTimeZone}
       attachmentOptions={attachmentOptions}
+      initialAttachments={preselected}
     />
   );
 }

@@ -22,6 +22,7 @@ export function ActivitiesView({
   current,
   today,
   pair = null,
+  debrief = null,
 }: {
   activities: Activity[];
   total: number;
@@ -34,6 +35,7 @@ export function ActivitiesView({
   sync: string | null;
   today: string;
   pair?: React.ReactNode;
+  debrief?: React.ReactNode;
 }) {
   return (
     <ActivitySplitFrame
@@ -76,6 +78,7 @@ export function ActivitiesView({
               view={view}
               current={current}
               pair={pair}
+              debrief={debrief}
               detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit, search)}`}
             />
           ) : (

@@ -22,6 +22,8 @@ import {
 import { activityPairView, pairQuestion } from "@/features/gear/check-view";
 import { loadPairChecks } from "@/server/gear/checks";
 import { reconcileGearNotificationsAfterResponse } from "@/server/notifications/garmin";
+import { ActivityDebrief } from "@/features/activities/components/activity-debrief";
+import { loadSessionDebrief } from "@/server/plans/debrief";
 
 export default async function ActivityPage({
   params,
@@ -37,13 +39,14 @@ export default async function ActivityPage({
   const context = await requireAthlete();
   const now = new Date();
   const search = parseActivitySearch(query.q);
-  const [detail, { activities, total }, shell, calibration, checks] =
+  const [detail, { activities, total }, shell, calibration, checks, debrief] =
     await Promise.all([
       readActivityDetail(context, id),
       listActivities(context, filter, limit, search),
       getShell(),
       loadHeartRateZones(context, now),
       loadPairChecks(context, id),
+      loadSessionDebrief(context, { activityId: id }).catch(() => null),
     ]);
   if (!detail) notFound();
   reconcileGearNotificationsAfterResponse(context, checks);
@@ -61,6 +64,7 @@ export default async function ActivityPage({
       current
       sync={shell.sync}
       today={localToday(now)}
+      debrief={debrief && <ActivityDebrief debrief={debrief} />}
       pair={
         check &&
         checks && (

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { activityTitle } from "@/features/activities/activities";
 import {
   attachmentRefs,
+  coachAttachmentSchema,
   maxAttachments,
   type AttachmentOption,
   type AttachmentOptions,
@@ -12,7 +13,9 @@ import {
 import { addDays } from "@/features/plans/model/dates";
 import { listActivities, readActivity } from "@/server/activities/activities";
 import type { OnboardingContext } from "@/server/onboarding/context";
+import { loadSessionDebrief } from "@/server/plans/debrief";
 import { readActivePlan } from "@/server/plans/stored";
+import type { DebriefView } from "@/features/plans/debrief/view";
 import { listRaces } from "@/server/races/races";
 
 export const sessionWindowDays = { past: 14, ahead: 28 } as const;
@@ -39,6 +42,32 @@ const sessionContextSchema = z.strictObject({
   durationMinutes: z.int().nonnegative(),
   distanceKm: amount,
   elevationGainM: amount,
+  debrief: z
+    .strictObject({
+      activityId: z.string(),
+      verdict: z.strictObject({ title: z.string(), body: z.string() }),
+      stepsAligned: z.boolean(),
+      note: z.string().optional(),
+      steps: z
+        .array(
+          z.strictObject({
+            name: z.string(),
+            target: z.string(),
+            actual: z.string(),
+            detail: z.string().optional(),
+            status: z.string().optional(),
+          }),
+        )
+        .max(100),
+      feeling: z
+        .strictObject({
+          source: z.enum(["garmin", "athlete"]),
+          effort: z.int().min(1).max(10).optional(),
+          feel: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 const activityContextSchema = z.strictObject({
@@ -96,15 +125,47 @@ function positiveInt(value: number | null) {
   return whole > 0 ? whole : undefined;
 }
 
+function debriefContext(debrief: DebriefView) {
+  const { feeling } = debrief;
+  return {
+    activityId: debrief.activityId,
+    verdict: { title: debrief.verdict.title, body: debrief.verdict.body },
+    stepsAligned: debrief.aligned,
+    ...(debrief.note && { note: debrief.note }),
+    steps: debrief.steps.map((step) => ({
+      name: step.name,
+      target: step.target,
+      actual: step.actual,
+      ...(step.detail && { detail: step.detail }),
+      ...(step.status && { status: step.status.label }),
+    })),
+    ...(feeling && {
+      feeling: {
+        source: feeling.source,
+        ...(feeling.value.effort !== null && { effort: feeling.value.effort }),
+        ...(feeling.feel && { feel: feeling.feel }),
+      },
+    }),
+  };
+}
+
 async function resolveSessions(
   context: OnboardingContext,
   ids: string[],
 ): Promise<ResolvedAttachment[]> {
   if (ids.length === 0) return [];
-  const plan = await readActivePlan(context);
-  return ids.map((id) => {
+  const [plan, debriefs] = await Promise.all([
+    readActivePlan(context),
+    Promise.all(
+      ids.map((id) =>
+        loadSessionDebrief(context, { sessionKey: id }).catch(() => null),
+      ),
+    ),
+  ]);
+  return ids.map((id, index) => {
     const session = plan?.state.sessions.find((item) => item.sessionKey === id);
     if (!session) throw new AttachmentAccessError();
+    const debrief = debriefs[index];
     return {
       kind: "session",
       id,
@@ -122,6 +183,7 @@ async function resolveSessions(
           : session.targets.distanceMeters / 1000,
       ),
       elevationGainM: rounded(session.targets.elevationGainMeters ?? null, 0),
+      ...(debrief && { debrief: debriefContext(debrief) }),
     };
   });
 }
@@ -243,6 +305,36 @@ async function sessionOptions(
       distanceKm: null,
       elevationGainM: null,
     }));
+}
+
+export async function loadSessionOption(
+  context: OnboardingContext,
+  options: AttachmentOptions,
+  sessionKey: string | null,
+): Promise<AttachmentOption[]> {
+  const ref = coachAttachmentSchema.safeParse({
+    kind: "session",
+    id: sessionKey,
+  });
+  if (!ref.success) return [];
+  const listed = options.session.find((option) => option.id === ref.data.id);
+  if (listed) return [listed];
+  const plan = await readActivePlan(context).catch(() => null);
+  const session = plan?.state.sessions.find(
+    (item) => item.sessionKey === ref.data.id,
+  );
+  return session
+    ? [
+        {
+          kind: "session",
+          id: session.sessionKey,
+          title: session.title,
+          date: session.scheduledOn,
+          distanceKm: null,
+          elevationGainM: null,
+        },
+      ]
+    : [];
 }
 
 async function activityOptions(

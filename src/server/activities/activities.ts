@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { readRunningMaximum } from "@/server/heart-rate/maximum";
 import {
   activityColumns,
@@ -63,7 +64,7 @@ export async function readActivity(
   return data ? activityRowSchema.parse(data) : null;
 }
 
-export async function readActivityDetail(
+export const readActivityDetail = cache(async function readActivityDetail(
   context: OnboardingContext,
   id: string,
 ) {
@@ -97,7 +98,7 @@ export async function readActivityDetail(
     segments: (segments.data ?? []).map((row) => segmentRowSchema.parse(row)),
     track: track.error || !track.data ? null : parseTrack(track.data),
   };
-}
+});
 
 const dayMs = 86_400_000;
 

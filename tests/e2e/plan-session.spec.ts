@@ -220,3 +220,56 @@ test("a mobility session is checked in by hand and undone", async ({
   await expect(panel.getByText("Fait · noté par toi")).toHaveCount(0);
   await expect(tile).not.toContainText("Fait");
 });
+
+test("a matched structured run shows its debrief and takes a feeling", async ({
+  page,
+}) => {
+  const activityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005002";
+  const reset = await fetch(
+    `${authUrl}/__test__/activity-feelings?activity=${activityId}`,
+    { method: "DELETE" },
+  );
+  expect(reset.ok).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  await page.goto(`/activities/${activityId}`);
+  const section = page.getByRole("region", { name: "Débrief de la séance" });
+  await expect(section).toBeVisible({ timeout: 20_000 });
+  await expect(section.getByText("Séance écourtée")).toBeVisible();
+  await section.getByRole("link", { name: "Voir dans le plan" }).click();
+
+  const panel = page.getByRole("dialog");
+  await expect(panel.getByRole("heading", { level: 2 })).toContainText(
+    "Seuil",
+    { timeout: 20_000 },
+  );
+  await expect(
+    panel.getByText(/10 tours alignés sur les 10 étapes$/),
+  ).toBeVisible();
+  const steps = panel.getByRole("region", { name: "Étape par étape" });
+  await expect(steps.getByText("Seuil 1", { exact: true })).toBeVisible();
+  await expect(
+    steps.getByRole("listitem").filter({ hasText: "Seuil 4" }),
+  ).toContainText("Écourtée");
+
+  const feeling = panel.getByRole("region", { name: "Ton ressenti" });
+  await feeling
+    .getByRole("radiogroup", { name: "Effort perçu, de 1 à 10" })
+    .getByRole("radio", { name: "7" })
+    .click();
+  await feeling
+    .getByRole("radiogroup", { name: "Sensations" })
+    .getByRole("radio", { name: "Bien", exact: true })
+    .click();
+  await expect(page.getByText("Ressenti enregistré.")).toBeVisible();
+  await expect(panel.getByText("Noté par toi")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Modifier" })).toBeVisible();
+
+  await panel.getByRole("link", { name: "En parler au coach" }).click();
+  await expect(page).toHaveURL(/\/coach\/nouvelle\?seance=s-/, {
+    timeout: 20_000,
+  });
+  await expect(
+    page.getByRole("button", { name: /^Retirer Seuil .* du contexte$/ }),
+  ).toBeVisible();
+});

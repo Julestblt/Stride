@@ -7,6 +7,8 @@ import {
   formatPace,
 } from "@/features/progress/format";
 import { cardiacDrift } from "@/features/progress/measures";
+import type { AthleteFeeling } from "../debrief/debrief";
+import { buildDebriefView, type DebriefView } from "../debrief/view";
 import type { MatchStatus } from "../matching/adherence";
 import { addDays, mondayOf } from "../model/dates";
 import type { PlanSession, PlanState } from "../model/plan";
@@ -31,7 +33,11 @@ export type PanelMatch = {
   sessionKey: string;
   activityId: string | null;
   status: MatchStatus;
-  compliance: { duration: number | null; distance: number | null };
+  compliance: {
+    duration: number | null;
+    distance: number | null;
+    intensity?: number | null;
+  };
 };
 
 export type PanelProposal = {
@@ -51,6 +57,8 @@ export type PanelActivity = {
   distanceMeters: number | null;
   averageHeartRate: number | null;
   detailImportedAt: string | null;
+  perceivedEffort?: number | null;
+  feel?: number | null;
 };
 
 export type PanelLap = {
@@ -71,6 +79,7 @@ export type SessionPanelInput = {
   series: Series | null;
   paceRanges?: IntensityPaceRanges | null;
   shoes?: SessionShoesView | null;
+  feeling?: AthleteFeeling | null;
 };
 
 export type PanelStatus =
@@ -96,6 +105,7 @@ export type PanelCompletion = {
   rows: PanelRow[];
   pace: number[];
   paceLabel: string | null;
+  debrief: DebriefView | null;
 };
 
 export type PanelCheckIn = { done: boolean };
@@ -328,6 +338,28 @@ function completion(
       ? Math.round((Date.parse(activity.detailImportedAt) - end) / 60_000)
       : null;
   const pace = paceByMinute(input.series);
+  const debrief =
+    match.status === "completed" || match.status === "partial"
+      ? buildDebriefView({
+          session,
+          activityId: activity.id,
+          laps: input.laps,
+          paceRanges: input.paceRanges ?? null,
+          match: {
+            status: match.status,
+            compliance: {
+              duration: match.compliance.duration,
+              intensity: match.compliance.intensity ?? null,
+            },
+          },
+          garmin: {
+            rpe: activity.perceivedEffort ?? null,
+            feel: activity.feel ?? null,
+          },
+          athlete: input.feeling ?? null,
+          averageHeartRate: activity.averageHeartRate,
+        })
+      : null;
   return {
     activityId: activity.id,
     pct,
@@ -350,6 +382,7 @@ function completion(
       pace.length > 0
         ? `Allure minute par minute, de ${formatPace(Math.min(...pace))} à ${formatPace(Math.max(...pace))} /km`
         : null,
+    debrief,
   };
 }
 

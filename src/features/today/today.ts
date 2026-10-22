@@ -1,3 +1,5 @@
+import type { Verdict } from "@/features/plans/debrief/debrief";
+import type { DebriefView } from "@/features/plans/debrief/view";
 import {
   activityKind,
   activityTitle,
@@ -116,6 +118,8 @@ export type TodayLatest = {
   family: SessionFamily;
   detail: string;
   compliance: { pct: number | null; partial: boolean } | null;
+  verdict: Verdict | null;
+  feelingPrompt: string | null;
   href: string;
 };
 
@@ -144,6 +148,7 @@ export type TodayInput = {
   panel: SessionPanel | null;
   recovery: RecoveryModel;
   latest: Activity | null;
+  debrief?: DebriefView | null;
 };
 
 const dayMs = 86_400_000;
@@ -545,6 +550,8 @@ function latest(input: TodayInput): TodayLatest | null {
         ? "Hier"
         : `Dernière activité · ${formatLongDay(activity.date)}`;
   const match = input.matches.find((item) => item.activityId === activity.id);
+  const debrief =
+    input.debrief?.activityId === activity.id ? input.debrief : null;
   const session = match
     ? input.plan?.sessions.find((item) => item.sessionKey === match.sessionKey)
     : undefined;
@@ -589,6 +596,15 @@ function latest(input: TodayInput): TodayLatest | null {
             partial: match.status === "partial",
           }
         : null,
+    verdict: debrief
+      ? {
+          ...debrief.verdict,
+          body:
+            debrief.verdict.body.charAt(0).toLowerCase() +
+            debrief.verdict.body.slice(1),
+        }
+      : null,
+    feelingPrompt: debrief && !debrief.feeling ? activity.id : null,
     href: `/activities/${activity.id}`,
   };
 }

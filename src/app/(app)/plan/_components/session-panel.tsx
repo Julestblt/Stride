@@ -13,6 +13,13 @@ import { ProposalLink } from "./proposal-sheet";
 import type { WatchCopy } from "@/features/garmin/watch";
 import { WatchStatusBlock } from "@/features/garmin/components/watch-status";
 import { SessionShoesBlock } from "@/features/gear/components/session-shoes";
+import { DebriefFeeling } from "@/features/activities/components/feeling-prompt";
+import {
+  DebriefCoach,
+  DebriefNote,
+  DebriefSteps,
+  DebriefVerdict,
+} from "@/features/activities/components/session-debrief";
 import {
   panelStatusLabel,
   type PanelCompletion,
@@ -330,85 +337,116 @@ function SurgeIdeas({ items }: { items: string[] }) {
 function Completion({ completion }: { completion: PanelCompletion }) {
   const maximum = Math.max(...completion.pace);
   const minimum = Math.min(...completion.pace);
+  const { debrief } = completion;
+  const rows = (
+    <table className="w-full table-fixed border-collapse text-[13px]">
+      <thead>
+        <tr>
+          <th scope="col" className="pb-1.5">
+            <span className="sr-only">Mesure</span>
+          </th>
+          <th
+            scope="col"
+            className="w-22.5 pb-1.5 pl-2.5 text-left font-normal"
+          >
+            <Dk>Prévu</Dk>
+          </th>
+          <th
+            scope="col"
+            className="w-22.5 pb-1.5 pl-2.5 text-left font-normal"
+          >
+            <Dk>Réalisé</Dk>
+          </th>
+          <th scope="col" className="w-6 pb-1.5">
+            <span className="sr-only">Écart</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {completion.rows.map((row) => (
+          <tr key={row.key} className="border-t border-border">
+            <th scope="row" className="py-2.5 text-left font-normal text-muted">
+              {row.label}
+            </th>
+            <td className="py-2.5 pl-2.5 font-metric text-base font-semibold text-muted-foreground tabular-nums">
+              {row.planned}
+            </td>
+            <td className="py-2.5 pl-2.5 font-metric text-base font-semibold tabular-nums">
+              {row.actual}
+            </td>
+            <td className="py-2.5 text-right">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "inline-block size-1.5 rounded-full",
+                  toneDots[row.tone],
+                )}
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+  const feeling = debrief && (
+    <DebriefFeeling
+      activityId={completion.activityId}
+      feeling={debrief.feeling}
+    />
+  );
   return (
     <>
-      <div className="flex items-center gap-3 rounded-card border border-success-border bg-success-surface p-3.5">
-        <CheckIcon
-          aria-hidden="true"
-          className="size-4.5 shrink-0 text-success"
-          strokeWidth={2.5}
-        />
-        <span className="flex flex-1 flex-col gap-0.5">
-          <span className="text-[15px] font-semibold">
-            {completion.headline}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {completion.detail}
-          </span>
-        </span>
-        {completion.pct !== null && (
-          <span
+      {debrief ? (
+        <>
+          <DebriefVerdict
+            debrief={debrief}
+            pct={completion.pct}
+            detail={[completion.detail, debrief.alignment]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+          {!debrief.feeling && feeling}
+          {debrief.note && <DebriefNote>{debrief.note}</DebriefNote>}
+          {debrief.aligned && <DebriefSteps steps={debrief.steps} />}
+        </>
+      ) : (
+        <div className="flex items-center gap-3 rounded-card border border-success-border bg-success-surface p-3.5">
+          <CheckIcon
             aria-hidden="true"
-            className="font-metric text-[30px] leading-none font-semibold text-success tabular-nums"
-          >
-            {completion.pct}
+            className="size-4.5 shrink-0 text-success"
+            strokeWidth={2.5}
+          />
+          <span className="flex flex-1 flex-col gap-0.5">
+            <span className="text-[15px] font-semibold">
+              {completion.headline}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {completion.detail}
+            </span>
           </span>
-        )}
-      </div>
-      {completion.rows.length > 0 && (
-        <table className="w-full table-fixed border-collapse text-[13px]">
-          <thead>
-            <tr>
-              <th scope="col" className="pb-1.5">
-                <span className="sr-only">Mesure</span>
-              </th>
-              <th
-                scope="col"
-                className="w-22.5 pb-1.5 pl-2.5 text-left font-normal"
-              >
-                <Dk>Prévu</Dk>
-              </th>
-              <th
-                scope="col"
-                className="w-22.5 pb-1.5 pl-2.5 text-left font-normal"
-              >
-                <Dk>Réalisé</Dk>
-              </th>
-              <th scope="col" className="w-6 pb-1.5">
-                <span className="sr-only">Écart</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {completion.rows.map((row) => (
-              <tr key={row.key} className="border-t border-border">
-                <th
-                  scope="row"
-                  className="py-2.5 text-left font-normal text-muted"
-                >
-                  {row.label}
-                </th>
-                <td className="py-2.5 pl-2.5 font-metric text-base font-semibold text-muted-foreground tabular-nums">
-                  {row.planned}
-                </td>
-                <td className="py-2.5 pl-2.5 font-metric text-base font-semibold tabular-nums">
-                  {row.actual}
-                </td>
-                <td className="py-2.5 text-right">
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "inline-block size-1.5 rounded-full",
-                      toneDots[row.tone],
-                    )}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          {completion.pct !== null && (
+            <span
+              aria-hidden="true"
+              className="font-metric text-[30px] leading-none font-semibold text-success tabular-nums"
+            >
+              {completion.pct}
+            </span>
+          )}
+        </div>
       )}
-      {completion.paceLabel && (
+      {!debrief?.aligned &&
+        completion.rows.length > 0 &&
+        (debrief ? (
+          <section aria-label="Sur l’ensemble" className="flex flex-col">
+            <Dk className="pb-1.5" asChild>
+              <h3>Sur l’ensemble</h3>
+            </Dk>
+            {rows}
+          </section>
+        ) : (
+          rows
+        ))}
+      {!debrief?.aligned && completion.paceLabel && (
         <section aria-labelledby="panel-pace" className="flex flex-col gap-1.5">
           <Dk id="panel-pace">Allure, minute par minute</Dk>
           <div
@@ -433,6 +471,8 @@ function Completion({ completion }: { completion: PanelCompletion }) {
           </div>
         </section>
       )}
+      {debrief?.feeling && feeling}
+      {debrief && <DebriefCoach href={debrief.coachHref} />}
       <Button
         asChild
         variant="outline"

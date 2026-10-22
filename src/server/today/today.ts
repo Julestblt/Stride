@@ -14,6 +14,7 @@ import {
   readPlanRaces,
 } from "@/server/plans/overview";
 import { loadIntensityPaces } from "@/server/plans/paces";
+import { loadSessionDebrief } from "@/server/plans/debrief";
 import { loadSessionPanel } from "@/server/plans/session-panel";
 import { loadRecovery } from "@/server/progress/recovery";
 
@@ -29,18 +30,23 @@ export async function loadToday(context: OnboardingContext, now: Date) {
   const today = overview?.today ?? localToday(now);
   const plan = overview?.plan.state ?? null;
   const sessionKey = todaySessionKey(plan, today);
-  const [panel, races, , checks] = await Promise.all([
+  const [panel, races, , checks, debrief] = await Promise.all([
     sessionKey ? loadSessionPanel(context, sessionKey) : null,
     overview ? overview.races : readPlanRaces(context),
     loadWatchView(context, overview?.plan ?? null),
     loadPairChecks(context, latest?.id ?? null),
+    latest
+      ? loadSessionDebrief(context, { activityId: latest.id }).catch(() => null)
+      : null,
   ]);
   reconcileGearNotificationsAfterResponse(context, checks);
   const latestCheck = latest ? checks?.checks.get(latest.id) : null;
   return {
     checkin: recovery.checkin,
     pairQuestion:
-      latestCheck && checks ? pairQuestion(latestCheck, checks.shoes) : null,
+      latestCheck && checks && !(debrief && !debrief.feeling)
+        ? pairQuestion(latestCheck, checks.shoes)
+        : null,
     view: buildToday({
       today,
       plan,
@@ -50,6 +56,7 @@ export async function loadToday(context: OnboardingContext, now: Date) {
       panel,
       recovery,
       latest,
+      debrief,
     }),
   };
 }
