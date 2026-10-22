@@ -153,8 +153,7 @@ export function useAutosave<V extends FieldValues>({
         update((state) =>
           editField(state, field as keyof V, value as V[keyof V]),
         );
-    timer.current = setTimeout(() => void run(), 0);
-  }, [cacheKey, run, serverUpdatedAt, update]);
+  }, [cacheKey, serverUpdatedAt, update]);
   useEffect(() => {
     const online = () => void run();
     const leave = (event: BeforeUnloadEvent) => {
@@ -168,7 +167,13 @@ export function useAutosave<V extends FieldValues>({
       window.removeEventListener("beforeunload", leave);
     };
   }, [run]);
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    if (current.current.status === "unsaved") {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => void runRef.current(), 0);
+    }
+    return () => clearTimeout(timer.current);
+  }, []);
   return { state, change, flush, resolve, retry: run };
 }
 
