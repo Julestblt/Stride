@@ -4,6 +4,7 @@ import {
   ChevronsRightIcon,
   DumbbellIcon,
   FlagIcon,
+  FootprintsIcon,
   GaugeIcon,
   MinusIcon,
   MountainIcon,
@@ -11,7 +12,6 @@ import {
   RouteIcon,
   TargetIcon,
   TrendingUpIcon,
-  WavesIcon,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ export type SessionTileKind =
 type Tone = "provider" | "quality" | "terrain" | "support" | "race" | "rest";
 
 const kinds: Record<SessionTileKind, { icon: LucideIcon; tone: Tone }> = {
-  easy: { icon: WavesIcon, tone: "provider" },
+  easy: { icon: FootprintsIcon, tone: "provider" },
   long: { icon: RouteIcon, tone: "provider" },
   long_trail: { icon: MountainIcon, tone: "terrain" },
   tempo: { icon: ChevronsRightIcon, tone: "quality" },
