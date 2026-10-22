@@ -2213,6 +2213,29 @@ export type Database = {
         Args: { p_changeset: Json; p_proposal_id: string };
         Returns: number;
       };
+      check_in_session: {
+        Args: { p_plan_id: string; p_session_key: string };
+        Returns: {
+          activity_id: string | null;
+          algorithm_version: string | null;
+          compliance: NonNullable<Json>;
+          computed_at: string;
+          confidence: number;
+          id: string;
+          method: string;
+          plan_id: string;
+          session_key: string;
+          session_revision_id: string;
+          status: string;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "session_activity_matches";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       claim_sync_job: {
         Args: Record<PropertyKey, never>;
         Returns: {

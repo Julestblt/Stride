@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(41);
 
 grant usage on schema extensions to stride_coach_worker;
 
@@ -26,7 +26,9 @@ select 'd2000000-0000-4000-8000-000000000001', 'a2000000-0000-4000-8000-00000000
   1, current_date + offset_days, sport, kind, 'Séance', 'Objectif', false, 'normal',
   '{"durationSeconds": 2400, "distanceMeters": 8000, "elevationGainMeters": null}', '[]', 'template'
 from (values ('s-1', 1, 'run', 'easy'), ('s-2', 2, 'run', 'easy'), ('s-3', 3, 'run', 'easy'),
-  ('s-4', 4, 'run', 'easy'), ('s-5', 5, 'rest', 'rest'))
+  ('s-4', 4, 'run', 'easy'), ('s-5', 5, 'rest', 'rest'), ('m-1', 0, 'strength', 'mobility'),
+  ('m-2', -1, 'strength', 'mobility'), ('m-3', 2, 'strength', 'mobility'),
+  ('k-1', 0, 'strength', 'strength'))
   as v (key, offset_days, sport, kind);
 
 create function pg_temp.act_as(p_user uuid)
@@ -268,6 +270,64 @@ set local role stride_coach_worker;
 select is(
   (private.apply_plan_proposal('e2000000-0000-4000-8000-000000000002', pg_temp.closing('s-4'))).version,
   2, 'an unmatched future session can still be changed'
+);
+reset role;
+
+select ok(
+  has_function_privilege('authenticated', 'public.check_in_session(uuid, text)', 'execute')
+    and not has_function_privilege('anon', 'public.check_in_session(uuid, text)', 'execute')
+    and not has_function_privilege('service_role', 'public.check_in_session(uuid, text)', 'execute'),
+  'only athletes may check in a session'
+);
+
+select pg_temp.act_as('a2000000-0000-4000-8000-0000000000a2');
+select is(
+  (select status || ':' || coalesce(activity_id::text, '-') || ':' || method
+    from public.check_in_session('d2000000-0000-4000-8000-000000000001', 'm-1')),
+  'checked_in:-:athlete', 'athlete checks in a mobility session of today'
+);
+select is(
+  (select count(*)::int from public.check_in_session('d2000000-0000-4000-8000-000000000001', 'm-2')),
+  1, 'athlete checks in a past mobility session'
+);
+select throws_ok(
+  $$select public.check_in_session('d2000000-0000-4000-8000-000000000001', 'm-3')$$,
+  'PT400', 'not_due', 'a future mobility session cannot be checked in'
+);
+select throws_ok(
+  $$select public.check_in_session('d2000000-0000-4000-8000-000000000001', 'k-1')$$,
+  'PT400', 'not_checkable', 'a strength session cannot be checked in'
+);
+select throws_ok(
+  $$select public.check_in_session('d2000000-0000-4000-8000-000000000001', 's-2')$$,
+  'PT400', 'not_checkable', 'a run session cannot be checked in'
+);
+reset role;
+
+set local role stride_coach_worker;
+select is(
+  private.record_session_matches('d2000000-0000-4000-8000-000000000001', jsonb_build_array(
+    pg_temp.auto('m-1', 'ac000000-0000-4000-8000-000000000009')
+  ), 'match-v1'),
+  0, 'auto matching skips a checked-in session'
+);
+reset role;
+
+select pg_temp.act_as('b2000000-0000-4000-8000-0000000000b2');
+select throws_ok(
+  $$select public.check_in_session('d2000000-0000-4000-8000-000000000001', 'm-1')$$,
+  'PT404', 'not_found', 'another athlete cannot check in a foreign session'
+);
+reset role;
+
+select pg_temp.act_as('a2000000-0000-4000-8000-0000000000a2');
+select is(
+  public.clear_session_match('d2000000-0000-4000-8000-000000000001', 'm-1'),
+  1, 'athlete undoes a check-in'
+);
+select is(
+  (select count(*)::int from public.session_activity_matches where session_key = 'm-1'),
+  0, 'an undone check-in leaves the session neutral'
 );
 reset role;
 
