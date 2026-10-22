@@ -23,6 +23,7 @@ import type {
   TodayWeek,
 } from "../today";
 import { LegsCheckin } from "./legs-checkin";
+import { FeelingPrompt } from "@/features/activities/components/feeling-prompt";
 
 const card =
   "flex min-w-0 flex-col gap-3.5 rounded-card border border-border bg-surface px-5 py-5 sm:px-5.5";
@@ -470,7 +471,26 @@ export function LatestSection({
           Aucune activité importée depuis Garmin pour l’instant.
         </p>
       )}
-      {question && <PairQuestionCard question={question} />}
+      {latest?.verdict && (
+        <p className="flex items-center gap-2 border-t border-border pt-2.5 text-[13px] text-muted">
+          <PulseDot
+            tone={latest.verdict.tone === "warning" ? "warning" : "success"}
+            breathing={false}
+          />
+          <span>
+            <b className="font-semibold text-foreground">
+              {latest.verdict.title}
+            </b>
+            {" · "}
+            {latest.verdict.body}
+          </span>
+        </p>
+      )}
+      {latest?.feelingPrompt ? (
+        <FeelingPrompt activityId={latest.feelingPrompt} compact />
+      ) : (
+        question && <PairQuestionCard question={question} />
+      )}
     </section>
   );
 }

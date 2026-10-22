@@ -297,6 +297,7 @@ const tables = {
     },
   ],
   activity_shoe_decisions: [],
+  activity_feelings: [],
   athlete_wellness_checkins: [],
   provider_activities: [
     activity(1, 1, {
@@ -889,6 +890,12 @@ const planDoneSession = planMatchedSessions.findLast(
   (session) => session.kind === "easy",
 );
 const planDoneActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005000";
+const planDebriefSession = planMatchedSessions.find(
+  (session) =>
+    session.kind === "threshold" &&
+    session.scheduled_on < planDoneSession.scheduled_on,
+);
+const planDebriefActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005002";
 const planMissedSession = pastPlanSessions[2];
 const planImportedActivityId = "aaaaaaaa-aaaa-4aaa-8aaa-000000005001";
 const planDoneStart = Date.parse(`${planDoneSession.scheduled_on}T17:12:00Z`);
@@ -906,6 +913,49 @@ tables.provider_activities.push({
   started_at: new Date(planDoneStart).toISOString(),
   local_started_at: `${planDoneSession.scheduled_on} 19:12:00`,
 });
+if (planDebriefSession) {
+  const laps = [
+    [900, 2800, 140],
+    [360, 1390, 166],
+    [90, 230, 150],
+    [360, 1380, 168],
+    [90, 230, 152],
+    [360, 1370, 169],
+    [90, 230, 153],
+    [310, 1180, 172],
+    [90, 230, 155],
+    [600, 1850, 145],
+  ];
+  const duration = laps.reduce((total, [seconds]) => total + seconds, 0);
+  tables.provider_activities.push({
+    ...activity(5002, 0, {
+      activity_name: "Seuil 4 × 6’",
+      distance_meters: laps.reduce((total, [, meters]) => total + meters, 0),
+      duration_seconds: duration,
+      average_heart_rate: 158,
+    }),
+    user_id: planUser.id,
+    provider_activity_id: "21894515002",
+    started_at: `${planDebriefSession.scheduled_on}T16:40:00Z`,
+    local_started_at: `${planDebriefSession.scheduled_on} 18:40:00`,
+  });
+  tables.provider_activity_segments.push(
+    ...laps.map(([seconds, meters, heartRate], index) => ({
+      activity_id: planDebriefActivityId,
+      user_id: planUser.id,
+      segment_type: "lap",
+      segment_index: index,
+      started_at: null,
+      distance_meters: meters,
+      duration_seconds: seconds,
+      average_heart_rate: heartRate,
+      average_cadence: null,
+      average_power_watts: null,
+      elevation_gain_meters: null,
+      elevation_loss_meters: null,
+    })),
+  );
+}
 tables.provider_activity_gear = [
   {
     user_id: planUser.id,
@@ -1165,7 +1215,12 @@ Object.assign(tables, {
     user_id: planUser.id,
     plan_id: planId,
     session_key: session.session_key,
-    activity_id: session === planDoneSession ? planDoneActivityId : null,
+    activity_id:
+      session === planDoneSession
+        ? planDoneActivityId
+        : session === planDebriefSession
+          ? planDebriefActivityId
+          : null,
     method: "auto",
     status: "completed",
     confidence: 0.9,
@@ -1833,7 +1888,13 @@ function selectRows(table, params) {
     rows = [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
   }
   const owner = params.get("activity_id");
-  if (owner) rows = rows.filter((row) => `eq.${row.activity_id}` === owner);
+  const owners = owner?.match(/^in\.\((.*)\)$/)?.[1].split(",");
+  if (owners)
+    rows = rows.filter((row) =>
+      owners.map((item) => item.replace(/"/g, "")).includes(row.activity_id),
+    );
+  else if (owner)
+    rows = rows.filter((row) => `eq.${row.activity_id}` === owner);
   const types = params.get("activity_type")?.match(/^in\.\((.*)\)$/);
   if (types) {
     const allowed = types[1].split(",").map((type) => type.replace(/"/g, ""));
@@ -2140,6 +2201,16 @@ createServer(async (request, response) => {
         updated_at: new Date().toISOString(),
       });
     return send(200, { sessionKey: planMissedSession.session_key });
+  }
+  if (
+    url.pathname === "/__test__/activity-feelings" &&
+    request.method === "DELETE"
+  ) {
+    const activityId = url.searchParams.get("activity");
+    tables.activity_feelings = tables.activity_feelings.filter(
+      (row) => activityId && row.activity_id !== activityId,
+    );
+    return send(200, { reset: true });
   }
   if (url.pathname === "/__test__/plan-import" && request.method === "DELETE") {
     tables.provider_activities = tables.provider_activities.filter(
@@ -2675,6 +2746,30 @@ createServer(async (request, response) => {
         );
         return send(204, undefined);
       }
+    }
+    if (
+      url.pathname === "/rest/v1/activity_feelings" &&
+      request.method === "POST"
+    ) {
+      const feeling = Array.isArray(body) ? body[0] : body;
+      const owned = tables.provider_activities.some(
+        (row) =>
+          row.id === feeling.activity_id &&
+          (row.user_id ?? user.id) === feeling.user_id,
+      );
+      if (!owned)
+        return send(403, {
+          code: "42501",
+          message: "new row violates row-level security policy",
+        });
+      tables.activity_feelings = tables.activity_feelings
+        .filter(
+          (item) =>
+            item.user_id !== feeling.user_id ||
+            item.activity_id !== feeling.activity_id,
+        )
+        .concat(feeling);
+      return send(201, undefined);
     }
     if (
       url.pathname === "/rest/v1/activity_shoe_decisions" &&

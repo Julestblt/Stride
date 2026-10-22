@@ -4,6 +4,7 @@ import { readActivityDetail } from "@/server/activities/activities";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { sessionShoesView } from "@/features/gear/planned";
 import { loadPlanShoes } from "@/server/gear/planned";
+import { readActivityFeeling } from "@/server/activities/feelings";
 import { loadPlanOverview } from "./overview";
 import { loadIntensityPaceRanges } from "./paces";
 
@@ -18,9 +19,12 @@ export async function loadSessionPanel(
   ]);
   if (!overview) return null;
   const match = overview.matches.find((item) => item.sessionKey === sessionKey);
-  const detail = match?.activityId
-    ? await readActivityDetail(context, match.activityId).catch(() => null)
-    : null;
+  const [detail, feeling] = match?.activityId
+    ? await Promise.all([
+        readActivityDetail(context, match.activityId).catch(() => null),
+        readActivityFeeling(context, match.activityId),
+      ])
+    : [null, null];
   return buildSessionPanel({
     state: overview.plan.state,
     today: overview.today,
@@ -32,5 +36,6 @@ export async function loadSessionPanel(
     series: detail?.track?.series ?? null,
     paceRanges,
     shoes: shoes ? sessionShoesView(shoes, sessionKey) : null,
+    feeling,
   });
 }
