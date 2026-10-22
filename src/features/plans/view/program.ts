@@ -37,6 +37,7 @@ export type SessionFamily = SessionTileKind;
 
 export const familyLabels: Record<SessionFamily, string> = {
   easy: "Footing",
+  recovery: "Récupération",
   long: "Sortie longue",
   long_trail: "Sortie longue trail",
   tempo: "Allure soutenue",
@@ -62,7 +63,6 @@ export function sessionFamilyOf(session: PlanSession): SessionFamily {
     return session.sport === "trail" || session.terrain === "trail"
       ? "long_trail"
       : "long";
-  if (session.kind === "easy" || session.kind === "recovery") return "easy";
   return session.kind;
 }
 

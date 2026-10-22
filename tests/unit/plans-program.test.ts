@@ -440,7 +440,7 @@ describe("race programs", () => {
 });
 
 describe("session families", () => {
-  it("separates trail long runs and maps recovery to easy", () => {
+  it("separates trail long runs and recovery runs", () => {
     const long = { ...easyRun(120), kind: "long" as const };
     const placed = { sessionKey: "s-1", scheduledOn: "2026-10-12" };
     expect(sessionFamilyOf({ ...long, ...placed })).toBe("long");
@@ -449,7 +449,10 @@ describe("session families", () => {
     );
     expect(
       sessionFamilyOf({ ...easyRun(30), kind: "recovery", ...placed }),
-    ).toBe("easy");
+    ).toBe("recovery");
+    expect(
+      sessionFamilyOf({ ...easyRun(30), kind: "mobility", ...placed }),
+    ).toBe("mobility");
   });
 });
 
