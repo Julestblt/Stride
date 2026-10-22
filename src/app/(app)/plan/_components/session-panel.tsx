@@ -7,7 +7,7 @@ import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
 import { zoneHeights } from "@/components/stride/session-blocks";
 import { SessionKindTile } from "@/components/stride/session-kind-tile";
-import { zoneFills } from "@/components/stride/session-shape";
+import { FreeBlock, zoneFills } from "@/components/stride/session-shape";
 import { cn } from "@/lib/utils";
 import { ProposalLink } from "./proposal-sheet";
 import type { WatchCopy } from "@/features/garmin/watch";
@@ -162,10 +162,17 @@ function Structure({ panel }: { panel: SessionPanel }) {
             style={{ flexGrow: segment.seconds, flexBasis: 0 }}
           >
             <span className="flex h-11 items-end">
-              <span
-                className={cn("w-full rounded-[2px]", zoneFills[segment.zone])}
-                style={{ height: `${zoneHeights[segment.zone]}%` }}
-              />
+              {segment.free ? (
+                <FreeBlock className="w-full rounded-[3px]" />
+              ) : (
+                <span
+                  className={cn(
+                    "w-full rounded-[2px]",
+                    zoneFills[segment.zone],
+                  )}
+                  style={{ height: `${zoneHeights[segment.zone]}%` }}
+                />
+              )}
             </span>
             <span
               aria-hidden="true"
@@ -287,6 +294,35 @@ function Contingencies({ items }: { items: string[] }) {
     >
       <Dk id="panel-contingencies">Si ça se passe mal</Dk>
       <p className="text-[13px] leading-normal text-muted">{items.join(" ")}</p>
+    </section>
+  );
+}
+
+function SurgeIdeas({ items }: { items: string[] }) {
+  return (
+    <section
+      aria-labelledby="panel-surges"
+      className="flex flex-col gap-2 rounded-[10px] border border-border bg-surface-panel px-3.5 py-3"
+    >
+      <Dk id="panel-surges">Idées de relances, sans obligation</Dk>
+      <ul className="flex flex-col gap-1.5">
+        {items.map((item) => (
+          <li
+            key={item}
+            className="flex items-start gap-2 text-[13px] leading-[1.45] text-muted"
+          >
+            <span
+              aria-hidden="true"
+              className="mt-1.75 size-1.25 shrink-0 rounded-full bg-zone-4"
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+      <p className="text-[12.5px] leading-[1.45] text-muted-foreground">
+        6 à 10 relances de 30” à 3’ suffisent. Récupère au moins aussi longtemps
+        que tu as relancé.
+      </p>
     </section>
   );
 }
@@ -445,6 +481,9 @@ export function SessionPanelBody({
             ) : (
               <Contents panel={panel} />
             ))}
+          {panel.surgeIdeas.length > 0 && (
+            <SurgeIdeas items={panel.surgeIdeas} />
+          )}
           {panel.checkIn?.done ? (
             <CheckedIn day={panel.day} />
           ) : (

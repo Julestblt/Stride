@@ -40,10 +40,15 @@ const stepSeconds = (step: SimpleStep) =>
     ? step.end.seconds
     : (step.end.estimatedSeconds ?? 0);
 
+export function isFreeStep(session: PlanSession, step: SimpleStep) {
+  return session.kind === "fartlek" && step.type === "work";
+}
+
 export function sessionBlocks(session: PlanSession): SessionBlock[] {
   return flattenSteps(session.structure).map((step) => ({
     minutes: stepSeconds(step) / 60,
     zone: intensityZone[step.intensity],
+    ...(isFreeStep(session, step) ? { free: true } : {}),
   }));
 }
 
@@ -52,6 +57,7 @@ const qualityKinds = new Set<PlanSession["kind"]>([
   "threshold",
   "intervals",
   "hills",
+  "fartlek",
   "race_specific",
 ]);
 
@@ -114,14 +120,17 @@ export function stepViews(
       return [
         {
           key: `${index}`,
-          name:
-            step.type === "work"
+          name: isFreeStep(session, step)
+            ? "Bloc fartlek"
+            : step.type === "work"
               ? intensityLabels[step.intensity]
               : stepNames[step.type],
           cue: step.cue ?? null,
           duration: formatStepDuration(stepSeconds(step)),
           target: formatTarget(step.target),
-          pace: expectedPace(step, ranges),
+          pace: isFreeStep(session, step)
+            ? "sans allure"
+            : expectedPace(step, ranges),
           zone: intensityZone[step.intensity],
         },
       ];
@@ -144,17 +153,22 @@ export type ChartSegment = {
   seconds: number;
   zone: 1 | 2 | 3 | 4 | 5;
   label: string | null;
+  free: boolean;
 };
 
 export function chartSegments(session: PlanSession): ChartSegment[] {
-  return flattenSteps(session.structure).map((step) => ({
-    seconds: stepSeconds(step),
-    zone: intensityZone[step.intensity],
-    label:
-      step.type === "recovery" || stepSeconds(step) < 120
-        ? null
-        : formatDuration(stepSeconds(step)),
-  }));
+  return flattenSteps(session.structure).map((step) => {
+    const free = isFreeStep(session, step);
+    return {
+      seconds: stepSeconds(step),
+      zone: intensityZone[step.intensity],
+      label:
+        step.type === "recovery" || stepSeconds(step) < 120
+          ? null
+          : `${formatDuration(stepSeconds(step))}${free ? " au feeling" : ""}`,
+      free,
+    };
+  });
 }
 
 export function sessionStats(
@@ -187,6 +201,10 @@ export function sessionStats(
         }
       : null,
     pace,
+    effort:
+      work && isFreeStep(session, work) && work.target.kind === "rpe"
+        ? `${work.target.min}–${work.target.max}/10`
+        : null,
     heartRate: heartRate ? `${heartRate.minBpm}–${heartRate.maxBpm}` : null,
     elevation:
       session.targets.elevationGainMeters !== null

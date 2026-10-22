@@ -23,7 +23,7 @@ Call `submit_plan` with `{"plan": <plan>}` where `<plan>` is one JSON object:
     "sessions": [{
       "date": "YYYY-MM-DD",
       "sport": "run" | "trail" | "strength" | "cross",
-      "kind": "easy" | "long" | "recovery" | "tempo" | "threshold" | "intervals" | "hills" | "race_specific" | "race" | "strength" | "mobility" | "cross",
+      "kind": "easy" | "long" | "recovery" | "tempo" | "threshold" | "intervals" | "hills" | "fartlek" | "race_specific" | "race" | "strength" | "mobility" | "cross",
       "title": string (French, max 80 chars),
       "purpose": string (French, max 280 chars),
       "key": boolean (true for the week's key sessions),

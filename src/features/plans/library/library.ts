@@ -102,6 +102,7 @@ export type QualityKind =
   | "short_hills"
   | "long_hills"
   | "treadmill_incline"
+  | "fartlek"
   | "marathon_pace"
   | "half_pace"
   | "ten_k_pace";
@@ -113,6 +114,7 @@ export const maxLevel: Record<QualityKind, number> = {
   short_hills: 4,
   long_hills: 3,
   treadmill_incline: 3,
+  fartlek: 3,
   marathon_pace: 6,
   half_pace: 2,
   ten_k_pace: 3,
@@ -250,6 +252,35 @@ export function qualitySession(
           treadmill ? "Pente à 1 %, trottine" : "Redescente souple",
         ),
         contingencies: qualityContingencies(context, "threshold"),
+      });
+    }
+    case "fartlek": {
+      const block = minutes(20 + 5 * level);
+      const trail = context.terrain === "trail";
+      return content(context, {
+        ...key,
+        kind: "fartlek",
+        title: `Fartlek · ${formatDuration(block)} au feeling`,
+        purpose: trail
+          ? "Varier l’effort au gré du terrain pour habituer le cœur aux changements de rythme, comme en course."
+          : "Varier l’effort au feeling pour habituer le cœur aux changements de rythme.",
+        structure: [
+          step(context, "warmup", warm.warmupSeconds, "easy"),
+          {
+            type: "work",
+            end: { kind: "time", seconds: block },
+            target: { kind: "rpe", min: 5, max: 9 },
+            intensity: "threshold",
+            cue: trail
+              ? "Relance en montée ou sur le plat, récupère en descente"
+              : "Varie l’effort, récupère quand tu veux",
+          },
+          step(context, "cooldown", warm.cooldownSeconds, "easy"),
+        ],
+        contingencies: [
+          "Si la FC ne redescend pas entre deux relances, finis le bloc en footing.",
+          "Jambes lourdes ou nuit courte : remplace par un footing facile de la même durée.",
+        ],
       });
     }
     case "marathon_pace": {

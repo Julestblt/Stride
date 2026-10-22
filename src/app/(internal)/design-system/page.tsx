@@ -109,6 +109,7 @@ const sessionTileKinds: SessionTileKind[] = [
   "tempo",
   "threshold",
   "intervals",
+  "fartlek",
   "hills",
   "race_specific",
   "strength",

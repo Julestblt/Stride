@@ -153,6 +153,25 @@ describe("watch request", () => {
     expect(held.workouts[1]).not.toHaveProperty("allow_simplified");
   });
 
+  it("sends a fartlek without asking to confirm its free effort block", () => {
+    const fartlek: PlanSession = {
+      ...session("s-fartlek", "2026-10-16"),
+      kind: "fartlek",
+    };
+    const request = buildWatchRequest({
+      planId,
+      sessions: [fartlek],
+      today,
+      rows: [],
+    });
+    expect(request.workouts).toEqual([
+      expect.objectContaining({
+        key: `${planId}:s-fartlek`,
+        allow_simplified: true,
+      }),
+    ]);
+  });
+
   it("widens the window to remove workouts that left the plan", () => {
     const request = buildWatchRequest({
       planId,

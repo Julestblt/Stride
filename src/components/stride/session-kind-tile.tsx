@@ -9,6 +9,7 @@ export type SessionTileKind =
   | "threshold"
   | "intervals"
   | "hills"
+  | "fartlek"
   | "race_specific"
   | "strength"
   | "mobility"
@@ -58,6 +59,9 @@ const glyphs: Record<SessionTileKind, React.ReactNode> = {
   intervals: (
     <path d="M1.5 11.5 H3.5 V4.5 H6 V11.5 H8 V4.5 H10.5 V11.5 H12.5 V4.5 H14.5" />
   ),
+  fartlek: (
+    <path d="M1.5 11.5 H3 V8 H4.5 V11.5 H6 V3.5 H9 V11.5 H10.5 V6.5 H12 V11.5 H14.5" />
+  ),
   tempo: <path d="M3 4 L7 8 L3 12 M8.5 4 L12.5 8 L8.5 12" />,
   race_specific: (
     <>
@@ -99,6 +103,7 @@ const tones: Record<SessionTileKind, Tone> = {
   tempo: "quality",
   threshold: "quality",
   intervals: "quality",
+  fartlek: "quality",
   race_specific: "quality",
   strength: "support",
   mobility: "support",

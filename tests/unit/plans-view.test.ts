@@ -11,7 +11,12 @@ import {
   formatTarget,
   formatWeekRange,
 } from "@/features/plans/view/format";
-import { sessionStats, stepViews } from "@/features/plans/view/plan-view";
+import {
+  chartSegments,
+  sessionBlocks,
+  sessionStats,
+  stepViews,
+} from "@/features/plans/view/plan-view";
 
 const targets = trainingTargets({
   today: "2026-10-14",
@@ -124,9 +129,40 @@ describe("sessions", () => {
       distance: expect.stringMatching(/^≈ \d+,\d km$/),
       intensityTime: { seconds: 1_440, value: "24’", label: "au seuil" },
       pace: "4:25–4:38",
+      effort: null,
       heartRate: "152–170",
       elevation: null,
       terrain: "Route",
     });
+  });
+
+  it("shows the fartlek block as a free effort without pace", () => {
+    const trail = { targets, terrain: "trail" as const };
+    const fartlek = placed(qualitySession(trail, "fartlek", 1));
+    expect(
+      stepViews(fartlek, intensityPaceRanges(targets)).map((step) => [
+        step.name,
+        step.duration,
+        step.target,
+        step.pace,
+      ]),
+    ).toEqual([
+      ["Échauffement", "15:00", "FC 114–132", "≈ 5:21–6:05/km"],
+      ["Bloc fartlek", "25:00", "Effort 5–9/10", "sans allure"],
+      ["Retour au calme", "10:00", "FC 114–132", "≈ 5:21–6:05/km"],
+    ]);
+    expect(sessionStats(fartlek, targets)).toMatchObject({
+      total: "50’",
+      intensityTime: { seconds: 1_500 },
+      effort: "5–9/10",
+      pace: null,
+    });
+    expect(chartSegments(fartlek).map((segment) => segment.free)).toEqual([
+      false,
+      true,
+      false,
+    ]);
+    expect(chartSegments(fartlek)[1].label).toBe("25’ au feeling");
+    expect(sessionBlocks(fartlek)[1]).toMatchObject({ free: true });
   });
 });

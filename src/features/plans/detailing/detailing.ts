@@ -59,8 +59,10 @@ export function qualityKinds(
   phase: Phase,
   template: PlanTemplate,
   access: string[],
+  week = 0,
 ): QualityKind[] {
   const trail = template.sport === "trail";
+  const alternate = week % 2 === 1;
   const hills: QualityKind =
     trail || access.includes("hills")
       ? "long_hills"
@@ -70,9 +72,11 @@ export function qualityKinds(
   switch (phase) {
     case "lead_in":
     case "base":
-      return [trail ? "short_hills" : "tempo"];
+      return [trail ? (alternate ? "fartlek" : "short_hills") : "tempo"];
     case "development":
-      return trail ? ["threshold", hills] : ["threshold", "vo2"];
+      return trail
+        ? ["threshold", hills]
+        : ["threshold", alternate ? "fartlek" : "vo2"];
     case "specific":
     case "taper":
       return [raceSpecificKind(template), "threshold"];
@@ -225,6 +229,7 @@ export function detailPlan(input: DetailingInput): PlanState {
       phase,
       template,
       availability.trainingAccess,
+      counter,
     ).slice(0, raceInWeek ? 1 : week.targets.qualitySessions);
     const qualityDates: string[] = [];
     const candidates = dates
@@ -255,7 +260,9 @@ export function detailPlan(input: DetailingInput): PlanState {
     qualityDates.forEach((date, index) => {
       const kind = kinds[index];
       const context =
-        kind === "short_hills" || kind === "long_hills" ? trail : road;
+        kind === "short_hills" || kind === "long_hills" || kind === "fartlek"
+          ? trail
+          : road;
       const session = fitQualitySession(
         context,
         kind,

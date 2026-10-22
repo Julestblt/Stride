@@ -88,6 +88,7 @@ const qualityKinds = new Set<PlanSession["kind"]>([
   "threshold",
   "intervals",
   "hills",
+  "fartlek",
   "race_specific",
 ]);
 

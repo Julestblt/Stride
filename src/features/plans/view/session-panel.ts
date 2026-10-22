@@ -100,6 +100,19 @@ export type PanelCompletion = {
 
 export type PanelCheckIn = { done: boolean };
 
+function surgeIdeas(session: PlanSession) {
+  const trail = session.sport === "trail" || session.terrain === "trail";
+  return [
+    "30” vif · trottine 1’",
+    trail
+      ? "1’ au seuil dans une montée · récupère en descente"
+      : "1’ au seuil · trottine 1’",
+    trail
+      ? "3’ soutenu sur un replat · trottine 2’"
+      : "3’ soutenu · trottine 2’",
+  ];
+}
+
 export type SessionPanel = {
   sessionKey: string;
   day: string;
@@ -121,6 +134,7 @@ export type SessionPanel = {
   structureLabel: string;
   steps: StepView[];
   contingencies: string[];
+  surgeIdeas: string[];
   completion: PanelCompletion | null;
   shoes: SessionShoesView | null;
 };
@@ -409,10 +423,15 @@ export function buildSessionPanel(
             key: "intensity",
             value: minutes(stats.intensityTime.seconds),
             label:
-              stats.intensityTime.label.charAt(0).toUpperCase() +
-              stats.intensityTime.label.slice(1),
+              session.kind === "fartlek"
+                ? "Bloc libre"
+                : stats.intensityTime.label.charAt(0).toUpperCase() +
+                  stats.intensityTime.label.slice(1),
           },
         ]
+      : []),
+    ...(stats.effort
+      ? [{ key: "effort", value: stats.effort, label: "Effort bloc" }]
       : []),
     ...(stats.pace
       ? [{ key: "pace", value: stats.pace, label: "Allure /km" }]
@@ -463,6 +482,7 @@ export function buildSessionPanel(
           .filter((step) => step.cue !== null)
           .map((step) => ({ ...step, target: "", pace: null })),
     contingencies: session.contingencies,
+    surgeIdeas: session.kind === "fartlek" ? surgeIdeas(session) : [],
     completion: match ? completion(input, session, match, paces) : null,
     shoes: input.shoes ?? null,
   };
