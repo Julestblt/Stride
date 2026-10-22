@@ -685,3 +685,117 @@ test("fitness period changes show loading before the server response", async ({
     page.getByTestId("data-activity-thread").filter({ visible: true }),
   ).toHaveCount(0);
 });
+
+const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
+
+async function withSlowReads<T>(match: string, run: () => Promise<T>) {
+  const endpoint = `http://127.0.0.1:${authPort}/__test__/rest-delay`;
+  await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ match, ms: 1_500 }),
+  });
+  try {
+    return await run();
+  } finally {
+    await fetch(`${endpoint}?match=${encodeURIComponent(match)}`, {
+      method: "DELETE",
+    });
+  }
+}
+
+async function expectRouteSkeleton(
+  page: Page,
+  label: string,
+  heading: { name: string; level: number },
+) {
+  const loading = page.getByRole("status", { name: label, exact: true });
+  await loading.waitFor({ state: "visible" });
+  const title = loading.getByRole("heading", heading);
+  await expect(title).toBeVisible();
+  expect(await title.locator('[data-slot="skeleton"]').count()).toBe(0);
+  await expectNoThreadWhile(page, loading);
+  await expect(loading).not.toBeVisible({ timeout: 15_000 });
+}
+
+test("progress tabs show the destination skeleton under the real tabs", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto("/progress/records");
+  await page.goto("/progress");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  const tabs = page
+    .getByRole("navigation", { name: "Sections de la progression" })
+    .filter({ visible: true });
+  await withSlowReads("/rest/v1/provider_activity_tracks?", async () => {
+    await tabs.getByRole("link", { name: "Records", exact: true }).click();
+    await expectRouteSkeleton(page, "Chargement des records", {
+      name: "Records",
+      level: 1,
+    });
+  });
+  await expect(page).toHaveURL("/progress/records");
+  await expect(
+    tabs.getByRole("link", { name: "Records", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+});
+
+for (const width of [1440, 390]) {
+  test(`entering a race shows the full race skeleton at ${width}px`, async ({
+    page,
+  }) => {
+    const race = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    await page.setViewportSize({ width, height: 900 });
+    await signIn(page);
+    await page.goto(`/races/${race}`);
+    await page.goto("/races");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Courses" }),
+    ).toBeVisible();
+    await withSlowReads(`&id=eq.${race}`, async () => {
+      await page.getByRole("link", { name: "Ouvrir la course" }).click();
+      const loading = page.getByRole("status", {
+        name: "Chargement de la course",
+        exact: true,
+      });
+      await loading.waitFor({ state: "visible" });
+      await expect(
+        width === 1440
+          ? page
+              .getByRole("navigation", { name: "Fil d’Ariane" })
+              .getByRole("link", { name: "Courses", exact: true })
+          : page.getByRole("link", { name: "Retour aux courses" }),
+      ).toBeVisible();
+      await page.screenshot({ path: `test-results/race-entry-${width}.png` });
+      await expectNoThreadWhile(page, loading);
+    });
+    await expect(
+      page.getByRole("heading", { level: 1, name: "EcoTrail Paris 120K" }),
+    ).toBeVisible({ timeout: 15_000 });
+  });
+}
+
+test("a settings page shows its skeleton with the real title", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await signIn(page);
+  await page.goto("/settings/profile");
+  await page.goto("/settings");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Réglages" }),
+  ).toBeVisible();
+  await withSlowReads("/rest/v1/athlete_profiles?select=*&", async () => {
+    await page
+      .getByRole("navigation", { name: "Réglages personnels" })
+      .getByRole("link", { name: "Profil" })
+      .click();
+    await expectRouteSkeleton(page, "Chargement du profil", {
+      name: "Profil",
+      level: 1,
+    });
+  });
+  await expect(page.getByRole("textbox", { name: "Prénom" })).toBeVisible();
+});

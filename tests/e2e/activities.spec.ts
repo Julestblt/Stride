@@ -10,6 +10,15 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL("/today");
 }
 
+async function expectNotFound(page: Page) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Page introuvable" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('meta[name="robots"][content*="noindex"]'),
+  ).not.toHaveCount(0);
+}
+
 test("signed-out athletes are sent to sign-in", async ({ page }) => {
   await page.goto("/activities");
   await expect(page).toHaveURL(/\/sign-in$/);
@@ -257,17 +266,15 @@ test("the full detail says when Garmin sent no laps and stays within 320px", asy
       .getByRole("table", { name: "Tours" })
       .evaluate((element) => element.scrollWidth <= element.clientWidth),
   ).toBe(true);
-  const response = await page.goto(
-    "/activities/cccccccc-cccc-4ccc-8ccc-cccccccccccc/details",
-  );
-  expect(response?.status()).toBe(404);
+  await page.goto("/activities/cccccccc-cccc-4ccc-8ccc-cccccccccccc/details");
+  await expectNotFound(page);
 });
 
 test("an unknown or foreign activity is not found", async ({ page }) => {
   await signIn(page);
   for (const id of ["not-an-id", "cccccccc-cccc-4ccc-8ccc-cccccccccccc"]) {
-    const response = await page.goto(`/activities/${id}`);
-    expect(response?.status()).toBe(404);
+    await page.goto(`/activities/${id}`);
+    await expectNotFound(page);
   }
 });
 

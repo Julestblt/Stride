@@ -64,6 +64,15 @@ function item(kind: string, body: Record<string, unknown>) {
   return { type: "item", item: { kind, at: at(), ...body } };
 }
 
+async function expectNotFound(page: Page) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Page introuvable" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('meta[name="robots"][content*="noindex"]'),
+  ).not.toHaveCount(0);
+}
+
 test("the conversations list, consult, question and Suivi at 1440", async ({
   page,
 }) => {
@@ -669,16 +678,16 @@ test("a reload keeps the list and the thread", async ({ page }) => {
   ).toBeEnabled();
 });
 
-test("another athlete's thread returns 404", async ({ page }) => {
+test("another athlete's thread is not found", async ({ page }) => {
   await signIn(page, "plan-review@example.com");
-  const response = await page.goto(`/coach/${kneeThread}`);
-  expect(response?.status()).toBe(404);
+  await page.goto(`/coach/${kneeThread}`);
+  await expectNotFound(page);
 });
 
 test("an untitled empty legacy session is never shown", async ({ page }) => {
   await signIn(page);
-  const response = await page.goto(`/coach/${spikeThread}`);
-  expect(response?.status()).toBe(404);
+  await page.goto(`/coach/${spikeThread}`);
+  await expectNotFound(page);
 });
 
 test("the Plan empty state asks the Coach for a plan", async ({ page }) => {
@@ -846,8 +855,8 @@ test("deleting a conversation asks for confirmation and refreshes the badge", as
   await expect(
     page.locator("li", { has: coachLink }).first(),
   ).not.toContainText("en attente");
-  const response = await page.goto(`/coach/${kneeThread}`);
-  expect(response?.status()).toBe(404);
+  await page.goto(`/coach/${kneeThread}`);
+  await expectNotFound(page);
 });
 
 test("the thread menu offers deletion on mobile", async ({ page }) => {
