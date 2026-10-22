@@ -1,4 +1,5 @@
 import type { PlanSession } from "../model/plan";
+import { isUntrackedSession } from "../model/volume";
 import { sessionFamily } from "./matching";
 
 export const matchStatuses = [
@@ -68,6 +69,7 @@ function count(
     if (sessionFamily(session) === null) continue;
     if (session.scheduledOn < from || session.scheduledOn > to) continue;
     const status = statuses.get(session.sessionKey);
+    if (isUntrackedSession(session) && !status) continue;
     if (session.scheduledOn > today) continue;
     if (session.scheduledOn === today && !status) continue;
     const done = status === "completed" || status === "partial";

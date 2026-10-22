@@ -83,6 +83,27 @@ export const thresholdSession = (): SessionContent => ({
   contingencies: ["Arrête après la 3e répétition si la FC dépasse la plage"],
 });
 
+export const supportSession = (
+  kind: "mobility" | "strength",
+  minutes: number,
+  cue: string | null = null,
+): SessionContent => ({
+  ...easyRun(minutes),
+  sport: "strength",
+  kind,
+  title: kind === "mobility" ? "Mobilité et marche" : "Renforcement",
+  purpose: "Détends les jambes.",
+  structure: [
+    {
+      type: "recovery",
+      end: { kind: "time", seconds: minutes * 60 },
+      target: { kind: "rpe", min: 1, max: 2 },
+      intensity: "recovery",
+      ...(cue ? { cue } : {}),
+    },
+  ],
+});
+
 const placed = (
   sessionKey: string,
   scheduledOn: string,

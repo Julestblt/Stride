@@ -1,5 +1,5 @@
 import { useSearchParams } from "next/navigation";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, InfoIcon } from "lucide-react";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { SheetTitle } from "@/components/ui/sheet";
@@ -228,6 +228,39 @@ function Steps({ panel }: { panel: SessionPanel }) {
   );
 }
 
+function Contents({ panel }: { panel: SessionPanel }) {
+  return (
+    <section aria-labelledby="panel-contents" className="flex flex-col">
+      <Dk id="panel-contents" className="pb-1 text-[9.5px]">
+        Contenu
+      </Dk>
+      <ol>
+        {panel.steps.map((step) => (
+          <li
+            key={step.key}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-t border-border py-2.75"
+          >
+            <span className="text-sm leading-normal">{step.cue}</span>
+            <span className="font-metric text-[17px] leading-[1.1] font-semibold tabular-nums">
+              {step.duration}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function Untracked() {
+  return (
+    <p className="flex items-start gap-2 text-[12.5px] leading-normal text-muted-foreground">
+      <InfoIcon aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+      Séance libre, sans suivi Garmin : elle ne compte ni comme faite ni comme
+      manquée.
+    </p>
+  );
+}
+
 function Contingencies({ items }: { items: string[] }) {
   return (
     <section
@@ -379,10 +412,22 @@ export function SessionPanelBody({
       ) : (
         <>
           {panel.proposal && <Proposal proposal={panel.proposal} />}
-          <Stats panel={panel} />
+          {panel.summary ? (
+            <p className="font-metric text-2xl leading-none font-semibold tabular-nums">
+              {panel.summary}
+            </p>
+          ) : (
+            <Stats panel={panel} />
+          )}
           {watch && <WatchStatusBlock copy={watch} pending={watchPending} />}
           {panel.segments.length > 0 && <Structure panel={panel} />}
-          {panel.steps.length > 0 && <Steps panel={panel} />}
+          {panel.steps.length > 0 &&
+            (panel.intensity ? (
+              <Steps panel={panel} />
+            ) : (
+              <Contents panel={panel} />
+            ))}
+          {panel.untracked && <Untracked />}
           {panel.contingencies.length > 0 && (
             <Contingencies items={panel.contingencies} />
           )}
