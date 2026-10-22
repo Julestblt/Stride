@@ -24,7 +24,7 @@ import { ActivityListPane } from "@/features/activities/components/activity-list
 import { useActivityListSnapshot } from "@/features/activities/components/activity-list-snapshot";
 import { useDataActivity } from "./provider";
 
-function LoadingScope({
+export function LoadingScope({
   label,
   children,
   className,
@@ -33,8 +33,8 @@ function LoadingScope({
   children: React.ReactNode;
   className?: string;
 }) {
-  const markLoading = useDataActivity()?.markLoading;
-  useEffect(() => markLoading?.(), [markLoading]);
+  const markSkeleton = useDataActivity()?.markSkeleton;
+  useEffect(() => markSkeleton?.(), [markSkeleton]);
   return (
     <div role="status" aria-label={label} className={className}>
       {children}

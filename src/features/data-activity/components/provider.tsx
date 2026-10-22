@@ -15,6 +15,7 @@ import {
   activityState,
   dataActivitySchema,
   freshCategories,
+  threadActive,
   threadDelay,
   type DataActivityObservation,
 } from "../model";
@@ -48,6 +49,7 @@ type ActivityContext = {
   fresh: GarminSyncCategory[];
   apply: () => void;
   markLoading: () => () => void;
+  markSkeleton: () => () => void;
   thread: boolean;
   sync: SyncRequestControl;
 };
@@ -72,6 +74,7 @@ export function DataActivityProvider({
   const [offline, setOffline] = useState(false);
   const [fresh, setFresh] = useState<GarminSyncCategory[]>([]);
   const [loads, setLoads] = useState(0);
+  const [skeletons, setSkeletons] = useState(0);
   const [thread, setThread] = useState(false);
   const [applying, startTransition] = useTransition();
   const [requested, setRequested] = useState<RequestedSync | null>(null);
@@ -109,6 +112,10 @@ export function DataActivityProvider({
   const markLoading = useCallback(() => {
     setLoads((count) => count + 1);
     return () => setLoads((count) => Math.max(0, count - 1));
+  }, []);
+  const markSkeleton = useCallback(() => {
+    setSkeletons((count) => count + 1);
+    return () => setSkeletons((count) => Math.max(0, count - 1));
   }, []);
   const apply = () => {
     if (offline) return;
@@ -241,8 +248,13 @@ export function DataActivityProvider({
     };
   }, [router]);
 
-  const active =
-    !offline && (state === "syncing" || loads > 0 || applying || pending);
+  const active = threadActive({
+    offline,
+    syncing: state === "syncing" || pending,
+    navigations: loads,
+    skeletons,
+    refreshing: applying,
+  });
   const visibleSince = useRef(0);
   useEffect(() => {
     if (offline) {
@@ -262,10 +274,10 @@ export function DataActivityProvider({
           setThread(false);
         }
       },
-      threadDelay(active, visibleSince.current, Date.now()),
+      threadDelay(active, visibleSince.current, Date.now(), skeletons > 0),
     );
     return () => clearTimeout(timer);
-  }, [active, offline]);
+  }, [active, offline, skeletons]);
   return (
     <Context.Provider
       value={{
@@ -274,6 +286,7 @@ export function DataActivityProvider({
         fresh,
         apply,
         markLoading,
+        markSkeleton,
         thread,
         sync: { pending, progress, availableAt, failure, request },
       }}

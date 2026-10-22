@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { DataActivityObservation } from "../../src/features/data-activity/model";
 
 const successAt = "2026-10-13T06:12:00Z";
@@ -380,6 +380,19 @@ async function holdNavigation(page: Page, path: string) {
   return { requested, release };
 }
 
+async function expectNoThreadWhile(
+  page: Page,
+  loading: Locator,
+  duration = 1_000,
+) {
+  const thread = page.getByTestId("data-activity-thread");
+  const end = Date.now() + duration;
+  while (Date.now() < end && (await loading.isVisible())) {
+    expect(await thread.count()).toBe(0);
+    await page.waitForTimeout(50);
+  }
+}
+
 async function expectHeaderThread(page: Page) {
   const thread = page
     .getByTestId("data-activity-thread")
@@ -424,7 +437,7 @@ for (const width of [1440, 390]) {
     });
     await expect(heading).toBeVisible();
     expect(await heading.locator('[data-slot="skeleton"]').count()).toBe(0);
-    await expectHeaderThread(page);
+    await expectNoThreadWhile(page, loading);
     const list = loading.locator(":scope > div > div").first();
     if (width === 1440) {
       expect(
@@ -472,7 +485,7 @@ for (const width of [1440, 390]) {
       exact: true,
     });
     await expect(loading).toBeVisible();
-    await expectHeaderThread(page);
+    await expectNoThreadWhile(page, loading, 800);
     const retainedList = loading.getByRole("region", {
       name: "Liste des activités",
       includeHidden: true,

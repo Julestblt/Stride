@@ -26,16 +26,33 @@ export type DataActivityState =
   | "complete"
   | "waiting";
 
+export const threadShowDelayMs = 300;
+export const threadMinimumMs = 600;
+export const threadMergeMs = 250;
+
 export function threadDelay(
   active: boolean,
   visibleSince: number,
   now: number,
+  replaced = false,
 ) {
-  return active
-    ? visibleSince
-      ? 0
-      : 300
-    : Math.max(0, 600 - (now - visibleSince));
+  if (active) return visibleSince ? 0 : threadShowDelayMs;
+  if (!visibleSince || replaced) return 0;
+  return Math.max(threadMergeMs, threadMinimumMs - (now - visibleSince));
+}
+
+export type ThreadSignals = {
+  offline: boolean;
+  syncing: boolean;
+  navigations: number;
+  skeletons: number;
+  refreshing: boolean;
+};
+
+export function threadActive(signals: ThreadSignals) {
+  if (signals.offline) return false;
+  if (signals.syncing || signals.refreshing) return true;
+  return signals.navigations > 0 && signals.skeletons === 0;
 }
 
 export function activityState(
