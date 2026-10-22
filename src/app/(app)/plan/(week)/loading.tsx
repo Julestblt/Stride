@@ -1,12 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingScope } from "@/features/data-activity/components/loading";
 import { PlanFrame } from "../_components/plan-frame";
 
 export default function Loading() {
   return (
     <PlanFrame crumbs={[{ label: "Plan" }]}>
-      <div
-        role="status"
-        aria-label="Chargement du plan"
+      <LoadingScope
+        label="Chargement du plan"
         className="flex flex-col gap-7 sm:gap-9"
       >
         <div aria-hidden="true" className="flex flex-col gap-3">
@@ -27,7 +27,7 @@ export default function Loading() {
             <Skeleton key={index} className="h-14 w-full" />
           ))}
         </div>
-      </div>
+      </LoadingScope>
     </PlanFrame>
   );
 }

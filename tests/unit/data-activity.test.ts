@@ -6,6 +6,7 @@ import {
   garminConnectionTone,
   dataActivitySchema,
   freshCategories,
+  threadActive,
   threadDelay,
   type DataActivityObservation,
 } from "@/features/data-activity/model";
@@ -38,7 +39,30 @@ describe("data activity", () => {
     expect(threadDelay(true, 0, 1_000)).toBe(300);
     expect(threadDelay(true, 1_300, 1_400)).toBe(0);
     expect(threadDelay(false, 1_300, 1_400)).toBe(500);
-    expect(threadDelay(false, 1_300, 2_000)).toBe(0);
+    expect(threadDelay(false, 0, 2_000)).toBe(0);
+  });
+  it("waits before hiding so back-to-back signals keep one thread", () => {
+    expect(threadDelay(false, 1_300, 2_000)).toBe(250);
+    expect(threadDelay(false, 1_300, 5_000)).toBe(250);
+  });
+  it("hides a navigation thread at once when a skeleton replaces it", () => {
+    expect(threadDelay(false, 1_300, 1_400, true)).toBe(0);
+    expect(threadDelay(true, 1_300, 1_400, true)).toBe(0);
+  });
+  it("lets a skeleton replace navigation feedback but not data activity", () => {
+    const idle = {
+      offline: false,
+      syncing: false,
+      navigations: 0,
+      skeletons: 0,
+      refreshing: false,
+    };
+    expect(threadActive({ ...idle, navigations: 1 })).toBe(true);
+    expect(threadActive({ ...idle, navigations: 1, skeletons: 1 })).toBe(false);
+    expect(threadActive({ ...idle, skeletons: 1 })).toBe(false);
+    expect(threadActive({ ...idle, syncing: true, skeletons: 1 })).toBe(true);
+    expect(threadActive({ ...idle, refreshing: true })).toBe(true);
+    expect(threadActive({ ...idle, offline: true, syncing: true })).toBe(false);
   });
   it("rejects malformed timestamps and missing categories", () => {
     expect(
