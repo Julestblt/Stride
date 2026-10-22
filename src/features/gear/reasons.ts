@@ -14,6 +14,7 @@ const kindLeads: Partial<Record<SessionNeed["kind"], string>> = {
   threshold: "Seuil",
   intervals: "Fractionné",
   hills: "Côtes",
+  fartlek: "Fartlek",
   race_specific: "Allure course",
   race: "Course",
 };
@@ -34,6 +35,7 @@ const kindFitParts: Partial<Record<SessionNeed["kind"], string>> = {
   threshold: "réactive pour le seuil",
   intervals: "réactive pour le fractionné",
   hills: "stable en côte",
+  fartlek: "polyvalente pour les relances",
   race_specific: "faite pour l’allure course",
   race: "faite pour le jour J",
 };

@@ -44,6 +44,7 @@ export const familyLabels: Record<SessionFamily, string> = {
   threshold: "Seuil",
   intervals: "Fractionné",
   hills: "Côtes",
+  fartlek: "Fartlek",
   race_specific: "Spécifique course",
   strength: "Renfo",
   mobility: "Mobilité",
@@ -665,6 +666,7 @@ const qualityFamilies = new Set<SessionFamily>([
   "threshold",
   "intervals",
   "hills",
+  "fartlek",
   "race_specific",
 ]);
 

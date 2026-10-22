@@ -171,7 +171,7 @@ const hardKinds = new Set([
   "race",
   "long",
 ]);
-const moderateKinds = new Set(["tempo", "hills"]);
+const moderateKinds = new Set(["tempo", "hills", "fartlek"]);
 const runningSports = new Set(["run", "trail"]);
 
 function parseDay(value: string) {

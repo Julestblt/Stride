@@ -92,6 +92,7 @@ const kindFit: Partial<Record<SessionKind, Record<ShoeCategory, number>>> = {
   threshold: { tempo: 3, race: 2, daily: 1, recovery: 0 },
   intervals: { tempo: 3, race: 2, daily: 1, recovery: 0 },
   hills: { daily: 2, tempo: 2, recovery: 1, race: 0 },
+  fartlek: { daily: 3, tempo: 2, recovery: 1, race: 0 },
   race_specific: { race: 3, tempo: 2, daily: 1, recovery: 0 },
   race: { race: 3, tempo: 2, daily: 1, recovery: 0 },
 };

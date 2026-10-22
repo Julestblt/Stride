@@ -35,6 +35,7 @@ export const sessionKinds = [
   "threshold",
   "intervals",
   "hills",
+  "fartlek",
   "race_specific",
   "race",
   "strength",

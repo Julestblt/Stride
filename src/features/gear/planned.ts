@@ -78,6 +78,7 @@ const kindNames: Partial<Record<PlanSession["kind"], string>> = {
   threshold: "seuil",
   intervals: "fractionné",
   hills: "côtes",
+  fartlek: "fartlek",
   race_specific: "allure course",
   race: "course",
 };
