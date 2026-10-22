@@ -24,6 +24,7 @@ import {
   shellAthlete,
   shellProfileDetail,
   shellGoal,
+  shellRaces,
   syncLabel,
 } from "../../src/features/app-shell/shell";
 
@@ -218,6 +219,20 @@ describe("activity periods", () => {
 });
 
 describe("application shell", () => {
+  it("lists upcoming races by date and drops the ones already run", () => {
+    expect(
+      shellRaces(
+        [
+          { id: "undated", name: "Undated", priority: "C", date: null },
+          { id: "past", name: "Old race", priority: "A", date: "2026-10-06" },
+          { id: "later", name: "Ecotrail", priority: "A", date: "2027-03-20" },
+          { id: "today", name: "Race day", priority: "B", date: today },
+        ],
+        today,
+      ).map(({ id }) => id),
+    ).toEqual(["today", "later", "undated"]);
+  });
+
   it("leads with the next priority race and counts the days to it", () => {
     expect(
       shellGoal(
