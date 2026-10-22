@@ -1688,8 +1688,12 @@ function selectRows(table, params) {
     return { rows: [], total: 0 };
   const ownerId = params.get("user_id");
   if (ownerId)
-    rows = rows.filter(
-      (row) => !row.user_id || `eq.${row.user_id}` === ownerId,
+    rows = rows.filter((row) =>
+      row.user_id
+        ? `eq.${row.user_id}` === ownerId
+        : table !== "provider_activities" ||
+          ownerId !== `eq.${planUser.id}` ||
+          Date.parse(row.started_at) < planDoneStart,
     );
   for (const [key, filter] of params) {
     if (filter.startsWith("gte."))
