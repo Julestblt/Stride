@@ -103,6 +103,7 @@ import { GallerySection, Specimen } from "./_components/specimen";
 
 const sessionTileKinds: SessionTileKind[] = [
   "easy",
+  "recovery",
   "long",
   "long_trail",
   "tempo",
