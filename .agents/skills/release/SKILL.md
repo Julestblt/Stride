@@ -28,7 +28,7 @@ Stop and report on the first failure. Do not merge around a failed check.
    git fetch origin main
    gh run list --branch main --workflow CI --limit 1 --json headSha,status,conclusion
    ```
-2. **Pre-production runs that commit.** The latest deployment of the pre-production Dokploy app `preprod` (`stride-preprod-fajqks`, on `stride-preprod.julez.cat`) is `done` for the `origin/main` commit. Use the Dokploy MCP tools when available; otherwise check that `https://stride-preprod.julez.cat/` answers.
+2. **Pre-production runs that commit.** The latest deployment of the pre-production Dokploy app `frontend` in environment `dev` (`stride-frontend-pqibcb`, on `stride-dev.julez.cat`) is `done` for the `origin/main` commit. Use the Dokploy MCP tools when available; otherwise check that `https://stride-dev.julez.cat/` answers.
 3. **Hosted migrations are applied.** Every file in `supabase/migrations` is applied on the shared hosted Supabase project (Supabase MCP `list_migrations`). A missing migration means both environments run code ahead of the schema: report it, since applying it is an owner approval checkpoint.
 4. **Migrations in this release stay compatible.** List them with `git diff --name-only <previous tag> origin/main -- supabase/migrations`. Flag any drop, rename or new constraint that the code of the previous tag still depends on.
 5. **Shared Managed Agents.** If `managed-agents/` changed since the previous tag, confirm with the owner that `ant apply` already ran, since both environments use the same agents.
@@ -48,7 +48,7 @@ gh run list --branch main --workflow Release --limit 1 --json status,conclusion,
 gh release view v<version> --json tagName,url
 ```
 
-The production Dokploy app `frontend` (`stride-frontend-1yf71m`, on `stride.julez.cat`) deploys the new tag. Wait for its deployment to finish `done`, then check that `https://stride.julez.cat/` answers.
+The production Dokploy app `frontend` in environment `production` (`stride-frontend-1yf71m`, on `stride.julez.cat`) deploys the new tag. Wait for its deployment to finish `done`, then check that `https://stride.julez.cat/` answers.
 
 ## 4. Report
 

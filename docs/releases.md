@@ -4,10 +4,10 @@ Stride ships with a GitLab-flow style model: `main` is pre-production and releas
 
 ## Environments
 
-| Environment    | Dokploy app (project `stride`)        | URL                                | Deploys                             |
-| -------------- | ------------------------------------- | ---------------------------------- | ----------------------------------- |
-| Pre-production | `preprod` (`stride-preprod-fajqks`)   | `https://stride-preprod.julez.cat` | Every push to `main`                |
-| Production     | `frontend` (`stride-frontend-1yf71m`) | `https://stride.julez.cat`         | Every `vX.Y.Z` tag pushed to GitHub |
+| Environment    | Dokploy app (project `stride`)                                    | URL                            | Deploys                             |
+| -------------- | ----------------------------------------------------------------- | ------------------------------ | ----------------------------------- |
+| Pre-production | `frontend` in environment `dev` (`stride-frontend-pqibcb`)        | `https://stride-dev.julez.cat` | Every push to `main`                |
+| Production     | `frontend` in environment `production` (`stride-frontend-1yf71m`) | `https://stride.julez.cat`     | Every `vX.Y.Z` tag pushed to GitHub |
 
 Both apps build the same `Dockerfile`. Each has its own runtime environment, including `SITE_URL`, and both share one hosted Supabase project, one garmin_mcp service and the same Managed Agents. Supabase Auth must list both URLs as redirect URLs.
 
@@ -44,5 +44,6 @@ Fix forward: revert or fix on `main`, check it in pre-production and ship a patc
 ## Setup
 
 - The production app's trigger type is `tag`; the pre-production app follows `main` with trigger type `push`.
-- Pre-production needs its own copy of the production build arguments and environment, with `SITE_URL=https://stride-preprod.julez.cat`.
+- Pre-production needs its own copy of the production build arguments and environment, with `SITE_URL=https://stride-dev.julez.cat`.
+- Both hosts go through the server's locally managed Cloudflare Tunnel: each needs a proxied `CNAME` to the tunnel and an ingress rule in `/etc/cloudflared/config.yml` that forwards to Traefik with its own `httpHostHeader`. Keep hosts first-level (`stride-dev`, not `dev.stride`) so Cloudflare's universal certificate covers them.
 - GitHub Actions must be allowed to create pull requests (repository settings, Actions, Workflow permissions) so release-please can open the release pull request.
