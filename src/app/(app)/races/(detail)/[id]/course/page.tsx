@@ -1,4 +1,5 @@
 import { CourseImport } from "@/features/races/components/course-import";
+import { requireAthlete } from "@/server/app/session";
 import { listCourseActivities } from "@/server/races/activities";
 import { loadRace } from "@/server/races/load";
 
@@ -8,8 +9,10 @@ export default async function RaceCourseImportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { context, data } = await loadRace(id);
-  const activities = await listCourseActivities(context);
+  const [{ data }, activities] = await Promise.all([
+    loadRace(id),
+    requireAthlete().then((context) => listCourseActivities(context)),
+  ]);
   return (
     <CourseImport
       race={data.race}

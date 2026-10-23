@@ -88,6 +88,8 @@ export const goalRowSchema = z.object({
   revision: z.number().int().positive(),
   updated_at: z.string(),
 });
+export const raceColumns =
+  "id, user_id, name, race_kind, race_date, distance_km, elevation_gain_m, priority, target_duration_seconds, revision, updated_at";
 export const raceRowSchema = z.object({
   id: z.uuid(),
   user_id: z.uuid(),

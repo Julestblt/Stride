@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  profileColumns,
   profileRowSchema,
   profileSaveSchema,
   profileValues,
@@ -8,12 +9,15 @@ import {
 } from "@/features/onboarding/profile";
 import type { OnboardingContext } from "./context";
 
+export const athleteProfileColumns =
+  `${profileColumns}, coach_face, medical_face, director_face, strategist_face, nutritionist_face, running_max_heart_rate_override, threshold_heart_rate_override, threshold_heart_rate_source, profile_photo_path` as const;
+
 export async function readProfile(
   context: OnboardingContext,
 ): Promise<ProfileSnapshot & { updatedAt: string | null }> {
   const { data, error } = await context.client
     .from("athlete_profiles")
-    .select("*")
+    .select(athleteProfileColumns)
     .eq("user_id", context.userId)
     .maybeSingle();
   if (error) throw new Error("Unable to read athlete profile");
@@ -60,14 +64,14 @@ export async function saveProfile(
               ...parsed.data.values,
               value_sources,
             })
-            .select("*")
+            .select(profileColumns)
             .maybeSingle()
         : await context.client
             .from("athlete_profiles")
             .update({ ...parsed.data.values, value_sources })
             .eq("user_id", context.userId)
             .eq("revision", current.revision)
-            .select("*")
+            .select(profileColumns)
             .maybeSingle();
     if (response.error) {
       if (response.error.code === "23505")

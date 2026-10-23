@@ -3,6 +3,7 @@ import {
   goalRowSchema,
   goalSaveSchema,
   maxRaces,
+  raceColumns,
   raceIdsSchema,
   raceRowSchema,
   raceSaveSchema,
@@ -46,7 +47,7 @@ async function readRace(
 ): Promise<RaceSnapshot | null> {
   const { data, error } = await context.client
     .from("athlete_races")
-    .select("*")
+    .select(raceColumns)
     .eq("user_id", context.userId)
     .eq("id", id)
     .maybeSingle();
@@ -61,7 +62,7 @@ export async function readGoals(
     readGoal(context),
     context.client
       .from("athlete_races")
-      .select("*")
+      .select(raceColumns)
       .eq("user_id", context.userId)
       .order("created_at", { ascending: true }),
   ]);
@@ -142,7 +143,7 @@ export async function saveRace(
       .eq("user_id", context.userId)
       .eq("id", parsed.data.id)
       .eq("revision", parsed.data.revision)
-      .select("*")
+      .select(raceColumns)
       .maybeSingle();
     if (response.error) return failure(response.error.code);
     if (response.data) {
@@ -178,7 +179,7 @@ export async function createRace(
     const response = await context.client
       .from("athlete_races")
       .insert({ user_id: context.userId, race_kind: "road" })
-      .select("*")
+      .select(raceColumns)
       .single();
     if (response.error) return failure(response.error.code);
     return {

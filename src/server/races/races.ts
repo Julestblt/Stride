@@ -1,6 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { raceRowSchema, withRaceCourse } from "@/features/onboarding/goals";
+import {
+  raceColumns,
+  raceRowSchema,
+  withRaceCourse,
+} from "@/features/onboarding/goals";
 import {
   checklistColumns,
   checklistRowSchema,
@@ -52,7 +56,7 @@ export const listRaces = cache(async (context: OnboardingContext) => {
   const [{ data, error }, courses] = await Promise.all([
     context.client
       .from("athlete_races")
-      .select("*")
+      .select(raceColumns)
       .eq("user_id", context.userId)
       .order("race_date", { ascending: true, nullsFirst: false }),
     readRaceCourses(context),
@@ -80,7 +84,7 @@ export const readWorkspace = cache(
     const [race, plan, course, waypoints, checklist] = await Promise.all([
       context.client
         .from("athlete_races")
-        .select("*")
+        .select(raceColumns)
         .eq("user_id", context.userId)
         .eq("id", raceId)
         .maybeSingle(),

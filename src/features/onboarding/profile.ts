@@ -94,6 +94,8 @@ const numeric = z
   .union([z.number(), z.string()])
   .nullable()
   .transform((value) => (value === null ? null : Number(value)));
+export const profileColumns =
+  "user_id, first_name, birth_date, sex, height_cm, weight_kg, primary_terrain, available_weekdays, long_run_day, weekday_session_minutes, training_access, value_sources, revision, updated_at";
 export const profileRowSchema = z.object({
   user_id: z.uuid(),
   first_name: z.string().nullable(),

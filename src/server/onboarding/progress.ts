@@ -1,5 +1,6 @@
 import "server-only";
 import {
+  progressColumns,
   progressSchema,
   type ProgressSnapshot,
 } from "@/features/onboarding/schemas";
@@ -9,7 +10,7 @@ export async function readProgress(
 ): Promise<ProgressSnapshot | null> {
   const { data, error } = await context.client
     .from("onboarding_progress")
-    .select("*")
+    .select(progressColumns)
     .eq("user_id", context.userId)
     .maybeSingle();
   if (error) throw new Error("Unable to read onboarding progress");
