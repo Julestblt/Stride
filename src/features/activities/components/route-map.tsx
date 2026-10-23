@@ -116,6 +116,7 @@ function RouteMapView({
   const canvas = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const hoverRef = useRef(onHover);
+  const viewRef = useRef(view);
   const [engine, setEngine] = useState<Engine>("loading");
   const [palette, setPalette] = useState<RoutePalette>(zoneHex);
   const [size, setSize] = useState(initialSize);
@@ -124,6 +125,10 @@ function RouteMapView({
   useEffect(() => {
     hoverRef.current = onHover;
   }, [onHover]);
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
+  const routeKey = useMemo(() => view.route.join(";"), [view.route]);
 
   const fallback = useMemo(() => projectFallback(view, size), [view, size]);
   const colors = useMemo(
@@ -156,6 +161,7 @@ function RouteMapView({
   }, []);
 
   useEffect(() => {
+    const view = viewRef.current;
     let disposed = false;
     let map: MapLibreMap | undefined;
     const markers: Marker[] = [];
@@ -328,7 +334,7 @@ function RouteMapView({
       map?.remove();
       mapRef.current = null;
     };
-  }, [view, theme]);
+  }, [routeKey, theme]);
 
   useEffect(() => {
     const map = mapRef.current;
