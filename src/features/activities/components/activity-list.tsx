@@ -89,6 +89,25 @@ export function ActivityList({
                   <Link
                     href={`/activities/${activity.id}${activitiesQuery(filter, limit, search)}`}
                     aria-current={selected && current ? "true" : undefined}
+                    onClick={
+                      selected
+                        ? (event) => {
+                            if (
+                              event.button !== 0 ||
+                              event.metaKey ||
+                              event.ctrlKey ||
+                              event.shiftKey ||
+                              event.altKey
+                            )
+                              return;
+                            if (
+                              current ||
+                              window.matchMedia("(min-width: 64rem)").matches
+                            )
+                              event.preventDefault();
+                          }
+                        : undefined
+                    }
                     className={cn(
                       "flex flex-col gap-1.5 border-b border-border-subtle px-5 py-3 transition-colors duration-150 ease-stride hover:bg-surface lg:px-3.5",
                       selected &&
