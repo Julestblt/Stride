@@ -94,6 +94,11 @@ describe("races overview", () => {
       checklist: [],
     });
     expect(rows.map((row) => row.key)).toEqual(["course", "target", "start"]);
+    expect(rows.map((row) => row.href)).toEqual([
+      "/races/race/course",
+      null,
+      null,
+    ]);
   });
 
   it("cycles indicative phases toward each A race", () => {
