@@ -23,6 +23,13 @@ for (const viewport of [
     await expect(
       page.getByRole("heading", { level: 1, name: "Courses" }),
     ).toBeVisible();
+    for (const row of [/^Objectif de temps/, /^Heure de départ/]) {
+      await page.getByRole("button", { name: row }).click();
+      const dialog = page.getByRole("dialog", { name: "Modifier la course" });
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+    }
     await page.getByRole("link", { name: "Ouvrir la course" }).click();
     await expect(page).toHaveURL(
       /\/races\/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb$/,

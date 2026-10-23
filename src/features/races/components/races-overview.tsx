@@ -24,6 +24,7 @@ import {
   type RaceSummary,
   type StoredCourse,
 } from "../race";
+import { RaceSettingsDialog } from "./race-settings-dialog";
 import { EmptyState, Figure, RaceCard } from "./race-ui";
 
 export function PriorityBadge({
@@ -418,13 +419,11 @@ export function FeaturedRace({
           />
         </div>
         <ul className="flex flex-col">
-          {rows.map((row) => (
-            <li key={row.key} className="border-t border-border first:border-t">
-              <Link
-                href={row.href}
-                prefetch={false}
-                className="flex items-center gap-2.5 py-2 text-meta hover:text-accent focus-visible:outline-2 focus-visible:outline-ring"
-              >
+          {rows.map((row) => {
+            const className =
+              "flex w-full items-center gap-2.5 py-2 text-left text-meta hover:text-accent focus-visible:outline-2 focus-visible:outline-ring";
+            const content = (
+              <>
                 <span
                   aria-hidden="true"
                   className={cn(
@@ -437,9 +436,33 @@ export function FeaturedRace({
                   {row.detail}
                 </span>
                 <span className="sr-only">{rowStateLabels[row.state]}</span>
-              </Link>
-            </li>
-          ))}
+              </>
+            );
+            return (
+              <li
+                key={row.key}
+                className="border-t border-border first:border-t"
+              >
+                {row.href ? (
+                  <Link href={row.href} prefetch={false} className={className}>
+                    {content}
+                  </Link>
+                ) : (
+                  <RaceSettingsDialog
+                    raceId={race.id}
+                    raceRevision={race.revision}
+                    targetSeconds={race.targetSeconds}
+                    kind={race.kind}
+                    plan={plan}
+                  >
+                    <button type="button" className={className}>
+                      {content}
+                    </button>
+                  </RaceSettingsDialog>
+                )}
+              </li>
+            );
+          })}
         </ul>
         {progress.next && (
           <p className="mt-auto flex items-start gap-2.5 rounded-card border border-border-subtle bg-surface px-3.5 py-3 text-meta leading-normal text-pretty text-muted">

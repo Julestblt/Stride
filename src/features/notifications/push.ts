@@ -54,6 +54,32 @@ export const pushCategoryCopy: Record<
   },
 };
 
+const pushSummaryLabels: Record<PushCategory, string> = {
+  session_reminder: "rappels",
+  plan_staff: "plan",
+  debrief: "débrief",
+  garmin_issues: "Garmin",
+};
+
+export function pushSummary({
+  configured,
+  devices,
+  preferences,
+}: {
+  configured: boolean;
+  devices: number;
+  preferences: PushPreferences;
+}) {
+  if (!configured) return "Dans l’app uniquement";
+  if (devices === 0) return "Push à activer";
+  const enabled = pushCategories
+    .filter((category) => preferences[category])
+    .map((category) => pushSummaryLabels[category])
+    .join(", ");
+  if (!enabled) return "Push coupé";
+  return enabled.charAt(0).toUpperCase() + enabled.slice(1);
+}
+
 export const pushCategoryOf: Partial<Record<NotificationKind, PushCategory>> = {
   plan_proposal: "plan_staff",
   staff_reply: "plan_staff",

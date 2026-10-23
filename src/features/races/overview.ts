@@ -209,7 +209,7 @@ export type PreparationRow = {
   label: string;
   detail: string;
   state: "done" | "partial" | "todo";
-  href: string;
+  href: string | null;
 };
 
 type OverviewInput = {
@@ -258,14 +258,14 @@ export function preparationRows({
         ? formatDuration(race.targetSeconds)
         : "à définir",
       state: race.targetSeconds ? "done" : "todo",
-      href: base,
+      href: null,
     },
     {
       key: "start",
       label: "Heure de départ",
       detail: plan.startConfirmed ? "confirmée" : "à confirmer",
       state: plan.startConfirmed ? "done" : "todo",
-      href: base,
+      href: null,
     },
   );
   if (trail) {

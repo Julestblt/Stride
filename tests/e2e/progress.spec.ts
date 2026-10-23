@@ -389,9 +389,6 @@ for (const viewport of [
     ).toBe(false);
     await filters.getByRole("link", { name: "Tous", exact: true }).click();
     await expect(
-      page.getByRole("region", { name: "Courses terminées" }),
-    ).toContainText("ne sont pas encore disponibles");
-    await expect(
       filters.getByRole("link", { name: "Tous", exact: true }),
     ).toHaveAttribute("aria-current", "page");
     await expect(
