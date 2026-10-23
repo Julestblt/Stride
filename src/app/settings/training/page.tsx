@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import {
   PreferenceRow,
   PreferenceSection,
-  PreviewNotificationRow,
   PreviewSegments,
   PreviewSwitch,
   SegmentedField,
@@ -24,6 +23,8 @@ import {
 import { localToday } from "@/features/plans/constraints";
 import { currentPeriods } from "@/features/settings/planning";
 import { readPlanningConstraints } from "@/server/plans/constraints";
+import { PushSettings } from "@/features/notifications/components/push-settings";
+import { readPushSettings } from "@/server/push/preferences";
 
 const weekdays = [
   { value: 1, short: "L", label: "Lundi" },
@@ -40,32 +41,16 @@ const access = [
   { value: "gym", label: "Salle" },
   { value: "track", label: "Piste" },
 ];
-const notifications = [
-  { label: "Rappel de séance", hint: "Le matin d’une séance, 07:00" },
-  {
-    label: "Un changement du plan t’attend",
-    hint: "Quand une proposition est en attente",
-  },
-  {
-    label: "Alertes de récupération",
-    hint: "Deux nuits de VFC basse d’affilée, FC au repos inhabituelle",
-  },
-  {
-    label: "Préparation de course",
-    hint: "Séances clés, check du matériel, début de l’affûtage",
-  },
-  { label: "Bilan hebdo", hint: "Dimanche soir" },
-];
-
 export default async function TrainingSettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const [profile, planning] = await Promise.all([
+  const [profile, planning, push] = await Promise.all([
     readProfile(context),
     readPlanningConstraints(context),
+    readPushSettings(context),
   ]);
   const values = profile.values;
   return (
@@ -248,15 +233,11 @@ export default async function TrainingSettingsPage({
           </div>
         </PreferenceRow>
       </PreferenceSection>
-      <PreferenceSection
-        id="notifications"
-        title="Notifications"
-        badge="Bientôt"
-      >
-        {notifications.map((item) => (
-          <PreviewNotificationRow key={item.label} {...item} />
-        ))}
-      </PreferenceSection>
+      <PushSettings
+        publicKey={push.publicKey}
+        preferences={push.preferences}
+        endpoints={push.endpoints}
+      />
     </div>
   );
 }

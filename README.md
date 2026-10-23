@@ -23,7 +23,7 @@ The sign-in page runs without external credentials. Copy `.env.example` to `.env
 
 ## Docker
 
-The `Dockerfile` builds a production image that serves the app with `next start` on port 3000. Public Supabase values are inlined into the browser bundle at build time, so pass them as build arguments. Provide server-only values (`SITE_URL`, `GARMIN_API_URL`, `ANTHROPIC_API_KEY`, and the others in `.env.example`) as runtime environment variables.
+The `Dockerfile` builds a production image that serves the app with `next start` on port 3000. Public Supabase values are inlined into the browser bundle at build time, so pass them as build arguments. Provide server-only values (`SITE_URL`, `GARMIN_API_URL`, `ANTHROPIC_API_KEY`, the push values `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` and `PUSH_DISPATCH_SECRET`, and the others in `.env.example`) as runtime environment variables. Push notifications stay disabled until the four push values are set and the Vault secrets `push_dispatch_url` (the production `/api/push/dispatch` URL) and `push_dispatch_secret` exist on the hosted database; see [ADR 0014](docs/adr/0014-postgres-scheduled-push-delivery.md).
 
 Dokploy deploys `main` to pre-production and release tags to production. See [releases](docs/releases.md).
 

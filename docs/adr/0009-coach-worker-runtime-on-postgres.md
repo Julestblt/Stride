@@ -1,6 +1,6 @@
 # ADR 0009: A coach worker on Supabase Postgres runs agent workflows
 
-- Status: Accepted (2026-10-13, #94), amended by the Managed Agents spike (2026-10-15, #128); the `stride-coach-worker` service is removed by the 2026-10-18 amendment (#193)
+- Status: Accepted (2026-10-13, #94), amended by the Managed Agents spike (2026-10-15, #128); the `stride-coach-worker` service is removed by the 2026-10-18 amendment (#193); scheduled push delivery runs in Postgres per [ADR 0014](0014-postgres-scheduled-push-delivery.md) (#284)
 - Date: 2026-10-13
 - RFC: [agentic coaching engine](../architecture/coaching-engine/README.md) (#86)
 

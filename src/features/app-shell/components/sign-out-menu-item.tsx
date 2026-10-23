@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { releasePushSubscription } from "@/features/notifications/components/release-push";
 import { clearOnboardingCaches } from "@/features/onboarding/components/use-autosave";
 import { signOut } from "@/server/auth/actions";
 import { AccountMenuSignOutIcon } from "./account-menu-icons";
@@ -17,6 +18,7 @@ export function SignOutMenuItem() {
         event.preventDefault();
         clearOnboardingCaches();
         startTransition(async () => {
+          await releasePushSubscription();
           const result = await signOut();
           if (result.error)
             toast.error("Déconnexion impossible. Réessaie.", {

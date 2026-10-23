@@ -68,6 +68,11 @@ export default defineConfig({
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "isolated-test-publishable-key",
         SITE_URL: `http://127.0.0.1:${appPort}`,
         GARMIN_API_URL: `http://127.0.0.1:${garminPort}`,
+        VAPID_PUBLIC_KEY:
+          "BAt0x6yzV4LsXyG2_4FQC-TKf7nOrbxaTZQok5sJcH_yuCJvLryKisTzmSpx-mdXZgO7HgNK_oaA8dOawZ5XJ0c",
+        VAPID_PRIVATE_KEY: "e2e-unused",
+        VAPID_SUBJECT: "mailto:e2e@example.com",
+        PUSH_DISPATCH_SECRET: "e2e-dispatch-secret-never-used-for-delivery",
       },
     },
   ],

@@ -106,7 +106,8 @@ These requirements are accepted. Phase 1 of the coaching engine delivers them de
 - V1 includes an in-app notification center: a bell with the unread count in every application header, a desktop panel and a `/notifications` history of the last 30 days filtered by Toutes, À traiter, Staff and Données.
 - The first sources are plan proposals ready for review and staff replies or questions in Coach threads. Database triggers on the existing plan and coach tables create and resolve notifications, so every call site is covered and the athlete's own decisions resolve a notification instead of creating one.
 - Garmin sources follow: fresh running activities, connection problems, watch send failures and shoe questions. Stride detects them when the athlete opens the app, without changing the Garmin service.
-- Push and email delivery, notification preferences and a realtime badge are out of scope for V1.
+- Stride is installable as a web app. Each device can enable Web Push from Réglages, with four switches per athlete: Séance du jour (07:00 in the plan time zone), Plan et staff, Débrief prêt and Problèmes Garmin. Shoe questions are not pushed. On iPhone, push requires the app on the home screen (#284).
+- Email delivery, a configurable reminder time and a realtime badge are out of scope for V1.
 
 ### Future capabilities
 
@@ -149,7 +150,7 @@ Do not optimize for recommendation acceptance alone; an informed decline can be 
 
 ## Out of scope
 
-- Native apps, billing, push and email notifications, social features, and coach/team accounts
+- Native apps, billing, email notifications, social features, and coach/team accounts
 - Medical diagnoses or treatment plans
 - Unreviewed automated changes to a training plan
 - An exhaustive specialist-agent catalog

@@ -26,6 +26,7 @@ ENV HOSTNAME=0.0.0.0
 COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/package.json /app/next.config.ts ./
 COPY --from=build --chown=node:node /app/.next ./.next
+COPY --from=build --chown=node:node /app/public ./public
 USER node
 EXPOSE 3000
 CMD ["node_modules/.bin/next", "start"]
