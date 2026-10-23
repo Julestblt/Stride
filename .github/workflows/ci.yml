@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       documentation_only: ${{ steps.scope.outputs.documentation_only }}
+      migrations: ${{ steps.scope.outputs.migrations }}
+      browser: ${{ steps.scope.outputs.browser }}
+      browser_matrix: ${{ steps.scope.outputs.browser_matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,8 +32,8 @@ jobs:
         run: node scripts/ci-scope.ts
         env:
           CI_EVENT_NAME: ${{ github.event_name }}
-          CI_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
   quality:
     needs: scope
@@ -50,32 +53,14 @@ jobs:
 
   browser:
     needs: scope
-    if: needs.scope.outputs.documentation_only != 'true'
+    if: needs.scope.outputs.browser == 'true'
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - lane: main-1
-            project: chromium
-            shard: 1/3
-            production: "true"
-          - lane: main-2
-            project: chromium
-            shard: 2/3
-            production: "true"
-          - lane: main-3
-            project: chromium
-            shard: 3/3
-            production: "true"
-          - lane: course
-            project: chromium-race-course
-            shard: 1/1
-            production: "true"
-          - lane: development
-            project: chromium-development
-            shard: 1/1
-            production: "false"
+      matrix: ${{ fromJSON(needs.scope.outputs.browser_matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -83,8 +68,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e -- --project=${{ matrix.project }} --no-deps --shard=${{ matrix.shard }}
+      - run: npm run test:e2e -- --project=${{ matrix.project }} --no-deps --shard=${{ matrix.shard }} --pass-with-no-tests ${{ matrix.specs }}
         env:
           PLAYWRIGHT_PRODUCTION: ${{ matrix.production }}
       - uses: actions/upload-artifact@v4
@@ -102,7 +86,7 @@ jobs:
 
   database-onboarding:
     needs: scope
-    if: needs.scope.outputs.documentation_only != 'true'
+    if: needs.scope.outputs.migrations == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -158,13 +142,16 @@ jobs:
           node <<'NODE'
           const needs = JSON.parse(process.env.NEEDS);
           const scope = needs.scope;
-          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.documentation_only)) {
+          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.documentation_only) || !['true', 'false'].includes(scope.outputs.browser)) {
             throw new Error('CI scope did not complete successfully.');
           }
-          const expected = scope.outputs.documentation_only === 'true' ? 'skipped' : 'success';
-          for (const name of ['quality', 'browser']) {
-            if (needs[name].result !== expected) {
-              throw new Error(`${name} was ${needs[name].result}; expected ${expected}.`);
+          const expected = {
+            quality: scope.outputs.documentation_only === 'true' ? 'skipped' : 'success',
+            browser: scope.outputs.browser === 'true' ? 'success' : 'skipped',
+          };
+          for (const [name, result] of Object.entries(expected)) {
+            if (needs[name].result !== result) {
+              throw new Error(`${name} was ${needs[name].result}; expected ${result}.`);
             }
           }
           NODE
@@ -181,10 +168,10 @@ jobs:
           node <<'NODE'
           const needs = JSON.parse(process.env.NEEDS);
           const scope = needs.scope;
-          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.documentation_only)) {
+          if (scope.result !== 'success' || !['true', 'false'].includes(scope.outputs.migrations)) {
             throw new Error('CI scope did not complete successfully.');
           }
-          const expected = scope.outputs.documentation_only === 'true' ? 'skipped' : 'success';
+          const expected = scope.outputs.migrations === 'true' ? 'success' : 'skipped';
           if (needs['database-onboarding'].result !== expected) {
             throw new Error(`database-onboarding was ${needs['database-onboarding'].result}; expected ${expected}.`);
           }

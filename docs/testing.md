@@ -8,25 +8,41 @@
 - Cover database ownership, constraints and functions with pgTAP tests in `supabase/tests/database`, run with `npm run db:test` against the local Supabase stack. Every Stride table needs cross-athlete and anonymous access tests.
 - AI behavior will need curated evaluations for coaching quality, safety, and regression; no evaluation framework is included yet.
 
-Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` before a pull request when relevant. Locally, run only the Playwright specs the change touches, such as `npx playwright test tests/e2e/<area>.spec.ts --project=chromium`; CI runs the full browser and onboarding suites. CI retries a failed browser test once.
+Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build` before a pull request when relevant. Locally, run only the Playwright specs the change touches, such as `npx playwright test tests/e2e/<area>.spec.ts --project=chromium`. Pull requests run the browser specs selected from their changes, `main` runs the full browser suite, and onboarding runs only with migrations (see [CI design](ci.md)). CI retries a failed browser test once.
+
+### Reusing the app between local runs
+
+Each Playwright invocation otherwise builds or compiles the app before its first test. Keep one app running instead, and let Playwright start fresh auth and Garmin fixtures for every run:
+
+```bash
+PLAYWRIGHT_PRODUCTION=true npm run e2e:app
+```
+
+```bash
+PLAYWRIGHT_REUSE_APP=true npx playwright test tests/e2e/<area>.spec.ts --project=chromium
+```
+
+`e2e:app` starts the configured app server with the e2e environment on port 3100. With `PLAYWRIGHT_PRODUCTION=true` it builds once, so restart it after changing application code; without it, it runs `next dev` with hot reload. The fixtures keep their state in memory, so they are never reused between runs.
 
 ## Main browser suite
 
 `npm run test:e2e` still starts the development server locally. The `chromium` project covers ordinary application journeys; `chromium-development` covers the design-system gallery, remote development origin and data-activity API/loading journeys; `chromium-race-course` runs its serial fixture mutations after `chromium` by default. The serial settings suite remains intact when sharding.
 
-CI selects projects explicitly with `--no-deps`, so each runner has its own auth and Garmin fixtures and the course fixture cannot affect another project. The main project is split across three runners. The development project and course project each use a separate runner.
+CI selects projects explicitly with `--no-deps`, so each runner has its own auth and Garmin fixtures and the course fixture cannot affect another project. For the full suite, the main and development projects are each split across two runners and the course project uses its own runner; smaller selections use one runner per project. Spec membership of the development and course lanes, and the spec areas used for pull-request selection, live in `tests/e2e/lanes.json`, which both the Playwright config and CI scope read.
+
+Journeys sign in with `signInAs` from `tests/e2e/support/session.ts`. The first journey for each athlete in a worker uses the sign-in form; later journeys in that worker reuse its Supabase session cookies and open `/today`. Fixture sessions are static and logout does not revoke them, so reuse cannot leak a signed-out state. Keep the form in journeys whose subject is authentication.
 
 To exercise the isolated CI groups locally:
 
 ```bash
-PLAYWRIGHT_PRODUCTION=true npm run test:e2e -- --project=chromium --no-deps --shard=1/3
+PLAYWRIGHT_PRODUCTION=true npm run test:e2e -- --project=chromium --no-deps --shard=1/2
 PLAYWRIGHT_PRODUCTION=true npm run test:e2e -- --project=chromium-race-course --no-deps
 npm run test:e2e -- --project=chromium-development --no-deps
 ```
 
 Production selections build and start the app inside Playwright's server command with the same environment, including public Supabase values. Both commands receive `PLAYWRIGHT_TEST=1` and use the ignored `.next-e2e` directory, outside Playwright's `test-results` output directory, so the Turbopack development cache survives between local runs. Build outputs are neither shared between CI jobs nor cached. Main application journeys run on a production build in CI so routes never compile during a test; a plain local `npm run test:e2e` still uses `next dev` for every project. Keep the development project on `next dev`: the gallery is hidden in production, the origin test exercises development behavior, and authenticated data-activity API requests need loopback cookies that Playwright's API client omits when production marks them Secure.
 
-List projects and shards with `--list` to check selection without starting servers. The original 130 main tests are covered exactly once: 93 main tests (31/31/31), 35 development tests and two course tests. See [CI design and measurements](ci.md) for required-check behavior.
+List projects and shards with `--list` to check selection without starting servers. See [CI design and measurements](ci.md) for required-check behavior.
 
 ## Onboarding foundation
 

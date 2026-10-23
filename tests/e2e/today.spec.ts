@@ -1,13 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
-async function signIn(page: Page, email = "athlete@example.com") {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill(email);
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page, email = "athlete@example.com") {
+  return signInAs(page, email);
 }
 
 test("signed-out athletes are sent to sign-in", async ({ page }) => {

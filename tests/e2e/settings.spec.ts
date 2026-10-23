@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 test.describe.configure({ mode: "serial" });
 
@@ -16,14 +17,8 @@ async function expectTrainingNotice(page: Page, message: string) {
   await expect(page).toHaveURL("/settings/training");
 }
 
-async function signIn(page: Page, email = "athlete@example.com") {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill(email);
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page, email = "athlete@example.com") {
+  return signInAs(page, email);
 }
 
 test("keyboard help is searchable, platform-aware and available from the account menu", async ({

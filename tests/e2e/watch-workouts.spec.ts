@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 const garminUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_GARMIN_PORT ?? 3300}`;
 const authUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}`;
@@ -47,14 +48,8 @@ async function failWorkouts(fail: boolean) {
   });
 }
 
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("watch@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page) {
+  return signInAs(page, "watch@example.com");
 }
 
 async function sentWeek() {

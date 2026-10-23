@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 const ready = "eeeeeeee-eeee-4eee-8eee-700000000001";
@@ -18,16 +19,8 @@ async function resetProposals() {
 test.beforeAll(resetProposals);
 test.afterAll(resetProposals);
 
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page
-    .getByLabel("E-mail", { exact: true })
-    .fill("plan-review@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page) {
+  return signInAs(page, "plan-review@example.com");
 }
 
 test("Examiner opens the review of a ready proposal", async ({ page }) => {

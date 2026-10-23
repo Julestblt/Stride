@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 
@@ -13,14 +14,8 @@ async function resetNotifications() {
 test.beforeEach(resetNotifications);
 test.afterAll(resetNotifications);
 
-async function signIn(page: Page, email = "notifications@example.com") {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill(email);
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today", { timeout: 20_000 });
+function signIn(page: Page, email = "notifications@example.com") {
+  return signInAs(page, email);
 }
 
 test("the desktop bell opens the panel and marks everything read", async ({

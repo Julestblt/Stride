@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 const kneeThread = "c0c0c0c0-0000-4000-8000-000000000001";
@@ -36,14 +37,8 @@ async function coachTurn(update: {
 test.beforeAll(resetCoach);
 test.afterAll(resetCoach);
 
-async function signIn(page: Page, email = "coach@example.com") {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill(email);
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page, email = "coach@example.com") {
+  return signInAs(page, email);
 }
 
 const at = () => new Date().toISOString();

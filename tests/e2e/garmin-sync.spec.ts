@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 const garminUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_GARMIN_PORT ?? 3300}`;
 const syncUserId = "66666666-6666-4666-8666-666666666666";
@@ -14,14 +15,8 @@ async function connectGarmin() {
   expect(response.ok).toBe(true);
 }
 
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("sync@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page) {
+  return signInAs(page, "sync@example.com");
 }
 
 function dataStatus(page: Page) {
