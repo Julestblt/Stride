@@ -88,6 +88,11 @@ describe("data activity", () => {
     current.connection = "expired";
     expect(activityState(current, false, true)).toBe("reconnect");
   });
+  it("checks Garmin until the first observation or failure arrives", () => {
+    expect(activityState(null, false, false)).toBe("checking");
+    expect(activityState(null, false, true)).toBe("unavailable");
+    expect(activityState(null, true, false)).toBe("offline");
+  });
   it("ignores initial observations, poll timestamps and declining counts", () => {
     const before = observation();
     const after = observation();

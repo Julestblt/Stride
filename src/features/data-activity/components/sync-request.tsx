@@ -12,7 +12,10 @@ export function useSyncRequest() {
   const { state, sync } = activity;
   const running = sync.progress !== null || state === "syncing";
   const blocked =
-    state === "offline" || state === "reconnect" || state === "unavailable";
+    state === "checking" ||
+    state === "offline" ||
+    state === "reconnect" ||
+    state === "unavailable";
   return {
     ...sync,
     state,

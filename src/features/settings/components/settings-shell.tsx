@@ -87,10 +87,12 @@ export function SettingsShell({
                         {section.label}
                         {section.slug === "connections" && activity && (
                           <span className="ml-auto flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
-                            <PulseDot
-                              tone={activityTone(activity.state)}
-                              breathing={false}
-                            />
+                            {activity.state !== "checking" && (
+                              <PulseDot
+                                tone={activityTone(activity.state)}
+                                breathing={false}
+                              />
+                            )}
                             Garmin
                           </span>
                         )}
