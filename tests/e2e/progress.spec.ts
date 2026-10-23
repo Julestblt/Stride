@@ -138,7 +138,9 @@ test("athlete records how they feel today", async ({ page }) => {
       .getByRole("radiogroup", { name: "Jambes" })
       .getByRole("radio", { name: "Fraîches" }),
   ).toBeChecked();
-  await expect(page.getByText("Tu as noté des jambes fraîches.")).toBeVisible();
+  await expect(
+    page.getByText("Tu as noté des jambes fraîches.").filter({ visible: true }),
+  ).toBeVisible();
 });
 
 test("progress tabs switch between fitness and recovery", async ({ page }) => {
