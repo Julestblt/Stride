@@ -3,6 +3,7 @@ import { addDays, daysBetween, weekStart } from "./period";
 
 export type LoadWeek = { start: string; freshness: number };
 export type LoadMarker = { day: string; name: string };
+export type LoadRange = { from: string; to: string };
 
 export type LoadChart = {
   start: string;
@@ -14,7 +15,26 @@ export type LoadChart = {
   peak: { day: string; condition: number };
   gapToPeak: number;
   recentChange: number | null;
+  overload: LoadRange[];
+  overloadDays: number;
 };
+
+function overloadRanges(
+  points: { day: string; condition: number; fatigue: number }[],
+) {
+  const ranges: LoadRange[] = [];
+  let open: LoadRange | null = null;
+  for (const point of points) {
+    if (point.fatigue > point.condition) {
+      if (open) open.to = point.day;
+      else {
+        open = { from: point.day, to: point.day };
+        ranges.push(open);
+      }
+    } else open = null;
+  }
+  return ranges;
+}
 
 export const minimumLoadDays = 7;
 
@@ -73,5 +93,10 @@ export function buildLoadChart(
       daysBetween(reference.day, current.day) >= 10
         ? (current.condition - reference.condition) / reference.condition
         : null,
+    overload: overloadRanges(series),
+    overloadDays:
+      current.fatigue > current.condition
+        ? daysBetween(overloadRanges(series).at(-1)!.from, current.day) + 1
+        : 0,
   };
 }

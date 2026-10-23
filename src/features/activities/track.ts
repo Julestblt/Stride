@@ -49,6 +49,16 @@ const trackRowSchema = z.object({
   heart_rate_histogram: z.record(z.string(), z.number()).nullable(),
 });
 
+const histogramSchema = z.record(z.string(), z.number()).nullable();
+
+export function parseHeartRateHistogram(value: unknown): [number, number][] {
+  const parsed = histogramSchema.safeParse(value);
+  return Object.entries(parsed.success ? (parsed.data ?? {}) : {})
+    .map(([bpm, seconds]): [number, number] => [Number(bpm), seconds])
+    .filter(([bpm, seconds]) => Number.isFinite(bpm) && bpm > 0 && seconds > 0)
+    .sort((a, b) => a[0] - b[0]);
+}
+
 const earthRadiusMeters = 6_371_000;
 const minimumRunningSpeed = 0.8;
 
@@ -91,10 +101,7 @@ export function parseTrack(row: unknown): ActivityTrack | null {
       }
     }
   }
-  const histogram = Object.entries(heart_rate_histogram ?? {})
-    .map(([bpm, seconds]): [number, number] => [Number(bpm), seconds])
-    .filter(([bpm, seconds]) => Number.isFinite(bpm) && bpm > 0 && seconds > 0)
-    .sort((a, b) => a[0] - b[0]);
+  const histogram = parseHeartRateHistogram(heart_rate_histogram);
   const validatedRoute = z
     .array(
       z.tuple([z.number().min(-90).max(90), z.number().min(-180).max(180)]),

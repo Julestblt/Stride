@@ -1,3 +1,4 @@
+import { coachRequestHref } from "@/features/coach/request";
 import { shareLabel } from "@/features/insights/facts";
 import { isRunning, isTrailRun, type ProgressActivity } from "./history";
 import type { LoadChart } from "./load";
@@ -180,4 +181,51 @@ export function coachNote(measures: FitnessMeasures) {
   )
     return `À ${referenceHeartRate} bpm sur le plat, ton allure est passée de ${formatPace(efficiency.baseline)} à ${formatPace(efficiency.value)} /km depuis ${formatMonth(efficiency.since!)}.`;
   return null;
+}
+
+export type LoadAction = { label: string; href: string };
+
+export type LoadAdvice = { text: string; actions: LoadAction[] };
+
+export type LoadPlanContext = {
+  currentWeekStart: string;
+  nextLightWeekStart: string | null;
+  currentLight: boolean;
+} | null;
+
+export function loadAdvice(load: LoadChart, plan: LoadPlanContext): LoadAdvice {
+  const { current, overloadDays } = load;
+  if (overloadDays === 0 || current.condition <= 0)
+    return { text: loadNote(load), actions: [] };
+  const gap = Math.round((current.fatigue / current.condition - 1) * 100);
+  const since =
+    overloadDays === 1
+      ? "aujourd’hui"
+      : `depuis ${formatInteger(overloadDays)} jours`;
+  const planSentence = !plan
+    ? " Garde des séances faciles jusqu’à ce qu’elle repasse sous ta condition."
+    : plan.currentLight
+      ? " Ta semaine allégée tombe au bon moment."
+      : plan.nextLightWeekStart
+        ? ` Ton plan prévoit une semaine allégée à partir du ${formatDayMonth(plan.nextLightWeekStart)}.`
+        : " Ton plan ne prévoit pas de semaine allégée d’ici là.";
+  return {
+    text: `Fatigue ${formatInteger(gap)} % au-dessus de ta condition ${since}.${planSentence}`,
+    actions: [
+      ...(plan
+        ? [
+            {
+              label: "Voir la semaine",
+              href: `/plan?week=${plan.currentWeekStart}`,
+            },
+          ]
+        : []),
+      {
+        label: "Alléger ma semaine",
+        href: coachRequestHref(
+          `Ma fatigue dépasse ma condition de ${formatInteger(gap)} % ${since}. Peux-tu alléger ma semaine ?`,
+        ),
+      },
+    ],
+  };
 }
