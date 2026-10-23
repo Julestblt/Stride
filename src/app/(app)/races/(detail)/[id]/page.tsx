@@ -18,6 +18,7 @@ import {
 import { CourseImport } from "@/features/races/components/course-import";
 import { TargetMissing } from "@/features/races/components/target-missing";
 import { WalkCard } from "@/features/races/components/walk-card";
+import { requireAthlete } from "@/server/app/session";
 import { listRaces } from "@/server/races/races";
 import { loadRace } from "@/server/races/load";
 import { chartViews, planFor, weatherFor } from "@/server/races/views";
@@ -35,8 +36,10 @@ export default async function RaceCoursePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const { context, data } = await loadRace(id);
-  const races = await listRaces(context);
+  const [{ context, data }, races] = await Promise.all([
+    loadRace(id),
+    requireAthlete().then((context) => listRaces(context)),
+  ]);
   if (!data.course) {
     const activities = await listCourseActivities(context);
     return (
