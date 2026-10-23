@@ -85,18 +85,13 @@ async function readActivities(
   });
 }
 
-export async function loadHealthDay(
+export async function loadHealthStrip(
   context: OnboardingContext,
   day: string,
   today: string,
 ) {
   const stripEnd = day === today ? today : [addDays(day, 3), today].sort()[0];
-  const [current, previous, activities, days] = await Promise.all([
-    readWellness(context, day),
-    readWellness(context, addDays(day, -1)),
-    readActivities(context, day),
-    loadHealthDays(context, stripEnd),
-  ]);
+  const days = await loadHealthDays(context, stripEnd);
   const reference = healthModel({
     days: days.filter((item) => item.day <= day),
     view: "week",
@@ -116,9 +111,16 @@ export async function loadHealthDay(
             : ("success" as const),
     };
   });
+  return { reference, strip };
+}
+
+export async function loadHealthDay(context: OnboardingContext, day: string) {
+  const [current, previous, activities] = await Promise.all([
+    readWellness(context, day),
+    readWellness(context, addDays(day, -1)),
+    readActivities(context, day),
+  ]);
   return {
-    reference,
-    strip,
     failure: current.failure,
     model: current.day
       ? healthDayModel({

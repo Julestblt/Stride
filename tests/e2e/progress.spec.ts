@@ -262,6 +262,40 @@ test("health day navigation moves between days", async ({ page }) => {
   await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-10");
 });
 
+test("the health day shows the stored strip before the Garmin day arrives", async ({
+  page,
+}) => {
+  const garminUrl = `http://127.0.0.1:${process.env.PLAYWRIGHT_GARMIN_PORT ?? 3300}`;
+  const hold = (held: boolean) =>
+    fetch(`${garminUrl}/__test__/wellness`, {
+      method: "POST",
+      body: JSON.stringify({ day: "2026-10-07", hold: held }),
+    });
+  expect((await hold(true)).ok).toBe(true);
+  try {
+    await signIn(page);
+    await page.goto("/progress/health?view=day&date=2026-10-07", {
+      waitUntil: "commit",
+    });
+    await expect(
+      page
+        .getByRole("region", { name: "Choisir une journée" })
+        .getByText("mer. 7 oct.", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("status", { name: "Chargement de la journée" }),
+    ).toBeVisible();
+  } finally {
+    await hold(false);
+  }
+  await expect(
+    page.getByRole("status", { name: "Chargement de la journée" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Moments de la journée" }),
+  ).toBeVisible();
+});
+
 test("signed-out visitors cannot open Records", async ({ page }) => {
   await page.goto("/progress/records");
   await expect(page).toHaveURL(/\/sign-in$/);

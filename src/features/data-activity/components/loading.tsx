@@ -248,6 +248,29 @@ export function HealthLoading() {
   );
 }
 
+export function HealthDayLoading() {
+  return (
+    <LoadingScope
+      label="Chargement de la journée"
+      className="flex flex-col gap-6 sm:gap-8"
+    >
+      <div aria-hidden="true" className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => (
+          <Skeleton key={item} className="h-24 rounded-panel" />
+        ))}
+      </div>
+      <Skeleton className="h-72 w-full rounded-panel" />
+      <div
+        aria-hidden="true"
+        className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-8"
+      >
+        <Skeleton className="h-64 rounded-panel" />
+        <Skeleton className="h-64 rounded-panel" />
+      </div>
+    </LoadingScope>
+  );
+}
+
 export function RaceLoading() {
   return (
     <LoadingScope
