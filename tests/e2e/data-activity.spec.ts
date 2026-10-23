@@ -782,7 +782,7 @@ test("a settings page shows its skeleton with the real title", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Réglages" }),
   ).toBeVisible();
-  await withSlowReads("/rest/v1/athlete_profiles?select=*&", async () => {
+  await withSlowReads("/rest/v1/athlete_profiles?select=", async () => {
     await page
       .getByRole("navigation", { name: "Réglages personnels" })
       .getByRole("link", { name: "Profil" })
