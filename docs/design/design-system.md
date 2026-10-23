@@ -120,6 +120,14 @@ Motion explains state and hierarchy. Keep transitions restrained; reference timi
 
 Motion tokens: `ease-stride` (`cubic-bezier(0.4, 0, 0.2, 1)`), `animate-rise` (320ms rise 8px and fade for recommendations and findings), `animate-trace` (1.6s coach reading sweep), `animate-sheen` (1.8s import lane), and `animate-breathe` (2.4s sync dot). The sidebar collapses in 220ms. Apply looping animations with `motion-safe:` so reduced motion shows the static end state.
 
+## Errors and missing items
+
+Errors and missing items stay inside the app shell, following the board's `System · In-app error` and `System · In-app not found` artboards. The sidebar, header and mobile tab bar remain usable, and no technical detail reaches the athlete; server errors are still logged by Next.
+
+- `(app)/error.tsx` and `settings/error.tsx` render `RouteError` (`src/features/app-shell/components/route-state.tsx`): an `alert` with "Cette page n’a pas pu se charger.", a **Réessayer** button wired to the boundary's `retry()`, and a link back to Aujourd’hui. In `(app)`, the header names the current section from the URL.
+- `notFound()` resolves to the nearest segment `not-found.tsx`, which renders `RouteNotFound` with item-specific French copy from `missingItems` (`src/features/app-shell/route-state.ts`): activity (`activities/[id]`), race (`races/(detail)`, because the race layout calls `notFound()`), pair (`gear/[id]`), conversation (`coach/[thread]`), and a generic page fallback at `(app)/not-found.tsx`. Each offers its list and Aujourd’hui.
+- Outside the shell, `app/error.tsx` (for example when the app layout cannot read the athlete identity) and `app/global-error.tsx` (root layout failure) reuse the standalone 404 layout (`StandalonePage`) with the same error copy. `global-error` brings its own document, fonts, global styles and theme script. Unknown URLs still use the standalone root `not-found.tsx`.
+
 ## Responsive behavior
 
 Preserve information hierarchy from desktop to mobile. The references show a desktop contextual sidebar and inset work area; below `md`, the sidebar becomes a sheet and `AppShell` renders the mobile tab bar at the bottom of the inset, in flow: Aujourd’hui, Plan, the central Coach action with the pending-attention badge, Activités and Progression. The bar is hidden in conversations (`/coach/nouvelle`, `/coach/<thread>`), where the composer takes the bottom, and the fresh-data pill sits above it. Keep status and provenance visible at narrow widths. Each screen has desktop and mobile artboards on the [design board](design-board.md). Artboard HTML explains structure and exact values but must not be copied into production.

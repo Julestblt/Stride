@@ -7,8 +7,16 @@ function signIn(page: Page) {
 
 async function expectNotFound(page: Page) {
   await expect(
-    page.getByRole("heading", { level: 1, name: "Page introuvable" }),
+    page.getByRole("heading", { level: 1, name: "Activité introuvable" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Voir mes activités" }),
+  ).toHaveAttribute("href", "/activities");
+  await expect(
+    page
+      .getByRole("button", { name: "Afficher ou masquer la barre latérale" })
+      .filter({ visible: true }),
+  ).toHaveCount(1);
   await expect(
     page.locator('meta[name="robots"][content*="noindex"]'),
   ).not.toHaveCount(0);
@@ -774,4 +782,48 @@ test("mobile list and GPS preview fit 390 and 320 pixels", async ({ page }) => {
       path: `test-results/activities-preview-${width}.png`,
     });
   }
+});
+
+test("a failed activities read stays in the app and recovers on retry", async ({
+  page,
+}) => {
+  const endpoint = `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}/__test__/rest-failure`;
+  const match = "panne-fixture";
+  await signIn(page);
+  await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ match }),
+  });
+  try {
+    await page.goto("/activities?q=panne-fixture");
+    const alert = page.getByRole("alert").filter({
+      has: page.getByRole("heading", {
+        name: "Cette page n’a pas pu se charger.",
+      }),
+    });
+    await expect(alert).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Retour à Aujourd’hui" }),
+    ).toBeVisible();
+    await expect(
+      page
+        .locator("[data-sidebar=sidebar]")
+        .getByRole("link", { name: /Activités/ }),
+    ).toBeVisible();
+  } finally {
+    await fetch(`${endpoint}?match=${encodeURIComponent(match)}`, {
+      method: "DELETE",
+    });
+  }
+  await page.getByRole("button", { name: "Réessayer" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Cette page n’a pas pu se charger." }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByText("Aucune activité ne correspond à ce nom.")
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
 });
