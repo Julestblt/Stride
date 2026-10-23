@@ -19,11 +19,13 @@ export async function CoachPage({
   current,
   request = null,
   sessionKey = null,
+  text = null,
 }: {
   threadId?: string | null;
   current: boolean;
   request?: string | null;
   sessionKey?: string | null;
+  text?: string | null;
 }) {
   const context = await requireAthlete();
   const now = new Date();
@@ -45,7 +47,7 @@ export async function CoachPage({
       current={current}
       draft={{
         mode: plan ? "plan" : "conversation",
-        text: plan ? planRequest : "",
+        text: plan ? planRequest : (text ?? ""),
       }}
       now={now.toISOString()}
       timeZone={coachTimeZone}

@@ -8,29 +8,20 @@ import { summarizeHistory } from "@/features/plans/history/summary";
 import { addDays } from "@/features/plans/model/dates";
 import type { StoredPlan } from "@/server/plans/stored";
 import type { ProfileValues } from "@/features/onboarding/profile";
-import type { OnboardingContext } from "@/server/onboarding/context";
 import { readProfile } from "@/server/onboarding/profile";
 import { loadPlanningInput } from "@/server/plans/draft";
 import { readActivePlan } from "@/server/plans/stored";
 import { defineTool } from "./define";
 import { checkinSchema, readCheckins, type Checkin } from "./health-reports";
+import {
+  garminPredictions,
+  type PredictionRow,
+} from "@/features/progress/garmin-predictions";
+import { readPredictions } from "@/server/progress/predictions";
 
 export const contextHistoryWeeks = 8;
 export const contextCheckinDays = 7;
 export const contextPacketBudgetBytes = 4_096;
-
-const predictionMetrics = {
-  race_prediction_5k_seconds: "5k",
-  race_prediction_10k_seconds: "10k",
-  race_prediction_half_marathon_seconds: "half_marathon",
-  race_prediction_marathon_seconds: "marathon",
-} as const;
-
-export type PredictionRow = {
-  metric: string;
-  observed_on: string | null;
-  value_numeric: number | string | null;
-};
 
 const asOf = z.iso.date();
 const range = z.tuple([z.number(), z.number()]);
@@ -191,27 +182,18 @@ const minutes = (seconds: number) => Math.round(seconds / 60);
 const positive = (value: number | null | undefined) =>
   value !== null && value !== undefined && value > 0 ? value : null;
 
-function predictions(rows: PredictionRow[]) {
-  const entries = Object.entries(predictionMetrics).flatMap(([metric, key]) => {
-    const latest = rows.find(
-      (row) =>
-        row.metric === metric &&
-        row.observed_on !== null &&
-        Number(row.value_numeric) > 0,
-    );
-    return latest?.observed_on
-      ? [
-          [
-            key,
-            {
-              seconds: Math.round(Number(latest.value_numeric)),
-              source: "garmin" as const,
-              asOf: latest.observed_on,
-            },
-          ] as const,
-        ]
-      : [];
-  });
+function predictions(rows: PredictionRow[], today: string) {
+  const entries = garminPredictions(rows, today).map(
+    (prediction) =>
+      [
+        prediction.key,
+        {
+          seconds: prediction.seconds,
+          source: "garmin" as const,
+          asOf: prediction.asOf,
+        },
+      ] as const,
+  );
   return entries.length ? Object.fromEntries(entries) : null;
 }
 
@@ -251,7 +233,7 @@ export function buildAthleteContext({
             asOf: lactate.asOf,
           }
         : null,
-    racePredictions: predictions(predictionRows),
+    racePredictions: predictions(predictionRows, today),
   });
   const longest = history.longestRun30d;
   return present({
@@ -404,22 +386,6 @@ export function buildAthleteContext({
   }) as AthleteContext;
 }
 
-async function readPredictions(
-  context: OnboardingContext,
-): Promise<PredictionRow[]> {
-  const metrics = Object.keys(predictionMetrics);
-  const { data, error } = await context.client
-    .from("provider_observations")
-    .select("metric, observed_on, value_numeric")
-    .eq("user_id", context.userId)
-    .eq("availability", "available")
-    .in("metric", metrics)
-    .order("observed_on", { ascending: false })
-    .limit(metrics.length * 4);
-  if (error) throw new Error("Unable to read the race predictions");
-  return data ?? [];
-}
-
 export const readAthleteContextTool = defineTool({
   name: "read_athlete_context",
   description:
@@ -436,7 +402,7 @@ export const readAthleteContextTool = defineTool({
     ]);
     const [checkins, predictionRows] = await Promise.all([
       readCheckins(context, addDays(today, -contextCheckinDays)),
-      readPredictions(context),
+      readPredictions(context, today),
     ]);
     return buildAthleteContext({
       today,

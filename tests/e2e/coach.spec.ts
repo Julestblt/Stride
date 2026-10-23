@@ -699,6 +699,24 @@ test("the Plan empty state asks the Coach for a plan", async ({ page }) => {
   ).toHaveValue("Construis-moi un plan d’entraînement pour mon objectif.");
 });
 
+test("a prefilled request starts the composer with its text", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto(
+    `/coach/nouvelle?texte=${encodeURIComponent("Ma fatigue dépasse ma condition. Peux-tu alléger ma semaine ?")}`,
+  );
+  await expect(
+    page.getByRole("textbox", { name: "Écrire au staff" }),
+  ).toHaveValue(
+    "Ma fatigue dépasse ma condition. Peux-tu alléger ma semaine ?",
+  );
+  await page.goto(`/coach/nouvelle?texte=${"a".repeat(600)}`);
+  await expect(
+    page.getByRole("textbox", { name: "Écrire au staff" }),
+  ).toHaveValue("a".repeat(500));
+});
+
 test("mobile shows the list, the thread and the Suivi sheet at 390", async ({
   page,
 }) => {
