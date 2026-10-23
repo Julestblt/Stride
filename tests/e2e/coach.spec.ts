@@ -61,7 +61,7 @@ function item(kind: string, body: Record<string, unknown>) {
 
 async function expectNotFound(page: Page) {
   await expect(
-    page.getByRole("heading", { level: 1, name: "Page introuvable" }),
+    page.getByRole("heading", { level: 1, name: "Conversation introuvable" }),
   ).toBeVisible();
   await expect(
     page.locator('meta[name="robots"][content*="noindex"]'),

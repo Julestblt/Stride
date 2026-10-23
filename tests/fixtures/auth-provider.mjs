@@ -1930,6 +1930,7 @@ function selectRows(table, params) {
 const profileImages = new Map();
 const events = [];
 let restDelays = [];
+let restFailures = [];
 const links = new Map();
 const challenges = new Map();
 const requests = new Map();
@@ -2089,6 +2090,18 @@ createServer(async (request, response) => {
   if (url.pathname === "/__test__/rest-delay" && request.method === "POST") {
     restDelays.push({ match: String(body.match), ms: Number(body.ms) });
     return send(200, { delayed: restDelays.length });
+  }
+  if (url.pathname === "/__test__/rest-failure" && request.method === "POST") {
+    restFailures.push(String(body.match));
+    return send(200, { failing: restFailures.length });
+  }
+  if (
+    url.pathname === "/__test__/rest-failure" &&
+    request.method === "DELETE"
+  ) {
+    const match = url.searchParams.get("match");
+    restFailures = restFailures.filter((rule) => rule !== match);
+    return send(200, { failing: restFailures.length });
   }
   if (url.pathname === "/__test__/rest-delay" && request.method === "DELETE") {
     const match = url.searchParams.get("match");
@@ -2414,6 +2427,12 @@ createServer(async (request, response) => {
       `${url.pathname}${url.search}`.includes(rule.match),
     );
     if (delay) await new Promise((resolve) => setTimeout(resolve, delay.ms));
+    if (
+      restFailures.some((match) =>
+        `${url.pathname}${url.search}`.includes(match),
+      )
+    )
+      return send(500, { message: "Fixture failure" });
     if (
       url.pathname === "/rest/v1/provider_activities" &&
       url.searchParams.get("activity_name")?.includes("loading-fixture")
