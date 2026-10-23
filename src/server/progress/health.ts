@@ -1,11 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import {
-  healthDays,
-  healthMetrics,
-  healthModel,
-  type HealthView,
-} from "@/features/progress/health";
+import { healthDays, healthMetrics } from "@/features/progress/health";
 import { addDays } from "@/features/progress/period";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readAll } from "./history";
@@ -49,16 +44,4 @@ export async function loadHealthDays(
     ];
   });
   return healthDays(observations);
-}
-
-export async function loadHealth(
-  context: OnboardingContext,
-  today: string,
-  view: Exclude<HealthView, "day">,
-) {
-  return healthModel({
-    days: await loadHealthDays(context, today),
-    view,
-    today,
-  });
 }

@@ -12,6 +12,7 @@ import type {
   ReadinessSummary,
   TodaySession,
 } from "../body";
+import { lighterSessionHref, sessionHref } from "../body";
 import { formatInteger } from "../format";
 import type { HealthRange } from "../health";
 import type { RecoveryView } from "../recovery-view";
@@ -28,16 +29,13 @@ export function ReadinessCard({
   summary,
   advice,
   session,
-  lighterHref,
 }: {
   summary: ReadinessSummary | null;
   advice: ReadinessAdvice | null;
   session: TodaySession | null;
-  lighterHref: string | null;
 }) {
-  const sessionHref = session
-    ? `/plan?seance=${encodeURIComponent(session.sessionKey)}`
-    : null;
+  const planHref = session ? sessionHref(session) : null;
+  const lighterHref = session ? lighterSessionHref(session) : null;
   return (
     <section
       aria-labelledby="body-readiness"
@@ -97,9 +95,9 @@ export function ReadinessCard({
         </div>
       )}
       {advice &&
-        (session && sessionHref ? (
+        (session && planHref ? (
           <Link
-            href={sessionHref}
+            href={planHref}
             className="flex flex-col gap-1 rounded-surface border border-border p-3.5 transition-colors hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring"
           >
             <MonoLabel size="micro">Séance du jour</MonoLabel>
@@ -111,7 +109,7 @@ export function ReadinessCard({
         ) : (
           <p className="text-meta leading-normal text-muted">{advice.text}</p>
         ))}
-      {session && sessionHref && (
+      {session && planHref && (
         <div className="flex gap-2 [&>*]:flex-1">
           <Button
             asChild
@@ -119,7 +117,7 @@ export function ReadinessCard({
             size="md"
             className="max-sm:min-h-11"
           >
-            <Link href={sessionHref}>Voir la séance</Link>
+            <Link href={planHref}>Voir la séance</Link>
           </Button>
           {advice?.lighter && lighterHref && (
             <Button

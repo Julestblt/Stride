@@ -1,3 +1,4 @@
+import { coachRequestHref } from "@/features/coach/request";
 import { formatDecimal, formatInteger } from "./format";
 import { loadZone, type HealthDay, type HealthModel } from "./health";
 import { addDays } from "./period";
@@ -19,6 +20,17 @@ export type TodaySession = {
   title: string;
   hard: boolean;
 };
+
+export function sessionHref(session: TodaySession) {
+  return `/plan?seance=${encodeURIComponent(session.sessionKey)}`;
+}
+
+export function lighterSessionHref(session: TodaySession) {
+  return coachRequestHref(
+    `Ma forme du jour est sous ma moyenne. Propose-moi une version allégée de « ${session.title} ».`,
+    session.sessionKey,
+  );
+}
 
 export type ReadinessAdvice = {
   text: string;

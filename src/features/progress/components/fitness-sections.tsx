@@ -219,10 +219,7 @@ export function GoalCardView({ goal }: { goal: GoalCard | null }) {
             </span>
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground">
-            Pas de plan actif : la phase d’entraînement apparaîtra avec ton
-            plan.
-          </span>
+          <span className="text-xs text-muted-foreground">{goal.planNote}</span>
         )}
       </Link>
     </section>

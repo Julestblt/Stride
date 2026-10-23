@@ -1,7 +1,6 @@
 import type { LoadPoint, ProgressRace } from "./history";
-import { addDays, daysBetween, weekStart } from "./period";
+import { addDays, daysBetween } from "./period";
 
-export type LoadWeek = { start: string; freshness: number };
 export type LoadMarker = { day: string; name: string };
 export type LoadRange = { from: string; to: string };
 
@@ -9,7 +8,6 @@ export type LoadChart = {
   start: string;
   end: string;
   points: { day: string; condition: number; fatigue: number }[];
-  weeks: LoadWeek[];
   markers: LoadMarker[];
   current: { day: string; condition: number; fatigue: number };
   peak: { day: string; condition: number };
@@ -37,6 +35,7 @@ function overloadRanges(
 }
 
 export const minimumLoadDays = 7;
+export const maximumLoadAgeDays = 1;
 
 export function buildLoadChart(
   points: LoadPoint[],
@@ -53,14 +52,6 @@ export function buildLoadChart(
     condition: point.chronic,
     fatigue: point.acute,
   }));
-  const weeks = new Map<string, number[]>();
-  for (const point of series) {
-    const key = weekStart(point.day);
-    weeks.set(key, [
-      ...(weeks.get(key) ?? []),
-      point.condition - point.fatigue,
-    ]);
-  }
   const current = series.at(-1)!;
   const peak = series.reduce((best, point) =>
     point.condition > best.condition ? point : best,
@@ -73,10 +64,6 @@ export function buildLoadChart(
     start: series[0].day,
     end: current.day,
     points: series,
-    weeks: [...weeks.entries()].map(([weekStartDay, values]) => ({
-      start: weekStartDay,
-      freshness: values.reduce((sum, value) => sum + value, 0) / values.length,
-    })),
     markers: races
       .filter((race) => race.day >= series[0].day && race.day <= current.day)
       .sort((a, b) => a.day.localeCompare(b.day))
@@ -95,7 +82,8 @@ export function buildLoadChart(
         : null,
     overload: overloadRanges(series),
     overloadDays:
-      current.fatigue > current.condition
+      current.fatigue > current.condition &&
+      daysBetween(current.day, today) <= maximumLoadAgeDays
         ? daysBetween(overloadRanges(series).at(-1)!.from, current.day) + 1
         : 0,
   };

@@ -50,12 +50,8 @@ function headline(
   load: LoadChart | null,
   periodPhrase: string,
 ) {
-  const { efficiency, threshold } = measures;
-  if (efficiency.trend === "improving" && threshold.trend === "improving")
-    return "Ton endurance et ton seuil progressent ensemble.";
-  if (efficiency.trend === "improving")
-    return "Ton moteur progresse plus vite que ta vitesse de pointe.";
-  if (threshold.trend === "improving") return "Ton allure au seuil progresse.";
+  const { efficiency } = measures;
+  if (efficiency.trend === "improving") return "Ton endurance progresse.";
   if (efficiency.trend === "watch") return "Ton efficacité aérobie recule.";
   if (load && load.gapToPeak >= significantGap)
     return `Ta condition a reculé depuis son pic du ${formatDayMonth(load.peak.day)}.`;
@@ -85,8 +81,8 @@ export function fitnessReading({
   const volume = weeklyHours(activities, start, today);
   const hasMeasures = [
     measures.efficiency,
-    measures.threshold,
-    measures.vo2,
+    measures.climbing,
+    measures.drift,
   ].some((measure) => measure.value !== null);
   if (volume.count === 0 && !load && !hasMeasures)
     return {
@@ -104,7 +100,7 @@ export function fitnessReading({
       `${capitalize(periodPhrase)} à ${formatDecimal(volume.hours)} h d’entraînement par semaine en moyenne${trail}.`,
     );
   }
-  const { efficiency, threshold, referenceHeartRate } = measures;
+  const { efficiency, referenceHeartRate } = measures;
   if (
     efficiency.value !== null &&
     efficiency.baseline !== null &&
@@ -122,16 +118,6 @@ export function fitnessReading({
     else
       sentences.push(
         `Ton allure à ${referenceHeartRate} bpm sur le plat reste stable.`,
-      );
-  }
-  if (threshold.value !== null && threshold.baseline !== null) {
-    if (threshold.trend === "stable")
-      sentences.push(
-        `L’allure au seuil reste autour de ${formatPace(threshold.value)} /km.`,
-      );
-    else
-      sentences.push(
-        `L’allure au seuil passe de ${formatPace(threshold.baseline)} à ${formatPace(threshold.value)} /km.`,
       );
   }
   return {

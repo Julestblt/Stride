@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   bodyNights,
   checkinHistory,
+  lighterSessionHref,
   readinessAdvice,
   readinessFactors,
   readinessSummary,
+  sessionHref,
 } from "@/features/progress/body";
 import type { HealthDay } from "@/features/progress/health";
 import { addDays } from "@/features/progress/period";
@@ -191,5 +193,22 @@ describe("body history", () => {
     expect(nights.shortCount).toBe(2);
     expect(nights.nights.at(-1)?.short).toBe(true);
     expect(nights.summary).toBe("moy. 7h09 · score 80 · 2 nuits courtes");
+  });
+});
+
+describe("Corps actions", () => {
+  it("opens the session and asks the Coach for a lighter version", () => {
+    const session = {
+      sessionKey: "2026-10-14:seuil 1",
+      title: "Seuil",
+      hard: true,
+    };
+    expect(sessionHref(session)).toBe("/plan?seance=2026-10-14%3Aseuil%201");
+    const url = new URL(lighterSessionHref(session), "https://stride.test");
+    expect(url.pathname).toBe("/coach/nouvelle");
+    expect(url.searchParams.get("texte")).toBe(
+      "Ma forme du jour est sous ma moyenne. Propose-moi une version allégée de « Seuil ».",
+    );
+    expect(url.searchParams.get("seance")).toBe("2026-10-14:seuil 1");
   });
 });

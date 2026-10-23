@@ -260,7 +260,6 @@ describe("condition chart", () => {
     expect(chart.current.condition).toBe(357);
     expect(chart.gapToPeak).toBeCloseTo(38 / 395);
     expect(chart.markers).toEqual([{ day: "2026-09-13", name: "TCO 62K" }]);
-    expect(chart.weeks[0].start).toBe("2026-08-10");
     expect(loadNote(chart)).toMatch(/^Ta condition est 10 % sous son pic du/);
   });
 
@@ -297,6 +296,25 @@ describe("condition chart", () => {
       /^\/coach\/nouvelle\?texte=Ma\+fatigue/,
     );
     expect(loadAdvice(chart, null).actions).toHaveLength(1);
+  });
+
+  it("ignores fatigue above condition when the Garmin load is stale", () => {
+    const chart = buildLoadChart(
+      Array.from({ length: 10 }, (_, index) => ({
+        day: addDays("2026-09-30", index),
+        acute: 500,
+        chronic: 400,
+      })),
+      [],
+      "2026-09-30",
+      today,
+    )!;
+    expect(chart.overload).toEqual([{ from: "2026-09-30", to: "2026-10-09" }]);
+    expect(chart.overloadDays).toBe(0);
+    expect(loadAdvice(chart, null)).toEqual({
+      text: loadNote(chart),
+      actions: [],
+    });
   });
 
   it("keeps the condition note when fatigue stays below condition", () => {
@@ -390,6 +408,35 @@ describe("fitness reading", () => {
         periodPhrase: "six mois",
       }).headline,
     ).toBe("Pas encore assez d’historique pour lire ta forme.");
+  });
+
+  it("leaves the lap-based threshold pace to Records", () => {
+    const empty = fitnessMeasures({
+      activities: [],
+      laps: [],
+      vo2: [],
+      zones,
+      start: "2026-04-14",
+      today,
+    });
+    const reading = fitnessReading({
+      activities: [run("a", today)],
+      measures: {
+        ...empty,
+        threshold: {
+          ...empty.threshold,
+          value: 270,
+          baseline: 280,
+          trend: "improving",
+        },
+      },
+      load: null,
+      start: "2026-04-14",
+      today,
+      periodPhrase: "six mois",
+    });
+    expect(reading.headline).not.toMatch(/seuil/);
+    expect(reading.summary).not.toMatch(/seuil/);
   });
 
   it("keeps consistency unavailable without a training plan", () => {

@@ -5,7 +5,12 @@ import {
   garminPredictions,
   type GarminPrediction,
 } from "@/features/progress/garmin-predictions";
-import { goalCard, goalSummary, ultraNote } from "@/features/progress/goal";
+import {
+  goalCard,
+  goalSummary,
+  noPlanNote,
+  ultraNote,
+} from "@/features/progress/goal";
 import { addDays } from "@/features/progress/period";
 
 const today = "2026-10-14";
@@ -25,7 +30,7 @@ function race(values: Partial<RaceSummary> = {}): RaceSummary {
   };
 }
 
-function program(): ProgramOverview {
+function program(currentWeekKey: string | null = "w3"): ProgramOverview {
   const blocks = [
     { blockKey: "lead", name: "Reprise", count: 2 },
     { blockKey: "volume", name: "Volume", count: 4 },
@@ -50,7 +55,7 @@ function program(): ProgramOverview {
     programs: [],
     blocks: built,
     weeks: built.flatMap((block) => block.weeks),
-    currentWeekKey: "w3",
+    currentWeekKey,
   } as unknown as ProgramOverview;
 }
 
@@ -187,5 +192,25 @@ describe("goal card", () => {
     expect(
       goalCard({ ...base, races: races.slice(0, 2), primaryRaceId: null }),
     ).toBeNull();
+  });
+
+  it("tells a plan not started or finished apart from no plan", () => {
+    const card = (value: ProgramOverview | null, day = today) =>
+      goalCard({
+        ...base,
+        today: day,
+        races: [race()],
+        primaryRaceId: null,
+        program: value,
+      })!;
+    expect(card(program()).planNote).toBeNull();
+    expect(card(null).planNote).toBe(noPlanNote);
+    expect(card(program(null), "2026-09-20").planNote).toBe(
+      "Ton plan commence le 28 septembre.",
+    );
+    expect(card(program(null), "2026-12-01")).toMatchObject({
+      phase: null,
+      planNote: "Ton plan est terminé.",
+    });
   });
 });

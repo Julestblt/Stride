@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { DataCategoryScope } from "@/features/data-activity/components/status";
 import { HealthDayLoading } from "@/features/data-activity/components/loading";
 import { localToday } from "@/features/app-shell/shell";
-import { coachRequestHref } from "@/features/coach/request";
 import {
   bodyKpis,
   bodyNights,
@@ -141,14 +140,6 @@ export default async function ProgressBodyPage({
             summary={readinessSummary(recovery.readiness)}
             advice={advice}
             session={session}
-            lighterHref={
-              session
-                ? coachRequestHref(
-                    `Ma forme du jour est sous ma moyenne. Propose-moi une version allégée de « ${session.title} ».`,
-                    session.sessionKey,
-                  )
-                : null
-            }
           />
         </section>
         <div className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start lg:gap-10">

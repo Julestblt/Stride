@@ -56,7 +56,20 @@ export type GoalCard = {
   preparation: GoalPreparation | null;
   note: string | null;
   phase: GoalPhase | null;
+  planNote: string | null;
 };
+
+export const noPlanNote =
+  "Pas de plan actif : la phase d’entraînement apparaîtra avec ton plan.";
+
+function planNote(program: ProgramOverview | null, today: string) {
+  if (!program) return noPlanNote;
+  if (program.currentWeekKey) return null;
+  const first = program.weeks[0]?.weekStart;
+  if (first && first > today)
+    return `Ton plan commence le ${formatDayMonth(first)}.`;
+  return "Ton plan est terminé.";
+}
 
 const priorityRank: Record<string, number> = { A: 0, B: 1, C: 2 };
 
@@ -243,6 +256,7 @@ export function goalCard({
         },
     note: race.kind === "trail" ? ultraNote : null,
     phase: phase(program, blockKinds, today),
+    planNote: planNote(program, today),
   };
 }
 
