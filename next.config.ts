@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  ...(process.env.PLAYWRIGHT_TEST ? { distDir: ".next-e2e" } : {}),
+  ...(process.env.PLAYWRIGHT_TEST
+    ? { distDir: ".next-e2e" }
+    : { output: "standalone" }),
   allowedDevOrigins: [
     "127.0.0.1",
     ...(process.env.ALLOWED_DEV_ORIGINS ?? "")

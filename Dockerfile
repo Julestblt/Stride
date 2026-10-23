@@ -6,10 +6,6 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM base AS production-deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
 FROM base AS build
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
@@ -23,10 +19,9 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-COPY --from=production-deps --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/package.json /app/next.config.ts ./
-COPY --from=build --chown=node:node /app/.next ./.next
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
 USER node
 EXPOSE 3000
-CMD ["node_modules/.bin/next", "start"]
+CMD ["node", "server.js"]
