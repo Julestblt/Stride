@@ -1,31 +1,10 @@
 import type { Metadata } from "next";
-import {
-  Barlow_Condensed,
-  IBM_Plex_Mono,
-  Instrument_Sans,
-} from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeToaster } from "@/features/theme/components/theme-toaster";
 import { themeScript } from "@/features/theme/model";
 import { cn } from "@/lib/utils";
+import { fontVariables } from "./fonts";
 import "./globals.css";
-
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument-sans",
-  subsets: ["latin"],
-});
-
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 export const metadata: Metadata = {
   title: "Stride",
@@ -39,12 +18,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn(
-        instrumentSans.variable,
-        barlowCondensed.variable,
-        ibmPlexMono.variable,
-        "h-full antialiased",
-      )}
+      className={cn(fontVariables, "h-full antialiased")}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
