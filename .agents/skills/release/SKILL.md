@@ -58,4 +58,4 @@ Tell the owner the version, the release URL, the production deployment status an
 
 - Release workflow failed: read its log, fix on a branch through a normal pull request, and let release-please refresh the release pull request.
 - Production deployment failed or the release is broken: read the Dokploy deployment log, fix forward on `main` (revert or fix) through a pull request, and ship a patch release with this skill.
-- To force a version, land a commit on `main` whose body contains `Release-As: <version>`.
+- To force a version, land a single-commit pull request whose message ends with the footer `Release-As: <version>`; a footer followed by other commit messages in the squash is ignored.
