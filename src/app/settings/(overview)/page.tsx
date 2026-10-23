@@ -18,14 +18,17 @@ import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "@/server/app/session";
 import { getShellIdentity } from "@/server/app/shell";
 import { signOut } from "@/server/auth/actions";
+import { pushSummary } from "@/features/notifications/push";
+import { readPushSettings } from "@/server/push/preferences";
 
 export default async function SettingsOverviewPage() {
   const context = await requireAthlete();
-  const [profile, goals, shell, athleteProfile] = await Promise.all([
+  const [profile, goals, shell, athleteProfile, push] = await Promise.all([
     readProfile(context),
     readGoals(context),
     getShellIdentity(),
     loadAthleteProfile(context, new Date()),
+    readPushSettings(context),
   ]);
   const races = goals.races
     .filter((item) => item.values.name)
@@ -196,7 +199,11 @@ export default async function SettingsOverviewPage() {
         <SettingsLinkRow
           href="/settings/training#notifications"
           title="Notifications"
-          detail="Indisponibles pour le moment"
+          detail={pushSummary({
+            configured: push.publicKey !== null,
+            devices: push.endpoints.length,
+            preferences: push.preferences,
+          })}
         />
       </SettingsGroup>
       <SettingsGroup title="Données">

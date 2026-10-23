@@ -7,6 +7,7 @@ import {
   pushDeviceState,
   pushMessage,
   pushPreferencesSchema,
+  pushSummary,
   type PushDelivery,
 } from "@/features/notifications/push";
 
@@ -229,5 +230,52 @@ describe("push device", () => {
     expect(Array.from(applicationServerKey("AQID_-8"))).toEqual([
       1, 2, 3, 255, 239,
     ]);
+  });
+});
+
+describe("pushSummary", () => {
+  const preferences = {
+    session_reminder: true,
+    plan_staff: true,
+    debrief: true,
+    garmin_issues: true,
+  };
+
+  it("lists the enabled categories once a device receives push", () => {
+    expect(pushSummary({ configured: true, devices: 1, preferences })).toBe(
+      "Rappels, plan, débrief, Garmin",
+    );
+    expect(
+      pushSummary({
+        configured: true,
+        devices: 2,
+        preferences: {
+          ...preferences,
+          session_reminder: false,
+          debrief: false,
+        },
+      }),
+    ).toBe("Plan, Garmin");
+  });
+
+  it("says when push is off, unregistered or unavailable", () => {
+    expect(
+      pushSummary({
+        configured: true,
+        devices: 1,
+        preferences: {
+          session_reminder: false,
+          plan_staff: false,
+          debrief: false,
+          garmin_issues: false,
+        },
+      }),
+    ).toBe("Push coupé");
+    expect(pushSummary({ configured: true, devices: 0, preferences })).toBe(
+      "Push à activer",
+    );
+    expect(pushSummary({ configured: false, devices: 1, preferences })).toBe(
+      "Dans l’app uniquement",
+    );
   });
 });
