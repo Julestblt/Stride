@@ -44,7 +44,7 @@ export function RaceEntryLoading() {
             </div>
             <div
               aria-hidden="true"
-              className="-mx-5 flex gap-6 border-b border-border px-5 sm:mx-0 sm:px-0"
+              className="-mx-5 flex gap-6 overflow-hidden border-b border-border px-5 sm:mx-0 sm:px-0"
             >
               {["w-16", "w-18", "w-20", "w-22", "w-24"].map((width) => (
                 <div
