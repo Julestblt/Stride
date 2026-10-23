@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
@@ -238,7 +239,7 @@ export async function syncWatchAfterResponse(
 
 export type WatchView = { enabled: boolean; rows: WatchRow[] };
 
-export async function loadWatchView(
+export const loadWatchView = cache(async function loadWatchView(
   context: WatchContext,
   plan: StoredPlan | null,
 ): Promise<WatchView> {
@@ -256,4 +257,4 @@ export async function loadWatchView(
       new Date(now.getTime() - retryAfterMs),
     );
   return { enabled: true, rows };
-}
+});

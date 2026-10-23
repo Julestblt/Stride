@@ -104,6 +104,8 @@ Keep a message inline when it belongs to the page rather than to the action: fie
 
 ## Loading and motion
 
+Server reads, revalidation after mutations, prefetching and programmatic navigation follow [frontend data loading](../architecture/frontend-data-loading.md).
+
 ### Garmin data activity
 
 The authenticated shell owns one data activity controller. Its read-only panel shows the four normalized Garmin categories, their actual state, last success and verified activity count. The application status endpoint is independent of onboarding and validates responses without exposing provider credentials. The athlete can request a sync with "Synchroniser maintenant" in the panel or in Garmin settings, or with a pull-to-sync gesture (64 px) at the top of a mobile screen. The request goes through `requestGarminSync`, which calls garmin_mcp `POST /v1/connections/garmin/sync`. While its activities and recovery jobs run, the status line reads `Garmin · n sur 2 · famille` and the thread fills instead of sweeping. When they settle, the page refreshes without the "Afficher" pill. garmin_mcp accepts one request every five minutes, so the controls stay disabled until `manual_sync_available_at` and say when a sync becomes possible. Background syncs keep the quiet behavior and the pill.

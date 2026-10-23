@@ -23,7 +23,7 @@ import {
 } from "@/features/onboarding/heart-rate-zones";
 import type { OnboardingContext } from "@/server/onboarding/context";
 
-export async function listActivities(
+export const listActivities = cache(async function listActivities(
   context: OnboardingContext,
   filter: ActivityFilter,
   limit: number,
@@ -47,9 +47,9 @@ export async function listActivities(
   if (error) throw new Error("Unable to read activities");
   const activities = (data ?? []).map((row) => activityRowSchema.parse(row));
   return { activities, total: Math.max(count ?? 0, activities.length) };
-}
+});
 
-export async function readActivity(
+export const readActivity = cache(async function readActivity(
   context: OnboardingContext,
   id: string,
 ): Promise<Activity | null> {
@@ -62,7 +62,7 @@ export async function readActivity(
     .maybeSingle();
   if (error) throw new Error("Unable to read activity");
   return data ? activityRowSchema.parse(data) : null;
-}
+});
 
 export const readActivityDetail = cache(async function readActivityDetail(
   context: OnboardingContext,
@@ -102,7 +102,7 @@ export const readActivityDetail = cache(async function readActivityDetail(
 
 const dayMs = 86_400_000;
 
-export async function loadHeartRateZones(
+export const loadHeartRateZones = cache(async function loadHeartRateZones(
   context: OnboardingContext,
   now: Date,
 ): Promise<HeartRateZones | null> {
@@ -134,4 +134,4 @@ export async function loadHeartRateZones(
     ),
     today: now,
   });
-}
+});

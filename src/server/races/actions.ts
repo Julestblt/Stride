@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   checklistInputSchema,
@@ -419,11 +420,29 @@ export async function importCourseFromActivity(
   const current = await context();
   if (!current) return { status: "session-expired" };
   const result = await importActivity(current, race.data, activity.data);
-  if (result.status === "saved") {
-    refresh(race.data);
-    return { status: "saved" };
-  }
+  if (result.status === "saved") return { status: "saved" };
   if (result.status === "no-track" || result.status === "missing")
     return { status: result.status };
   return { status: "error" };
+}
+
+const importedRacePages = {
+  root: "",
+  course: "/course",
+  waypoints: "/waypoints",
+} as const;
+
+const importedRaceTargetSchema = z.enum(["root", "course", "waypoints"]);
+
+export type ImportedRaceTarget = z.infer<typeof importedRaceTargetSchema>;
+
+export async function showImportedRace(
+  raceId: string,
+  target: ImportedRaceTarget,
+): Promise<ActionResult> {
+  const race = idSchema.safeParse(raceId);
+  const page = importedRaceTargetSchema.safeParse(target);
+  if (!race.success || !page.success) return { status: "invalid" };
+  refresh(race.data);
+  redirect(`/races/${race.data}${importedRacePages[page.data]}`);
 }

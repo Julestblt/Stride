@@ -751,7 +751,6 @@ export function WaypointWorkspace({
   passages: Passage[];
   distanceM: number;
 }) {
-  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [newDistance, setNewDistance] = useState<number | null>(null);
   const selected = waypoints.find((point) => point.id === selectedId) ?? null;
@@ -862,12 +861,10 @@ export function WaypointWorkspace({
               onSaved={(id) => {
                 setSelectedId(id);
                 setNewDistance(null);
-                router.refresh();
               }}
               onDeleted={() => {
                 setSelectedId(null);
                 setNewDistance(null);
-                router.refresh();
               }}
             />
           )}

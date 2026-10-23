@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -46,7 +45,6 @@ export function RaceSettingsDialog({
   plan: RacePlan;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -107,7 +105,6 @@ export function RaceSettingsDialog({
       }
       toast.success("Réglages de la course enregistrés.");
       setOpen(false);
-      router.refresh();
     });
   }
 

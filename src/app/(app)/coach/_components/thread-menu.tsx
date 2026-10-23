@@ -41,8 +41,7 @@ export function ThreadMenu({
       setConfirming(false);
       if (result.status === "deleted") {
         toast.success("Conversation supprimée.", { id: "coach-thread-delete" });
-        router.push("/coach");
-        router.refresh();
+        startTransition(() => router.push("/coach"));
         return;
       }
       toast.error(deleteFailures[result.status] ?? deleteFailures.error, {

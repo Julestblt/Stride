@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { ProvenanceLabel } from "@/components/stride/provenance";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";

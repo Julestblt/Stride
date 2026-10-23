@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { localToday } from "@/features/app-shell/shell";
 import type { ShoeInput } from "@/features/gear/view";
 import type { OnboardingContext } from "@/server/onboarding/context";
@@ -41,7 +42,10 @@ function shoeInput(
   };
 }
 
-export async function loadGear(context: GearContext, now = new Date()) {
+export const loadGear = cache(async function loadGear(
+  context: GearContext,
+  now = new Date(),
+) {
   const today = localToday(now);
   const shoes = await readShoes(context);
   const uuids = shoes.flatMap((shoe) =>
@@ -58,7 +62,7 @@ export async function loadGear(context: GearContext, now = new Date()) {
     ),
     stored: shoes,
   };
-}
+});
 
 export async function loadImportable(
   context: GearContext,

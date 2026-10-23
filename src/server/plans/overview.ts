@@ -34,7 +34,7 @@ const raceSchema = z.object({
   elevation_gain_m: z.number().int().min(0).nullable().catch(null),
 });
 
-export async function readPlanRaces(
+export const readPlanRaces = cache(async function readPlanRaces(
   context: OnboardingContext,
 ): Promise<ProgramRace[]> {
   const [{ data, error }, courses] = await Promise.all([
@@ -63,7 +63,7 @@ export async function readPlanRaces(
         elevationGainM: values.elevation_gain_m,
       };
     });
-}
+});
 
 export const loadPlanOverview = cache(
   async (context: OnboardingContext): Promise<PlanOverview | null> => {

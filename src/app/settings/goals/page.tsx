@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { SettingsNotice } from "@/features/settings/components/settings-notice";
 import { RaceWizard } from "@/features/settings/components/race-wizard";

@@ -1,6 +1,6 @@
 # Testing expectations
 
-- Use Vitest for focused unit tests of domain rules, parsing, and deterministic behavior.
+- Use Vitest for focused unit tests of domain rules, parsing, and deterministic behavior. The `server` Vitest project runs `tests/unit/server-render` with the `react-server` condition to check request-scoped server reads through a Flight render.
 - Use Playwright for user-visible browser flows and smoke coverage.
 - Keep domain code framework-independent where practical so it is easy to test.
 - Validate external inputs at boundaries and cover valid, invalid, and incomplete cases.

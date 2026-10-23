@@ -88,6 +88,7 @@ export function ActivityList({
                 <li key={activity.id}>
                   <Link
                     href={`/activities/${activity.id}${activitiesQuery(filter, limit, search)}`}
+                    prefetch={false}
                     aria-current={selected && current ? "true" : undefined}
                     onClick={
                       selected
