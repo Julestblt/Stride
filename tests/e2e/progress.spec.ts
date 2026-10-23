@@ -14,38 +14,45 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`fitness tab renders computed measures at ${viewport.width}px`, async ({
+  test(`Forme renders the goal, load and measures at ${viewport.width}px`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     await signIn(page);
     await page.goto("/progress");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const goal = page.getByRole("region", { name: "EcoTrail Paris 120K" });
+    await expect(goal.getByRole("link")).toHaveAttribute(
+      "href",
+      "/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    );
     await expect(
-      page.getByRole("heading", { name: "Condition, fatigue et fraîcheur" }),
+      goal.getByText(
+        "Pas de prévision de temps fiable en ultra : Stride suit ta préparation.",
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Condition et fatigue" }),
     ).toBeVisible();
     await expect(
       page.getByRole("img", { name: /^Condition \d+, fatigue \d+/ }).first(),
     ).toBeAttached();
-    const measures = page.getByRole("region", { name: "Ce qui évolue" });
-    await expect(measures.getByText("Estimation VO₂ max")).toBeVisible();
-    await expect(measures.getByText("55", { exact: true })).toBeVisible();
-    await expect(
-      measures.getByText("Disponible avec un plan d’entraînement"),
-    ).toBeVisible();
     const predictions = page.getByRole("region", {
       name: "Prévisions de course",
     });
-    await expect(predictions.getByText("38:06")).toBeVisible();
+    await expect(predictions.getByText("45:02")).toBeVisible();
+    await expect(predictions.getByText("−0:18")).toBeVisible();
     await expect(
-      predictions.getByRole("link", { name: "EcoTrail Paris 120K →" }),
-    ).toHaveAttribute("href", "/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
+      page.getByRole("region", { name: "Course à pied · km par semaine" }),
+    ).toContainText("Cette semaine :");
+    const measures = page.getByRole("region", { name: "Ce qui évolue" });
+    await expect(measures.getByText("Efficacité aérobie")).toBeVisible();
     await expect(
-      page
-        .getByRole("region", { name: "Records" })
-        .getByText("Sortie la plus longue"),
+      measures.getByRole("link", { name: /Régularité/ }),
+    ).toHaveAttribute("href", "/plan");
+    await expect(
+      measures.getByText("Disponible avec un plan d’entraînement"),
     ).toBeVisible();
-    await expect(page.locator("body")).not.toHaveCSS("overflow-x", "scroll");
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,
     );
@@ -89,25 +96,33 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`recovery tab renders Garmin signals at ${viewport.width}px`, async ({
+  test(`Corps renders readiness, factors and nights at ${viewport.width}px`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     await signIn(page);
-    await page.goto("/progress/recovery");
+    await page.goto("/progress/body");
     await expect(
       page.getByRole("heading", {
         level: 1,
         name: "Une courte nuit pèse sur ta forme du jour.",
       }),
     ).toBeVisible();
-    await expect(page.getByText("Forme du jour · Garmin")).toBeVisible();
-    const sleep = page.getByRole("region", { name: /Sommeil/ });
-    await expect(sleep.getByText("5h52", { exact: true })).toBeVisible();
-    await expect(sleep.getByText("À surveiller · 1 nuit")).toBeVisible();
-    const hrv = page.getByRole("region", { name: /VFC nocturne/ });
-    await expect(hrv.getByText("46 ms")).toBeVisible();
-    await expect(hrv.getByText("Sous la plage · 1 jour")).toBeVisible();
+    const readiness = page.getByRole("region", {
+      name: "Prêt pour aujourd’hui ?",
+    });
+    await expect(readiness.getByText(/^Modéré|^Bas/)).toBeVisible();
+    const factors = page.getByRole("region", {
+      name: "Ce qui pèse aujourd’hui",
+    });
+    await expect(factors.getByText("Sommeil · 5h52")).toBeVisible();
+    await expect(factors.getByText("VFC · 46 ms")).toBeVisible();
+    await expect(
+      page
+        .getByRole("region", { name: "VFC nocturne" })
+        .getByText("Sous ta plage"),
+    ).toBeVisible();
+    await expect(page.getByRole("region", { name: "Nuits" })).toBeVisible();
     await expect(
       page.getByText("Aucune course passée avec des mesures de VFC."),
     ).toBeVisible();
@@ -120,21 +135,23 @@ for (const viewport of [
 
 test("athlete records how they feel today", async ({ page }) => {
   await signIn(page);
-  await page.goto("/progress/recovery");
-  const checkin = page.getByRole("region", { name: /Ton ressenti/ });
-  await expect(checkin.getByText("À saisir")).toBeVisible();
+  await page.goto("/progress/body");
+  const checkin = page.getByRole("region", { name: "Ton ressenti" });
+  await expect(checkin.getByText("À saisir ce matin")).toBeVisible();
   const legs = checkin.getByRole("radiogroup", { name: "Jambes" });
   await legs.getByRole("radio", { name: "Fraîches" }).click();
   await expect(legs.getByRole("radio", { name: "Fraîches" })).toBeChecked();
-  await expect(checkin.getByText(/^Saisi à \d{2}:\d{2}$/)).toBeVisible();
+  await expect(
+    checkin.getByText(/^ce matin · enregistré à \d{2}:\d{2}$/),
+  ).toBeVisible();
   await checkin
-    .getByRole("radiogroup", { name: "Stress" })
+    .getByRole("radiogroup", { name: "Stress hors sport" })
     .getByRole("radio", { name: "Élevé" })
     .click();
   await page.reload();
   await expect(
     page
-      .getByRole("region", { name: /Ton ressenti/ })
+      .getByRole("region", { name: "Ton ressenti" })
       .getByRole("radiogroup", { name: "Jambes" })
       .getByRole("radio", { name: "Fraîches" }),
   ).toBeChecked();
@@ -143,69 +160,43 @@ test("athlete records how they feel today", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("progress tabs switch between fitness and recovery", async ({ page }) => {
+test("progress tabs switch between Forme and Corps", async ({ page }) => {
   await signIn(page);
   await page.goto("/progress");
   await page
     .getByRole("navigation", { name: "Sections de la progression" })
     .last()
-    .getByRole("link", { name: "Récupération" })
+    .getByRole("link", { name: "Corps" })
     .click();
-  await expect(page).toHaveURL("/progress/recovery");
+  await expect(page).toHaveURL("/progress/body");
   await expect(
-    page
-      .getByRole("navigation", { name: "Fil d’Ariane" })
-      .getByText("Récupération"),
+    page.getByRole("navigation", { name: "Fil d’Ariane" }).getByText("Corps"),
   ).toBeVisible();
 });
 
-for (const viewport of [
-  { width: 1440, height: 900 },
-  { width: 390, height: 844 },
-]) {
-  test(`health week view renders Garmin signals at ${viewport.width}px`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(viewport);
-    await signIn(page);
-    await page.goto("/progress/health");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Santé" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("heading", {
-        name: "Tu récupères bien de la charge, mais ton sommeil ne suit plus.",
-      }),
-    ).toBeVisible();
-    const sleep = page.getByRole("region", { name: "Sommeil" });
-    await expect(sleep.getByText("5h52", { exact: true })).toBeVisible();
-    await expect(sleep.getByText("58 min")).toBeVisible();
-    await expect(
-      page
-        .getByRole("region", { name: "Charge et forme" })
-        .getByText("Aérobie faible", { exact: true }),
-    ).toBeVisible();
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth,
-    );
-    expect(overflow).toBe(false);
-  });
-}
+test("old Récupération and Santé links land on Corps", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/progress/recovery");
+  await expect(page).toHaveURL("/progress/body");
+  await page.goto("/progress/health?view=month");
+  await expect(page).toHaveURL("/progress/body?view=month");
+  await page.goto("/progress/health?view=day&date=2026-10-10");
+  await expect(page).toHaveURL("/progress/body?view=day&date=2026-10-10");
+});
 
-test("health switches to the month and explains values on hover", async ({
+test("Corps switches to 30 days and explains nights on hover", async ({
   page,
 }) => {
   await signIn(page);
-  await page.goto("/progress/health");
+  await page.goto("/progress/body");
   await page
-    .getByRole("navigation", { name: "Période" })
-    .getByRole("link", { name: "Mois" })
+    .getByRole("navigation", { name: "Échelle" })
+    .getByRole("link", { name: "30 jours" })
     .click();
-  await expect(page).toHaveURL("/progress/health?view=month");
-  await expect(page.getByText("Garmin · sommeil · 30 nuits")).toBeVisible();
+  await expect(page).toHaveURL("/progress/body?view=month");
   const chart = page
-    .getByRole("region", { name: "Sommeil" })
-    .getByRole("group", { name: /Durée de sommeil/ });
+    .getByRole("region", { name: "Nuits" })
+    .getByRole("group", { name: /Durée et phases de sommeil des 30/ });
   await chart.scrollIntoViewIfNeeded();
   const box = (await chart.boundingBox())!;
   await chart.hover({ position: { x: box.width - 4, y: box.height / 2 } });
@@ -217,12 +208,12 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`health day view explains the day at ${viewport.width}px`, async ({
+  test(`Corps day view explains the day at ${viewport.width}px`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
     await signIn(page);
-    await page.goto("/progress/health?view=day&date=2026-10-10");
+    await page.goto("/progress/body?view=day&date=2026-10-10");
     await expect(
       page
         .getByRole("region", { name: "Choisir une journée" })
@@ -255,13 +246,13 @@ for (const viewport of [
   });
 }
 
-test("health day navigation moves between days", async ({ page }) => {
+test("Corps day navigation moves between days", async ({ page }) => {
   await signIn(page);
-  await page.goto("/progress/health?view=day&date=2026-10-10");
+  await page.goto("/progress/body?view=day&date=2026-10-10");
   await page.getByRole("link", { name: "Jour suivant" }).click();
-  await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-11");
+  await expect(page).toHaveURL("/progress/body?view=day&date=2026-10-11");
   await page.getByRole("link", { name: "Jour précédent" }).click();
-  await expect(page).toHaveURL("/progress/health?view=day&date=2026-10-10");
+  await expect(page).toHaveURL("/progress/body?view=day&date=2026-10-10");
 });
 
 test("the health day shows the stored strip before the Garmin day arrives", async ({
@@ -276,7 +267,7 @@ test("the health day shows the stored strip before the Garmin day arrives", asyn
   expect((await hold(true)).ok).toBe(true);
   try {
     await signIn(page);
-    await page.goto("/progress/health?view=day&date=2026-10-07", {
+    await page.goto("/progress/body?view=day&date=2026-10-07", {
       waitUntil: "commit",
     });
     await expect(
@@ -306,140 +297,52 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 390, height: 844 },
 ]) {
-  test(`Records filters, disclosures and charts at ${viewport.width}px`, async ({
+  test(`Records shows markers, speed and endurance at ${viewport.width}px`, async ({
     page,
   }) => {
-    test.setTimeout(60_000);
     await page.setViewportSize(viewport);
     await signIn(page);
     await page.goto("/progress/records");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const markers = page.getByRole("region", { name: "Tes repères actuels" });
+    await expect(markers.getByText("4:38")).toBeVisible();
+    await expect(markers.getByText("171")).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 1, name: "Records" }),
-    ).toBeVisible();
-    const road = page.getByRole("region", { name: "Route", exact: true });
-    await expect(road).toBeVisible();
-    await expect(
-      road
-        .locator('[data-slot="confidence-meter"][data-level="moderate"]')
-        .first(),
-    ).toContainText("Confiance modérée");
-    await expect(
-      road.locator('[data-slot="confidence-meter"][data-level="low"]'),
-    ).toContainText("Confiance faible");
-    const disclosure = road.locator("details").first();
-    if (viewport.width === 390)
-      await expect(
-        disclosure.getByText("· 5:30/km", { exact: true }),
-      ).toBeVisible();
-    await disclosure.locator(":scope > summary").focus();
-    await page.keyboard.press("Enter");
-    await expect(disclosure).toHaveAttribute("open", "");
-    const chart = disclosure.getByRole("group", {
-      name: /^Historique du record/,
-    });
-    await chart.focus();
-    await chart.press("Home");
-    await expect(chart.getByRole("status")).toContainText("Garmin");
-    await chart.press("ArrowRight");
-    await chart.press("Escape");
-    const chartBounds = await chart.boundingBox();
-    await chart.dispatchEvent("pointerdown", {
-      pointerType: "touch",
-      clientX: chartBounds!.x + chartBounds!.width / 2,
-      clientY: chartBounds!.y + chartBounds!.height / 2,
-    });
-    await expect(chart.getByRole("status")).toContainText("Garmin");
-    const source = disclosure.getByRole("link", {
-      name: "Ouvrir l’activité du record →",
-    });
+      markers.getByRole("link", { name: "Voir tes zones d’allure et de FC →" }),
+    ).toHaveAttribute("href", "/settings/profile#entrainement");
+    const speed = page.getByRole("region", { name: "Vitesse" });
+    await expect(speed.getByText("Marathon", { exact: true })).toBeVisible();
+    await expect(speed.getByText("prévision 3:33:40")).toBeVisible();
+    const endurance = page.getByRole("region", { name: "Endurance" });
+    await expect(endurance.getByText("VAM sur 20 min")).toBeVisible();
+    await expect(endurance.getByText("840 m/h")).toBeVisible();
+    const source = endurance.getByRole("link", { name: /Plus longue sortie/ });
     await expect(source).toHaveAttribute("href", /\/activities\//);
-    const href = await source.getAttribute("href");
-    await source.click();
-    await expect(page).toHaveURL(href!, { timeout: 15_000 });
-    await page.goBack();
-    const filters = page.getByRole("navigation", { name: "Type de records" });
-    await filters.getByRole("link", { name: "Trail et ultra" }).click();
-    await expect(page).toHaveURL(/filter=trail/);
-    await expect(
-      page.getByRole("region", { name: "Route", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      page.getByRole("region", { name: "Trail et ultra", exact: true }),
-    ).toBeVisible();
     await expect(
       page
-        .getByRole("article")
-        .filter({ has: page.getByRole("heading", { name: "VAM sur 20 min" }) })
-        .locator("[data-slot=metric]"),
-    ).toContainText("840");
-    await page.reload();
-    await expect(
-      filters.getByRole("link", { name: "Trail et ultra" }),
-    ).toHaveAttribute("aria-current", "page");
-    await filters.getByRole("link", { name: "Route", exact: true }).click();
-    await expect(
-      page.getByRole("region", { name: "Trail et ultra", exact: true }),
-    ).toHaveCount(0);
-    await page.goBack();
-    await expect(page).toHaveURL(/filter=trail/);
+        .getByRole("region", { name: "À portée" })
+        .getByRole("link", { name: /EcoTrail Paris 120K/ }),
+    ).toHaveAttribute("href", "/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
       ),
     ).toBe(false);
-    await filters.getByRole("link", { name: "Tous", exact: true }).click();
-    await expect(
-      filters.getByRole("link", { name: "Tous", exact: true }),
-    ).toHaveAttribute("aria-current", "page");
-    await expect(
-      page.getByRole("region", { name: "Route", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page
-        .getByRole("region", { name: "Prochains records à portée" })
-        .getByRole("link", { name: "EcoTrail Paris 120K →" }),
-    ).toHaveAttribute("href", "/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
-    await page.evaluate(() => document.fonts.ready);
-    await page.setViewportSize({
-      width: viewport.width,
-      height: viewport.width === 390 ? 4080 : 2942,
-    });
-    await page.screenshot({
-      path: `test-results/records-${viewport.width}.png`,
-    });
-    await page.setViewportSize(viewport);
-    const finalRoad = page.getByRole("region", { name: "Route", exact: true });
-    const finalDisclosure = finalRoad.locator("details").first();
-    await finalDisclosure.locator(":scope > summary").click();
-    await finalDisclosure.scrollIntoViewIfNeeded();
-    await page.screenshot({
-      path: `test-results/records-road-${viewport.width}.png`,
-    });
-    const endurance = page.getByRole("region", {
-      name: "Trail et ultra",
-      exact: true,
-    });
-    await endurance.scrollIntoViewIfNeeded();
-    await page.screenshot({
-      path: `test-results/records-endurance-${viewport.width}.png`,
-    });
   });
 }
 for (const mode of ["empty", "failure", "goal-failure"] as const) {
   test(`Records displays explicit ${mode} state`, async ({ page }) => {
     await signInAs(page, `records-${mode}@example.com`);
     await page.goto("/progress/records");
-    await expect(
-      page.getByRole("heading", { level: 1, name: "Records" }),
-    ).toBeVisible();
     if (mode === "empty") {
       await expect(
         page.getByRole("heading", {
+          level: 1,
           name: "Tes records attendent ton historique.",
         }),
       ).toBeVisible();
       await expect(
-        page.getByText("Aucun record documenté pour ce filtre."),
+        page.getByText("Aucun record d’endurance documenté."),
       ).toBeVisible();
     } else
       await expect(

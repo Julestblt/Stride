@@ -295,7 +295,7 @@ for (const width of [390, 700]) {
       route.fulfill({ json: observation() }),
     );
     await signIn(page);
-    await page.goto("/progress/health");
+    await page.goto("/progress/body");
     const status = page
       .getByRole("button", { name: /État des données/ })
       .filter({ visible: true });
@@ -773,8 +773,8 @@ test("progress tabs show the destination skeleton under the real tabs", async ({
   await withSlowReads("/rest/v1/provider_activity_tracks?", async () => {
     await tabs.getByRole("link", { name: "Records", exact: true }).click();
     await expectRouteSkeleton(page, "Chargement des records", {
-      name: "Records",
-      level: 1,
+      name: "Tes repères actuels",
+      level: 2,
     });
   });
   await expect(page).toHaveURL("/progress/records");

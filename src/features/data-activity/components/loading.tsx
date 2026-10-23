@@ -2,9 +2,6 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { localToday } from "@/features/app-shell/shell";
-import { parseHealthView } from "@/features/progress/health";
-import { HealthViewSwitch } from "@/features/progress/components/health-sections";
 import { parseRacesView } from "@/features/races/overview";
 import { RacesTitle } from "@/features/races/components/races-title";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -215,46 +212,6 @@ export function ActivityFullDetailLoading() {
         <span aria-current="page">Détail</span>
       </ActivityToolbar>
       <ActivityContentLoading full />
-    </LoadingScope>
-  );
-}
-
-const healthHeaderDate = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-export function HealthLoading() {
-  const query = useSearchParams();
-  const view = parseHealthView(query.get("view"));
-  const today = localToday(new Date());
-  return (
-    <LoadingScope
-      label="Chargement de la santé"
-      className="flex flex-col gap-6 sm:gap-8"
-    >
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-[25px] leading-[1.12] font-semibold tracking-[-0.025em] sm:text-[clamp(32px,4vw,46px)] sm:leading-[1.05] sm:tracking-[-0.03em]">
-          Santé
-        </h1>
-        <HealthViewSwitch
-          current={view}
-          date={healthHeaderDate.format(new Date(`${today}T00:00:00Z`))}
-        />
-      </section>
-      <div aria-hidden="true" className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[0, 1, 2, 3].map((item) => (
-          <Skeleton key={item} className="h-24 rounded-panel" />
-        ))}
-      </div>
-      <Skeleton className="h-72 w-full rounded-panel" />
-      <div aria-hidden="true" className="grid gap-5 lg:grid-cols-2">
-        <Skeleton className="h-64 rounded-panel" />
-        <Skeleton className="h-64 rounded-panel" />
-      </div>
     </LoadingScope>
   );
 }
