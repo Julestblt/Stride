@@ -217,55 +217,43 @@ export function EnduranceRecords({ model }: { model: RecordsModel }) {
     </section>
   );
 }
-export function RecordsRacesAndOpportunities({ view }: { view: RecordsView }) {
+export function RecordsOpportunities({ view }: { view: RecordsView }) {
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-      <section aria-labelledby="records-races" className="flex flex-col gap-3">
-        <h2 id="records-races" className="text-lead font-semibold">
-          Courses terminées
-        </h2>
-        <p className="border-t border-border pt-4 text-sm leading-normal text-muted">
-          Les résultats de course et leur lien vérifié avec tes activités ne
-          sont pas encore disponibles. Les objectifs passés et les temps cibles
-          ne constituent pas des résultats.
-        </p>
-      </section>
-      <section
-        aria-labelledby="records-opportunities"
-        className="rounded-panel border border-border bg-surface p-5"
-      >
-        <h2 id="records-opportunities">
-          <MonoLabel size="micro" className="flex items-center gap-2">
-            <StrideMark className="size-3" />
-            Prochains records à portée
-          </MonoLabel>
-        </h2>
-        {view.opportunities.length ? (
-          <ul className="mt-4 flex flex-col">
-            {view.opportunities.map(({ race, text }) => (
-              <li
-                key={race.id}
-                className="flex flex-col gap-2 border-t border-border py-4"
+    <section
+      aria-labelledby="records-opportunities"
+      className="rounded-panel border border-border bg-surface p-5"
+    >
+      <h2 id="records-opportunities">
+        <MonoLabel size="micro" className="flex items-center gap-2">
+          <StrideMark className="size-3" />
+          Prochains records à portée
+        </MonoLabel>
+      </h2>
+      {view.opportunities.length ? (
+        <ul className="mt-4 flex flex-col">
+          {view.opportunities.map(({ race, text }) => (
+            <li
+              key={race.id}
+              className="flex flex-col gap-2 border-t border-border py-4"
+            >
+              <Link
+                href={`/races/${race.id}`}
+                className="text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <Link
-                  href={`/races/${race.id}`}
-                  className="text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-                >
-                  {race.name} →
-                </Link>
-                <MonoLabel size="nano">
-                  {formatRecordDate(race.day)} · objectif prévu
-                </MonoLabel>
-                <p className="text-meta leading-normal text-muted">{text}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-4 text-sm text-muted">
-            Aucun objectif à venir dans ton calendrier.
-          </p>
-        )}
-      </section>
-    </div>
+                {race.name} →
+              </Link>
+              <MonoLabel size="nano">
+                {formatRecordDate(race.day)} · objectif prévu
+              </MonoLabel>
+              <p className="text-meta leading-normal text-muted">{text}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-4 text-sm text-muted">
+          Aucun objectif à venir dans ton calendrier.
+        </p>
+      )}
+    </section>
   );
 }

@@ -8,7 +8,7 @@ import { RoadRecords } from "@/features/progress/components/records-road";
 import {
   EnduranceRecords,
   RecordsFilters,
-  RecordsRacesAndOpportunities,
+  RecordsOpportunities,
   RecordsReading,
 } from "@/features/progress/components/records-sections";
 import {
@@ -67,7 +67,7 @@ export default async function ProgressRecordsPage({
       <RecordsChronology view={view} />
       {filter !== "trail" && <RoadRecords model={model} view={view} />}
       {filter !== "road" && <EnduranceRecords model={model} />}
-      <RecordsRacesAndOpportunities view={view} />
+      <RecordsOpportunities view={view} />
       <p className="text-xs leading-normal text-muted-foreground">
         Records recalculés par Stride à partir de l’historique Garmin importé.
         Les activités datées après aujourd’hui sont exclues. Les semaines
