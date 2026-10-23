@@ -17,7 +17,7 @@ Versions follow semver and are computed by [release-please](https://github.com/g
 
 - `fix` gives a patch release, `feat` a minor release, and `!` or a `BREAKING CHANGE:` footer a major release.
 - Other types, such as `chore`, `docs`, `refactor` and `test`, do not trigger a release on their own and stay out of the changelog.
-- A commit body containing `Release-As: <version>` forces the next version.
+- A `Release-As: <version>` footer forces the next version. It must sit in the last paragraph of the squash commit message, so land it from a single-commit pull request; a footer followed by other commit messages is ignored.
 
 The `Release` workflow keeps one release pull request open on `main`, titled `chore: release X.Y.Z`. It updates `CHANGELOG.md`, the `package.json` version and `.release-please-manifest.json` as commits land. Those files are owned by release-please; do not edit them by hand. Merging the release pull request makes the workflow create the `vX.Y.Z` tag and its GitHub release, and the tag deploys production.
 
