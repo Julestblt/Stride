@@ -7,6 +7,8 @@ import {
 } from "@/server/app/shell";
 import { requireAthlete } from "@/server/app/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {
