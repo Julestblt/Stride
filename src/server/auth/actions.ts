@@ -64,7 +64,7 @@ async function runAuthentication(
       message: unavailableMessage,
     };
   }
-  if (result.status === "authenticated") redirect("/");
+  if (result.status === "authenticated") redirect("/today");
   return result;
 }
 
@@ -152,7 +152,7 @@ export async function savePassword(
   } catch {
     result = { status: "error", message: unavailableMessage };
   }
-  if (result.status === "authenticated") redirect("/");
+  if (result.status === "authenticated") redirect("/today");
   return result;
 }
 
@@ -165,5 +165,5 @@ export async function signOut(): Promise<{ error: boolean }> {
   } catch {
     return { error: true };
   }
-  redirect("/");
+  redirect("/sign-in");
 }

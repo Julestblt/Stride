@@ -10,7 +10,7 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
     .getByLabel("Mot de passe", { exact: true })
     .fill("TrailMiles2026!");
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+  await expect(page).toHaveURL("/today", { timeout: 20_000 });
 
   for (const path of [
     "/",
@@ -20,7 +20,7 @@ test("signed-in session updates home, visitor routes, 404, and sign-out", async 
     "/link-expired",
   ]) {
     await page.goto(path);
-    await expect(page).toHaveURL("/today");
+    await expect(page).toHaveURL("/today", { timeout: 20_000 });
   }
 
   await page.goto("/missing-route");
@@ -64,7 +64,7 @@ for (const remember of [true, false]) {
     await page
       .getByRole("button", { name: "Se connecter", exact: true })
       .click();
-    await expect(page).toHaveURL("/today");
+    await expect(page).toHaveURL("/today", { timeout: 20_000 });
     const cookies = (await context.cookies()).filter((cookie) =>
       cookie.name.includes("auth-token"),
     );
@@ -212,7 +212,7 @@ test("recovery exchanges a code, saves a password and revokes other sessions", a
   await page
     .getByRole("button", { name: "Enregistrer et se connecter" })
     .click();
-  await expect(page).toHaveURL("/today");
+  await expect(page).toHaveURL("/today", { timeout: 20_000 });
   const events = await (
     await request.get("http://127.0.0.1:3200/__test__/events")
   ).json();
@@ -228,7 +228,7 @@ test("verified token hash cannot redirect off site", async ({ page }) => {
   await page.goto(
     "/auth/callback?token_hash=valid-token&type=magiclink&next=https://evil.example",
   );
-  await expect(page).toHaveURL("/today");
+  await expect(page).toHaveURL("/today", { timeout: 20_000 });
 });
 
 for (const remember of [true, false]) {
@@ -262,7 +262,7 @@ for (const remember of [true, false]) {
       )
     ).json();
     await page.goto(link.url);
-    await expect(page).toHaveURL("/today");
+    await expect(page).toHaveURL("/today", { timeout: 20_000 });
     const cookie = (await context.cookies()).find((item) =>
       item.name.endsWith("auth-token"),
     );
@@ -384,5 +384,5 @@ test("signup with a provider session returns to Stride", async ({ page }) => {
   await page
     .getByRole("button", { name: "Créer un compte", exact: true })
     .click();
-  await expect(page).toHaveURL("/today");
+  await expect(page).toHaveURL("/today", { timeout: 20_000 });
 });

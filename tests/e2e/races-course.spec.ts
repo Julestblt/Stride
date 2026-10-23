@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 test.describe.configure({ mode: "serial" });
 
@@ -10,13 +11,7 @@ test("a populated race opens every workspace section on desktop and mobile", asy
   await request.post(
     `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}/__test__/race-course`,
   );
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+  await signInAs(page, "athlete@example.com");
 
   for (const viewport of [
     { width: 1440, height: 900 },
@@ -169,13 +164,7 @@ test("a road 10 km keeps the relevant preparation and accepts a new start time",
   await request.post(
     `http://127.0.0.1:${process.env.PLAYWRIGHT_AUTH_PORT ?? 3200}/__test__/race-road`,
   );
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+  await signInAs(page, "athlete@example.com");
   await page.goto("/races");
   await page.getByRole("link", { name: "Ouvrir la course" }).click();
 

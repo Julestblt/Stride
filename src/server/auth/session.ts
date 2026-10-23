@@ -14,5 +14,5 @@ export async function getCurrentUser() {
 }
 
 export async function redirectIfAuthenticated() {
-  if (await getCurrentUser()) redirect("/");
+  if (await getCurrentUser()) redirect("/today");
 }
