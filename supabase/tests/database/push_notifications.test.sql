@@ -144,9 +144,9 @@ select is(
 insert into public.push_preferences (user_id, plan_staff)
 values ('a9000000-0000-4000-8000-0000000000a9', false);
 insert into public.plan_proposals (id, user_id, plan_id, base_version, scope, origin, requested_by,
-  status, title, summary, operations)
+  status, title, summary, operations, target_keys)
 values ('a9000000-0000-4000-8000-0000000000e2', 'a9000000-0000-4000-8000-0000000000a9', null, null,
-  'new_plan', 'training', 'athlete', 'ready', 'Bloc seuil', null, '[]');
+  'new_plan', 'training', 'athlete', 'ready', 'Bloc seuil', null, '[]', '{bloc-seuil}');
 select private.push_tick();
 select is(
   pg_temp.deliveries('a9000000-0000-4000-8000-0000000000a9', 'plan_proposal'), 2,
