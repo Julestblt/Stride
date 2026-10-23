@@ -3,10 +3,13 @@
 import { createContext, useContext } from "react";
 import type { NotificationFeed } from "../model";
 
-type NotificationsState = { feed: NotificationFeed | null; now: string };
+type NotificationsState = {
+  feed: Promise<NotificationFeed | null>;
+  now: string;
+};
 
 const NotificationsContext = createContext<NotificationsState>({
-  feed: null,
+  feed: Promise.resolve(null),
   now: new Date(0).toISOString(),
 });
 
