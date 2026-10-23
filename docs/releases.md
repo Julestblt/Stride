@@ -4,10 +4,10 @@ Stride ships with a GitLab-flow style model: `main` is pre-production and releas
 
 ## Environments
 
-| Environment    | Dokploy app (project `stride`) | URL                                | Deploys                             |
-| -------------- | ------------------------------ | ---------------------------------- | ----------------------------------- |
-| Pre-production | `stride-preprod`               | `https://preprod.stride.julez.cat` | Every push to `main`                |
-| Production     | `stride-frontend`              | `https://stride.julez.cat`         | Every `vX.Y.Z` tag pushed to GitHub |
+| Environment    | Dokploy app (project `stride`)        | URL                                | Deploys                             |
+| -------------- | ------------------------------------- | ---------------------------------- | ----------------------------------- |
+| Pre-production | `preprod` (`stride-preprod-fajqks`)   | `https://stride-preprod.julez.cat` | Every push to `main`                |
+| Production     | `frontend` (`stride-frontend-1yf71m`) | `https://stride.julez.cat`         | Every `vX.Y.Z` tag pushed to GitHub |
 
 Both apps build the same `Dockerfile`. Each has its own runtime environment, including `SITE_URL`, and both share one hosted Supabase project, one garmin_mcp service and the same Managed Agents. Supabase Auth must list both URLs as redirect URLs.
 
@@ -40,3 +40,9 @@ Apply a merged migration to the hosted project before or right after its pull re
 ## Rollback
 
 Fix forward: revert or fix on `main`, check it in pre-production and ship a patch release. Because migrations stay compatible with the previous release, a revert runs against the current schema.
+
+## Setup
+
+- The production app's trigger type is `tag`; the pre-production app follows `main` with trigger type `push`.
+- Pre-production needs its own copy of the production build arguments and environment, with `SITE_URL=https://stride-preprod.julez.cat`.
+- GitHub Actions must be allowed to create pull requests (repository settings, Actions, Workflow permissions) so release-please can open the release pull request.
