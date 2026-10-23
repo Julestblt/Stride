@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, use, useState } from "react";
 import { ChevronRightIcon } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
@@ -16,6 +16,7 @@ import {
   isTodo,
   matchesFilter,
   unreadLabel,
+  type NotificationFeed,
   type NotificationFilter,
 } from "../model";
 import { BellIcon } from "./bell-icon";
@@ -42,6 +43,52 @@ function Badge({ count }: { count: number }) {
 
 export function NotificationBell({ className }: { className?: string }) {
   const { feed, now } = useNotifications();
+  return (
+    <Suspense fallback={<PendingBell className={className} />}>
+      <LoadedBell feed={feed} now={now} className={className} />
+    </Suspense>
+  );
+}
+
+function PendingBell({ className }: { className?: string }) {
+  const current = usePathname() === "/notifications";
+  return (
+    <>
+      <Link
+        href="/notifications"
+        aria-label={bellLabel(0)}
+        aria-current={current ? "page" : undefined}
+        className={cn(
+          bell,
+          "size-11 border-transparent md:hidden",
+          current && "hidden",
+          className,
+        )}
+      >
+        <BellIcon className="size-4.5" />
+      </Link>
+      <Link
+        href="/notifications"
+        aria-label={bellLabel(0)}
+        aria-current={current ? "page" : undefined}
+        className={cn(bell, "size-8.5 max-md:hidden", className)}
+      >
+        <BellIcon className="size-4" />
+      </Link>
+    </>
+  );
+}
+
+function LoadedBell({
+  feed: pending,
+  now,
+  className,
+}: {
+  feed: Promise<NotificationFeed | null>;
+  now: string;
+  className?: string;
+}) {
+  const feed = use(pending);
   const pathname = usePathname();
   const search = useSearchParams().toString();
   const location = `${pathname}?${search}`;

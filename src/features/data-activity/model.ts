@@ -18,6 +18,7 @@ export const dataActivitySchema = z.object({
 });
 export type DataActivityObservation = z.infer<typeof dataActivitySchema>;
 export type DataActivityState =
+  | "checking"
   | "offline"
   | "unavailable"
   | "reconnect"
@@ -61,7 +62,7 @@ export function activityState(
   unavailable: boolean,
 ): DataActivityState {
   if (offline) return "offline";
-  if (!observation) return "unavailable";
+  if (!observation) return unavailable ? "unavailable" : "checking";
   if (
     ["expired", "reconnect_required", "disconnected"].includes(
       observation.connection,
@@ -102,6 +103,7 @@ export function freshCategories(
 }
 
 export const activityLabels: Record<DataActivityState, string> = {
+  checking: "Chargement de l’état Garmin",
   offline: "Hors ligne · données conservées",
   unavailable: "Statut Garmin indisponible",
   reconnect: "Garmin déconnecté · Reconnecter",

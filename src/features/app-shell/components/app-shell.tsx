@@ -1,14 +1,14 @@
+import { Suspense } from "react";
 import { DataActivityProvider } from "@/features/data-activity/components/provider";
 import { StaffProvider } from "@/features/coach/components/staff-context";
 import { NotificationsProvider } from "@/features/notifications/components/notifications-context";
 import type { NotificationFeed } from "@/features/notifications/model";
-import { defaultStaffFaces, type StaffFaces } from "@/features/coach/staff";
+import type { StaffFaces } from "@/features/coach/staff";
 import { PullToSync } from "@/features/data-activity/components/pull-to-sync";
 import {
   DataActivityStatus,
   DataActivityFeedback,
 } from "@/features/data-activity/components/status";
-import type { DataActivityObservation } from "@/features/data-activity/model";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import {
@@ -49,12 +49,13 @@ import {
   type ShellBadge,
   type ShellAthlete,
   type ShellGoal,
+  type ShellNavigation,
   type ShellRaceLink,
 } from "@/features/app-shell/shell";
 import { AppMobileTabBar } from "./app-mobile-tab-bar";
 import { CoachNavItem } from "./coach-nav";
-import { PlanSidebarGroup } from "./plan-nav";
-import type { ProgramNav } from "@/features/plans/view/program";
+import { GarminSince } from "./garmin-since";
+import { PlanSidebarGroup, PlanSidebarGroupLoading } from "./plan-nav";
 import { ProgressSidebarGroup } from "@/features/progress/components/progress-nav";
 import { ShellNavItem } from "./shell-nav-item";
 import { ShellRaceItem } from "./shell-race-item";
@@ -67,48 +68,82 @@ import {
   AccountMenuSettingsIcon,
 } from "./account-menu-icons";
 
+type Navigation = { navigation: Promise<ShellNavigation> };
+
+async function TodayNavItem({ navigation }: Navigation) {
+  const { todayBadge } = await navigation;
+  return <TodayNavLink badge={todayBadge} />;
+}
+
+function TodayNavLink({ badge = null }: { badge?: ShellBadge | null }) {
+  return (
+    <ShellNavItem
+      href="/today"
+      icon={<NavTodayIcon />}
+      label="Aujourd’hui"
+      badge={badge}
+    />
+  );
+}
+
+async function GearNavItem({ navigation }: Navigation) {
+  const { gearBadge } = await navigation;
+  return <GearNavLink badge={gearBadge} />;
+}
+
+function GearNavLink({ badge = null }: { badge?: ShellBadge | null }) {
+  return (
+    <ShellNavItem
+      href="/gear"
+      icon={<NavGearIcon />}
+      label="Matériel"
+      badge={badge}
+    />
+  );
+}
+
+async function CoachNav({ navigation }: Navigation) {
+  const { coachAttention } = await navigation;
+  return <CoachNavItem attention={coachAttention} />;
+}
+
+async function PlanNav({ navigation }: Navigation) {
+  const { planNav, planHistoryCount } = await navigation;
+  return <PlanSidebarGroup nav={planNav} historyCount={planHistoryCount} />;
+}
+
+async function MobileTabBar({ navigation }: Navigation) {
+  const { coachAttention } = await navigation;
+  return <AppMobileTabBar attention={coachAttention} />;
+}
+
 export function AppShell({
   athlete,
   account,
   goal,
   races,
-  sync,
-  defaultOpen,
-  initialActivity,
-  planNav = null,
-  planHistoryCount = null,
-  coachAttention = null,
-  todayBadge = null,
-  gearBadge = null,
-  staffFaces = defaultStaffFaces,
-  notifications = null,
+  staffFaces,
+  navigation,
+  notifications,
   notificationsAt,
+  defaultOpen,
   children,
 }: {
   athlete: ShellAthlete;
   account: ShellAccount;
   goal: ShellGoal | null;
   races: ShellRaceLink[];
-  sync: string | null;
-  initialActivity?: DataActivityObservation | null;
-  planNav?: ProgramNav | null;
-  planHistoryCount?: number | null;
-  coachAttention?: { questions: number; proposals: number } | null;
-  todayBadge?: ShellBadge | null;
-  gearBadge?: ShellBadge | null;
-  staffFaces?: StaffFaces;
-  notifications?: NotificationFeed | null;
-  notificationsAt?: string;
+  staffFaces: StaffFaces;
+  navigation: Promise<ShellNavigation>;
+  notifications: Promise<NotificationFeed | null>;
+  notificationsAt: string;
   defaultOpen: boolean;
   children: React.ReactNode;
 }) {
   return (
     <StaffProvider faces={staffFaces}>
-      <NotificationsProvider
-        feed={notifications}
-        now={notificationsAt ?? new Date().toISOString()}
-      >
-        <DataActivityProvider initial={initialActivity}>
+      <NotificationsProvider feed={notifications} now={notificationsAt}>
+        <DataActivityProvider>
           <SidebarProvider
             defaultOpen={defaultOpen}
             className="h-svh overflow-hidden print:h-auto print:overflow-visible"
@@ -138,13 +173,12 @@ export function AppShell({
                 <SidebarGroup>
                   <SidebarGroupLabel>Entraînement</SidebarGroupLabel>
                   <SidebarMenu>
-                    <ShellNavItem
-                      href="/today"
-                      icon={<NavTodayIcon />}
-                      label="Aujourd’hui"
-                      badge={todayBadge}
-                    />
-                    <CoachNavItem attention={coachAttention} />
+                    <Suspense fallback={<TodayNavLink />}>
+                      <TodayNavItem navigation={navigation} />
+                    </Suspense>
+                    <Suspense fallback={<CoachNavItem attention={null} />}>
+                      <CoachNav navigation={navigation} />
+                    </Suspense>
                     <ShellNavItem
                       href="/plan"
                       icon={<NavPlanIcon />}
@@ -167,10 +201,9 @@ export function AppShell({
                     />
                   </SidebarMenu>
                 </SidebarGroup>
-                <PlanSidebarGroup
-                  nav={planNav}
-                  historyCount={planHistoryCount}
-                />
+                <Suspense fallback={<PlanSidebarGroupLoading />}>
+                  <PlanNav navigation={navigation} />
+                </Suspense>
                 <ProgressSidebarGroup />
                 <SidebarGroup className="group-data-[collapsible=icon]:hidden">
                   <SidebarGroupLabel>Objectifs</SidebarGroupLabel>
@@ -201,12 +234,9 @@ export function AppShell({
                 <SidebarGroup>
                   <SidebarGroupLabel>Athlète</SidebarGroupLabel>
                   <SidebarMenu>
-                    <ShellNavItem
-                      href="/gear"
-                      icon={<NavGearIcon />}
-                      label="Matériel"
-                      badge={gearBadge}
-                    />
+                    <Suspense fallback={<GearNavLink />}>
+                      <GearNavItem navigation={navigation} />
+                    </Suspense>
                     <ShellNavItem
                       href="/nutrition"
                       icon={<NavNutritionIcon />}
@@ -224,14 +254,8 @@ export function AppShell({
                   name={athlete.name}
                   detail={shellProfileDetail(account)}
                   initials={athlete.initials}
-                  sync={
-                    initialActivity !== undefined ? (
-                      <DataActivityStatus />
-                    ) : sync ? (
-                      `Garmin ${sync.toLowerCase()}`
-                    ) : undefined
-                  }
-                  syncDot={initialActivity === undefined}
+                  sync={<DataActivityStatus />}
+                  syncDot={false}
                 >
                   <DropdownMenuContent
                     className="w-(--radix-dropdown-menu-trigger-width) min-w-60 gap-px rounded-surface border border-border-strong bg-popover p-1.5"
@@ -285,12 +309,7 @@ export function AppShell({
                       <Link href="/settings/connections">
                         <AccountMenuConnectionsIcon />
                         Connexions
-                        {account.garminSince && (
-                          <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span className="size-1.5 rounded-full bg-success" />
-                            Garmin · {account.garminSince}
-                          </span>
-                        )}
+                        <GarminSince />
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
@@ -313,7 +332,9 @@ export function AppShell({
             <SidebarInset className="group/inset relative h-svh min-h-0 overflow-hidden md:h-[calc(100svh-1rem)] print:h-auto print:overflow-visible md:print:h-auto">
               <DataActivityFeedback />
               <PullToSync>{children}</PullToSync>
-              <AppMobileTabBar attention={coachAttention} />
+              <Suspense fallback={<AppMobileTabBar attention={null} />}>
+                <MobileTabBar navigation={navigation} />
+              </Suspense>
             </SidebarInset>
           </SidebarProvider>
         </DataActivityProvider>

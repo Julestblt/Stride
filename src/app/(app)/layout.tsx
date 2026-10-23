@@ -1,6 +1,11 @@
 import { cookies } from "next/headers";
 import { AppShell } from "@/features/app-shell/components/app-shell";
-import { getShell } from "@/server/app/shell";
+import {
+  getShellIdentity,
+  getShellNavigation,
+  getShellNotifications,
+} from "@/server/app/shell";
+import { requireAthlete } from "@/server/app/session";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +14,19 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [shell, cookieStore] = await Promise.all([getShell(), cookies()]);
+  await requireAthlete();
+  const navigation = getShellNavigation();
+  const notifications = getShellNotifications();
+  const [identity, cookieStore] = await Promise.all([
+    getShellIdentity(),
+    cookies(),
+  ]);
   return (
     <AppShell
-      {...shell}
+      {...identity}
+      navigation={navigation}
+      notifications={notifications}
+      notificationsAt={new Date().toISOString()}
       defaultOpen={cookieStore.get("sidebar_state")?.value !== "false"}
     >
       {children}

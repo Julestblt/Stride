@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { PulseDot } from "@/components/stride/marks";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type {
   ProgramNav,
@@ -195,6 +196,26 @@ export function PlanSidebarGroup({
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
+    </SidebarGroup>
+  );
+}
+
+export function PlanSidebarGroupLoading() {
+  const pathname = usePathname();
+  if (pathname !== "/plan" && !pathname.startsWith("/plan/")) return null;
+  return (
+    <SidebarGroup
+      aria-hidden="true"
+      className="group-data-[collapsible=icon]:hidden"
+    >
+      <SidebarGroupLabel>Blocs</SidebarGroupLabel>
+      <div className="flex flex-col gap-2.5 px-2 py-1.25">
+        <Skeleton className="mb-1 h-5 w-3/4" />
+        {["w-3/5", "w-2/3", "w-1/2", "w-3/5"].map((width, index) => (
+          <Skeleton key={index} className={cn("h-5", width)} />
+        ))}
+        <Skeleton className="mt-1.5 h-5 w-1/2" />
+      </div>
     </SidebarGroup>
   );
 }

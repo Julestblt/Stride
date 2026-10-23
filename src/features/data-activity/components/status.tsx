@@ -13,6 +13,7 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PulseDot } from "@/components/stride/marks";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,28 @@ export function DataActivityStatus({
   const isMobile = useIsMobile();
   if (!activity) return null;
   const { state, observation } = activity;
+  if (state === "checking")
+    return (
+      <span
+        role="status"
+        className={cn("flex min-h-8 min-w-0 items-center gap-2", className)}
+      >
+        {compact && (
+          <DatabaseIcon
+            aria-hidden="true"
+            className="size-4 text-muted-foreground"
+          />
+        )}
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 rounded-full bg-border-strong"
+        />
+        {!compact && (
+          <Skeleton className={cn("h-3", short ? "w-16" : "w-32")} />
+        )}
+        <span className="sr-only">{activityLabels.checking}</span>
+      </span>
+    );
   const progress = activity.sync.progress;
   const label = activityStatusLabel({
     state,

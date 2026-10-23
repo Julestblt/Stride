@@ -23,7 +23,7 @@ import { parseHealthDate } from "@/features/progress/health-day";
 import { healthDayView } from "@/features/progress/health-day-view";
 import { addDays } from "@/features/progress/period";
 import { healthPageView } from "@/features/progress/health-view";
-import { getShell } from "@/server/app/shell";
+import { getGarminSyncLabel } from "@/server/app/shell";
 import { requireAthlete } from "@/server/app/session";
 import { loadHealth } from "@/server/progress/health";
 import { loadHealthDay } from "@/server/progress/health-day";
@@ -43,10 +43,10 @@ export default async function ProgressHealthPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [context, query, shell] = await Promise.all([
+  const [context, query, sync] = await Promise.all([
     requireAthlete(),
     searchParams,
-    getShell(),
+    getGarminSyncLabel(),
   ]);
   const view = parseHealthView(query.view);
   const today = localToday(new Date());
@@ -75,7 +75,7 @@ export default async function ProgressHealthPage({
           <DayNavigator
             day={day}
             today={today}
-            sync={shell.sync}
+            sync={sync}
             strip={loaded.strip}
           />
           {loaded.model && dayView ? (
@@ -86,7 +86,7 @@ export default async function ProgressHealthPage({
                 <div className="flex flex-col gap-5">
                   <DayReading
                     view={dayView}
-                    sync={day === today ? shell.sync : null}
+                    sync={day === today ? sync : null}
                   />
                   {dayView.night && <NightCard night={dayView.night} />}
                 </div>
@@ -108,7 +108,7 @@ export default async function ProgressHealthPage({
     );
   }
   const model = await loadHealth(context, today, view);
-  const page = healthPageView(model, shell.sync);
+  const page = healthPageView(model, sync);
   return (
     <DataCategoryScope categories={["recovery"]}>
       <div className="flex flex-col gap-6 sm:gap-8">

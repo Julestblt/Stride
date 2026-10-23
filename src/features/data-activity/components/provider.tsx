@@ -63,14 +63,13 @@ export function useDataActivity() {
 }
 
 export function DataActivityProvider({
-  initial,
   children,
 }: {
-  initial?: DataActivityObservation | null;
   children: React.ReactNode;
 }) {
-  const [observation, setObservation] = useState(initial ?? null);
-  const [unavailable, setUnavailable] = useState(!initial);
+  const [observation, setObservation] =
+    useState<DataActivityObservation | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const [offline, setOffline] = useState(false);
   const [fresh, setFresh] = useState<GarminSyncCategory[]>([]);
   const [loads, setLoads] = useState(0);
@@ -84,8 +83,8 @@ export function DataActivityProvider({
   const [clock, setClock] = useState<number | null>(null);
   const requestedRef = useRef<RequestedSync | null>(null);
   const pollNow = useRef<() => void>(() => {});
-  const applied = useRef(initial ?? null);
-  const latest = useRef(initial ?? null);
+  const applied = useRef<DataActivityObservation | null>(null);
+  const latest = useRef<DataActivityObservation | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const query = useSearchParams().toString();

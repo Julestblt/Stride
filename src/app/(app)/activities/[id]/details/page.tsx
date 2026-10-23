@@ -13,7 +13,7 @@ import {
   readActivityDetail,
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
-import { getShell } from "@/server/app/shell";
+import { getGarminSyncLabel } from "@/server/app/shell";
 
 export default async function ActivityDetailPage({
   params,
@@ -26,9 +26,9 @@ export default async function ActivityDetailPage({
   if (!z.uuid().safeParse(id).success) notFound();
   const context = await requireAthlete();
   const now = new Date();
-  const [detail, shell, calibration] = await Promise.all([
+  const [detail, sync, calibration] = await Promise.all([
     readActivityDetail(context, id),
-    getShell(),
+    getGarminSyncLabel(),
     loadHeartRateZones(context, now),
   ]);
   if (!detail) notFound();
@@ -41,7 +41,7 @@ export default async function ActivityDetailPage({
       filter={parseActivityFilter(query.filter)}
       limit={parseActivityLimit(query.limit)}
       search={parseActivitySearch(query.q)}
-      sync={shell.sync}
+      sync={sync}
       today={localToday(now)}
     />
   );

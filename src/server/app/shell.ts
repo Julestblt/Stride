@@ -9,6 +9,7 @@ import {
   shellGoal,
   shellRaces,
   syncLabel,
+  type ShellNavigation,
 } from "@/features/app-shell/shell";
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
 import { buildProgram, programNavigation } from "@/features/plans/view/program";
@@ -41,32 +42,14 @@ async function readTodayReadiness(context: OnboardingContext, now: Date) {
     : null;
 }
 
-export async function loadShell(context: OnboardingContext, now: Date) {
-  reconcileGarminNotificationsAfterResponse(context);
-  const [
-    profile,
-    goals,
-    activity,
-    plan,
-    planHistoryCount,
-    coachAttention,
-    readiness,
-    shoeCount,
-    notifications,
-  ] = await Promise.all([
+export async function loadShellIdentity(context: OnboardingContext, now: Date) {
+  const [profile, goals] = await Promise.all([
     context.client
       .from("athlete_profiles")
       .select(athleteProfileColumns)
       .eq("user_id", context.userId)
       .maybeSingle(),
     readGoals(context).catch(() => null),
-    readDataActivity({ accessToken: context.accessToken }),
-    loadPlanOverview(context).catch(() => null),
-    countPlanProposals(context).catch(() => null),
-    countCoachAttention(context).catch(() => null),
-    readTodayReadiness(context, now).catch(() => null),
-    countActiveShoes(context).catch(() => null),
-    readNotificationFeed(context, now).catch(() => null),
   ]);
   const parsed = profileRowSchema.safeParse(profile.data);
   const values = profileValues(parsed.success ? parsed.data : null);
@@ -75,8 +58,6 @@ export async function loadShell(context: OnboardingContext, now: Date) {
     account: shellAccount(
       values,
       goals ? goals.goal.values.focus === null : false,
-      activity.ok ? activity.value.sync.lastSyncAt : null,
-      now,
     ),
     goal: goals
       ? shellGoal(
@@ -100,19 +81,52 @@ export async function loadShell(context: OnboardingContext, now: Date) {
           localToday(now),
         )
       : [],
-    sync: syncLabel(activity.ok ? activity.value.sync.lastSyncAt : null, now),
-    initialActivity: activity.ok ? activity.value : null,
+    staffFaces: staffFacesOf(profile.data),
+  };
+}
+
+export async function loadShellNavigation(
+  context: OnboardingContext,
+  now: Date,
+): Promise<ShellNavigation> {
+  const [plan, planHistoryCount, coachAttention, readiness, shoeCount] =
+    await Promise.all([
+      loadPlanOverview(context).catch(() => null),
+      countPlanProposals(context).catch(() => null),
+      countCoachAttention(context).catch(() => null),
+      readTodayReadiness(context, now).catch(() => null),
+      countActiveShoes(context).catch(() => null),
+    ]);
+  return {
     planNav: plan ? programNavigation(buildProgram(programInput(plan))) : null,
     planHistoryCount,
     coachAttention,
     todayBadge: readinessBadge(readiness),
     gearBadge: gearBadge(shoeCount),
-    staffFaces: staffFacesOf(profile.data),
-    notifications,
-    notificationsAt: now.toISOString(),
   };
 }
 
-export const getShell = cache(async () =>
-  loadShell(await requireAthlete(), new Date()),
+export const getShellIdentity = cache(async () =>
+  loadShellIdentity(await requireAthlete(), new Date()),
 );
+
+export const getShellNavigation = cache(async () =>
+  loadShellNavigation(await requireAthlete(), new Date()),
+);
+
+export const getShellNotifications = cache(async () => {
+  const context = await requireAthlete();
+  reconcileGarminNotificationsAfterResponse(context);
+  return readNotificationFeed(context, new Date()).catch(() => null);
+});
+
+export const getGarminSyncLabel = cache(async () => {
+  const context = await requireAthlete();
+  const activity = await readDataActivity({
+    accessToken: context.accessToken,
+  });
+  return syncLabel(
+    activity.ok ? activity.value.sync.lastSyncAt : null,
+    new Date(),
+  );
+});
