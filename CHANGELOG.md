@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/Julestblt/Stride/compare/v1.0.0...v1.0.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **275:** keep the race reading open when the weather loads ([#279](https://github.com/Julestblt/Stride/issues/279)) ([0cc2061](https://github.com/Julestblt/Stride/commit/0cc20613b3b62bf8767d0cd493948cd53a33bb2c))
+* **280:** redirect auth actions straight to their destination ([#282](https://github.com/Julestblt/Stride/issues/282)) ([8298274](https://github.com/Julestblt/Stride/commit/829827468e3c090df7833ca9d0110e3d51b21838))
+
 ## [1.0.0](https://github.com/Julestblt/Stride/compare/v0.1.0...v1.0.0) (2026-10-23)
 
 
