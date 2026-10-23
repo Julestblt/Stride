@@ -1,13 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signInAs } from "./support/session";
 
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+function signIn(page: Page) {
+  return signInAs(page, "athlete@example.com");
 }
 
 async function expectNotFound(page: Page) {
