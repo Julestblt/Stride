@@ -116,6 +116,12 @@ test("the fresh-data pill stays above the mobile tab bar", async ({ page }) => {
   await page.goto("/activities");
   const tabs = page.getByRole("navigation", { name: "Navigation principale" });
   await expect(tabs).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: /État des données/ })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   value = observation("complete", 21);
   value.sync.categories.activities.lastSuccessAt = "2026-10-13T06:15:00Z";
   await pollNow(page);
@@ -298,6 +304,40 @@ for (const width of [390, 700]) {
     await page.screenshot({ path: `test-results/data-health-${width}.png` });
   });
 }
+
+test("the shell renders its navigation while the Garmin status is pending", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/api/data-activity", async (route) => {
+    await held;
+    await route.fulfill({ json: observation("complete") }).catch(() => {});
+  });
+  await signIn(page);
+  await page.goto("/today");
+  const sidebar = page.locator("[data-sidebar=sidebar]");
+  await expect(
+    sidebar.getByRole("link", { name: /Aujourd’hui/ }),
+  ).toBeVisible();
+  await expect(
+    sidebar
+      .getByRole("status")
+      .filter({ hasText: "Chargement de l’état Garmin" }),
+  ).toBeAttached();
+  await expect(
+    sidebar.getByRole("button", { name: /État des données/ }),
+  ).toHaveCount(0);
+  release();
+  await expect(
+    sidebar
+      .getByRole("button", { name: /État des données/ })
+      .filter({ visible: true }),
+  ).toHaveCount(1);
+});
 
 test("collapsed desktop navigation keeps the data panel accessible", async ({
   page,
@@ -557,6 +597,12 @@ test("a blocked server navigation starts the header thread before its response",
   await signIn(page);
   await page.goto("/activities");
   await expect(page.getByRole("article")).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: /État des données/ })
+      .filter({ visible: true })
+      .first(),
+  ).toContainText("Reconnecter");
   const before = await page.getByRole("article").boundingBox();
   const gate = await holdNavigation(page, "/progress");
   try {
