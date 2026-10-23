@@ -12,6 +12,8 @@ coverage
 test-results
 playwright-report
 tests
+playwright.config.ts
+scripts
 docs
 supabase
 evals
