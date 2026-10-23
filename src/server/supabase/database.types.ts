@@ -1691,6 +1691,129 @@ export type Database = {
           },
         ];
       };
+      push_deliveries: {
+        Row: {
+          attempts: number;
+          created_at: string;
+          dedupe_key: string;
+          dispatched_at: string | null;
+          id: string;
+          kind: string;
+          notification_id: string | null;
+          occurred_at: string;
+          payload: NonNullable<Json>;
+          request_id: number | null;
+          status: string;
+          subscription_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          attempts?: number;
+          created_at?: string;
+          dedupe_key: string;
+          dispatched_at?: string | null;
+          id?: string;
+          kind: string;
+          notification_id?: string | null;
+          occurred_at: string;
+          payload?: NonNullable<Json>;
+          request_id?: number | null;
+          status?: string;
+          subscription_id: string;
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          created_at?: string;
+          dedupe_key?: string;
+          dispatched_at?: string | null;
+          id?: string;
+          kind?: string;
+          notification_id?: string | null;
+          occurred_at?: string;
+          payload?: NonNullable<Json>;
+          request_id?: number | null;
+          status?: string;
+          subscription_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "push_deliveries_notification_id_fkey";
+            columns: ["notification_id"];
+            isOneToOne: false;
+            referencedRelation: "notifications";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "push_deliveries_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "push_subscriptions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      push_preferences: {
+        Row: {
+          debrief: boolean;
+          garmin_issues: boolean;
+          plan_staff: boolean;
+          session_reminder: boolean;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          debrief?: boolean;
+          garmin_issues?: boolean;
+          plan_staff?: boolean;
+          session_reminder?: boolean;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          debrief?: boolean;
+          garmin_issues?: boolean;
+          plan_staff?: boolean;
+          session_reminder?: boolean;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      push_subscriptions: {
+        Row: {
+          auth: string;
+          created_at: string;
+          endpoint: string;
+          id: string;
+          label: string | null;
+          p256dh: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          auth: string;
+          created_at?: string;
+          endpoint: string;
+          id?: string;
+          label?: string | null;
+          p256dh: string;
+          user_id: string;
+        };
+        Update: {
+          auth?: string;
+          created_at?: string;
+          endpoint?: string;
+          id?: string;
+          label?: string | null;
+          p256dh?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       race_checklist_items: {
         Row: {
           checked: boolean;
@@ -2409,6 +2532,15 @@ export type Database = {
           p_version: number;
         };
         Returns: number;
+      };
+      register_push_subscription: {
+        Args: {
+          p_auth: string;
+          p_endpoint: string;
+          p_label?: string;
+          p_p256dh: string;
+        };
+        Returns: string;
       };
       reject_plan_proposal: {
         Args: { p_note?: string; p_proposal_id: string };
