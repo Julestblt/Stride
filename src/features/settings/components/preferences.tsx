@@ -6,17 +6,38 @@ const segment =
 const segmentSelected =
   "border-foreground bg-foreground font-semibold text-background md:bg-foreground";
 
+export function PreferenceGroup({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col overflow-hidden rounded-surface border border-border bg-surface md:overflow-visible md:rounded-none md:border-0 md:bg-transparent",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function PreferenceSection({
   title,
   accent = false,
   badge,
   id,
+  grouped = true,
   children,
 }: {
   title: string;
   accent?: boolean;
   badge?: string;
   id?: string;
+  grouped?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -34,9 +55,7 @@ export function PreferenceSection({
           </span>
         )}
       </div>
-      <div className="flex flex-col overflow-hidden rounded-surface border border-border bg-surface md:overflow-visible md:rounded-none md:border-0 md:bg-transparent">
-        {children}
-      </div>
+      {grouped ? <PreferenceGroup>{children}</PreferenceGroup> : children}
     </section>
   );
 }
@@ -203,25 +222,5 @@ export function PreviewSwitch({ label }: { label: string }) {
       disabled
       className="relative h-6 w-10 shrink-0 cursor-not-allowed rounded-full bg-border-strong after:absolute after:top-0.75 after:left-0.75 after:size-4.5 after:rounded-full after:bg-muted"
     />
-  );
-}
-
-export function PreviewNotificationRow({
-  label,
-  hint,
-}: {
-  label: string;
-  hint: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-5 border-b border-border px-4 py-2.5 last:border-b-0 md:px-0 md:py-3.5">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="text-sm">{label}</span>
-        <span className="text-xs leading-snug text-muted-foreground">
-          {hint}
-        </span>
-      </div>
-      <PreviewSwitch label={label} />
-    </div>
   );
 }

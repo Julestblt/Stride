@@ -16,7 +16,11 @@
     "insights": ["progress"],
     "internal": ["design-system"],
     "not-found": ["home"],
-    "notifications": ["notifications", "watch-workouts"],
+    "notifications": [
+      "notifications",
+      "watch-workouts",
+      "settings-notifications"
+    ],
     "nutrition": ["nutrition"],
     "onboarding": ["auth", "home"],
     "plans": [
@@ -28,8 +32,9 @@
       "watch-workouts"
     ],
     "progress": ["progress"],
+    "push": ["settings-notifications"],
     "races": ["races", "races-course"],
-    "settings": ["settings", "garmin-sync"],
+    "settings": ["settings", "garmin-sync", "settings-notifications"],
     "theme": ["theme"],
     "today": ["today"]
   }
