@@ -6,6 +6,7 @@ import {
   courseReading,
   raceStrategy,
   roadReading,
+  type Reading,
 } from "@/features/races/reading";
 import { MapCard } from "@/features/races/components/map-card";
 import {
@@ -36,6 +37,40 @@ type Workspace = {
   views: NonNullable<ReturnType<typeof planFor>>;
   races: Awaited<ReturnType<typeof listRaces>>;
 };
+
+function readingFor(
+  { data, views: { model, planned } }: Workspace,
+  weather: RaceWeather | null,
+): Reading | null {
+  if (!planned) return null;
+  return data.race.kind === "road"
+    ? roadReading({ model, planned, weather, date: data.race.date })
+    : courseReading({
+        model,
+        planned,
+        weather,
+        walkGrade: data.plan.walkGradePercent,
+        date: data.race.date,
+      });
+}
+
+function CourseReading({
+  pending,
+  ...props
+}: Workspace & { pending?: Promise<RaceWeather | null> }) {
+  const reading = readingFor(props, null);
+  if (!reading)
+    return <TargetMissing race={props.data.race} plan={props.data.plan} />;
+  const road = props.data.race.kind === "road";
+  return (
+    <ReadingCard
+      reading={reading}
+      pending={pending?.then((weather) => readingFor(props, weather)!)}
+      road={road}
+      strategy={!road}
+    />
+  );
+}
 
 async function CourseWithWeather({
   weather,
@@ -84,25 +119,6 @@ function CourseWorkspace({
   );
   return (
     <>
-      {planned ? (
-        <ReadingCard
-          reading={
-            road
-              ? roadReading({ model, planned, weather, date: data.race.date })
-              : courseReading({
-                  model,
-                  planned,
-                  weather,
-                  walkGrade: data.plan.walkGradePercent,
-                  date: data.race.date,
-                })
-          }
-          road={road}
-          strategy={!road}
-        />
-      ) : (
-        <TargetMissing race={data.race} plan={data.plan} />
-      )}
       <MapCard
         key={data.race.kind}
         data={map}
@@ -196,23 +212,29 @@ export default async function RaceCoursePage({
   const props = { data, views, races };
   const { planned } = views;
   if (!planned || !data.race.date || planned.startEpochMs === null)
-    return <CourseWorkspace {...props} weather={null} />;
+    return (
+      <>
+        <CourseReading {...props} />
+        <CourseWorkspace {...props} weather={null} />
+      </>
+    );
+  const weather = weatherFor(data, views.model, planned);
   return (
-    <Suspense
-      fallback={
-        <CourseWorkspace
-          {...props}
-          weather={null}
-          pendingWeather={
-            <WeatherCardLoading planned={planned} race={data.race} />
-          }
-        />
-      }
-    >
-      <CourseWithWeather
-        {...props}
-        weather={weatherFor(data, views.model, planned)}
-      />
-    </Suspense>
+    <>
+      <CourseReading {...props} pending={weather} />
+      <Suspense
+        fallback={
+          <CourseWorkspace
+            {...props}
+            weather={null}
+            pendingWeather={
+              <WeatherCardLoading planned={planned} race={data.race} />
+            }
+          />
+        }
+      >
+        <CourseWithWeather {...props} weather={weather} />
+      </Suspense>
+    </>
   );
 }

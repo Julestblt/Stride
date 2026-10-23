@@ -1,4 +1,5 @@
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
+import { Suspense } from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MonoLabel } from "@/components/stride/mono-label";
@@ -24,12 +25,37 @@ import { WeatherIcon } from "./weather-icon";
 import { LoadingScope } from "@/features/data-activity/components/loading";
 import { Skeleton } from "@/components/ui/skeleton";
 
+async function ReadingText({
+  reading,
+  field,
+}: {
+  reading: Promise<Reading>;
+  field: keyof Reading;
+}) {
+  return (await reading)[field];
+}
+
+function readingText(
+  reading: Reading,
+  pending: Promise<Reading> | undefined,
+  field: keyof Reading,
+) {
+  if (!pending) return reading[field];
+  return (
+    <Suspense fallback={reading[field]}>
+      <ReadingText reading={pending} field={field} />
+    </Suspense>
+  );
+}
+
 export function ReadingCard({
   reading,
+  pending,
   road = false,
   strategy = false,
 }: {
   reading: Reading;
+  pending?: Promise<Reading>;
   road?: boolean;
   strategy?: boolean;
 }) {
@@ -51,7 +77,7 @@ export function ReadingCard({
             className="h-4.5 w-px shrink-0 bg-border-strong max-sm:hidden"
           />
           <span className="min-w-0 text-base leading-[1.35] font-semibold tracking-[-0.01em] sm:flex-1 sm:truncate">
-            {reading.title}
+            {readingText(reading, pending, "title")}
           </span>
           <span className="flex min-h-7 items-center gap-1.5 text-meta whitespace-nowrap text-muted sm:min-h-0 sm:border-l sm:border-border sm:pl-3.5">
             <span className="group-open:hidden">Lire l’analyse</span>
@@ -64,7 +90,7 @@ export function ReadingCard({
         </summary>
         <div className="px-4 pb-4 sm:mx-5 sm:border-t sm:border-border sm:px-0 sm:pt-3.5 sm:pb-5.5 sm:pl-5.5">
           <p className="max-w-205 border-t border-border pt-3.5 text-sm leading-[1.65] text-muted sm:border-t-0 sm:pt-0 sm:text-body sm:leading-[1.65]">
-            {reading.body}
+            {readingText(reading, pending, "body")}
           </p>
         </div>
       </details>
