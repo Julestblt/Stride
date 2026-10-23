@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { onboardingSteps } from "./progress";
 const timestamp = z.iso.datetime({ offset: true }).nullable();
+export const progressColumns =
+  "user_id, current_step, revision, completed_at, welcome_completed_at, garmin_completed_at, history_completed_at, about_completed_at, goals_completed_at, profile_completed_at, created_at, updated_at";
 export const progressSchema = z.object({
   user_id: z.uuid(),
   current_step: z.string(),

@@ -6,7 +6,10 @@ import {
   type SettingsProfileSnapshot,
 } from "@/features/settings/profile";
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
-import { readProfile } from "@/server/onboarding/profile";
+import {
+  athleteProfileColumns,
+  readProfile,
+} from "@/server/onboarding/profile";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { profilePhotoUrl, uploadProfilePhoto } from "./photo";
 
@@ -24,7 +27,7 @@ export async function readSettingsProfile(
 ): Promise<SettingsProfileSnapshot> {
   const { data, error } = await context.client
     .from("athlete_profiles")
-    .select("*")
+    .select(athleteProfileColumns)
     .eq("user_id", context.userId)
     .maybeSingle();
   if (error) throw new Error("Unable to read profile capabilities");
@@ -93,14 +96,14 @@ export async function persistSettingsProfile(
       ? await context.client
           .from("athlete_profiles")
           .insert({ user_id: context.userId, ...update })
-          .select("*")
+          .select("revision")
           .maybeSingle()
       : await context.client
           .from("athlete_profiles")
           .update(update)
           .eq("user_id", context.userId)
           .eq("revision", current.revision)
-          .select("*")
+          .select("revision")
           .maybeSingle();
   if (response.error || !response.data) {
     if (photo && "path" in photo)

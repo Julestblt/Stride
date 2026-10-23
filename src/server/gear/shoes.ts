@@ -14,6 +14,9 @@ type GearContext = Pick<OnboardingContext, "client" | "userId">;
 
 const numeric = z.coerce.number().nullable();
 
+const shoeRowColumns =
+  "id, garmin_gear_uuid, brand, model, version, category, terrain, description, suggested_fields, size_eu, lifespan_km, starting_distance_m, first_use_date, retired_on, created_at";
+
 const shoeRowSchema = z.object({
   id: z.uuid(),
   garmin_gear_uuid: z.string().nullable(),
@@ -124,7 +127,7 @@ export async function readShoes(context: GearContext): Promise<StoredShoe[]> {
   const [{ data, error }, gear] = await Promise.all([
     context.client
       .from("athlete_shoes")
-      .select("*")
+      .select(shoeRowColumns)
       .eq("user_id", context.userId)
       .order("first_use_date", { ascending: false }),
     readGarminGear(context),

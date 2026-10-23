@@ -19,6 +19,7 @@ import { countPlanProposals } from "@/server/plans/proposals";
 import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
+import { athleteProfileColumns } from "@/server/onboarding/profile";
 import { countActiveShoes } from "@/server/gear/load";
 import { readNotificationFeed } from "@/server/notifications/feed";
 import { reconcileGarminNotificationsAfterResponse } from "@/server/notifications/garmin";
@@ -55,7 +56,7 @@ export async function loadShell(context: OnboardingContext, now: Date) {
   ] = await Promise.all([
     context.client
       .from("athlete_profiles")
-      .select("*")
+      .select(athleteProfileColumns)
       .eq("user_id", context.userId)
       .maybeSingle(),
     readGoals(context).catch(() => null),
