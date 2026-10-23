@@ -98,7 +98,7 @@ describe("health model", () => {
     expect(model.sleep?.restorativeShare).toBeCloseTo(8760 / 21_120);
     expect(model.load).toMatchObject({ zone: "productive", vo2: 55 });
     expect(model.load?.ratio).toBeCloseTo(1.125);
-    const view = healthPageView(model, null);
+    const view = healthPageView(model);
     expect(view.headline).toBe(
       "Tu récupères bien de la charge, mais ton sommeil ne suit plus.",
     );
@@ -146,14 +146,14 @@ describe("health model", () => {
       usualCharged: 55,
       drained: -51,
     });
-    expect(healthPageView(model, null).energy?.status).toBe(
+    expect(healthPageView(model).energy?.status).toBe(
       "Recharge partielle",
     );
   });
 
   it("states missing data honestly", () => {
     const model = healthModel({ days: [], view: "week", today });
-    const view = healthPageView(model, null);
+    const view = healthPageView(model);
     expect(view.headline).toBe(
       "Pas encore assez de données Garmin pour lire ta santé.",
     );

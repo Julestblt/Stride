@@ -12,7 +12,6 @@ import {
   loadHeartRateZones,
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
-import { getGarminSyncLabel } from "@/server/app/shell";
 
 export default async function ActivitiesPage({
   searchParams,
@@ -25,16 +24,13 @@ export default async function ActivitiesPage({
   const context = await requireAthlete();
   const now = new Date();
   const search = parseActivitySearch(query.q);
-  const [{ activities, total }, sync] = await Promise.all([
+  const [{ activities, total }, calibration] = await Promise.all([
     listActivities(context, filter, limit, search),
-    getGarminSyncLabel(),
+    loadHeartRateZones(context, now),
   ]);
-  const [detail, calibration] = activities[0]
-    ? await Promise.all([
-        readActivityDetail(context, activities[0].id),
-        loadHeartRateZones(context, now),
-      ])
-    : [null, null];
+  const detail = activities[0]
+    ? await readActivityDetail(context, activities[0].id)
+    : null;
   return (
     <ActivitiesView
       activities={activities}
@@ -49,7 +45,6 @@ export default async function ActivitiesPage({
       }
       search={search}
       current={false}
-      sync={sync}
       today={localToday(now)}
     />
   );

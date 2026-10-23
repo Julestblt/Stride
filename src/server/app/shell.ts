@@ -8,7 +8,6 @@ import {
   shellAthlete,
   shellGoal,
   shellRaces,
-  syncLabel,
   type ShellNavigation,
 } from "@/features/app-shell/shell";
 import { profileRowSchema, profileValues } from "@/features/onboarding/profile";
@@ -17,7 +16,6 @@ import { loadPlanOverview, programInput } from "@/server/plans/overview";
 import { staffFacesOf } from "@/features/coach/staff";
 import { countCoachAttention } from "@/server/coaching/managed/store";
 import { countPlanProposals } from "@/server/plans/proposals";
-import { readDataActivity } from "./data-activity";
 import type { OnboardingContext } from "@/server/onboarding/context";
 import { readGoals } from "@/server/onboarding/goals";
 import { athleteProfileColumns } from "@/server/onboarding/profile";
@@ -118,15 +116,4 @@ export const getShellNotifications = cache(async () => {
   const context = await requireAthlete();
   reconcileGarminNotificationsAfterResponse(context);
   return readNotificationFeed(context, new Date()).catch(() => null);
-});
-
-export const getGarminSyncLabel = cache(async () => {
-  const context = await requireAthlete();
-  const activity = await readDataActivity({
-    accessToken: context.accessToken,
-  });
-  return syncLabel(
-    activity.ok ? activity.value.sync.lastSyncAt : null,
-    new Date(),
-  );
 });

@@ -385,10 +385,7 @@ function loadCard(model: HealthModel): HealthPageView["load"] {
   };
 }
 
-export function healthPageView(
-  model: HealthModel,
-  syncedAt: string | null,
-): HealthPageView {
+export function healthPageView(model: HealthModel): HealthPageView {
   const { sleep } = model;
   const takeaways = [
     sleepTakeaway(model),
@@ -396,7 +393,7 @@ export function healthPageView(
     loadTakeaway(model),
   ].filter((item): item is Takeaway => item !== null);
   return {
-    readingLabel: `Lecture de Stride · ${model.readingDays} derniers jours${syncedAt ? ` · ${syncedAt.toLowerCase()}` : ""}`,
+    readingLabel: `Lecture de Stride · ${model.readingDays} derniers jours`,
     headline: headline(model),
     paragraph: paragraph(model),
     takeaways,

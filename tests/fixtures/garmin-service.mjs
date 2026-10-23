@@ -308,6 +308,7 @@ function reconcile(connection, body) {
 export function createGarminService() {
   const connections = new Map();
   const challenges = new Map();
+  const heldDays = new Map();
 
   function connect(user) {
     const connection = {
@@ -331,7 +332,24 @@ export function createGarminService() {
     if (url.pathname === "/__test__/reset" && request.method === "POST") {
       connections.clear();
       challenges.clear();
+      heldDays.forEach((held) => held.release());
+      heldDays.clear();
       return json(response, 200, { reset: true });
+    }
+    if (url.pathname === "/__test__/wellness" && request.method === "POST") {
+      const { day, hold } = raw ? JSON.parse(raw) : {};
+      if (typeof day !== "string" || typeof hold !== "boolean")
+        return failure(response, 400, "invalid_request");
+      heldDays.get(day)?.release();
+      heldDays.delete(day);
+      if (hold) {
+        let release = () => {};
+        const released = new Promise((resolve) => {
+          release = resolve;
+        });
+        heldDays.set(day, { released, release });
+      }
+      return json(response, 200, { held: hold });
     }
     const user = subject(request.headers.authorization);
     if (!user) return failure(response, 401, "unauthorized");
@@ -493,8 +511,10 @@ export function createGarminService() {
     const wellness = /^\/v1\/wellness\/days\/(\d{4}-\d{2}-\d{2})$/.exec(
       url.pathname,
     );
-    if (wellness && request.method === "GET")
+    if (wellness && request.method === "GET") {
+      await heldDays.get(wellness[1])?.released;
       return json(response, 200, wellnessDay(wellness[1]));
+    }
 
     return failure(response, 404, "invalid_request");
   });

@@ -1,5 +1,6 @@
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { ChartInspector } from "@/components/stride/chart-inspector";
+import { GarminSyncSuffix } from "@/features/data-activity/components/synced-at";
 import { TrendMark } from "@/components/stride/marks";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { StrideMark } from "@/components/stride/stride-mark";
@@ -174,6 +175,7 @@ export function ReadingCard({ view }: { view: HealthPageView }) {
         <MonoLabel size="micro" className="flex items-center gap-2">
           <StrideMark className="size-3" />
           {view.readingLabel}
+          <GarminSyncSuffix />
         </MonoLabel>
         <h2
           id="health-reading"

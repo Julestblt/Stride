@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { z } from "zod";
+import type { RaceWeather } from "@/features/races/weather";
 import { walkPortions, walkSummary } from "@/features/races/grade";
 import {
   courseReading,
@@ -14,12 +16,13 @@ import {
   SimulationCard,
   StrategyCard,
   WeatherCard,
+  WeatherCardLoading,
 } from "@/features/races/components/course-cards";
 import { CourseImport } from "@/features/races/components/course-import";
 import { TargetMissing } from "@/features/races/components/target-missing";
 import { WalkCard } from "@/features/races/components/walk-card";
 import { requireAthlete } from "@/server/app/session";
-import { listRaces } from "@/server/races/races";
+import { listRaces, type RaceWorkspaceData } from "@/server/races/races";
 import { loadRace } from "@/server/races/load";
 import { chartViews, planFor, weatherFor } from "@/server/races/views";
 import { listCourseActivities } from "@/server/races/activities";
@@ -28,34 +31,31 @@ const scenarioSchema = z
   .enum(["ambitious", "target", "cautious"])
   .catch("target");
 
-export default async function RaceCoursePage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+type Workspace = {
+  data: RaceWorkspaceData;
+  views: NonNullable<ReturnType<typeof planFor>>;
+  races: Awaited<ReturnType<typeof listRaces>>;
+};
+
+async function CourseWithWeather({
+  weather,
+  ...props
+}: Workspace & { weather: Promise<RaceWeather | null> }) {
+  return <CourseWorkspace {...props} weather={await weather} />;
+}
+
+function CourseWorkspace({
+  data,
+  views,
+  races,
+  weather,
+  pendingWeather = null,
+}: Workspace & {
+  weather: RaceWeather | null;
+  pendingWeather?: React.ReactNode;
 }) {
-  const [{ id }, query] = await Promise.all([params, searchParams]);
-  const [{ context, data }, races] = await Promise.all([
-    loadRace(id),
-    requireAthlete().then((context) => listRaces(context)),
-  ]);
-  if (!data.course) {
-    const activities = await listCourseActivities(context);
-    return (
-      <>
-        <CourseImport
-          race={data.race}
-          activities={activities}
-          replacing={false}
-        />
-        <OtherRaces races={races} currentId={data.race.id} />
-      </>
-    );
-  }
-  const views = planFor(data, scenarioSchema.parse(query.scenario))!;
+  const course = data.course!;
   const { model, planned, scenarios } = views;
-  const weather = await weatherFor(data, model, planned);
   const { profile, map } = chartViews(model, planned, weather);
   const road = data.race.kind === "road";
   const roadProfile = road
@@ -106,7 +106,7 @@ export default async function RaceCoursePage({
       <MapCard
         key={data.race.kind}
         data={map}
-        fileName={data.course.fileName ?? "parcours.gpx"}
+        fileName={course.fileName ?? "parcours.gpx"}
         rainLabel={weather?.mode === "forecast" ? "Averses" : "Météo"}
         hasWeather={profile.rain.length > 0}
         walkThreshold={data.plan.walkGradePercent}
@@ -121,6 +121,7 @@ export default async function RaceCoursePage({
         walkDistanceM={walk.distanceM}
         race={data.race}
       />
+      {pendingWeather}
       {weather && planned && (
         <WeatherCard weather={weather} planned={planned} race={data.race} />
       )}
@@ -163,5 +164,55 @@ export default async function RaceCoursePage({
       )}
       <OtherRaces races={races} currentId={data.race.id} />
     </>
+  );
+}
+
+export default async function RaceCoursePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
+  const [{ context, data }, races] = await Promise.all([
+    loadRace(id),
+    requireAthlete().then((context) => listRaces(context)),
+  ]);
+  if (!data.course) {
+    const activities = await listCourseActivities(context);
+    return (
+      <>
+        <CourseImport
+          race={data.race}
+          activities={activities}
+          replacing={false}
+        />
+        <OtherRaces races={races} currentId={data.race.id} />
+      </>
+    );
+  }
+  const views = planFor(data, scenarioSchema.parse(query.scenario))!;
+  const props = { data, views, races };
+  const { planned } = views;
+  if (!planned || !data.race.date || planned.startEpochMs === null)
+    return <CourseWorkspace {...props} weather={null} />;
+  return (
+    <Suspense
+      fallback={
+        <CourseWorkspace
+          {...props}
+          weather={null}
+          pendingWeather={
+            <WeatherCardLoading planned={planned} race={data.race} />
+          }
+        />
+      }
+    >
+      <CourseWithWeather
+        {...props}
+        weather={weatherFor(data, views.model, planned)}
+      />
+    </Suspense>
   );
 }

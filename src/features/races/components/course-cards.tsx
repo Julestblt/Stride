@@ -21,6 +21,8 @@ import { segmentNight } from "../workspace";
 import { ProfileChart } from "./profile-chart";
 import { CardLabel, Figure, LegendItem, RaceCard, StatusPill } from "./race-ui";
 import { WeatherIcon } from "./weather-icon";
+import { LoadingScope } from "@/features/data-activity/components/loading";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ReadingCard({
   reading,
@@ -279,6 +281,43 @@ export function MarkBadge({
     >
       {mark.label}
     </span>
+  );
+}
+
+export function WeatherCardLoading({
+  planned,
+  race,
+}: {
+  planned: RacePlanModel;
+  race: RaceSummary;
+}) {
+  const start = planned.simulation.passages[0].clockMinutes;
+  const finish = start + planned.simulation.finishSeconds / 60;
+  return (
+    <LoadingScope label="Chargement de la météo" className="flex flex-col">
+      <RaceCard>
+        <div className="flex items-center justify-between gap-3">
+          <CardLabel>Météo du jour J</CardLabel>
+          <div className="flex gap-1.5">
+            <StatusPill>Départ {formatClock(start)}</StatusPill>
+            <StatusPill tone="outline">
+              Arrivée ~{formatClock(finish)}
+            </StatusPill>
+          </div>
+        </div>
+        <Skeleton className="h-19 w-full rounded-[10px]" />
+        {race.kind !== "road" && (
+          <div aria-hidden="true" className="flex gap-1.5">
+            {[0, 1, 2, 3, 4, 5].map((item) => (
+              <Skeleton
+                key={item}
+                className="h-22 flex-[1_0_58px] rounded-surface"
+              />
+            ))}
+          </div>
+        )}
+      </RaceCard>
+    </LoadingScope>
   );
 }
 

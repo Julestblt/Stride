@@ -32,7 +32,6 @@ export function ActivitiesView({
   view: ActivityView | null;
   search: string;
   current: boolean;
-  sync: string | null;
   today: string;
   pair?: React.ReactNode;
   debrief?: React.ReactNode;

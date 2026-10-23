@@ -45,7 +45,6 @@ export function ActivityFullDetail({
   filter: ActivityFilter;
   limit: number;
   search?: string;
-  sync: string | null;
   today: string;
 }) {
   const query = activitiesQuery(filter, limit, search);
