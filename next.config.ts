@@ -9,6 +9,27 @@ const nextConfig: NextConfig = {
       .map((origin) => origin.trim())
       .filter(Boolean),
   ],
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self'",
+          },
+        ],
+      },
+    ];
+  },
   experimental: {
     serverActions: { bodySizeLimit: "3mb" },
     proxyClientMaxBodySize: "21mb",

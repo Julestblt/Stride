@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeToaster } from "@/features/theme/components/theme-toaster";
 import { themeScript } from "@/features/theme/model";
@@ -9,6 +9,15 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Stride",
   description: "Ton coach running personnel, sur route et en trail.",
+  appleWebApp: {
+    capable: true,
+    title: "Stride",
+    statusBarStyle: "black",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#080907",
 };
 
 export default function RootLayout({
