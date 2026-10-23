@@ -86,13 +86,14 @@ const pushServiceHosts = [
 ];
 
 export function isPushEndpoint(value: string) {
+  if (!URL.canParse(value)) return false;
   const { hostname } = new URL(value);
   return pushServiceHosts.some(
     (host) => hostname === host || hostname.endsWith(`.${host}`),
   );
 }
 
-const endpointSchema = z
+export const pushEndpointSchema = z
   .url({ protocol: /^https$/ })
   .max(2048)
   .refine(isPushEndpoint);
@@ -103,7 +104,7 @@ const keysShape = {
 };
 
 export const pushSubscriptionSchema = z.strictObject({
-  endpoint: endpointSchema,
+  endpoint: pushEndpointSchema,
   keys: z.strictObject(keysShape),
   label: z.string().trim().min(1).max(60).nullable(),
 });
@@ -112,7 +113,7 @@ export const pushDeliverySchema = z.object({
   id: z.uuid(),
   subscription: z.object({
     id: z.uuid(),
-    endpoint: endpointSchema,
+    endpoint: pushEndpointSchema,
     keys: z.object(keysShape),
   }),
   kind: z.string().min(1).max(40),
@@ -121,6 +122,10 @@ export const pushDeliverySchema = z.object({
   faces: z.unknown(),
 });
 export type PushDelivery = z.output<typeof pushDeliverySchema>;
+
+export const pushDeliveryTargetSchema = z.object({
+  subscription: z.object({ id: z.uuid(), endpoint: z.string() }),
+});
 
 export const pushDispatchSchema = z.object({
   deliveries: z.array(z.unknown()).max(50),

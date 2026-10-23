@@ -3,6 +3,8 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { sendNotification, WebPushError } from "web-push";
 import {
   pushDeliverySchema,
+  pushDeliveryTargetSchema,
+  pushEndpointSchema,
   pushMessage,
   pushTimeToLive,
   type PushDelivery,
@@ -63,9 +65,17 @@ export async function dispatchPushes(
   environment: PushEnvironment,
   items: readonly unknown[],
 ): Promise<DispatchResult> {
+  const invalid = new Set<string>();
   const deliveries = items.flatMap((item) => {
     const parsed = pushDeliverySchema.safeParse(item);
-    return parsed.success ? [parsed.data] : [];
+    if (parsed.success) return [parsed.data];
+    const target = pushDeliveryTargetSchema.safeParse(item);
+    if (
+      target.success &&
+      !pushEndpointSchema.safeParse(target.data.subscription.endpoint).success
+    )
+      invalid.add(target.data.subscription.id);
+    return [];
   });
   const outcomes = await Promise.all(
     deliveries.map(async (delivery) => ({
@@ -75,11 +85,12 @@ export async function dispatchPushes(
   );
   return {
     gone: [
-      ...new Set(
-        outcomes
+      ...new Set([
+        ...invalid,
+        ...outcomes
           .filter(({ outcome }) => outcome === "gone")
           .map(({ delivery }) => delivery.subscription.id),
-      ),
+      ]),
     ],
     failed: outcomes
       .filter(({ outcome }) => outcome === "failed")

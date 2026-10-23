@@ -76,6 +76,21 @@ alter table public.push_deliveries enable row level security;
 
 revoke all on public.push_deliveries from anon, authenticated;
 
+create function private.is_push_endpoint(p_endpoint text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(
+    substring(p_endpoint from '^https://([^/:?#]+)') ~
+      '^([^.]+\.)*(fcm\.googleapis\.com|android\.googleapis\.com|push\.services\.mozilla\.com|push\.apple\.com|notify\.windows\.com)$',
+    false
+  );
+$$;
+
+revoke all on function private.is_push_endpoint(text) from public, anon, authenticated;
+
 create function public.register_push_subscription(
   p_endpoint text,
   p_p256dh text,
@@ -93,6 +108,9 @@ declare
 begin
   if v_user is null then
     raise exception 'Not authenticated' using errcode = '42501';
+  end if;
+  if not private.is_push_endpoint(p_endpoint) then
+    raise exception 'Unsupported push endpoint' using errcode = '22023';
   end if;
   delete from public.push_subscriptions where endpoint = p_endpoint and user_id <> v_user;
   insert into public.push_subscriptions (user_id, endpoint, p256dh, auth, label)
@@ -424,9 +442,15 @@ begin
     group by d.request_id, r.id, r.status_code, r.content
   loop
     continue when not v_batch.answered and v_batch.dispatched_at > p_now - interval '5 minutes';
+    if v_batch.status_code is not null and v_batch.status_code not between 200 and 299 then
+      update public.push_deliveries set
+        status = case when attempts >= 3 then 'failed' else 'pending' end,
+        request_id = null
+      where request_id = v_batch.request_id and status = 'sent';
+      continue;
+    end if;
     v_body := case
-      when v_batch.answered and v_batch.status_code between 200 and 299
-        then private.push_json(v_batch.content)
+      when v_batch.status_code is not null then private.push_json(v_batch.content)
     end;
     if jsonb_typeof(v_body) = 'object' then
       delete from public.push_subscriptions s
@@ -441,14 +465,9 @@ begin
       where request_id = v_batch.request_id
         and status = 'sent'
         and id::text = any (private.push_ids(v_body, 'failed'));
-      update public.push_deliveries set status = 'delivered', request_id = null
-      where request_id = v_batch.request_id and status = 'sent';
-    else
-      update public.push_deliveries set
-        status = case when attempts >= 3 then 'failed' else 'pending' end,
-        request_id = null
-      where request_id = v_batch.request_id and status = 'sent';
     end if;
+    update public.push_deliveries set status = 'delivered', request_id = null
+    where request_id = v_batch.request_id and status = 'sent';
   end loop;
 
   for v_user in select distinct s.user_id from public.push_subscriptions s loop
@@ -503,7 +522,12 @@ begin
         )
         order by ps.is_key desc, ps.session_key
       ) as sessions
-    from public.training_plans tp
+    from (
+      select p.* from public.training_plans p
+      where p.status = 'active'
+        and p.time_zone in (select z.name from pg_catalog.pg_timezone_names z)
+      offset 0
+    ) tp
     join public.plan_sessions ps
       on ps.plan_id = tp.id
       and ps.valid_to_version is null
@@ -512,6 +536,7 @@ begin
       and ps.kind <> 'rest'
     where tp.status = 'active'
       and (p_now at time zone tp.time_zone)::time >= time '07:00'
+      and (p_now at time zone tp.time_zone)::time < time '12:00'
       and exists (select 1 from public.push_subscriptions x where x.user_id = tp.user_id)
       and not exists (
         select 1 from public.session_activity_matches m
@@ -523,6 +548,29 @@ begin
   left join public.push_preferences p on p.user_id = t.user_id
   where coalesce(p.session_reminder, true)
   on conflict (subscription_id, dedupe_key) do nothing;
+
+  update public.push_deliveries d set status = 'failed'
+  from (
+    select d2.id
+    from public.push_deliveries d2
+    left join public.push_preferences p on p.user_id = d2.user_id
+    left join public.notifications n on n.id = d2.notification_id
+    where d2.status = 'pending'
+      and (
+        not case
+          when d2.kind = 'session_reminder' then coalesce(p.session_reminder, true)
+          when d2.kind in ('plan_proposal', 'staff_reply', 'staff_question')
+            then coalesce(p.plan_staff, true)
+          when d2.kind = 'garmin_activity' then coalesce(p.debrief, true)
+          when d2.kind in ('garmin_connection', 'watch_workout')
+            then coalesce(p.garmin_issues, true)
+          else false
+        end
+        or (d2.notification_id is not null
+          and (n.id is null or n.read_at is not null or n.resolved_at is not null))
+      )
+  ) stale
+  where d.id = stale.id;
 
   select coalesce(array_agg(b.id), '{}'), coalesce(jsonb_agg(b.item), '[]')
   into v_ids, v_items
@@ -562,7 +610,7 @@ begin
         'Content-Type', 'application/json',
         'Authorization', 'Bearer ' || v_secret
       ),
-      timeout_milliseconds := 15000
+      timeout_milliseconds := 60000
     );
     update public.push_deliveries set
       status = 'sent',

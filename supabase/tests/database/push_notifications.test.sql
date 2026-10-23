@@ -1,11 +1,13 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(24);
 
 insert into auth.users (id, aud, role, email) values
   ('a9000000-0000-4000-8000-0000000000a9', 'authenticated', 'authenticated', 'push-a@example.com'),
-  ('b9000000-0000-4000-8000-0000000000b9', 'authenticated', 'authenticated', 'push-b@example.com');
+  ('b9000000-0000-4000-8000-0000000000b9', 'authenticated', 'authenticated', 'push-b@example.com'),
+  ('c9000000-0000-4000-8000-0000000000c9', 'authenticated', 'authenticated', 'push-c@example.com'),
+  ('d9000000-0000-4000-8000-0000000000d9', 'authenticated', 'authenticated', 'push-d@example.com');
 
 create function pg_temp.act_as(p_user uuid) returns void language sql as $$
   select set_config('request.jwt.claims', json_build_object('sub', p_user, 'role', 'authenticated')::text, true);
@@ -52,14 +54,28 @@ select is(
 
 select pg_temp.act_as('a9000000-0000-4000-8000-0000000000a9');
 select isnt(
-  public.register_push_subscription('https://push.example.com/a', 'p256dh-a', 'auth-a', 'iPhone'),
+  public.register_push_subscription('https://fcm.googleapis.com/fcm/send/a', 'p256dh-a', 'auth-a', 'iPhone'),
   null, 'an athlete registers a device'
 );
 select is(
-  public.register_push_subscription('https://push.example.com/a', 'p256dh-a2', 'auth-a2', 'iPhone'),
-  (select id from public.push_subscriptions where endpoint = 'https://push.example.com/a'),
+  public.register_push_subscription('https://fcm.googleapis.com/fcm/send/a', 'p256dh-a2', 'auth-a2', 'iPhone'),
+  (select id from public.push_subscriptions where endpoint = 'https://fcm.googleapis.com/fcm/send/a'),
   'registering the same endpoint again keeps one device'
 );
+select throws_ok(
+  $$select public.register_push_subscription('https://10.0.0.1/push', 'k', 'a', null)$$,
+  '22023', 'Unsupported push endpoint', 'only browser push services are accepted'
+);
+select throws_ok(
+  $$select public.register_push_subscription('https://push.apple.com.example.com/x', 'k', 'a', null)$$,
+  '22023', 'Unsupported push endpoint', 'a look-alike host is rejected'
+);
+reset role;
+select pg_temp.act_as('c9000000-0000-4000-8000-0000000000c9');
+select public.register_push_subscription('https://fcm.googleapis.com/fcm/send/c', 'p256dh-c', 'auth-c', null);
+reset role;
+select pg_temp.act_as('d9000000-0000-4000-8000-0000000000d9');
+select public.register_push_subscription('https://fcm.googleapis.com/fcm/send/d', 'p256dh-d', 'auth-d', null);
 reset role;
 
 select pg_temp.act_as('b9000000-0000-4000-8000-0000000000b9');
@@ -75,7 +91,7 @@ select throws_ok(
   'select * from public.push_deliveries', '42501', null,
   'athletes cannot read deliveries'
 );
-select public.register_push_subscription('https://push.example.com/b', 'p256dh-b', 'auth-b', null);
+select public.register_push_subscription('https://web.push.apple.com/b', 'p256dh-b', 'auth-b', null);
 reset role;
 
 select set_config('request.jwt.claims', '', true);
@@ -170,13 +186,31 @@ insert into public.session_activity_matches (
   'b9000000-0000-4000-8000-0000000000f1', null, 'athlete', 1, 'checked_in'
 );
 
+insert into public.training_plans (id, user_id, title, starts_on, ends_on, active_version, time_zone)
+values ('c9000000-0000-4000-8000-0000000000d1', 'c9000000-0000-4000-8000-0000000000c9',
+  'Plan C', current_date - 7, current_date + 60, 1, 'Foo/Bar');
+insert into public.plan_versions (plan_id, version, user_id, created_by, effective_from, confidence, content_hash)
+values ('c9000000-0000-4000-8000-0000000000d1', 1, 'c9000000-0000-4000-8000-0000000000c9',
+  'coach', current_date, '{"level": "normal", "reasons": []}', 'hash');
+insert into public.plan_sessions (
+  id, plan_id, user_id, session_key, valid_from_version, scheduled_on, sport, kind, title, purpose,
+  is_key, priority, targets, structure, origin
+) values (
+  'c9000000-0000-4000-8000-0000000000f1', 'c9000000-0000-4000-8000-0000000000d1',
+  'c9000000-0000-4000-8000-0000000000c9', 's-1', 1, (now() at time zone 'Europe/Paris')::date,
+  'run', 'easy', 'Footing', 'Objectif', false, 'normal', '{}', '[]', 'template'
+);
+
 select private.push_tick(pg_temp.local_time('06:30'));
 select is(
   pg_temp.deliveries('a9000000-0000-4000-8000-0000000000a9', 'session_reminder'), 0,
   'no reminder before 07:00 in the plan time zone'
 );
 
-select private.push_tick(pg_temp.local_time('07:05'));
+select lives_ok(
+  $$select private.push_tick(pg_temp.local_time('07:05'))$$,
+  'a plan with an unknown time zone does not break the tick'
+);
 select is(
   (select string_agg(payload -> 'sessions' -> 0 ->> 'title' || '/' || jsonb_array_length(payload -> 'sessions'), ',')
     from public.push_deliveries
@@ -192,6 +226,26 @@ select is(
 select is(
   pg_temp.deliveries('b9000000-0000-4000-8000-0000000000b9', 'session_reminder'), 0,
   'no reminder once the session is checked in'
+);
+
+insert into public.training_plans (id, user_id, title, starts_on, ends_on, active_version, time_zone)
+values ('d9000000-0000-4000-8000-0000000000d1', 'd9000000-0000-4000-8000-0000000000d9',
+  'Plan D', current_date - 7, current_date + 60, 1, 'Europe/Paris');
+insert into public.plan_versions (plan_id, version, user_id, created_by, effective_from, confidence, content_hash)
+values ('d9000000-0000-4000-8000-0000000000d1', 1, 'd9000000-0000-4000-8000-0000000000d9',
+  'coach', current_date, '{"level": "normal", "reasons": []}', 'hash');
+insert into public.plan_sessions (
+  id, plan_id, user_id, session_key, valid_from_version, scheduled_on, sport, kind, title, purpose,
+  is_key, priority, targets, structure, origin
+) values (
+  'd9000000-0000-4000-8000-0000000000f1', 'd9000000-0000-4000-8000-0000000000d1',
+  'd9000000-0000-4000-8000-0000000000d9', 's-1', 1, (now() at time zone 'Europe/Paris')::date,
+  'run', 'easy', 'Footing', 'Objectif', false, 'normal', '{}', '[]', 'template'
+);
+select private.push_tick(pg_temp.local_time('12:30'));
+select is(
+  pg_temp.deliveries('d9000000-0000-4000-8000-0000000000d9', 'session_reminder'), 0,
+  'no reminder after noon'
 );
 
 select * from finish();
