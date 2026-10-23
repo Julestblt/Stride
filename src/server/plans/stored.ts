@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { z } from "zod";
 import type { PlanState } from "@/features/plans/model/plan";
 import { toPlanState } from "@/features/plans/model/rows";
@@ -87,7 +88,7 @@ async function readRows(
   };
 }
 
-export async function readActivePlan(
+export const readActivePlan = cache(async function readActivePlan(
   context: PlanContext,
 ): Promise<StoredPlan | null> {
   const { data, error } = await context.client
@@ -98,7 +99,7 @@ export async function readActivePlan(
     .maybeSingle();
   if (error) throw new Error("Unable to read the active plan");
   return data ? readRows(context, data, data.active_version) : null;
-}
+});
 
 export async function readPlanVersion(
   context: PlanContext,

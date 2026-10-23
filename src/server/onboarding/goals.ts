@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import {
   goalRowSchema,
   goalSaveSchema,
@@ -55,7 +56,7 @@ async function readRace(
   return data ? raceSnapshot(raceRowSchema.parse(data)) : null;
 }
 
-export async function readGoals(
+export const readGoals = cache(async function readGoals(
   context: OnboardingContext,
 ): Promise<GoalsSnapshot> {
   const [goal, races] = await Promise.all([
@@ -73,7 +74,7 @@ export async function readGoals(
       raceSnapshot(raceRowSchema.parse(row)),
     ),
   };
-}
+});
 
 function failure(code: string | undefined): Failure {
   return code === "23514" || code === "22P02" || code === "22007"
