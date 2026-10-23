@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/Julestblt/Stride/compare/v1.0.1...v1.1.0) (2026-10-23)
+
+
+### Features
+
+* **284:** installable app and push notifications ([#285](https://github.com/Julestblt/Stride/issues/285)) ([fc6295c](https://github.com/Julestblt/Stride/commit/fc6295c56c174101854f2a94de610139400ccbd1))
+
+
+### Bug Fixes
+
+* **287:** respect iPhone safe areas and stop zoom on field focus ([#288](https://github.com/Julestblt/Stride/issues/288)) ([47ddbd9](https://github.com/Julestblt/Stride/commit/47ddbd9a548e0d8745ce5e7fd7be794f7b2636fc))
+* **app-shell:** keep the mobile sidebar clear of iPhone safe areas ([#289](https://github.com/Julestblt/Stride/issues/289)) ([4804c11](https://github.com/Julestblt/Stride/commit/4804c11a4631dc588a018e30830c5f8eb9e27d6b))
+
 ## [1.0.1](https://github.com/Julestblt/Stride/compare/v1.0.0...v1.0.1) (2026-10-23)
 
 
