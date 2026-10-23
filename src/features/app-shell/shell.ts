@@ -1,4 +1,6 @@
 import type { GoalFocus } from "@/features/onboarding/goals";
+import type { ProgramNav } from "@/features/plans/view/program";
+import type { CoachAttention } from "./coach-attention";
 import { readinessLevel } from "@/features/progress/recovery";
 import { focusLabels } from "@/features/onboarding/athlete-profile";
 import {
@@ -22,10 +24,16 @@ export type ShellRaceLink = {
 export type ShellAccount = {
   profilePercent: number;
   questions: number;
-  garminSince: string | null;
 };
 export type ShellAthlete = { name: string; initials: string; detail: string };
 export type ShellBadge = { value: string; label: string; attention: boolean };
+export type ShellNavigation = {
+  planNav: ProgramNav | null;
+  planHistoryCount: number | null;
+  coachAttention: CoachAttention | null;
+  todayBadge: ShellBadge | null;
+  gearBadge: ShellBadge | null;
+};
 
 export function gearBadge(count: number | null): ShellBadge | null {
   if (!count) return null;
@@ -164,8 +172,6 @@ export function readinessBadge(score: number | null): ShellBadge | null {
 export function shellAccount(
   profile: ProfileValues,
   focusMissing: boolean,
-  lastSyncAt: string | null,
-  now: Date,
 ): ShellAccount {
   const answered = profileFields.filter((field) =>
     isAnswered(profile, field),
@@ -173,6 +179,5 @@ export function shellAccount(
   return {
     profilePercent: Math.round((answered / profileFields.length) * 100),
     questions: profileFields.length - answered + (focusMissing ? 1 : 0),
-    garminSince: shortSince(lastSyncAt, now),
   };
 }

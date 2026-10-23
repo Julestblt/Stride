@@ -2,7 +2,8 @@ import { DataActivityProvider } from "@/features/data-activity/components/provid
 import { StaffProvider } from "@/features/coach/components/staff-context";
 import { NotificationsProvider } from "@/features/notifications/components/notifications-context";
 import { SettingsShell } from "@/features/settings/components/settings-shell";
-import { getShell } from "@/server/app/shell";
+import { getShellIdentity, getShellNotifications } from "@/server/app/shell";
+import { requireAthlete } from "@/server/app/session";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +12,17 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const shell = await getShell();
+  await requireAthlete();
+  const notifications = getShellNotifications();
+  const identity = await getShellIdentity();
   return (
-    <StaffProvider faces={shell.staffFaces}>
+    <StaffProvider faces={identity.staffFaces}>
       <NotificationsProvider
-        feed={shell.notifications}
-        now={shell.notificationsAt}
+        feed={notifications}
+        now={new Date().toISOString()}
       >
-        <DataActivityProvider initial={shell.initialActivity}>
-          <SettingsShell athlete={shell.athlete}>{children}</SettingsShell>
+        <DataActivityProvider>
+          <SettingsShell athlete={identity.athlete}>{children}</SettingsShell>
         </DataActivityProvider>
       </NotificationsProvider>
     </StaffProvider>

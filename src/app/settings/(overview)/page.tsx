@@ -16,7 +16,7 @@ import { loadAthleteProfile } from "@/server/onboarding/athlete-profile";
 import { readProfile } from "@/server/onboarding/profile";
 import { readGoals } from "@/server/onboarding/goals";
 import { requireAthlete } from "@/server/app/session";
-import { getShell } from "@/server/app/shell";
+import { getShellIdentity } from "@/server/app/shell";
 import { signOut } from "@/server/auth/actions";
 
 export default async function SettingsOverviewPage() {
@@ -24,7 +24,7 @@ export default async function SettingsOverviewPage() {
   const [profile, goals, shell, athleteProfile] = await Promise.all([
     readProfile(context),
     readGoals(context),
-    getShell(),
+    getShellIdentity(),
     loadAthleteProfile(context, new Date()),
   ]);
   const races = goals.races

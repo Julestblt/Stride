@@ -93,7 +93,7 @@ Only the worker writes `plan_proposals`. The athlete's accept, reject, undo and 
 
   The athlete could already link any activity through `set_session_match`, so this grants no new power over their own plan.
 
-- `refreshSessionMatches` (`src/server/plans/auto-matches.ts`) runs inside `loadPlanOverview`. The app shell calls it on every authenticated page, and Plan, the session panel and Progression share it per request. Each render costs two small reads. The matcher runs again only when:
+- `refreshSessionMatches` (`src/server/plans/auto-matches.ts`) runs inside `loadPlanOverview`. The app shell calls it on every authenticated page through the streamed shell navigation, and Plan, the session panel and Progression share it per request. Each render costs two small reads. The matcher runs again only when:
   - the marker is missing or the plan version changed;
   - an activity changed after `matches_activities_through` (garmin_mcp bumps `updated_at` on every upsert, so new and corrected activities both count);
   - the plan's local day changed.

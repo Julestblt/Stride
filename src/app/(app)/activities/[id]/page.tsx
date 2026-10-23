@@ -14,7 +14,7 @@ import {
   loadHeartRateZones,
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
-import { getShell } from "@/server/app/shell";
+import { getGarminSyncLabel } from "@/server/app/shell";
 import {
   ActivityPairBlock,
   PairQuestionCard,
@@ -39,11 +39,11 @@ export default async function ActivityPage({
   const context = await requireAthlete();
   const now = new Date();
   const search = parseActivitySearch(query.q);
-  const [detail, { activities, total }, shell, calibration, checks, debrief] =
+  const [detail, { activities, total }, sync, calibration, checks, debrief] =
     await Promise.all([
       readActivityDetail(context, id),
       listActivities(context, filter, limit, search),
-      getShell(),
+      getGarminSyncLabel(),
       loadHeartRateZones(context, now),
       loadPairChecks(context, id),
       loadSessionDebrief(context, { activityId: id }).catch(() => null),
@@ -62,7 +62,7 @@ export default async function ActivityPage({
       view={buildActivityView({ ...detail, zones: calibration?.zones ?? null })}
       search={search}
       current
-      sync={shell.sync}
+      sync={sync}
       today={localToday(now)}
       debrief={debrief && <ActivityDebrief debrief={debrief} />}
       pair={

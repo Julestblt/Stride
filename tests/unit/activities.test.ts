@@ -272,7 +272,7 @@ describe("application shell", () => {
   });
 
   it("sums up profile progress for the athlete menu", () => {
-    const account = { profilePercent: 72, questions: 2, garminSince: null };
+    const account = { profilePercent: 72, questions: 2 };
     expect(shellProfileDetail(account)).toBe("Profil 72\u00a0% · 2 questions");
     expect(shellProfileDetail({ ...account, questions: 1 })).toBe(
       "Profil 72\u00a0% · 1 question",
