@@ -1,16 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { signInAs } from "./support/session";
 
 test("the header theme menu switches, persists and follows the system", async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today");
+  await signInAs(page, "athlete@example.com");
   const root = page.locator("html");
   await expect(root).toHaveAttribute("data-theme", "dark");
 

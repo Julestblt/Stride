@@ -430,17 +430,7 @@ for (const viewport of [
 }
 for (const mode of ["empty", "failure", "goal-failure"] as const) {
   test(`Records displays explicit ${mode} state`, async ({ page }) => {
-    await page.goto("/sign-in");
-    await page
-      .getByLabel("E-mail", { exact: true })
-      .fill(`records-${mode}@example.com`);
-    await page
-      .getByLabel("Mot de passe", { exact: true })
-      .fill("TrailMiles2026!");
-    await page
-      .getByRole("button", { name: "Se connecter", exact: true })
-      .click();
-    await expect(page).not.toHaveURL(/\/sign-in/);
+    await signInAs(page, `records-${mode}@example.com`);
     await page.goto("/progress/records");
     await expect(
       page.getByRole("heading", { level: 1, name: "Records" }),

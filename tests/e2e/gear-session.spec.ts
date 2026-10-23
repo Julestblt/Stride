@@ -185,13 +185,7 @@ test("the race gear list links the shoe line to a real pair", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1805 });
-  await page.goto("/sign-in");
-  await page.getByLabel("E-mail", { exact: true }).fill("athlete@example.com");
-  await page
-    .getByLabel("Mot de passe", { exact: true })
-    .fill("TrailMiles2026!");
-  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL("/today", { timeout: 20_000 });
+  await signInAs(page, "athlete@example.com");
   await page.goto("/races/bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb/gear");
   const select = page.getByRole("combobox", {
     name: "Paire pour Chaussures de course",

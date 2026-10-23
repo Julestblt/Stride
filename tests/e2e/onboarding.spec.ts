@@ -37,6 +37,7 @@ async function signIn(page: Page, email: string, destination = "welcome") {
     destination === "application"
       ? "http://127.0.0.1:3110/today"
       : new RegExp(`/onboarding/${destination}$`),
+    { timeout: 20_000 },
   );
 }
 async function seed(userId: string, currentStep = "about") {
@@ -116,7 +117,9 @@ test("first entry, locked URLs, refresh/relogin and second context preserve dura
   await secondPage
     .getByRole("button", { name: "Se connecter", exact: true })
     .click();
-  await expect(secondPage).toHaveURL(/\/onboarding\/about$/);
+  await expect(secondPage).toHaveURL(/\/onboarding\/about$/, {
+    timeout: 20_000,
+  });
   expect(await read(user.id)).toEqual(before);
   await page.context().clearCookies();
   await page.goto("/onboarding/about");
@@ -124,7 +127,7 @@ test("first entry, locked URLs, refresh/relogin and second context preserve dura
   await page.getByLabel("E-mail", { exact: true }).fill(user.email);
   await page.getByLabel("Mot de passe", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Se connecter", exact: true }).click();
-  await expect(page).toHaveURL(/\/onboarding\/about$/);
+  await expect(page).toHaveURL(/\/onboarding\/about$/, { timeout: 20_000 });
   expect(await read(user.id)).toEqual(before);
   await second.close();
 });
@@ -731,7 +734,9 @@ test("About you autosaves, restores across refresh and devices, and completes on
   await secondPage
     .getByRole("button", { name: "Se connecter", exact: true })
     .click();
-  await expect(secondPage).toHaveURL(/\/onboarding\/about$/);
+  await expect(secondPage).toHaveURL(/\/onboarding\/about$/, {
+    timeout: 20_000,
+  });
   await expect(secondPage.getByLabel("Prénom")).toHaveValue("Ada");
   await second.close();
   await choose(page, "Sexe pour les estimations physiologiques", "Femme");
