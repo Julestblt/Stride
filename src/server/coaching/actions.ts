@@ -25,7 +25,7 @@ export async function markCoachThreadRead(input: unknown) {
     () => 0,
   );
   await markThreadRead(context, parsed.data.threadId).catch(() => undefined);
-  if (unread > 0) revalidatePath("/", "layout");
+  if (unread > 0) revalidatePath("/coach", "layout");
   return { ok: true } as const;
 }
 
@@ -80,6 +80,6 @@ export async function chooseStaffFace(input: unknown) {
   if (!context) return { ok: false } as const;
   const saved = await saveStaffFace(context, parsed.data).catch(() => false);
   if (!saved) return { ok: false } as const;
-  revalidatePath("/", "layout");
+  revalidatePath("/coach", "layout");
   return { ok: true } as const;
 }

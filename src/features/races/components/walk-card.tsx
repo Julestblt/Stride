@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
@@ -28,7 +27,6 @@ export function WalkCard({
   rows: WalkRow[];
   applied: boolean;
 }) {
-  const router = useRouter();
   const [value, setValue] = useState(threshold);
   const [pending, startTransition] = useTransition();
   const current = rows.find((row) => row.threshold === value) ?? rows[0];
@@ -51,7 +49,6 @@ export function WalkCard({
         return;
       }
       toast.success("Seuil de marche enregistré.", { id: "walk-grade" });
-      router.refresh();
     });
   }
 

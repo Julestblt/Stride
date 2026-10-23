@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
@@ -36,7 +35,6 @@ export function RetireShoeButton({
   id: string;
   retired: boolean;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const run = () =>
@@ -45,7 +43,6 @@ export function RetireShoeButton({
       if (result.status === "saved") {
         setOpen(false);
         toast.success(retired ? "Paire remise en service." : "Paire retirée.");
-        router.refresh();
       } else toast.error(gearErrorMessage(result));
     });
   if (retired)
@@ -93,7 +90,6 @@ export function CurrentKmButton({
   currentKm: number;
   garminKm: number;
 }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(String(Math.round(currentKm)));
   const [message, setMessage] = useState("");
@@ -115,7 +111,6 @@ export function CurrentKmButton({
       if (result.status === "saved") {
         setOpen(false);
         toast.success("Kilométrage mis à jour.");
-        router.refresh();
       } else toast.error(gearErrorMessage(result));
     });
   };

@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,7 +64,6 @@ function ChecklistCard({
     item.shoeId
       ? (pairs.find((pair) => pair.id === item.shoeId) ?? null)
       : null;
-  const router = useRouter();
 
   function toggle(item: ChecklistItem, checked: boolean) {
     const before = items;
@@ -87,7 +85,7 @@ function ChecklistCard({
       if (result.status !== "saved") {
         setItems(before);
         toast.error(errors[result.status], { id: "checklist-update" });
-      } else router.refresh();
+      }
     });
   }
 
@@ -107,7 +105,6 @@ function ChecklistCard({
         setDetail("");
         setStartDate("");
         toast.success("Élément ajouté.");
-        router.refresh();
       } else toast.error(errors[result.status]);
     });
   }
@@ -117,7 +114,6 @@ function ChecklistCard({
       const result = await applyChecklistTemplate(raceId, list);
       if (result.status === "saved") {
         toast.success("Liste type ajoutée.");
-        router.refresh();
       } else toast.error(errors[result.status]);
     });
   }
@@ -132,7 +128,6 @@ function ChecklistCard({
         toast.error(errors[result.status]);
       } else {
         toast.success("Élément supprimé.");
-        router.refresh();
       }
     });
   }
@@ -151,7 +146,6 @@ function ChecklistCard({
         toast.error(errors[result.status], { id: "checklist-update" });
       } else {
         toast.success(shoeId ? "Paire liée." : "Paire retirée de la ligne.");
-        router.refresh();
       }
     });
   }
@@ -172,7 +166,7 @@ function ChecklistCard({
       if (result.status !== "saved") {
         setItems(before);
         toast.error(errors[result.status], { id: "checklist-update" });
-      } else router.refresh();
+      }
     });
   }
 

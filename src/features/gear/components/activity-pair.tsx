@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ const stateDots: Record<PairCheckState, string> = {
 };
 
 function useActivityPair(activityId: string) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const save = (shoeId: string | null, message: string, onDone?: () => void) =>
     startTransition(async () => {
@@ -30,7 +28,6 @@ function useActivityPair(activityId: string) {
       if (result.status === "saved") {
         toast.success(message);
         onDone?.();
-        router.refresh();
       } else toast.error(gearErrorMessage(result));
     });
   return { pending, save };

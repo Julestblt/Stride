@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { markAllNotificationsRead } from "@/server/notifications/actions";
@@ -18,7 +17,6 @@ export function MarkAllRead({
   size?: "sm" | "md";
   className?: string;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
     <Button
@@ -35,7 +33,6 @@ export function MarkAllRead({
             toast.success("Notifications marquées comme lues.", {
               id: "notifications-read",
             });
-            router.refresh();
           } else
             toast.error(
               result?.status === "session-expired"

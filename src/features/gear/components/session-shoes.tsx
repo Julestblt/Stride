@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ChevronRightIcon } from "lucide-react";
@@ -21,7 +20,6 @@ import type { SessionShoesView } from "../planned";
 import { theModel } from "../view";
 
 function useChooseShoe(sessionKey: string) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const choose = (shoeId: string, name: string, onDone?: () => void) =>
     startTransition(async () => {
@@ -29,7 +27,6 @@ function useChooseShoe(sessionKey: string) {
       if (result.status === "saved") {
         toast.success(`${name} pour cette séance.`);
         onDone?.();
-        router.refresh();
       } else toast.error(gearErrorMessage(result));
     });
   return { pending, choose };

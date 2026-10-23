@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowUpRightIcon,
@@ -30,7 +29,10 @@ import {
   type CourseActivity,
   type RaceSummary,
 } from "../race";
-import { importCourseFromActivity } from "@/server/races/actions";
+import {
+  importCourseFromActivity,
+  showImportedRace,
+} from "@/server/races/actions";
 import { CardLabel, RaceCard } from "./race-ui";
 
 const benefits = [
@@ -74,21 +76,17 @@ export function CourseImport({
   activities: CourseActivity[];
   replacing: boolean;
 }) {
-  const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const pdfInput = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"link" | "activity" | null>(null);
   const [pending, startTransition] = useTransition();
-  const base = `/races/${race.id}`;
 
-  function done() {
+  function imported() {
     toast.success("Parcours importé.");
     setLinkError(null);
     setDialog(null);
-    router.push(base);
-    router.refresh();
   }
 
   function sendFile(file: File | undefined) {
@@ -101,8 +99,10 @@ export function CourseImport({
     body.set("file", file);
     startTransition(async () => {
       const result = await uploadTo(`/api/races/${race.id}/course`, body);
-      if (result.status === "saved") done();
-      else toast.error(importMessage(result.status));
+      if (result.status === "saved") {
+        imported();
+        await showImportedRace(race.id, "root");
+      } else toast.error(importMessage(result.status));
     });
   }
 
@@ -114,8 +114,7 @@ export function CourseImport({
       const result = await uploadTo(`/api/races/${race.id}/roadbook`, body);
       if (result.status === "roadbook-saved") {
         toast.success("Roadbook importé.");
-        router.push(`${base}/waypoints`);
-        router.refresh();
+        await showImportedRace(race.id, "waypoints");
       } else toast.error(importMessage(result.status));
     });
   }
@@ -127,13 +126,14 @@ export function CourseImport({
     setLinkError(null);
     startTransition(async () => {
       const result = await uploadTo(`/api/races/${race.id}/roadbook`, body);
-      if (result.status === "course-saved") done();
-      else if (result.status === "roadbook-saved") {
+      if (result.status === "course-saved") {
+        imported();
+        await showImportedRace(race.id, "root");
+      } else if (result.status === "roadbook-saved") {
         toast.success("Roadbook importé.");
         setLinkError(null);
         setDialog(null);
-        router.push(`${base}/waypoints`);
-        router.refresh();
+        await showImportedRace(race.id, "waypoints");
       } else if (
         result.status === "invalid-link" ||
         result.status === "unreachable"
@@ -146,8 +146,10 @@ export function CourseImport({
   function pickActivity(id: string) {
     startTransition(async () => {
       const result = await importCourseFromActivity(race.id, id);
-      if (result.status === "saved") done();
-      else toast.error(actionMessage(result.status));
+      if (result.status === "saved") {
+        imported();
+        await showImportedRace(race.id, "root");
+      } else toast.error(actionMessage(result.status));
     });
   }
 

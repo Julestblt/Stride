@@ -32,7 +32,7 @@ export async function openNotification(input: unknown) {
   const row = parsed.success
     ? await findAndRead(parsed.data.id).catch(() => null)
     : null;
-  revalidatePath("/", "layout");
+  revalidatePath("/notifications");
   redirect(notificationTarget(row));
 }
 
@@ -51,6 +51,6 @@ export async function markAllNotificationsRead(): Promise<MarkAllReadResult> {
     .is("read_at", null)
     .gte("occurred_at", windowStart(now).toISOString());
   if (error) return { status: "error" };
-  revalidatePath("/", "layout");
+  revalidatePath("/notifications");
   return { status: "saved" };
 }
