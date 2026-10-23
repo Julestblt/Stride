@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { bodyKpis } from "@/features/progress/body";
 import {
+  bodyHref,
   healthDays,
   healthModel,
   loadZone,
   parseHealthView,
 } from "@/features/progress/health";
-import {
-  formatStage,
-  healthPageView,
-  stressLabel,
-} from "@/features/progress/health-view";
+import { formatStage } from "@/features/progress/health-view";
 import { addDays } from "@/features/progress/period";
 
 const today = "2026-10-12";
@@ -56,11 +54,13 @@ describe("health view", () => {
     expect(loadZone(1.51)).toBe("high");
   });
 
-  it("labels Garmin stress levels", () => {
-    expect(stressLabel(25)).toBe("Journée calme");
-    expect(stressLabel(40)).toBe("Stress faible");
-    expect(stressLabel(60)).toBe("Stress modéré");
-    expect(stressLabel(80)).toBe("Stress élevé");
+  it("builds Corps links that keep the scale and the day", () => {
+    expect(bodyHref()).toBe("/progress/body");
+    expect(bodyHref("month")).toBe("/progress/body?view=month");
+    expect(bodyHref("day", "2026-10-10")).toBe(
+      "/progress/body?view=day&date=2026-10-10",
+    );
+    expect(bodyHref("day")).toBe("/progress/body?view=day");
   });
 
   it("formats sleep stages", () => {
@@ -98,23 +98,6 @@ describe("health model", () => {
     expect(model.sleep?.restorativeShare).toBeCloseTo(8760 / 21_120);
     expect(model.load).toMatchObject({ zone: "productive", vo2: 55 });
     expect(model.load?.ratio).toBeCloseTo(1.125);
-    const view = healthPageView(model);
-    expect(view.headline).toBe(
-      "Tu récupères bien de la charge, mais ton sommeil ne suit plus.",
-    );
-    expect(view.sleep?.note).toContain("C’est la durée qui manque");
-    expect(view.kpis.map((kpi) => kpi.key)).toEqual([
-      "sleep",
-      "hrv",
-      "resting",
-      "battery",
-      "stress",
-      "load",
-    ]);
-    expect(view.kpis.find((kpi) => kpi.key === "battery")).toMatchObject({
-      value: "—",
-      detail: "Non transmis par Garmin",
-    });
   });
 
   it("uses thirty nights for the month", () => {
@@ -129,35 +112,28 @@ describe("health model", () => {
   });
 
   it("reads Body Battery recharge against the usual night", () => {
-    const model = healthModel({
-      days: healthDays(
-        observations(30, (age) => ({
-          body_battery_wake: age === 0 ? 61 : 80,
-          body_battery_charged: age === 0 ? 38 : 55,
-          body_battery_drained: -51,
-        })),
-      ),
-      view: "week",
-      today,
-    });
+    const days = healthDays(
+      observations(30, (age) => ({
+        body_battery_wake: age === 0 ? 61 : 80,
+        body_battery_charged: age === 0 ? 38 : 55,
+        body_battery_drained: -51,
+      })),
+    );
+    const model = healthModel({ days, view: "week", today });
     expect(model.energy).toMatchObject({
       wake: 61,
       charged: 38,
       usualCharged: 55,
       drained: -51,
     });
-    expect(healthPageView(model).energy?.status).toBe(
-      "Recharge partielle",
-    );
+    expect(
+      bodyKpis(model, days).find((kpi) => kpi.key === "battery"),
+    ).toMatchObject({ value: "61", detail: "−19 vs moyenne", tone: "warning" });
   });
 
   it("states missing data honestly", () => {
     const model = healthModel({ days: [], view: "week", today });
-    const view = healthPageView(model);
-    expect(view.headline).toBe(
-      "Pas encore assez de données Garmin pour lire ta santé.",
-    );
-    expect(view.sleep).toBeNull();
-    expect(view.takeaways).toEqual([]);
+    expect(model.sleep).toBeNull();
+    expect(bodyKpis(model, [])).toEqual([]);
   });
 });

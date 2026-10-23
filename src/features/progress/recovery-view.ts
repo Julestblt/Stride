@@ -48,7 +48,13 @@ export type RecoveryView = {
     | null;
   hrv: (SignalCard & Pick<RangeSignal, "points" | "range">) | null;
   resting: (SignalCard & Pick<RangeSignal, "points" | "range">) | null;
-  races: { id: string; name: string; days: number; ongoing: boolean }[];
+  races: {
+    id: string;
+    name: string;
+    day: string;
+    days: number;
+    ongoing: boolean;
+  }[];
   racesNote: string;
 };
 
@@ -60,11 +66,11 @@ export const legsLabels: Record<Legs, string> = {
 export const sorenessLabels: Record<Soreness, string> = {
   none: "Aucune",
   light: "Légères",
-  marked: "Marquées",
+  marked: "Fortes",
 };
 export const stressLabels: Record<Stress, string> = {
-  low: "Faible",
-  normal: "Normal",
+  low: "Bas",
+  normal: "Moyen",
   high: "Élevé",
 };
 
@@ -381,12 +387,21 @@ export function recoveryView(model: RecoveryModel): RecoveryView {
       : null,
     races: model.races.flatMap((race): RecoveryView["races"] =>
       race.days !== null
-        ? [{ id: race.id, name: race.name, days: race.days, ongoing: false }]
+        ? [
+            {
+              id: race.id,
+              name: race.name,
+              day: race.day,
+              days: race.days,
+              ongoing: false,
+            },
+          ]
         : race.ongoing !== null
           ? [
               {
                 id: race.id,
                 name: race.name,
+                day: race.day,
                 days: race.ongoing,
                 ongoing: true,
               },
@@ -394,7 +409,7 @@ export function recoveryView(model: RecoveryModel): RecoveryView {
           : [],
     ),
     racesNote: model.nextRace
-      ? `Jours avant que la VFC revienne dans ta plage. Stride mesurera ta récupération après ${model.nextRace.name} (${formatDayMonth(model.nextRace.day)}).`
-      : "Jours avant que la VFC revienne dans ta plage après chaque course.",
+      ? `Jours avant que ta VFC revienne dans ta plage. Ton coach s’en sert pour placer la reprise après ${model.nextRace.name} (${formatDayMonth(model.nextRace.day)}).`
+      : "Jours avant que ta VFC revienne dans ta plage après chaque course.",
   };
 }

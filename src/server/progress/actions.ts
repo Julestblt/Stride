@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { localToday } from "@/features/app-shell/shell";
+import { bodyPath } from "@/features/progress/health";
 import { checkinFieldSchema } from "@/features/progress/recovery";
 import { getOnboardingContext } from "@/server/onboarding/context";
 
@@ -31,7 +32,7 @@ export async function saveCheckin(input: unknown): Promise<CheckinResult> {
     .select("updated_at")
     .single();
   if (error) return { status: "error" };
-  revalidatePath("/progress/recovery");
+  revalidatePath(bodyPath);
   revalidatePath("/today");
   return { status: "saved", updatedAt: data?.updated_at ?? null };
 }

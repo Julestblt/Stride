@@ -10,11 +10,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { bodyPath } from "../health";
 
 export const progressSections = [
   { href: "/progress", label: "Forme" },
-  { href: "/progress/recovery", label: "Récupération" },
-  { href: "/progress/health", label: "Santé" },
+  { href: bodyPath, label: "Corps" },
   { href: "/progress/records", label: "Records" },
 ] as const;
 
@@ -64,7 +64,7 @@ export function ProgressBreadcrumb() {
   const params = useSearchParams();
   const date = params.get("date");
   const dayCrumb =
-    section.href === "/progress/health" && params.get("view") === "day"
+    section.href === bodyPath && params.get("view") === "day"
       ? date && /^\d{4}-\d{2}-\d{2}$/.test(date)
         ? crumbDate.format(new Date(`${date}T00:00:00Z`))
         : "Aujourd’hui"

@@ -275,7 +275,7 @@ export function ReadinessSection({
     <section aria-labelledby="today-readiness" className={card}>
       <div className="flex items-baseline gap-2.5">
         <Eyebrow id="today-readiness">Forme du jour</Eyebrow>
-        <MoreLink href="/progress/recovery">Récupération</MoreLink>
+        <MoreLink href="/progress/body">Corps</MoreLink>
       </div>
       {readiness.score !== null ? (
         <div className="flex items-end gap-3">

@@ -39,6 +39,23 @@ export async function readCheckin(
   return parsed.success ? parsed.data : null;
 }
 
+export async function readCheckinHistory(
+  context: OnboardingContext,
+  since: string,
+): Promise<Checkin[]> {
+  const { data, error } = await context.client
+    .from("athlete_wellness_checkins")
+    .select("checkin_date, legs, soreness, stress, updated_at")
+    .eq("user_id", context.userId)
+    .gte("checkin_date", since)
+    .order("checkin_date", { ascending: true });
+  if (error) return [];
+  return (data ?? []).flatMap((row) => {
+    const parsed = checkinRowSchema.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
 export async function loadRecovery(context: OnboardingContext, today: string) {
   const since = addDays(today, -150);
   const [rows, checkin, races] = await Promise.all([
