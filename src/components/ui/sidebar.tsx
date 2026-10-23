@@ -198,7 +198,9 @@ function Sidebar({
               Destinations d’entraînement et contexte.
             </SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-full w-full flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
