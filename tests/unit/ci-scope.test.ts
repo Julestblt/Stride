@@ -4,9 +4,55 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  browserMatrix,
+  browserScope,
   changedPathsBetween,
   isDocumentationOnly,
+  touchesMigrations,
+  type Lanes,
 } from "../../scripts/ci-scope";
+
+const lanes: Lanes = {
+  development: ["design-system", "data-activity"],
+  course: ["races-course"],
+  database: ["onboarding"],
+  smoke: ["auth"],
+  areas: {
+    races: ["races", "races-course"],
+    plans: ["plan"],
+    today: ["today"],
+    onboarding: ["onboarding", "auth"],
+  },
+};
+
+const sources = new Map([
+  ["src/app/layout.tsx", 'import { Shell } from "@/features/app-shell/shell";'],
+  [
+    "src/features/app-shell/shell.tsx",
+    'import { days } from "@/features/plans/days";',
+  ],
+  ["src/features/plans/days.ts", "export const days = 7;"],
+  [
+    "src/features/races/components/race-map.tsx",
+    "export function RaceMap() {}",
+  ],
+  [
+    "src/features/races/model.ts",
+    'import type { Plan } from "@/features/plans/days";',
+  ],
+  [
+    "src/app/(app)/races/[id]/course/page.tsx",
+    'import { RaceMap } from "../../../../../features/races/components/race-map";',
+  ],
+  [
+    "src/app/(app)/today/page.tsx",
+    'import { RaceMap } from "@/features/races/components/race-map";',
+  ],
+  ["src/features/races/unused.ts", "export const unused = true;"],
+  ["src/features/onboarding/steps.ts", "export const steps = [];"],
+]);
+
+const changes = (...paths: string[]) => `${paths.join("\0")}\0`;
 
 describe("CI scope", () => {
   it.each([
@@ -93,5 +139,129 @@ describe("CI scope", () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
+  });
+
+  it("needs the database job only when a migration changes", () => {
+    expect(touchesMigrations(changes("supabase/migrations/1_add.sql"))).toBe(
+      true,
+    );
+    expect(
+      touchesMigrations(changes("supabase/tests/policies.sql", "src/a.ts")),
+    ).toBe(false);
+    expect(touchesMigrations("")).toBe(true);
+  });
+
+  it("selects the specs of the routes that import a changed file", () => {
+    expect(
+      browserScope(
+        changes("src/features/races/components/race-map.tsx"),
+        lanes,
+        sources,
+      ),
+    ).toEqual(["auth", "races", "races-course", "today"]);
+  });
+
+  it("falls back to the file area when no route imports it", () => {
+    expect(
+      browserScope(changes("src/features/races/unused.ts"), lanes, sources),
+    ).toEqual(["auth", "races", "races-course"]);
+  });
+
+  it("ignores type-only imports when following importers", () => {
+    expect(
+      browserScope(changes("src/features/races/model.ts"), lanes, sources),
+    ).toEqual(["auth", "races", "races-course"]);
+  });
+
+  it("runs every spec when a root layout reaches the change", () => {
+    expect(
+      browserScope(changes("src/features/plans/days.ts"), lanes, sources),
+    ).toBe("all");
+  });
+
+  it.each([
+    "tests/fixtures/auth-provider.mjs",
+    "package.json",
+    "playwright.config.ts",
+    "src/app/globals.css",
+    "src/components/ui/button.tsx",
+  ])("runs every spec for shared path %j", (path) => {
+    expect(browserScope(changes(path), lanes, sources)).toBe("all");
+  });
+
+  it("keeps changed specs and skips paths that never reach the browser", () => {
+    expect(
+      browserScope(
+        changes(
+          "tests/e2e/races.spec.ts",
+          "managed-agents/agents/coach.md",
+          "supabase/migrations/1_add.sql",
+          "src/server/supabase/database.types.ts",
+          "tests/unit/plans.test.ts",
+          "docs/testing.md",
+        ),
+        lanes,
+        sources,
+      ),
+    ).toEqual(["auth", "races"]);
+    expect(
+      browserScope(changes("managed-agents/README.md"), lanes, sources),
+    ).toEqual([]);
+  });
+
+  it("leaves database-only specs to the database job", () => {
+    expect(
+      browserScope(changes("src/features/onboarding/steps.ts"), lanes, sources),
+    ).toEqual(["auth"]);
+  });
+
+  it("splits selected specs into their Playwright lanes", () => {
+    const available = ["auth", "races", "races-course", "design-system"];
+    expect(
+      browserMatrix(
+        ["auth", "races-course", "design-system"],
+        lanes,
+        available,
+      ),
+    ).toEqual([
+      {
+        lane: "main-1",
+        project: "chromium",
+        shard: "1/1",
+        production: "true",
+        specs: "tests/e2e/auth.spec.ts",
+      },
+      {
+        lane: "course",
+        project: "chromium-race-course",
+        shard: "1/1",
+        production: "true",
+        specs: "tests/e2e/races-course.spec.ts",
+      },
+      {
+        lane: "development-1",
+        project: "chromium-development",
+        shard: "1/1",
+        production: "false",
+        specs: "tests/e2e/design-system.spec.ts",
+      },
+    ]);
+    expect(browserMatrix([], lanes, available)).toEqual([]);
+  });
+
+  it("shards the full suite without listing files", () => {
+    expect(
+      browserMatrix("all", lanes, [
+        "auth",
+        "races-course",
+        "data-activity",
+      ]).map(({ lane, shard, specs }) => [lane, shard, specs]),
+    ).toEqual([
+      ["main-1", "1/2", ""],
+      ["main-2", "2/2", ""],
+      ["course", "1/1", ""],
+      ["development-1", "1/2", ""],
+      ["development-2", "2/2", ""],
+    ]);
   });
 });

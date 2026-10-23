@@ -1,18 +1,18 @@
 import { defineConfig, devices } from "@playwright/test";
+import lanes from "./tests/e2e/lanes.json";
 
 const appPort = Number(process.env.PLAYWRIGHT_APP_PORT ?? 3100);
 const authPort = Number(process.env.PLAYWRIGHT_AUTH_PORT ?? 3200);
 const garminPort = Number(process.env.PLAYWRIGHT_GARMIN_PORT ?? 3300);
 const production = process.env.PLAYWRIGHT_PRODUCTION === "true";
-const developmentSpecs = [
-  "design-system.spec.ts",
-  "dev-origin.spec.ts",
-  "data-activity.spec.ts",
-];
+const specFiles = (names: string[]) => names.map((name) => `${name}.spec.ts`);
+const developmentSpecs = specFiles(lanes.development);
+const courseSpecs = specFiles(lanes.course);
 
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
+  workers: process.env.CI ? 4 : undefined,
   retries: process.env.CI ? 1 : 0,
   testIgnore: "onboarding.spec.ts",
   reporter: "list",
@@ -26,22 +26,18 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: [
-        "onboarding.spec.ts",
-        "races-course.spec.ts",
-        "session-matching.spec.ts",
-        ...developmentSpecs,
-      ],
+      testIgnore: ["onboarding.spec.ts", ...courseSpecs, ...developmentSpecs],
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "chromium-development",
       testMatch: developmentSpecs,
+      workers: 2,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "chromium-race-course",
-      testMatch: ["races-course.spec.ts", "session-matching.spec.ts"],
+      testMatch: courseSpecs,
       dependencies: ["chromium"],
       use: { ...devices["Desktop Chrome"] },
     },
@@ -62,7 +58,7 @@ export default defineConfig({
         ? `npm run build && npm run start -- --port ${appPort}`
         : `npm run dev -- --port ${appPort}`,
       url: `http://127.0.0.1:${appPort}`,
-      reuseExistingServer: false,
+      reuseExistingServer: process.env.PLAYWRIGHT_REUSE_APP === "true",
       timeout: production ? 300_000 : 120_000,
       env: {
         PLAYWRIGHT_TEST: "1",
