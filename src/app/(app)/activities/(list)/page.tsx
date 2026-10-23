@@ -1,17 +1,48 @@
+import { Suspense } from "react";
 import { ActivitiesView } from "@/features/activities/components/activities-view";
+import { ActivityDetail } from "@/features/activities/components/activity-detail";
 import {
+  activitiesQuery,
   parseActivityFilter,
   parseActivityLimit,
   parseActivitySearch,
 } from "@/features/activities/activities";
 import { localToday } from "@/features/app-shell/shell";
 import { buildActivityView } from "@/features/activities/activity-view";
+import { ActivityDetailLoading } from "@/features/data-activity/components/loading";
 import {
   listActivities,
   readActivityDetail,
   loadHeartRateZones,
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
+import type { OnboardingContext } from "@/server/onboarding/context";
+
+async function FirstActivityDetail({
+  context,
+  id,
+  now,
+  detailHref,
+}: {
+  context: OnboardingContext;
+  id: string;
+  now: Date;
+  detailHref: string;
+}) {
+  const [detail, calibration] = await Promise.all([
+    readActivityDetail(context, id),
+    loadHeartRateZones(context, now),
+  ]);
+  if (!detail) return null;
+  return (
+    <ActivityDetail
+      activity={detail.activity}
+      view={buildActivityView({ ...detail, zones: calibration?.zones ?? null })}
+      current={false}
+      detailHref={detailHref}
+    />
+  );
+}
 
 export default async function ActivitiesPage({
   searchParams,
@@ -24,28 +55,34 @@ export default async function ActivitiesPage({
   const context = await requireAthlete();
   const now = new Date();
   const search = parseActivitySearch(query.q);
-  const [{ activities, total }, calibration] = await Promise.all([
-    listActivities(context, filter, limit, search),
-    loadHeartRateZones(context, now),
-  ]);
-  const detail = activities[0]
-    ? await readActivityDetail(context, activities[0].id)
-    : null;
+  const { activities, total } = await listActivities(
+    context,
+    filter,
+    limit,
+    search,
+  );
+  const first = activities[0] ?? null;
   return (
     <ActivitiesView
       activities={activities}
       total={total}
       filter={filter}
       limit={limit}
-      selected={detail?.activity ?? null}
-      view={
-        detail
-          ? buildActivityView({ ...detail, zones: calibration?.zones ?? null })
-          : null
-      }
+      selected={first}
       search={search}
       current={false}
       today={localToday(now)}
-    />
+    >
+      {first && (
+        <Suspense fallback={<ActivityDetailLoading />}>
+          <FirstActivityDetail
+            context={context}
+            id={first.id}
+            now={now}
+            detailHref={`/activities/${first.id}/details${activitiesQuery(filter, limit, search)}`}
+          />
+        </Suspense>
+      )}
+    </ActivitiesView>
   );
 }

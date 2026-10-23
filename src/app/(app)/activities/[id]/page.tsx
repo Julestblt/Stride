@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActivitiesView } from "@/features/activities/components/activities-view";
+import { ActivityDetail } from "@/features/activities/components/activity-detail";
 import {
+  activitiesQuery,
   parseActivityFilter,
   parseActivityLimit,
   parseActivitySearch,
@@ -57,20 +59,29 @@ export default async function ActivityPage({
       filter={filter}
       limit={limit}
       selected={detail.activity}
-      view={buildActivityView({ ...detail, zones: calibration?.zones ?? null })}
       search={search}
       current
       today={localToday(now)}
-      debrief={debrief && <ActivityDebrief debrief={debrief} />}
-      pair={
-        check &&
-        checks && (
-          <div className="flex flex-col gap-2.5">
-            <ActivityPairBlock view={activityPairView(check, checks.shoes)} />
-            {question && <PairQuestionCard question={question} />}
-          </div>
-        )
-      }
-    />
+    >
+      <ActivityDetail
+        activity={detail.activity}
+        view={buildActivityView({
+          ...detail,
+          zones: calibration?.zones ?? null,
+        })}
+        current
+        detailHref={`/activities/${id}/details${activitiesQuery(filter, limit, search)}`}
+        debrief={debrief && <ActivityDebrief debrief={debrief} />}
+        pair={
+          check &&
+          checks && (
+            <div className="flex flex-col gap-2.5">
+              <ActivityPairBlock view={activityPairView(check, checks.shoes)} />
+              {question && <PairQuestionCard question={question} />}
+            </div>
+          )
+        }
+      />
+    </ActivitiesView>
   );
 }

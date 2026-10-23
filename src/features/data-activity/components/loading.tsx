@@ -191,6 +191,17 @@ export function ActivitiesLoading({ current = false }: { current?: boolean }) {
   );
 }
 
+export function ActivityDetailLoading() {
+  return (
+    <LoadingScope
+      label="Chargement de l’activité"
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <ActivityContentLoading />
+    </LoadingScope>
+  );
+}
+
 export function ActivityFullDetailLoading() {
   return (
     <LoadingScope

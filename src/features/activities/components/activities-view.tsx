@@ -5,9 +5,6 @@ import {
   type Activity,
   type ActivityFilter,
 } from "@/features/activities/activities";
-import type { ActivityDetailData } from "../detail";
-import type { ActivityView } from "../activity-view";
-import { ActivityDetail } from "./activity-detail";
 import { ActivityListPane } from "./activity-list-pane";
 import { ActivitySplitFrame, ActivityToolbar } from "./activity-frame";
 
@@ -17,24 +14,20 @@ export function ActivitiesView({
   filter,
   limit,
   selected,
-  view,
   search,
   current,
   today,
-  pair = null,
-  debrief = null,
+  children,
 }: {
   activities: Activity[];
   total: number;
   filter: ActivityFilter;
   limit: number;
-  selected: ActivityDetailData | null;
-  view: ActivityView | null;
+  selected: Pick<Activity, "id" | "date"> | null;
   search: string;
   current: boolean;
   today: string;
-  pair?: React.ReactNode;
-  debrief?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <ActivitySplitFrame
@@ -72,14 +65,7 @@ export function ActivitiesView({
       <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
         <DataCategoryScope categories={["activities"]}>
           {selected ? (
-            <ActivityDetail
-              activity={selected}
-              view={view}
-              current={current}
-              pair={pair}
-              debrief={debrief}
-              detailHref={`/activities/${selected.id}/details${activitiesQuery(filter, limit, search)}`}
-            />
+            children
           ) : (
             <p className="px-5 pt-8 text-body text-muted sm:px-10">
               {search
