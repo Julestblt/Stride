@@ -266,6 +266,8 @@
     color: var(--foreground);
     font-family: var(--stride-font-ui);
     text-rendering: optimizeLegibility;
+    padding-right: env(safe-area-inset-right);
+    padding-left: env(safe-area-inset-left);
   }
 
   ::placeholder {
@@ -339,5 +341,13 @@
     --provider: #285a7c;
     --provider-muted: #8fb0cc;
     --night: #485785;
+  }
+}
+
+@media (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]),
+  textarea,
+  select {
+    font-size: 16px;
   }
 }
