@@ -1929,6 +1929,7 @@ function selectRows(table, params) {
 }
 const profileImages = new Map();
 const events = [];
+let restDelays = [];
 const links = new Map();
 const challenges = new Map();
 const requests = new Map();
@@ -2085,6 +2086,15 @@ createServer(async (request, response) => {
     if (request.method === "DELETE") return send(200, []);
   }
   if (url.pathname === "/__test__/events") return send(200, events);
+  if (url.pathname === "/__test__/rest-delay" && request.method === "POST") {
+    restDelays.push({ match: String(body.match), ms: Number(body.ms) });
+    return send(200, { delayed: restDelays.length });
+  }
+  if (url.pathname === "/__test__/rest-delay" && request.method === "DELETE") {
+    const match = url.searchParams.get("match");
+    restDelays = restDelays.filter((rule) => rule.match !== match);
+    return send(200, { delayed: restDelays.length });
+  }
   if (
     url.pathname === "/__test__/provider-workouts" &&
     request.method === "PUT"
@@ -2400,6 +2410,10 @@ createServer(async (request, response) => {
       : send(401, { msg: "Unauthorized" });
   if (url.pathname === "/auth/v1/logout") return send(204, undefined);
   if (url.pathname.startsWith("/rest/v1/")) {
+    const delay = restDelays.find((rule) =>
+      `${url.pathname}${url.search}`.includes(rule.match),
+    );
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay.ms));
     if (
       url.pathname === "/rest/v1/provider_activities" &&
       url.searchParams.get("activity_name")?.includes("loading-fixture")

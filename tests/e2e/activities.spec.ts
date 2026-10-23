@@ -10,6 +10,15 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL("/today");
 }
 
+async function expectNotFound(page: Page) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Page introuvable" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('meta[name="robots"][content*="noindex"]'),
+  ).not.toHaveCount(0);
+}
+
 test("signed-out athletes are sent to sign-in", async ({ page }) => {
   await page.goto("/activities");
   await expect(page).toHaveURL(/\/sign-in$/);
@@ -257,17 +266,46 @@ test("the full detail says when Garmin sent no laps and stays within 320px", asy
       .getByRole("table", { name: "Tours" })
       .evaluate((element) => element.scrollWidth <= element.clientWidth),
   ).toBe(true);
-  const response = await page.goto(
-    "/activities/cccccccc-cccc-4ccc-8ccc-cccccccccccc/details",
-  );
-  expect(response?.status()).toBe(404);
+  await page.goto("/activities/cccccccc-cccc-4ccc-8ccc-cccccccccccc/details");
+  await expectNotFound(page);
+});
+
+test("an activity already shown in the detail pane is not loaded again", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await signIn(page);
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    const headers = request.headers();
+    if (headers.rsc === "1" && !headers["next-router-prefetch"])
+      requests.push(request.url());
+  });
+
+  await page.goto("/activities");
+  const preview = page.locator('ul a[href^="/activities/"]').first();
+  await expect(preview).toBeVisible();
+  await preview.click();
+  await expect(page).toHaveURL("/activities");
+
+  await page.goto("/activities/aaaaaaaa-aaaa-4aaa-8aaa-000000000005");
+  const selected = page.getByRole("link", { name: /Trail · Trail 80K/ });
+  await expect(selected).toHaveAttribute("aria-current", "true");
+  await selected.click();
+  await expect(
+    page
+      .getByRole("article")
+      .getByRole("heading", { level: 1, name: "Trail · Trail 80K" }),
+  ).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(requests).toEqual([]);
 });
 
 test("an unknown or foreign activity is not found", async ({ page }) => {
   await signIn(page);
   for (const id of ["not-an-id", "cccccccc-cccc-4ccc-8ccc-cccccccccccc"]) {
-    const response = await page.goto(`/activities/${id}`);
-    expect(response?.status()).toBe(404);
+    await page.goto(`/activities/${id}`);
+    await expectNotFound(page);
   }
 });
 
@@ -608,7 +646,10 @@ test("name search filters before pagination and keeps context through drill-down
     .getByRole("region", { name: "Liste des activités" })
     .getByRole("link", { name: /Threshold/ })
     .click();
-  await expect(page).toHaveURL(/000000000004\?filter=road&q=THRESHOLD$/);
+  await expect(page).toHaveURL(/\/activities\?filter=road&q=THRESHOLD$/);
+  await expect(
+    page.getByRole("article").getByRole("heading", { name: /Threshold/ }),
+  ).toBeVisible();
   await Promise.all([
     page.waitForURL(/\/details\?filter=road&q=THRESHOLD$/),
     page.getByRole("link", { name: /Détail complet/ }).click(),

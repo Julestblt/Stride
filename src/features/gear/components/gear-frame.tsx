@@ -5,16 +5,23 @@ import {
 
 export function GearFrame({
   crumbs,
+  breadcrumb,
   back,
   children,
 }: {
   crumbs: AppCrumb[];
+  breadcrumb?: React.ReactNode;
   back?: { href: string; label: string };
   children: React.ReactNode;
 }) {
   return (
     <>
-      <AppHeader title="Matériel" crumbs={crumbs} back={back} />
+      <AppHeader
+        title="Matériel"
+        crumbs={crumbs}
+        breadcrumb={breadcrumb}
+        back={back}
+      />
       <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain">
         <main className="mx-auto flex w-full max-w-310 flex-col gap-7 px-5 pt-3 pb-18 sm:px-[clamp(20px,4vw,56px)] md:pt-9">
           {children}
