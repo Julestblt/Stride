@@ -19,11 +19,12 @@ Stride uses the Supabase CLI with versioned SQL migrations in `supabase/migratio
 
 ## Environments
 
-| Environment | Use                                                                                  |
-| ----------- | ------------------------------------------------------------------------------------ |
-| CI          | Isolated Supabase CLI stack for schema, RLS and onboarding browser tests             |
-| Staging     | Separate Supabase project for deployed Stride, garmin_mcp and live Garmin validation |
-| Protected   | The current shared project; its production or staging role is unconfirmed            |
+| Environment | Use                                                                           |
+| ----------- | ----------------------------------------------------------------------------- |
+| CI          | Isolated Supabase CLI stack for schema, RLS and onboarding browser tests      |
+| Protected   | The hosted project shared by garmin_mcp, Stride pre-production and production |
+
+Pre-production and production share the protected project, so migrations must stay compatible with the current production release (see [releases](../releases.md)).
 
 Do not apply destructive or unreviewed changes to the protected project. Applying Stride migrations to any hosted project is an explicit approval checkpoint.
 

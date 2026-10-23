@@ -25,6 +25,8 @@ The sign-in page runs without external credentials. Copy `.env.example` to `.env
 
 The `Dockerfile` builds a production image that serves the app with `next start` on port 3000. Public Supabase values are inlined into the browser bundle at build time, so pass them as build arguments. Provide server-only values (`SITE_URL`, `GARMIN_API_URL`, `ANTHROPIC_API_KEY`, and the others in `.env.example`) as runtime environment variables.
 
+Dokploy deploys `main` to pre-production and release tags to production. See [releases](docs/releases.md).
+
     docker build \
       --build-arg NEXT_PUBLIC_SUPABASE_URL=... \
       --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=... \

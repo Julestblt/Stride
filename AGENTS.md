@@ -54,6 +54,8 @@ Stride is a web-first personal running coach for road and trail athletes. This r
 
 - Follow the GitHub issue workflow: clarify scope, plan, branch, implement, validate, review, and open a pull request.
 - Name branches `feat/<issue>-<name>`, `fix/<issue>-<name>`, `refactor/<issue>-<name>`, `docs/<issue>-<name>`, or `chore/<issue>-<name>`.
+- Merges to `main` deploy pre-production; only release tags deploy production. Release through the `release` skill and never tag by hand. Squash titles drive semver, so use `feat`, `fix` and `!` deliberately. See `docs/releases.md`.
+- Keep every migration compatible with the current production release: pre-production and production share the hosted database.
 - Use Conventional Commits and keep commits small and atomic. Inspect the staged diff before every commit and leave unrelated files out.
 - Run the relevant lint, typecheck, unit, browser, and build checks for the change. Add meaningful domain unit tests; do not test implementation trivia.
 - Locally, run only the Playwright specs the change touches or directly affects, for example `npx playwright test tests/e2e/<area>.spec.ts --project=chromium`. Never run the full browser or onboarding suites locally; CI runs them on every pull request.

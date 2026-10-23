@@ -7,3 +7,4 @@ test-results
 .agents/skills
 evals/topology/results/
 managed-agents/agents/*.md
+CHANGELOG.md
