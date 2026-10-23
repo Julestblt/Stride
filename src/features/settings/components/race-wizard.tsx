@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { CheckIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog as DialogPrimitive } from "radix-ui";
@@ -29,6 +28,7 @@ import {
   formatRaceLongDate,
   formatTarget,
 } from "../goals-view";
+import { useDataActivityNavigation } from "@/features/data-activity/components/navigation";
 import { RemoveRaceButton } from "./remove-race-button";
 import { submitSettingsRace } from "@/server/settings/actions";
 
@@ -163,8 +163,8 @@ export function RaceWizard({
   defaultPriority: RacePriority;
   primaryName: string | null;
 }) {
-  const router = useRouter();
-  const close = () => router.push("/settings/goals");
+  const navigate = useDataActivityNavigation();
+  const close = () => navigate("/settings/goals");
   const values = race?.values;
   const [step, setStep] = useState(1);
   const [saving, startSaving] = useTransition();
@@ -272,7 +272,6 @@ export function RaceWizard({
             ? "Course mise à jour."
             : "Course ajoutée à tes objectifs.",
         );
-        router.refresh();
         setStep(3);
         return;
       }

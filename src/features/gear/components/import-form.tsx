@@ -99,7 +99,7 @@ export function ImportForm({ gear }: { gear: ImportableGear[] }) {
             ? `${selected.length} paires importées.`
             : "Paire importée.",
         );
-        router.push("/gear");
+        startTransition(() => router.push("/gear"));
       } else toast.error(gearErrorMessage(result));
     });
   };

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   SettingsGroup,
@@ -43,7 +42,9 @@ export default async function PrivacySettingsPage() {
             </p>
           </div>
           <Button asChild variant="secondary">
-            <Link href="/settings/export">Télécharger le JSON</Link>
+            <a href="/settings/export" download>
+              Télécharger le JSON
+            </a>
           </Button>
         </div>
       </SettingsGroup>

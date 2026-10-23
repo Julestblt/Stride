@@ -422,6 +422,7 @@ export function FeaturedRace({
             <li key={row.key} className="border-t border-border first:border-t">
               <Link
                 href={row.href}
+                prefetch={false}
                 className="flex items-center gap-2.5 py-2 text-meta hover:text-accent focus-visible:outline-2 focus-visible:outline-ring"
               >
                 <span
@@ -469,6 +470,7 @@ export function CalendarRow({
   return (
     <Link
       href={`/races/${race.id}`}
+      prefetch={false}
       className="grid items-center gap-x-5 gap-y-3 rounded-card border border-border bg-surface px-4 py-4 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring sm:grid-cols-[2rem_minmax(0,1fr)_10rem_9rem_7rem_1rem] sm:px-5"
     >
       <PriorityBadge priority={race.priority} />
@@ -554,6 +556,7 @@ export function PastRaces({ races }: { races: RaceSummary[] }) {
               <td className="py-3 pr-3">
                 <Link
                   href={`/races/${race.id}`}
+                  prefetch={false}
                   className="flex items-center gap-2.5 text-body font-semibold hover:text-accent focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   <span className="font-metric text-muted">

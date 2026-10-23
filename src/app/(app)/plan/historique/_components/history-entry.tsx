@@ -15,6 +15,7 @@ export function HistoryEntry({ entry }: { entry: PlanHistoryEntry }) {
     <Button asChild size="md" className="max-sm:h-11 max-sm:w-full">
       <ProposalLink
         href={`/plan?proposition=${entry.id}`}
+        prefetch={false}
         data-proposal-id={entry.id}
       >
         Examiner
@@ -28,7 +29,9 @@ export function HistoryEntry({ entry }: { entry: PlanHistoryEntry }) {
       size="md"
       className="max-sm:h-11 max-sm:w-full"
     >
-      <Link href="/plan">Voir le programme</Link>
+      <Link href="/plan" prefetch={false}>
+        Voir le programme
+      </Link>
     </Button>
   ) : null;
   return (

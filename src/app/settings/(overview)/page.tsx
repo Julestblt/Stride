@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { formatLocalDate, localToday } from "@/features/app-shell/shell";
