@@ -2,6 +2,10 @@ import { DataActivityLink as Link } from "@/features/data-activity/components/na
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { StrideMark } from "@/components/stride/stride-mark";
+import {
+  GarminSyncLabel,
+  GarminSyncSuffix,
+} from "@/features/data-activity/components/synced-at";
 import { cn } from "@/lib/utils";
 import { formatClock, type HealthDayModel } from "../health-day";
 import type { HealthDayView } from "../health-day-view";
@@ -41,12 +45,10 @@ function dayHref(day: string, today: string) {
 export function DayNavigator({
   day,
   today,
-  sync,
   strip,
 }: {
   day: string;
   today: string;
-  sync: string | null;
   strip: { date: string; tone: "warning" | "success" | null }[];
 }) {
   const next = addDays(day, 1);
@@ -70,7 +72,7 @@ export function DayNavigator({
           <span className="text-lg font-semibold">
             {formatDayTitle(day, today)}
           </span>
-          {sync && day === today && <MonoLabel size="nano">{sync}</MonoLabel>}
+          {day === today && <GarminSyncLabel />}
         </div>
         {next <= today ? (
           <Link
@@ -124,10 +126,10 @@ export function DayNavigator({
 
 export function DayReading({
   view,
-  sync,
+  today,
 }: {
   view: HealthDayView;
-  sync: string | null;
+  today: boolean;
 }) {
   return (
     <section
@@ -136,7 +138,7 @@ export function DayReading({
     >
       <MonoLabel size="micro" className="flex items-center gap-2">
         <StrideMark className="size-3" />
-        Lecture du jour{sync ? ` · ${sync.toLowerCase()}` : ""}
+        Lecture du jour{today && <GarminSyncSuffix />}
       </MonoLabel>
       <h2
         id="health-day-reading"
