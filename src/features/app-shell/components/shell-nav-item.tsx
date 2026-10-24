@@ -25,7 +25,10 @@ export function ShellNavItem({
       attention={badge?.attention}
       badge={
         badge ? (
-          <NavBadge kind="value" tone={badge.attention ? "warning" : "muted"}>
+          <NavBadge
+            kind="value"
+            tone={badge.tone ?? (badge.attention ? "warning" : "muted")}
+          >
             <span aria-hidden="true">{badge.value}</span>
             <span className="sr-only">{badge.label}</span>
           </NavBadge>

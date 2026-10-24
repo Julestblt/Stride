@@ -395,9 +395,11 @@ function energyModel(
   };
 }
 
+export const productiveLoad = { low: 0.8, high: 1.5 } as const;
+
 export function loadZone(ratio: number): HealthLoad["zone"] {
-  if (ratio < 0.8) return "low";
-  if (ratio > 1.5) return "high";
+  if (ratio < productiveLoad.low) return "low";
+  if (ratio > productiveLoad.high) return "high";
   return "productive";
 }
 

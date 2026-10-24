@@ -1,7 +1,7 @@
 import type { GoalFocus } from "@/features/onboarding/goals";
 import type { ProgramNav } from "@/features/plans/view/program";
 import type { CoachAttention } from "./coach-attention";
-import { readinessLevel } from "@/features/progress/recovery";
+import { readinessLevel, readinessTones } from "@/features/progress/recovery";
 import { focusLabels } from "@/features/onboarding/athlete-profile";
 import {
   isAnswered,
@@ -26,7 +26,12 @@ export type ShellAccount = {
   questions: number;
 };
 export type ShellAthlete = { name: string; initials: string; detail: string };
-export type ShellBadge = { value: string; label: string; attention: boolean };
+export type ShellBadge = {
+  value: string;
+  label: string;
+  attention: boolean;
+  tone?: "success" | "warning" | "danger";
+};
 export type ShellNavigation = {
   planNav: ProgramNav | null;
   planHistoryCount: number | null;
@@ -166,6 +171,7 @@ export function readinessBadge(score: number | null): ShellBadge | null {
     value: String(value),
     label: `Disponibilité Garmin ${value} sur 100`,
     attention: readinessLevel(value) !== "high",
+    tone: readinessTones[readinessLevel(value)],
   };
 }
 

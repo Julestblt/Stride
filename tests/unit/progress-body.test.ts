@@ -52,6 +52,25 @@ describe("readiness advice", () => {
     expect(readinessAdvice(fine, threshold)?.lighter).toBe(false);
   });
 
+  it("follows the Today score thresholds for hard and easy sessions", () => {
+    const low: Readiness = { ...below, today: 41, level: "low" };
+    const poor: Readiness = { ...below, today: 20, level: "poor" };
+    expect(readinessAdvice(low, threshold)).toEqual({
+      text: "Ta forme est sous 50 avant une séance intense : revois-la avec le coach.",
+      lighter: true,
+    });
+    expect(
+      readinessAdvice({ ...fine, trend: "watch" }, threshold)?.lighter,
+    ).toBe(false);
+    expect(readinessAdvice(low, { ...threshold, hard: false })?.lighter).toBe(
+      false,
+    );
+    expect(readinessAdvice(poor, { ...threshold, hard: false })).toEqual({
+      text: "Ta forme est très basse : repos proposé, ou un footing très court à l’aise.",
+      lighter: true,
+    });
+  });
+
   it("advises without a session and stays empty without readiness", () => {
     expect(readinessAdvice(below, null)?.text).toBe(
       "Privilégie une sortie facile si tu t’entraînes.",

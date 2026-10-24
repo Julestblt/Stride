@@ -15,7 +15,13 @@ const errors = {
 
 const order = [...legsOptions].reverse();
 
-export function LegsCheckin({ initial }: { initial: Legs | null }) {
+export function LegsCheckin({
+  initial,
+  hint,
+}: {
+  initial: Legs | null;
+  hint: string;
+}) {
   const [legs, setLegs] = useState<Legs | null>(initial);
   const [, start] = useTransition();
 
@@ -34,9 +40,12 @@ export function LegsCheckin({ initial }: { initial: Legs | null }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 pt-1">
-      <span id="today-legs" className="text-[13px]">
-        Et tes jambes ce matin ?
+    <div className="flex flex-col gap-2.5">
+      <span className="flex flex-col gap-0.5">
+        <span id="today-legs" className="text-[15px] font-semibold">
+          Et tes jambes ce matin ?
+        </span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
       </span>
       <ToggleGroup
         type="single"
@@ -50,7 +59,7 @@ export function LegsCheckin({ initial }: { initial: Legs | null }) {
         className="grid grid-cols-3 gap-1.5"
       >
         {order.map((option) => (
-          <ToggleGroupItem key={option} value={option}>
+          <ToggleGroupItem key={option} value={option} className="min-h-11">
             {legsLabels[option]}
           </ToggleGroupItem>
         ))}
