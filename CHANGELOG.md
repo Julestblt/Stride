@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Julestblt/Stride/compare/v1.2.0...v1.3.0) (2026-10-24)
+
+
+### Features
+
+* **299:** Today answers what to do with the session and the form ([#304](https://github.com/Julestblt/Stride/issues/304)) ([3c795d4](https://github.com/Julestblt/Stride/commit/3c795d410666b7e18ffce479ad2a89dccd78d9ae))
+
 ## [1.2.0](https://github.com/Julestblt/Stride/compare/v1.1.0...v1.2.0) (2026-10-24)
 
 
