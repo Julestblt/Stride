@@ -282,13 +282,18 @@ describe("application shell", () => {
     ).toBe("Profil 100\u00a0%");
   });
 
-  it("flags today's readiness in the sidebar unless it is high", () => {
+  it("colors today's readiness in the sidebar like the Today score", () => {
     expect(readinessBadge(58.4)).toEqual({
       value: "58",
       label: "Disponibilité Garmin 58 sur 100",
       attention: true,
+      tone: "warning",
     });
-    expect(readinessBadge(80)?.attention).toBe(false);
+    expect(readinessBadge(80)).toMatchObject({
+      attention: false,
+      tone: "success",
+    });
+    expect(readinessBadge(41)?.tone).toBe("danger");
     expect(readinessBadge(null)).toBeNull();
   });
 

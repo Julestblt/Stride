@@ -166,6 +166,16 @@ export function readinessLevel(score: number): Readiness["level"] {
   return "poor";
 }
 
+export const readinessTones = {
+  high: "success",
+  moderate: "warning",
+  low: "danger",
+  poor: "danger",
+} as const satisfies Record<
+  Readiness["level"],
+  "success" | "warning" | "danger"
+>;
+
 export type SessionFit = "ready" | "caution" | "review";
 
 export function sessionFit(score: number, quality: boolean): SessionFit {

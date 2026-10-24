@@ -57,6 +57,13 @@ export function NavGoalSwitcher({
   );
 }
 
+const valueTones = {
+  muted: "text-muted-foreground",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
+} as const;
+
 export function NavBadge({
   kind,
   tone = "muted",
@@ -64,7 +71,7 @@ export function NavBadge({
   children,
 }: {
   kind: "value" | "count";
-  tone?: "muted" | "warning";
+  tone?: "muted" | "success" | "warning" | "danger";
   className?: string;
   children: React.ReactNode;
 }) {
@@ -73,8 +80,7 @@ export function NavBadge({
       data-kind={kind}
       className={cn(
         kind === "value" && "font-metric text-body font-semibold tabular-nums",
-        kind === "value" &&
-          (tone === "warning" ? "text-warning" : "text-muted-foreground"),
+        kind === "value" && valueTones[tone],
         kind === "count" &&
           "right-2 h-4.5 min-w-4.5 rounded-full bg-warning px-1 text-label font-semibold tracking-normal text-background",
         className,

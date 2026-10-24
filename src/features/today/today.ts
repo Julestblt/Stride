@@ -25,7 +25,11 @@ import {
 } from "@/features/plans/view/program";
 import type { SessionPanel } from "@/features/plans/view/session-panel";
 import { formatInteger } from "@/features/progress/format";
-import type { Readiness, RecoveryModel } from "@/features/progress/recovery";
+import {
+  readinessTones,
+  type Readiness,
+  type RecoveryModel,
+} from "@/features/progress/recovery";
 import {
   formIndicators,
   todayVerdict,
@@ -175,13 +179,6 @@ const levelLabels: Record<Readiness["level"], string> = {
   poor: "Faible",
 };
 
-const levelTones: Record<Readiness["level"], TodayForm["tone"]> = {
-  high: "success",
-  moderate: "warning",
-  low: "danger",
-  poor: "danger",
-};
-
 const statOrder = ["duration", "distance", "pace", "heart-rate", "intensity"];
 
 function daysBetween(from: string, to: string) {
@@ -311,7 +308,7 @@ function form(model: RecoveryModel): TodayForm {
   return {
     score: score?.today ?? null,
     level: score ? levelLabels[score.level] : null,
-    tone: score ? levelTones[score.level] : "warning",
+    tone: score ? readinessTones[score.level] : "warning",
     gap:
       gap === null
         ? null
