@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/Julestblt/Stride/compare/v1.1.0...v1.2.0) (2026-10-24)
+
+
+### Features
+
+* **291:** Progression V2 with Forme, Corps and Records ([#296](https://github.com/Julestblt/Stride/issues/296)) ([d2704f7](https://github.com/Julestblt/Stride/commit/d2704f78a8c05f7149d146df9496b2db5ca80447))
+
+
+### Bug Fixes
+
+* **290:** audit quick wins on settings, Progression, races and activities ([#292](https://github.com/Julestblt/Stride/issues/292)) ([9fd140e](https://github.com/Julestblt/Stride/commit/9fd140e0a33ca6cc11a989958c21be8745aaaf00))
+* **297:** consistent page titles and English-only URLs ([#298](https://github.com/Julestblt/Stride/issues/298)) ([c62d673](https://github.com/Julestblt/Stride/commit/c62d673dc7905198ed870a84a08a5d8afbc3d439))
+
 ## [1.1.0](https://github.com/Julestblt/Stride/compare/v1.0.1...v1.1.0) (2026-10-23)
 
 
