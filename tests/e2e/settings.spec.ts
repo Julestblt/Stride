@@ -432,7 +432,7 @@ test("profile desktop stages threshold and maximum edits, saves and cancels", as
   await page
     .getByRole("button", { name: "Modifier FC au seuil", exact: true })
     .click();
-  await expect(page.getByLabel("FC au seuil en bpm")).toHaveValue("");
+  await expect(page.getByLabel("FC au seuil en bpm")).toHaveValue("171");
   await page.getByRole("button", { name: "Annuler", exact: true }).click();
 });
 

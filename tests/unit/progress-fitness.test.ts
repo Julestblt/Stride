@@ -15,17 +15,14 @@ import {
   isFlatLap,
 } from "@/features/progress/measures";
 import { addDays, parsePeriod, weekStart } from "@/features/progress/period";
-import {
-  predictSeconds,
-  racePredictions,
-} from "@/features/progress/predictions";
+import { predictSeconds } from "@/features/progress/predictions";
 import { bestEffortSeconds, fitnessRecords } from "@/features/progress/records";
 import {
   coachNote,
   fitnessReading,
+  loadAdvice,
   loadNote,
 } from "@/features/progress/reading";
-import { weeklyVolume } from "@/features/progress/volume";
 
 const today = "2026-10-12";
 const zones: HeartRateZones = {
@@ -110,33 +107,6 @@ describe("race predictions", () => {
     expect(predictSeconds(50, 10_000)).toBeCloseTo(41 * 60 + 21, -1.5);
     expect(predictSeconds(50, 42_195)).toBeCloseTo(3 * 3600 + 10 * 60 + 49, -2);
     expect(predictSeconds(0, 10_000)).toBeNull();
-  });
-
-  it("requires a recent Garmin VO2 max", () => {
-    expect(
-      racePredictions([{ day: addDays(today, -31), value: 55 }], [], today),
-    ).toBeNull();
-    const result = racePredictions(
-      [{ day: addDays(today, -2), value: 55 }],
-      [race()],
-      today,
-    );
-    expect(result?.predictions.map((item) => item.key)).toEqual([
-      "10k",
-      "half",
-      "marathon",
-    ]);
-    expect(result?.predictions[2].confidence).toBe("low");
-    expect(result?.goal?.id).toBe("race");
-  });
-
-  it("does not repeat a road goal already covered by a prediction", () => {
-    const result = racePredictions(
-      [{ day: today, value: 55 }],
-      [race({ kind: "road", distanceKm: 21.1 })],
-      today,
-    );
-    expect(result?.goal).toBeNull();
   });
 });
 
@@ -290,8 +260,79 @@ describe("condition chart", () => {
     expect(chart.current.condition).toBe(357);
     expect(chart.gapToPeak).toBeCloseTo(38 / 395);
     expect(chart.markers).toEqual([{ day: "2026-09-13", name: "TCO 62K" }]);
-    expect(chart.weeks[0].start).toBe("2026-08-10");
     expect(loadNote(chart)).toMatch(/^Ta condition est 10 % sous son pic du/);
+  });
+
+  it("marks the days when fatigue is above condition", () => {
+    const chart = buildLoadChart(
+      Array.from({ length: 14 }, (_, index) => ({
+        day: addDays("2026-09-29", index),
+        acute: index === 3 || index >= 11 ? 500 : 300,
+        chronic: 400,
+      })),
+      [],
+      "2026-09-29",
+      today,
+    )!;
+    expect(chart.overload).toEqual([
+      { from: "2026-10-02", to: "2026-10-02" },
+      { from: "2026-10-10", to: "2026-10-12" },
+    ]);
+    expect(chart.overloadDays).toBe(3);
+    const advice = loadAdvice(chart, {
+      currentWeekStart: "2026-10-12",
+      currentLight: false,
+      nextLightWeekStart: "2026-10-19",
+    });
+    expect(advice.text).toBe(
+      "Fatigue 25 % au-dessus de ta condition depuis 3 jours. Ton plan prévoit une semaine allégée à partir du 19 octobre.",
+    );
+    expect(advice.actions.map((action) => action.label)).toEqual([
+      "Voir la semaine",
+      "Alléger ma semaine",
+    ]);
+    expect(advice.actions[0].href).toBe("/plan?week=2026-10-12");
+    expect(advice.actions[1].href).toMatch(
+      /^\/coach\/nouvelle\?texte=Ma\+fatigue/,
+    );
+    expect(loadAdvice(chart, null).actions).toHaveLength(1);
+  });
+
+  it("ignores fatigue above condition when the Garmin load is stale", () => {
+    const chart = buildLoadChart(
+      Array.from({ length: 10 }, (_, index) => ({
+        day: addDays("2026-09-30", index),
+        acute: 500,
+        chronic: 400,
+      })),
+      [],
+      "2026-09-30",
+      today,
+    )!;
+    expect(chart.overload).toEqual([{ from: "2026-09-30", to: "2026-10-09" }]);
+    expect(chart.overloadDays).toBe(0);
+    expect(loadAdvice(chart, null)).toEqual({
+      text: loadNote(chart),
+      actions: [],
+    });
+  });
+
+  it("keeps the condition note when fatigue stays below condition", () => {
+    const chart = buildLoadChart(
+      Array.from({ length: 10 }, (_, index) => ({
+        day: addDays("2026-10-03", index),
+        acute: 300,
+        chronic: 400,
+      })),
+      [],
+      "2026-10-03",
+      today,
+    )!;
+    expect(chart.overload).toEqual([]);
+    expect(loadAdvice(chart, null)).toEqual({
+      text: loadNote(chart),
+      actions: [],
+    });
   });
 
   it("pairs acute and chronic loads by day", () => {
@@ -302,30 +343,6 @@ describe("condition chart", () => {
         { metric: "training_load_acute", day: "2026-10-02", value: 410 },
       ]),
     ).toEqual([{ day: "2026-10-01", acute: 400, chronic: 380 }]);
-  });
-});
-
-describe("weekly volume", () => {
-  it("returns sixteen weeks ending with the current one", () => {
-    const weeks = weeklyVolume(
-      [
-        run("a", today, { duration: 3600 }),
-        run("b", "2026-10-06", { duration: 1800 }),
-        run("c", "2026-10-07", { duration: 1800, type: "strength_training" }),
-        run("old", "2026-01-01", { duration: 9000 }),
-      ],
-      [race({ day: "2026-10-04" }), race({ day: "2027-01-01" })],
-      today,
-    );
-    expect(weeks).toHaveLength(16);
-    expect(weeks.at(-1)).toEqual({
-      start: "2026-10-12",
-      seconds: 3600,
-      race: false,
-      current: true,
-    });
-    expect(weeks.at(-2)?.seconds).toBe(3600);
-    expect(weeks.at(-3)?.race).toBe(true);
   });
 });
 
@@ -393,6 +410,35 @@ describe("fitness reading", () => {
     ).toBe("Pas encore assez d’historique pour lire ta forme.");
   });
 
+  it("leaves the lap-based threshold pace to Records", () => {
+    const empty = fitnessMeasures({
+      activities: [],
+      laps: [],
+      vo2: [],
+      zones,
+      start: "2026-04-14",
+      today,
+    });
+    const reading = fitnessReading({
+      activities: [run("a", today)],
+      measures: {
+        ...empty,
+        threshold: {
+          ...empty.threshold,
+          value: 270,
+          baseline: 280,
+          trend: "improving",
+        },
+      },
+      load: null,
+      start: "2026-04-14",
+      today,
+      periodPhrase: "six mois",
+    });
+    expect(reading.headline).not.toMatch(/seuil/);
+    expect(reading.summary).not.toMatch(/seuil/);
+  });
+
   it("keeps consistency unavailable without a training plan", () => {
     const view = fitnessView({
       history: { activities: [], laps: [], load: [], vo2: [], races: [] },
@@ -404,8 +450,13 @@ describe("fitness reading", () => {
     expect(consistency?.value).toBe("—");
     expect(consistency?.trend).toBeUndefined();
     expect(view.load).toBeNull();
-    expect(view.predictions).toBeNull();
-    expect(view.records).toEqual([]);
+    expect(view.rows.map((row) => row.key)).toEqual([
+      "efficiency",
+      "climbing",
+      "drift",
+      "consistency",
+    ]);
+    expect(consistency?.href).toBe("/plan");
   });
 
   it("shows consistency from the active plan adherence", () => {
@@ -433,10 +484,7 @@ describe("fitness reading", () => {
       verdict: "8 sur 10 séances · séances clés 75 %",
       trend: "improving",
       tone: "success",
-      sparkline: [100, 50, null, 100, 100, 50, 100, 100],
     });
-    expect(consistency?.samples?.[1].value).toBe("50 %");
-    expect(consistency?.samples?.[2].value).toBe("Aucune séance passée");
   });
 
   it("keeps consistency empty when no plan session is due yet", () => {

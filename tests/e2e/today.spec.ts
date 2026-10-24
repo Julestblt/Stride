@@ -59,9 +59,10 @@ test("today shows the plan session, form, week and what comes next", async ({
   await expect(latest.getByRole("link", { name: "Activité" })).toBeVisible();
 
   const form = page.getByRole("region", { name: "Forme du jour" });
-  await expect(
-    form.getByRole("link", { name: "Récupération" }),
-  ).toHaveAttribute("href", "/progress/recovery");
+  await expect(form.getByRole("link", { name: "Corps" })).toHaveAttribute(
+    "href",
+    "/progress/body",
+  );
   const legs = form.getByRole("radiogroup", {
     name: "Et tes jambes ce matin ?",
   });

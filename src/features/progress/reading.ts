@@ -1,3 +1,4 @@
+import { coachRequestHref } from "@/features/coach/request";
 import { shareLabel } from "@/features/insights/facts";
 import { isRunning, isTrailRun, type ProgressActivity } from "./history";
 import type { LoadChart } from "./load";
@@ -49,12 +50,8 @@ function headline(
   load: LoadChart | null,
   periodPhrase: string,
 ) {
-  const { efficiency, threshold } = measures;
-  if (efficiency.trend === "improving" && threshold.trend === "improving")
-    return "Ton endurance et ton seuil progressent ensemble.";
-  if (efficiency.trend === "improving")
-    return "Ton moteur progresse plus vite que ta vitesse de pointe.";
-  if (threshold.trend === "improving") return "Ton allure au seuil progresse.";
+  const { efficiency } = measures;
+  if (efficiency.trend === "improving") return "Ton endurance progresse.";
   if (efficiency.trend === "watch") return "Ton efficacité aérobie recule.";
   if (load && load.gapToPeak >= significantGap)
     return `Ta condition a reculé depuis son pic du ${formatDayMonth(load.peak.day)}.`;
@@ -84,8 +81,8 @@ export function fitnessReading({
   const volume = weeklyHours(activities, start, today);
   const hasMeasures = [
     measures.efficiency,
-    measures.threshold,
-    measures.vo2,
+    measures.climbing,
+    measures.drift,
   ].some((measure) => measure.value !== null);
   if (volume.count === 0 && !load && !hasMeasures)
     return {
@@ -103,7 +100,7 @@ export function fitnessReading({
       `${capitalize(periodPhrase)} à ${formatDecimal(volume.hours)} h d’entraînement par semaine en moyenne${trail}.`,
     );
   }
-  const { efficiency, threshold, referenceHeartRate } = measures;
+  const { efficiency, referenceHeartRate } = measures;
   if (
     efficiency.value !== null &&
     efficiency.baseline !== null &&
@@ -121,16 +118,6 @@ export function fitnessReading({
     else
       sentences.push(
         `Ton allure à ${referenceHeartRate} bpm sur le plat reste stable.`,
-      );
-  }
-  if (threshold.value !== null && threshold.baseline !== null) {
-    if (threshold.trend === "stable")
-      sentences.push(
-        `L’allure au seuil reste autour de ${formatPace(threshold.value)} /km.`,
-      );
-    else
-      sentences.push(
-        `L’allure au seuil passe de ${formatPace(threshold.baseline)} à ${formatPace(threshold.value)} /km.`,
       );
   }
   return {
@@ -180,4 +167,51 @@ export function coachNote(measures: FitnessMeasures) {
   )
     return `À ${referenceHeartRate} bpm sur le plat, ton allure est passée de ${formatPace(efficiency.baseline)} à ${formatPace(efficiency.value)} /km depuis ${formatMonth(efficiency.since!)}.`;
   return null;
+}
+
+export type LoadAction = { label: string; href: string };
+
+export type LoadAdvice = { text: string; actions: LoadAction[] };
+
+export type LoadPlanContext = {
+  currentWeekStart: string;
+  nextLightWeekStart: string | null;
+  currentLight: boolean;
+} | null;
+
+export function loadAdvice(load: LoadChart, plan: LoadPlanContext): LoadAdvice {
+  const { current, overloadDays } = load;
+  if (overloadDays === 0 || current.condition <= 0)
+    return { text: loadNote(load), actions: [] };
+  const gap = Math.round((current.fatigue / current.condition - 1) * 100);
+  const since =
+    overloadDays === 1
+      ? "aujourd’hui"
+      : `depuis ${formatInteger(overloadDays)} jours`;
+  const planSentence = !plan
+    ? " Garde des séances faciles jusqu’à ce qu’elle repasse sous ta condition."
+    : plan.currentLight
+      ? " Ta semaine allégée tombe au bon moment."
+      : plan.nextLightWeekStart
+        ? ` Ton plan prévoit une semaine allégée à partir du ${formatDayMonth(plan.nextLightWeekStart)}.`
+        : " Ton plan ne prévoit pas de semaine allégée d’ici là.";
+  return {
+    text: `Fatigue ${formatInteger(gap)} % au-dessus de ta condition ${since}.${planSentence}`,
+    actions: [
+      ...(plan
+        ? [
+            {
+              label: "Voir la semaine",
+              href: `/plan?week=${plan.currentWeekStart}`,
+            },
+          ]
+        : []),
+      {
+        label: "Alléger ma semaine",
+        href: coachRequestHref(
+          `Ma fatigue dépasse ma condition de ${formatInteger(gap)} % ${since}. Peux-tu alléger ma semaine ?`,
+        ),
+      },
+    ],
+  };
 }

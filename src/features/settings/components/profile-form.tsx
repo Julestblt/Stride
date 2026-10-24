@@ -433,7 +433,7 @@ export function ProfileForm({
           {personalRow("weight_kg", "Poids", "kg")}
         </FieldGroup>
       </fieldset>
-      <section>
+      <section id="entrainement" className="scroll-mt-4">
         <div className="mb-2 flex flex-col gap-1 px-1.5 min-[1100px]:mb-0 min-[1100px]:flex-row min-[1100px]:items-baseline min-[1100px]:justify-between min-[1100px]:border-b min-[1100px]:border-border-strong min-[1100px]:px-0 min-[1100px]:pb-2.5">
           <h2 className="font-mono text-micro font-normal tracking-wider text-muted-foreground uppercase min-[1100px]:text-label">
             Issu de ton entraînement

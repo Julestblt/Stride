@@ -8,9 +8,22 @@ export const healthViews = ["day", "week", "month"] as const;
 export type HealthView = (typeof healthViews)[number];
 export const healthViewLabels: Record<HealthView, string> = {
   day: "Jour",
-  week: "Semaine",
-  month: "Mois",
+  week: "14 jours",
+  month: "30 jours",
 };
+
+export const bodyPath = "/progress/body";
+
+export function bodyHref(
+  view: HealthView = "week",
+  date: string | null = null,
+) {
+  const params = new URLSearchParams();
+  if (view !== "week") params.set("view", view);
+  if (view === "day" && date) params.set("date", date);
+  const query = params.toString();
+  return query ? `${bodyPath}?${query}` : bodyPath;
+}
 
 const viewSchema = z.enum(healthViews).catch("week");
 

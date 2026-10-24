@@ -41,15 +41,16 @@ export type EnduranceRecord = (typeof enduranceDefinitions)[number] & {
   current: RecordPoint | null;
 };
 export type RecordTrack = { activityId: string; series: Series };
+export type BusiestWeek = {
+  start: string;
+  meters: number;
+  gain: number | null;
+  activityIds: string[];
+};
 export type RecordsModel = {
   road: RoadRecord[];
   endurance: EnduranceRecord[];
-  chronology: (RecordPoint & {
-    key: string;
-    label: string;
-    kind: "road" | "endurance";
-    current: boolean;
-  })[];
+  busiestWeek: BusiestWeek | null;
   activities: ProgressActivity[];
 };
 
@@ -282,19 +283,18 @@ export function recordsModel(
       current: improvements.at(-1) ?? null,
     };
   });
-  const chronology = [
-    ...road.map((r) => ({ ...r, kind: "road" as const })),
-    ...endurance.map((r) => ({ ...r, kind: "endurance" as const })),
-  ]
-    .flatMap((r) =>
-      r.history.map((p) => ({
-        ...p,
-        key: r.key,
-        label: r.label,
-        kind: r.kind,
-        current: p === r.current,
-      })),
-    )
-    .sort((a, b) => a.day.localeCompare(b.day) || a.key.localeCompare(b.key));
-  return { road, endurance, chronology, activities };
+  const busiest = endurance.find(
+    (record) => record.key === "weeklyDistance",
+  )?.current;
+  const week = busiest ? weeks.get(busiest.day) : undefined;
+  const busiestWeek =
+    busiest && week
+      ? {
+          start: busiest.day,
+          meters: busiest.value,
+          gain: week.gainComplete ? week.gain : null,
+          activityIds: week.ids,
+        }
+      : null;
+  return { road, endurance, busiestWeek, activities };
 }

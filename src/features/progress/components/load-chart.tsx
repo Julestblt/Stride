@@ -2,7 +2,6 @@ import {
   ChartInspector,
   type InspectorPoint,
 } from "@/components/stride/chart-inspector";
-import { StrideMark } from "@/components/stride/stride-mark";
 import type { LoadChart as LoadChartModel } from "../load";
 import { addDays, daysBetween } from "../period";
 import {
@@ -18,7 +17,6 @@ type Frame = {
   baseline: number;
   top: number;
   lineBottom: number;
-  barDepth: number;
   font: number;
   axisGap: number;
   maxMonths: number;
@@ -30,7 +28,6 @@ const desktop: Frame = {
   baseline: 200,
   top: 30,
   lineBottom: 160,
-  barDepth: 26,
   font: 10,
   axisGap: 40,
   maxMonths: 13,
@@ -42,7 +39,6 @@ const mobile: Frame = {
   baseline: 140,
   top: 22,
   lineBottom: 112,
-  barDepth: 14,
   font: 8,
   axisGap: 26,
   maxMonths: 7,
@@ -89,11 +85,6 @@ function Plot({
   const y = (value: number) =>
     frame.lineBottom -
     ((value - min) / Math.max(1, max - min)) * (frame.lineBottom - frame.top);
-  const freshnessMax = Math.max(
-    1,
-    ...chart.weeks.map((week) => Math.abs(week.freshness)),
-  );
-  const weekWidth = Math.max(2, (7 / span) * frame.width * 0.6);
   const ticks = monthTicks(chart.start, chart.end, frame.maxMonths);
   return (
     <svg
@@ -110,21 +101,17 @@ function Plot({
           );
         })}
       </g>
-      <g className="fill-provider" opacity="0.45">
-        {chart.weeks.map((week) => {
-          const height =
-            (Math.abs(week.freshness) / freshnessMax) * frame.barDepth;
-          const left = Math.min(
-            Math.max(0, x(week.start)),
-            frame.width - weekWidth,
-          );
+      <g className="fill-danger" opacity="0.12">
+        {chart.overload.map((range) => {
+          const left = x(range.from);
+          const right = Math.max(left + 2, x(range.to));
           return (
             <rect
-              key={week.start}
+              key={range.from}
               x={left}
-              y={week.freshness >= 0 ? frame.baseline - height : frame.baseline}
-              width={weekWidth}
-              height={Math.max(1, height)}
+              y={frame.top}
+              width={right - left}
+              height={frame.baseline - frame.top}
             />
           );
         })}
@@ -222,18 +209,14 @@ export function LoadLegend({ className }: { className?: string }) {
         Fatigue · 7 j
       </li>
       <li className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="h-2.5 w-3 bg-provider opacity-50" />
-        Fraîcheur
+        <span aria-hidden="true" className="h-2 w-2.5 bg-danger/20" />
+        Fatigue &gt; condition
       </li>
     </ul>
   );
 }
 
-export function LoadChart({
-  chart,
-}: {
-  chart: LoadChartModel & { note: string };
-}) {
+export function LoadChart({ chart }: { chart: LoadChartModel }) {
   const span = Math.max(1, daysBetween(chart.start, chart.end));
   const markers = new Map(chart.markers.map((marker) => [marker.day, marker]));
   const points: InspectorPoint[] = chart.points.map((point) => ({
@@ -248,37 +231,28 @@ export function LoadChart({
         tone: "foreground",
       },
       { label: "Fatigue", value: formatInteger(point.fatigue), tone: "danger" },
-      {
-        label: "Fraîcheur",
-        value: `${point.condition - point.fatigue > 0 ? "+" : ""}${formatInteger(point.condition - point.fatigue)}`,
-        tone: "provider",
-      },
     ],
   }));
   return (
     <figure className="flex flex-col gap-3">
       <ChartInspector
-        label="Condition, fatigue et fraîcheur"
+        label="Condition et fatigue"
         points={points}
         className="max-sm:hidden"
       >
         <Plot chart={chart} frame={desktop} className="h-auto w-full" />
       </ChartInspector>
       <ChartInspector
-        label="Condition, fatigue et fraîcheur"
+        label="Condition et fatigue"
         points={points}
         className="sm:hidden"
       >
         <Plot chart={chart} frame={mobile} className="h-auto w-full" />
       </ChartInspector>
-      <figcaption className="flex items-start gap-2.5 text-sm text-muted sm:text-meta">
-        <StrideMark className="mt-0.5 size-3.5 shrink-0" />
-        <span className="text-pretty">{chart.note}</span>
-      </figcaption>
       <p className="text-xs text-muted-foreground">
         Condition : charge chronique Garmin (moyenne sur 28 jours). Fatigue :
-        charge aiguë Garmin (7 derniers jours). Fraîcheur : condition moins
-        fatigue, moyenne par semaine ; au-dessus de la ligne, tu es reposé.
+        charge aiguë Garmin (7 derniers jours). La zone colorée marque les jours
+        où la fatigue dépasse la condition.
       </p>
     </figure>
   );

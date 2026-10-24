@@ -3,153 +3,180 @@
 import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingScope } from "@/features/data-activity/components/loading";
+import { ScaleSwitch } from "@/features/progress/components/scale-switch";
 import { PeriodNav } from "@/features/progress/components/period-nav";
-import { RecordsFilters } from "@/features/progress/components/records-sections";
+import { parseHealthView } from "@/features/progress/health";
 import { parsePeriod } from "@/features/progress/period";
-import { parseRecordFilter } from "@/features/progress/records-view";
 
 function Lede() {
   return (
-    <div
-      aria-hidden="true"
-      className="flex w-full max-w-200 flex-col gap-2.5 sm:w-auto sm:flex-1 sm:gap-3"
-    >
-      <Skeleton className="h-7 w-3/4 sm:h-12" />
+    <div aria-hidden="true" className="flex w-full flex-col gap-2.5 sm:gap-3.5">
+      <Skeleton className="h-7 w-3/4 sm:h-10" />
+      <Skeleton className="h-7 w-1/2 sm:h-10" />
       <Skeleton className="h-10 w-full sm:h-12" />
     </div>
   );
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return <h2 className="text-base font-semibold sm:text-xl">{children}</h2>;
+  return <h2 className="text-base font-semibold sm:text-lg">{children}</h2>;
 }
 
-function Rows({ count, className }: { count: number; className: string }) {
+function Rows({ count }: { count: number }) {
   return (
-    <div aria-hidden="true" className="flex flex-col">
+    <div aria-hidden="true" className="flex flex-col border-t border-border">
       {Array.from({ length: count }, (_, item) => (
         <div
           key={item}
-          className="flex items-center justify-between gap-4 border-t border-border py-3.5"
+          className="flex items-center justify-between gap-4 border-b border-border py-3.5"
         >
           <Skeleton className="h-4 w-1/2" />
-          <Skeleton className={className} />
+          <Skeleton className="h-7 w-20" />
         </div>
       ))}
     </div>
   );
 }
 
+const twoColumns =
+  "grid items-start gap-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-10";
+
 export function FitnessLoading() {
   const period = parsePeriod(useSearchParams().get("period"));
   return (
     <LoadingScope
       label="Chargement de la forme"
-      className="flex flex-col gap-6.5 sm:gap-13"
+      className="flex flex-col gap-8 sm:gap-10"
     >
-      <section className="flex flex-col gap-6.5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
-        <Lede />
-        <PeriodNav period={period} />
-      </section>
-      <section className="flex flex-col gap-3 sm:gap-3.5">
-        <SectionTitle>Condition, fatigue et fraîcheur</SectionTitle>
+      <section className="grid items-start gap-6.5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-10">
+        <div className="flex flex-col gap-3.5 max-lg:order-2">
+          <Lede />
+          <PeriodNav period={period} />
+        </div>
         <Skeleton
           aria-hidden="true"
-          className="aspect-[350/168] w-full rounded-card sm:aspect-[1200/244]"
+          className="h-64 w-full rounded-card max-lg:order-1"
         />
-        <div aria-hidden="true" className="flex flex-col gap-3">
-          <Skeleton className="h-4 w-2/3" />
-          <Skeleton className="h-8 w-full" />
-        </div>
       </section>
-      <div className="flex flex-wrap items-start gap-x-14 gap-y-9">
-        <section className="flex min-w-0 flex-[999_1_620px] flex-col gap-3.5">
-          <SectionTitle>Ce qui évolue</SectionTitle>
-          <Rows count={5} className="h-8 w-24" />
+      <div className={twoColumns}>
+        <section className="flex flex-col gap-3.5">
+          <SectionTitle>Condition et fatigue</SectionTitle>
+          <Skeleton
+            aria-hidden="true"
+            className="aspect-[350/168] w-full rounded-card sm:aspect-[1200/244]"
+          />
+          <Skeleton aria-hidden="true" className="h-16 w-full rounded-card" />
         </section>
-        <div
-          aria-hidden="true"
-          className="flex min-w-0 flex-[1_1_360px] flex-col gap-9"
-        >
-          <Skeleton className="h-40 w-full rounded-card" />
-          <Skeleton className="h-44 w-full rounded-card" />
-          <Skeleton className="h-40 w-full rounded-card" />
+        <div className="flex flex-col gap-8">
+          <section className="flex flex-col gap-2.5">
+            <SectionTitle>Prévisions de course</SectionTitle>
+            <Rows count={3} />
+          </section>
+          <section className="flex flex-col gap-2.5">
+            <SectionTitle>Répartition de l’intensité</SectionTitle>
+            <Skeleton aria-hidden="true" className="h-24 w-full rounded-card" />
+          </section>
         </div>
+      </div>
+      <div className={twoColumns}>
+        <section className="flex flex-col gap-3.5">
+          <SectionTitle>Course à pied · km par semaine</SectionTitle>
+          <Skeleton
+            aria-hidden="true"
+            className="h-36 w-full rounded-card sm:h-45"
+          />
+        </section>
+        <section className="flex flex-col gap-2">
+          <SectionTitle>Ce qui évolue</SectionTitle>
+          <Rows count={4} />
+        </section>
       </div>
     </LoadingScope>
   );
 }
 
-export function RecoveryLoading() {
+export function BodyLoading() {
+  const view = parseHealthView(useSearchParams().get("view"));
   return (
     <LoadingScope
-      label="Chargement de la récupération"
-      className="flex flex-col gap-6.5 sm:gap-13"
+      label="Chargement du corps"
+      className="flex flex-col gap-8 sm:gap-10"
     >
-      <section className="flex max-w-205 flex-col gap-2.5 sm:gap-3">
-        <Lede />
+      <section className="grid items-start gap-6.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-10">
+        <div className="flex flex-col gap-3.5">
+          <Lede />
+          <ScaleSwitch current={view} />
+        </div>
+        {view !== "day" && (
+          <Skeleton aria-hidden="true" className="h-56 w-full rounded-card" />
+        )}
       </section>
-      <div
-        aria-hidden="true"
-        className="flex flex-col gap-4.5 sm:flex-row sm:flex-wrap sm:items-end sm:gap-12"
-      >
-        <Skeleton className="h-13 w-28 sm:h-24 sm:w-50" />
-        <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-          <Skeleton className="h-4 w-1/3" />
-          <Skeleton className="h-16 w-full rounded-card" />
+      {view === "day" ? (
+        <div aria-hidden="true" className="flex flex-col gap-6">
+          <Skeleton className="h-16 w-full rounded-panel" />
+          <Skeleton className="h-72 w-full rounded-panel" />
         </div>
-      </div>
-      <div
-        aria-hidden="true"
-        className="grid grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] gap-x-10 gap-y-9"
-      >
-        {[0, 1, 2].map((item) => (
-          <div key={item} className="flex flex-col gap-2.5">
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-10 w-24" />
-            <Skeleton className="h-28 w-full rounded-card" />
+      ) : (
+        <div className={twoColumns}>
+          <div className="flex flex-col gap-6 max-lg:order-2">
+            <section className="flex flex-col gap-3">
+              <SectionTitle>Nuits</SectionTitle>
+              <Skeleton
+                aria-hidden="true"
+                className="h-30 w-full rounded-card sm:h-37.5"
+              />
+            </section>
+            <div aria-hidden="true" className="grid gap-3.5 sm:grid-cols-2">
+              <Skeleton className="h-40 rounded-card" />
+              <Skeleton className="h-40 rounded-card" />
+            </div>
           </div>
-        ))}
-      </div>
-      <div
-        aria-hidden="true"
-        className="flex flex-wrap items-start gap-x-14 gap-y-9"
-      >
-        <Skeleton className="h-72 min-w-0 flex-[1_1_420px] rounded-panel" />
-        <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-3.5">
-          <Skeleton className="h-6 w-56" />
-          <Skeleton className="h-16 w-full rounded-card" />
-          <Skeleton className="h-16 w-full rounded-card" />
+          <section className="flex flex-col gap-1.5 max-lg:order-1">
+            <SectionTitle>Ce qui pèse aujourd’hui</SectionTitle>
+            <Rows count={5} />
+          </section>
         </div>
-      </div>
+      )}
     </LoadingScope>
   );
 }
 
 export function RecordsLoading() {
-  const filter = parseRecordFilter(useSearchParams().get("filter"));
   return (
     <LoadingScope
       label="Chargement des records"
-      className="flex min-w-0 flex-col gap-6 sm:gap-8"
+      className="flex min-w-0 flex-col gap-8 sm:gap-10"
     >
-      <section className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-        <h1 className="text-[25px] leading-tight font-semibold tracking-tight max-sm:sr-only sm:text-[46px]">
-          Records
-        </h1>
-        <div className="flex items-center gap-4 max-sm:w-full">
-          <Skeleton aria-hidden="true" className="h-3 w-36 max-lg:hidden" />
-          <RecordsFilters filter={filter} />
+      <section className="grid items-start gap-6.5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-10">
+        <Lede />
+        <div className="flex flex-col gap-3">
+          <SectionTitle>À portée</SectionTitle>
+          <Skeleton aria-hidden="true" className="h-56 w-full rounded-card" />
         </div>
       </section>
-      <Skeleton
-        aria-hidden="true"
-        className="h-80 w-full rounded-panel sm:h-60 lg:h-48"
-      />
-      <Skeleton aria-hidden="true" className="h-72 w-full rounded-panel" />
-      <div aria-hidden="true" className="flex flex-col gap-3.5">
-        <Skeleton className="h-6 w-48" />
-        <Rows count={6} className="h-6 w-20" />
+      <section className="flex flex-col gap-3">
+        <SectionTitle>Tes repères actuels</SectionTitle>
+        <div
+          aria-hidden="true"
+          className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3"
+        >
+          {[0, 1, 2, 3].map((item) => (
+            <Skeleton
+              key={item}
+              className="h-24 rounded-card max-sm:last:hidden"
+            />
+          ))}
+        </div>
+      </section>
+      <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-10">
+        <section className="flex flex-col gap-2">
+          <SectionTitle>Vitesse</SectionTitle>
+          <Rows count={4} />
+        </section>
+        <section className="flex flex-col gap-2">
+          <SectionTitle>Endurance</SectionTitle>
+          <Rows count={4} />
+        </section>
       </div>
     </LoadingScope>
   );

@@ -178,6 +178,22 @@ const progressObservations = Array.from({ length: 200 }, (_, index) => {
     availability: "available",
   }));
 }).flat();
+const predictionObservations = [
+  [0, "race_prediction_10k_seconds", 2_702],
+  [0, "race_prediction_half_marathon_seconds", 6_012],
+  [0, "race_prediction_marathon_seconds", 12_820],
+  [35, "race_prediction_10k_seconds", 2_720],
+  [35, "race_prediction_half_marathon_seconds", 6_052],
+  [35, "race_prediction_marathon_seconds", 12_820],
+  [3, "lactate_threshold_speed_mps", 3.6],
+  [3, "lactate_threshold_heart_rate_bpm", 171],
+].map(([age, metric, value_numeric]) => ({
+  user_id: user.id,
+  metric,
+  observed_on: new Date(Date.now() - age * day).toISOString().slice(0, 10),
+  value_numeric,
+  availability: "available",
+}));
 const recoveryObservations = Array.from({ length: 60 }, (_, index) => {
   const age = 59 - index;
   const observed_on = new Date(Date.now() - age * day)
@@ -475,7 +491,8 @@ const tables = {
     availability: "available",
   }))
     .concat(progressObservations)
-    .concat(recoveryObservations),
+    .concat(recoveryObservations)
+    .concat(predictionObservations),
   athlete_profiles: [
     {
       user_id: user.id,

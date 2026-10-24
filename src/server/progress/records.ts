@@ -5,7 +5,10 @@ import {
   type RecordTrack,
 } from "@/features/progress/record-history";
 import type { OnboardingContext } from "@/server/onboarding/context";
+import { loadGoalInputs } from "./goal";
 import { loadProgressHistory, readAll } from "./history";
+import { readPredictions } from "./predictions";
+import { readGarminThreshold, readThresholdOverride } from "./threshold";
 
 const trackSchema = z.object({
   activity_id: z.string(),
@@ -16,20 +19,25 @@ const trackSchema = z.object({
 });
 
 export async function loadRecords(context: OnboardingContext, today: string) {
-  const [history, rows] = await Promise.all([
-    loadProgressHistory(context, today, true),
-    readAll((from, to) =>
-      context.client
-        .from("provider_activity_tracks")
-        .select(
-          "activity_id, status, elapsed_s:series->elapsed_s, distance_m:series->distance_m, elevation_m:series->elevation_m",
-        )
-        .eq("user_id", context.userId)
-        .eq("status", "available")
-        .order("activity_id", { ascending: true })
-        .range(from, to),
-    ),
-  ]);
+  const [history, rows, predictions, threshold, override, goal] =
+    await Promise.all([
+      loadProgressHistory(context, today, true),
+      readAll((from, to) =>
+        context.client
+          .from("provider_activity_tracks")
+          .select(
+            "activity_id, status, elapsed_s:series->elapsed_s, distance_m:series->distance_m, elevation_m:series->elevation_m",
+          )
+          .eq("user_id", context.userId)
+          .eq("status", "available")
+          .order("activity_id", { ascending: true })
+          .range(from, to),
+      ),
+      readPredictions(context, today).catch(() => []),
+      readGarminThreshold(context),
+      readThresholdOverride(context),
+      loadGoalInputs(context, today),
+    ]);
   const tracks = rows.flatMap((row): RecordTrack[] => {
     const parsed = trackSchema.safeParse(row);
     return parsed.success &&
@@ -49,5 +57,15 @@ export async function loadRecords(context: OnboardingContext, today: string) {
         ]
       : [];
   });
-  return { model: recordsModel(history, tracks, today), history };
+  return {
+    model: recordsModel(history, tracks, today),
+    history,
+    predictions,
+    threshold: {
+      speedMps: threshold?.speedMps ?? null,
+      heartRateBpm: threshold?.heartRateBpm ?? null,
+      override,
+    },
+    goal,
+  };
 }

@@ -4,12 +4,8 @@ import {
   improvementHistory,
   recordsModel,
 } from "@/features/progress/record-history";
-import {
-  recordsView,
-  parseRecordFilter,
-  recordCount,
-} from "@/features/progress/records-view";
-import { formatClock } from "@/features/progress/format";
+import { recordsView } from "@/features/progress/records-view";
+import type { GarminPrediction } from "@/features/progress/garmin-predictions";
 import { bestEffortSeconds, fitnessRecords } from "@/features/progress/records";
 import type {
   ProgressActivity,
@@ -100,8 +96,6 @@ describe("record evidence", () => {
     );
     const road = model.road.find((r) => r.key === "10k")!;
     expect(road.history.map((p) => p.activityId)).toEqual(["a", "better"]);
-    const view = recordsView(model, history(), today, "road");
-    expect(view.improvements.map((p) => p.activityId)).toEqual(["better"]);
   });
   it("keeps Forme records available", () => {
     expect(fitnessRecords([run("a", "2026-01-01")], []).efforts[0].key).toBe(
@@ -125,6 +119,11 @@ describe("record evidence", () => {
     expect(
       model.endurance.find((r) => r.key === "weeklyDistance")?.current?.value,
     ).toBe(20000);
+    expect(model.busiestWeek).toMatchObject({
+      start: "2025-12-29",
+      meters: 20000,
+      gain: 500,
+    });
   });
   it("omits incomplete weekly gain while retaining complete distance and observed zero gain", () => {
     const input = history([
@@ -231,118 +230,131 @@ describe("sampled climbing", () => {
     expect(climbingVam({})).toBeNull();
   });
 });
+const prediction = (
+  key: GarminPrediction["key"],
+  seconds: number,
+): GarminPrediction => ({
+  key,
+  label: key,
+  meters: 0,
+  seconds,
+  asOf: today,
+  previous: null,
+});
+
 describe("records presentation facts", () => {
-  it("requires recent VO2 and exposes signed gaps without Garmin record attribution", () => {
-    const input = history([run("a", "2026-01-01")]);
-    input.vo2 = [{ day: "2026-09-12", value: 55 }];
-    const model = recordsModel(input, [], today);
-    expect(
-      recordsView(model, input, today, "all").predictions.find(
-        (p) => p.key === "10k",
-      )?.gap,
-    ).toBeLessThan(0);
-    input.vo2[0].day = "2026-09-11";
-    expect(recordsView(model, input, today, "all").predictions).toEqual([]);
-  });
-  it("describes an empty selected category while other records remain available", () => {
-    const enduranceOnly = history([
-      run("trail", "2026-01-01", { type: "trail_running" }),
+  it("puts a road record within 3 % of the Garmin prediction in reach", () => {
+    const input = history([run("a", "2025-11-09", { name: "10 km de Paris" })]);
+    const view = recordsView({
+      model: recordsModel(input, [], today),
+      predictions: [prediction("10k", 2721), prediction("half_marathon", 6000)],
+      vo2: [],
+      threshold: null,
+      today,
+    });
+    expect(view.headline).toBe("Ton 10K est à portée.");
+    expect(view.paragraph).toBe(
+      "Garmin te prédit 45:21 sur 10K, à 21 secondes de ton record de novembre. Une course test bien placée te dira si tu peux le battre.",
+    );
+    expect(view.reach).toMatchObject({
+      record: "45:00",
+      prediction: "45:21",
+      gap: "écart 0:21",
+      tone: "warning",
+    });
+    expect(view.reach?.coachHref).toMatch(/^\/coach\/nouvelle\?texte=/);
+    expect(view.speed.map((row) => [row.label, row.value, row.side])).toEqual([
+      ["5K", null, null],
+      ["10K", "45:00", "prévision 45:21"],
+      ["Semi-marathon", null, "prévision 1:40:00"],
+      ["Marathon", null, null],
     ]);
-    const roadReading = recordsView(
-      recordsModel(enduranceOnly, [], today),
-      enduranceOnly,
-      today,
-      "road",
-    );
-    expect(roadReading.events).toEqual([]);
-    expect(roadReading.headline).toBe(
-      "Aucun record sur route n’est encore documenté.",
-    );
-    expect(roadReading.paragraph).toContain("sur route ou piste");
-    expect(roadReading.paragraph).not.toContain("Aucune activité importée");
-    const roadOnly = history([
-      run("a", "2026-01-01", { distance: null, duration: null, gain: null }),
-    ]);
-    roadOnly.laps = [lap(0)];
-    const enduranceReading = recordsView(
-      recordsModel(roadOnly, [], today),
-      roadOnly,
-      today,
-      "trail",
-    );
-    expect(enduranceReading.events).toEqual([]);
-    expect(enduranceReading.headline).toBe(
-      "Aucun record d’endurance n’est encore documenté.",
-    );
-    expect(enduranceReading.paragraph).toContain("filtre Route");
-    const roadView = recordsView(
-      recordsModel(roadOnly, [], today),
-      roadOnly,
-      today,
-      "road",
-    );
-    expect(roadView.paragraph).toContain("1 distance sur route");
-    expect(roadView.takeaways[1].text).toContain("1 distance documentée");
-    expect(recordCount(1, "repère")).toBe("1 repère");
-    expect(recordCount(2, "repère")).toBe("2 repères");
+    expect(view.speed[1].detail).toBe("10 km de Paris · nov. 2025");
+    expect(view.speed[3].detail).toBe("jamais couru");
   });
-  it("predicts and compares 5 km goals while excluding past goals and retaining forecast confidence", () => {
+
+  it("marks a recent improvement as new", () => {
     const input = history([
-      run("a", "2026-01-01", { distance: 5000, duration: 1500 }),
+      run("old", "2026-03-01"),
+      run("new", "2026-10-01", { duration: 2600 }),
     ]);
-    input.vo2 = [{ day: today, value: 55 }];
-    input.races = [
-      {
-        id: "past",
-        name: "Course passée",
-        day: "2026-10-11",
-        kind: "road",
-        distanceKm: 5,
-        priority: "A",
-      },
-      {
-        id: "today",
-        name: "5 km aujourd’hui",
-        day: today,
-        kind: "road",
-        distanceKm: 5,
-        priority: "A",
-      },
-      {
-        id: "future",
-        name: "Marathon à venir",
-        day: "2026-11-01",
-        kind: "road",
-        distanceKm: 42.2,
-        priority: "A",
-      },
-    ];
-    const view = recordsView(
-      recordsModel(input, [], today),
-      input,
+    const view = recordsView({
+      model: recordsModel(input, [], today),
+      predictions: [],
+      vo2: [],
+      threshold: null,
       today,
-      "all",
-    );
-    expect(view.opportunities.map((o) => o.race.id)).toEqual([
-      "today",
-      "future",
-    ]);
-    const five = view.predictions.find((p) => p.key === "5k")!;
-    expect(five.gap).toBeLessThan(0);
-    expect(view.opportunities[0].text).toContain(formatClock(five.seconds));
-    expect(view.opportunities[0].text).toContain(
-      `Écart au record : −${formatClock(Math.abs(five.gap!))}`,
-    );
-    expect(view.opportunities[0].text).toContain("confiance modérée");
-    expect(view.opportunities[1].text).toContain("confiance faible");
+    });
+    expect(view.speed[1]).toMatchObject({
+      value: "43:20",
+      side: "−1:40 · nouveau",
+      tone: "success",
+      href: "/activities/new",
+    });
   });
-  it("provides empty states and validates URL filters", () => {
-    const input = history(),
-      model = recordsModel(input, [], today);
-    expect(recordsView(model, input, today, "all").headline).toBe(
-      "Tes records attendent ton historique.",
-    );
-    expect(parseRecordFilter("anything")).toBe("all");
-    expect(parseRecordFilter(["trail"])).toBe("trail");
+
+  it("lists the four endurance records with the busiest week", () => {
+    const input = history([
+      run("long", "2026-09-06", {
+        type: "trail_running",
+        distance: 80_000,
+        gain: 6100,
+        name: "CCC",
+      }),
+      run("short", "2026-09-05", { distance: 12_000, gain: 400 }),
+    ]);
+    const view = recordsView({
+      model: recordsModel(
+        input,
+        [{ activityId: "long", series: climb() }],
+        today,
+      ),
+      predictions: [],
+      vo2: [],
+      threshold: null,
+      today,
+    });
+    expect(view.endurance.map((row) => [row.label, row.value])).toEqual([
+      ["Plus longue sortie", "80 km"],
+      ["D+ sur une sortie", "6\u202f100 m"],
+      ["VAM sur 20 min", "840 m/h"],
+      ["Semaine la plus chargée", "92 km"],
+    ]);
+    expect(view.endurance[3].detail).toBe("6\u202f500 m D+ · août 2026");
+  });
+
+  it("reads markers from Garmin, the profile override and VO2 history", () => {
+    const view = recordsView({
+      model: recordsModel(history(), [], today),
+      predictions: [],
+      vo2: [
+        { day: "2026-06-01", value: 51 },
+        { day: "2026-10-10", value: 52 },
+      ],
+      threshold: { speedMps: 1000 / 278, heartRateBpm: 171, override: 168 },
+      today,
+    });
+    expect(
+      view.markers.map((marker) => [marker.label, marker.value, marker.detail]),
+    ).toEqual([
+      ["Allure seuil", "4:38", "Garmin"],
+      ["FC seuil", "168", "Ta valeur"],
+      ["VO₂ max", "52", "+1 en 3 mois"],
+      ["VAM · 20 min", null, "Pas encore de montée mesurée"],
+    ]);
+  });
+
+  it("provides empty states", () => {
+    const view = recordsView({
+      model: recordsModel(history(), [], today),
+      predictions: [],
+      vo2: [],
+      threshold: null,
+      today,
+    });
+    expect(view.headline).toBe("Tes records attendent ton historique.");
+    expect(view.empty).toBe(true);
+    expect(view.reach).toBeNull();
+    expect(view.endurance).toEqual([]);
   });
 });
