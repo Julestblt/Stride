@@ -11,7 +11,7 @@ export function PeriodNav({ period }: { period: ProgressPeriod }) {
   return (
     <nav
       aria-label="Période"
-      className="flex overflow-hidden rounded-surface border border-border"
+      className="flex w-fit gap-0.5 rounded-surface border border-border bg-surface p-0.75 max-sm:w-full"
     >
       {progressPeriods.map((item) => (
         <Link
@@ -22,8 +22,9 @@ export function PeriodNav({ period }: { period: ProgressPeriod }) {
           aria-current={item === period ? "page" : undefined}
           scroll={false}
           className={cn(
-            "flex min-h-11 flex-1 items-center justify-center border-l border-border px-3.5 text-meta whitespace-nowrap text-muted-foreground transition-colors first:border-l-0 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:min-h-9 sm:flex-none",
-            item === period && "bg-surface-raised text-foreground",
+            "flex min-h-9 items-center justify-center rounded-control px-3.5 text-meta whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring max-sm:min-h-10 max-sm:flex-1",
+            item === period &&
+              "bg-surface-raised font-semibold text-foreground",
           )}
         >
           {periodLabels[item]}
