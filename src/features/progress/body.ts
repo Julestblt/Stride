@@ -2,7 +2,13 @@ import { coachRequestHref } from "@/features/coach/request";
 import { formatDecimal, formatInteger } from "./format";
 import { loadZone, type HealthDay, type HealthModel } from "./health";
 import { addDays } from "./period";
-import type { Checkin, Legs, Readiness, RecoveryModel } from "./recovery";
+import {
+  sessionFit,
+  type Checkin,
+  type Legs,
+  type Readiness,
+  type RecoveryModel,
+} from "./recovery";
 import { formatSleep, legsLabels } from "./recovery-view";
 
 export type FactorTone = "danger" | "warning" | "muted" | "success";
@@ -103,19 +109,28 @@ export function readinessAdvice(
             : "Pas de séance prévue : profite de ta forme sans forcer.",
       lighter: false,
     };
+  const fit = sessionFit(readiness.today, session.hard);
   if (!session.hard)
+    return fit === "review"
+      ? {
+          text: "Ta forme est très basse : repos proposé, ou un footing très court à l’aise.",
+          lighter: true,
+        }
+      : {
+          text: low
+            ? "Séance facile : garde-la vraiment à l’aise, quitte à la raccourcir."
+            : "Séance facile : déroule-la à l’aise.",
+          lighter: false,
+        };
+  if (fit === "review")
     return {
-      text: low
-        ? "Séance facile : garde-la vraiment à l’aise, quitte à la raccourcir."
-        : "Séance facile : déroule-la à l’aise.",
-      lighter: false,
-    };
-  if (readiness.level === "poor")
-    return {
-      text: "Remplace-la par un footing facile ou du repos : ton corps n’est pas prêt pour l’intensité.",
+      text:
+        readiness.level === "poor"
+          ? "Remplace-la par un footing facile ou du repos : ton corps n’est pas prêt pour l’intensité."
+          : "Ta forme est sous 50 avant une séance intense : revois-la avec le coach.",
       lighter: true,
     };
-  if (low)
+  if (fit === "caution")
     return {
       text: "Faisable : garde un échauffement long et coupe la dernière fraction si l’allure ne vient pas.",
       lighter: true,

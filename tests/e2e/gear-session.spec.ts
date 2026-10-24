@@ -122,9 +122,7 @@ test("a run with another pair in Garmin asks which one was worn", async ({
   expect(reset.ok).toBe(true);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  const latest = page.getByRole("region", {
-    name: /^(Hier|Aujourd’hui|Dernière activité)/,
-  });
+  const latest = page.getByRole("region", { name: "À faire" });
   await expect(
     page.getByRole("group", { name: /^Garmin indique les Zegama/ }),
   ).toHaveCount(0);

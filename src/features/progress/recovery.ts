@@ -166,6 +166,19 @@ export function readinessLevel(score: number): Readiness["level"] {
   return "poor";
 }
 
+export type SessionFit = "ready" | "caution" | "review";
+
+export function sessionFit(score: number, quality: boolean): SessionFit {
+  const level = readinessLevel(score);
+  if (quality)
+    return level === "high"
+      ? "ready"
+      : level === "moderate"
+        ? "caution"
+        : "review";
+  return level === "poor" ? "review" : "ready";
+}
+
 export type SignalStatus = {
   trend: Trend;
   streak: number;

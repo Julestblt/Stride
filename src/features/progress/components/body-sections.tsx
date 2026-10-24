@@ -25,6 +25,52 @@ const ringTones = {
   danger: "stroke-danger",
 } as const;
 
+export function ScoreRing({
+  score,
+  tone,
+  className,
+  metricClassName,
+}: {
+  score: number;
+  tone: keyof typeof ringTones;
+  className?: string;
+  metricClassName?: string;
+}) {
+  return (
+    <span className={cn("relative shrink-0", className)}>
+      <svg viewBox="0 0 64 64" aria-hidden="true" className="size-full">
+        <circle
+          cx="32"
+          cy="32"
+          r="27"
+          fill="none"
+          strokeWidth="6"
+          className="stroke-border"
+        />
+        <circle
+          cx="32"
+          cy="32"
+          r="27"
+          fill="none"
+          strokeWidth="6"
+          strokeLinecap="round"
+          pathLength="100"
+          strokeDasharray={`${Math.max(0, Math.min(100, score))} 100`}
+          transform="rotate(-90 32 32)"
+          className={ringTones[tone]}
+        />
+      </svg>
+      <Metric
+        value={formatInteger(score)}
+        className={cn(
+          "absolute inset-0 justify-center self-center",
+          metricClassName,
+        )}
+      />
+    </span>
+  );
+}
+
 export function ReadinessCard({
   summary,
   advice,
@@ -43,34 +89,12 @@ export function ReadinessCard({
     >
       {summary ? (
         <div className="flex items-center gap-4">
-          <span className="relative size-19 shrink-0">
-            <svg viewBox="0 0 64 64" aria-hidden="true" className="size-full">
-              <circle
-                cx="32"
-                cy="32"
-                r="27"
-                fill="none"
-                strokeWidth="6"
-                className="stroke-border"
-              />
-              <circle
-                cx="32"
-                cy="32"
-                r="27"
-                fill="none"
-                strokeWidth="6"
-                strokeLinecap="round"
-                pathLength="100"
-                strokeDasharray={`${Math.max(0, Math.min(100, summary.score))} 100`}
-                transform="rotate(-90 32 32)"
-                className={ringTones[summary.tone]}
-              />
-            </svg>
-            <Metric
-              value={formatInteger(summary.score)}
-              className="absolute inset-0 justify-center self-center text-[28px] leading-[76px]"
-            />
-          </span>
+          <ScoreRing
+            score={summary.score}
+            tone={summary.tone}
+            className="size-19"
+            metricClassName="text-[28px] leading-[76px]"
+          />
           <span className="flex min-w-0 flex-col gap-0.5">
             <MonoLabel id="body-readiness" size="micro">
               Prêt pour aujourd’hui ?

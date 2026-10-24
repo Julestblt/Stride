@@ -126,15 +126,17 @@ describe("today view", () => {
     expect(formatTodayDate(today)).toBe("jeu. 22/10/2026");
   });
 
-  it("leads with the plan goal race and the current week", () => {
-    const { header } = buildToday(input());
-    expect(header.goal).toMatchObject({
+  it("shows the plan goal race once with its block and next light week", () => {
+    const { goal } = buildToday(input());
+    expect(goal).toMatchObject({
       id: "race-a",
       letter: "A",
+      name: "Marathon de Paris",
+      detail: "dim. 08/11/2026 · 42,2 km",
       days: 17,
+      block: { name: "Base", week: "S2 / 4" },
+      href: "/races/race-a",
     });
-    expect(header.week).toBe("S2 / 4 · Base");
-    expect(header.next).toMatchObject({ id: "race-c", days: 10 });
   });
 
   it("shows today's planned session with its key targets", () => {
@@ -148,7 +150,26 @@ describe("today view", () => {
       "Au seuil",
     ]);
     expect(session.terrain).toBe("Route");
+    expect(session.quality).toBe(true);
     expect(session.href).toBe("/plan?session=s-2026-10-22-1");
+  });
+
+  it("weighs today's quality session against the day's form", () => {
+    const { verdict } = buildToday(input());
+    expect(verdict).toMatchObject({
+      label: "Avec prudence",
+      compat: { question: "Compatible avec Seuil · 4 × 6' ?" },
+    });
+    expect(buildToday(input({ pain: true })).verdict?.label).toBe("À revoir");
+  });
+
+  it("drops the verdict once today's session is done", () => {
+    const base = input();
+    const done = buildToday(
+      input({ panel: base.panel && { ...base.panel, status: "done" } }),
+    );
+    expect(done.session.kind).toBe("session");
+    expect(done.verdict).toBeNull();
   });
 
   it("points to the next session on a rest day", () => {
@@ -157,7 +178,7 @@ describe("today view", () => {
       kind: "rest",
       next: {
         title: "Footing",
-        when: "dim. 25 oct.",
+        when: "dim. 25/10/2026",
         href: "/plan?session=s-2026-10-25-1",
       },
     });
@@ -168,35 +189,31 @@ describe("today view", () => {
       input({ plan: null, program: null, panel: null, matches: [] }),
     );
     expect(view.session).toEqual({ kind: "none" });
+    expect(view.verdict).toBeNull();
     expect(view.week).toBeNull();
-    expect(view.header.week).toBeNull();
-    expect(view.header.goal?.id).toBe("race-a");
-    expect(view.header.next?.id).toBe("race-c");
+    expect(view.goal).toMatchObject({ id: "race-a", block: null });
   });
 
-  it("reads the day's form from Garmin and names the main cause", () => {
-    const { readiness } = buildToday(input());
-    expect(readiness).toMatchObject({
+  it("reads the day's form from Garmin with banded indicators", () => {
+    const { form } = buildToday(input());
+    expect(form).toMatchObject({
       score: 58,
       level: "Modérée",
       tone: "warning",
-      context: "moy. 14 j : 70 · c’est le sommeil",
+      gap: "12 sous ta moyenne 14 j",
     });
-    expect(readiness.rows.map((row) => [row.label, row.value])).toEqual([
-      ["Sommeil", "5h52"],
-      ["VFC", "46 ms"],
-      ["FC repos", "45 bpm"],
+    expect(
+      form.indicators.map((item) => [item.label, item.value, item.status]),
+    ).toEqual([
+      ["VFC", "46 ms", "watch"],
+      ["FC repos", "45 bpm", "normal"],
+      ["Sommeil", "5h52", "watch"],
     ]);
-    expect(readiness.rows[0]).toMatchObject({
-      note: "−1h28 vs ta moyenne",
-      direction: "down",
-      tone: "warning",
-    });
-    expect(readiness.rows[1].note).toMatch(/^sous ta plage \d+–\d+$/);
+    expect(form.indicators[2].note).toBe("moy. 7h20 · −1h28");
   });
 
   it("has no score without a Garmin readiness", () => {
-    const { readiness } = buildToday(
+    const view = buildToday(
       input({
         recovery: recoveryModel({
           nights: [],
@@ -207,13 +224,23 @@ describe("today view", () => {
         }),
       }),
     );
-    expect(readiness).toMatchObject({ score: null, rows: [] });
+    expect(view.form).toMatchObject({ score: null, indicators: [] });
+    expect(view.verdict?.label).toBe("Forme inconnue");
+    expect(view.queue).toEqual([
+      {
+        kind: "legs",
+        key: "legs",
+        label: "tes jambes",
+        hint: "Ton ressenti complète la forme du jour.",
+      },
+    ]);
   });
 
   it("summarizes the current week day by day", () => {
     const { week } = buildToday(input());
     expect(week).toMatchObject({
       number: 2,
+      total: 4,
       blockName: "Base",
       planned: { duration: expect.any(String) },
       href: "/plan?week=2026-10-19",
@@ -232,32 +259,7 @@ describe("today view", () => {
     expect(week?.pct).toBeGreaterThan(0);
   });
 
-  it("lists the next key session and races in date order", () => {
-    const { upcoming } = buildToday(
-      input({ today: "2026-10-21", panel: null }),
-    );
-    expect(upcoming.map((item) => [item.title, item.when])).toEqual([
-      ["Seuil · 4 × 6' · 50’", "jeu. 22 oct."],
-      ["10K Vincennes", "dim. 1 nov."],
-    ]);
-    expect(upcoming[1].detail).toBe("Course C · cible 44:30 · J-11");
-  });
-
-  it("shows the latest activity with its plan compliance", () => {
-    const { latest } = buildToday(input({ today: "2026-10-21", panel: null }));
-    expect(latest).toEqual({
-      heading: "Hier",
-      title: "Footing · 50’",
-      family: "easy",
-      detail: "8,32 km · 6:02 /km · FC 142",
-      compliance: { pct: 98, partial: false },
-      verdict: null,
-      feelingPrompt: null,
-      href: "/activities/activity-1",
-    });
-  });
-
-  it("adds the debrief verdict and asks for a missing feeling", () => {
+  it("queues the feeling, then the pair, then the legs", () => {
     const debrief = buildDebriefView({
       session: planState().sessions.find(
         (item) => item.sessionKey === "s-2026-10-20-1",
@@ -272,16 +274,44 @@ describe("today view", () => {
       garmin: { rpe: null, feel: null },
       athlete: null,
     });
-    const { latest } = buildToday(
-      input({ today: "2026-10-21", panel: null, debrief }),
+    const pairQuestion = {
+      activityId: "activity-1",
+      title: "Quelle paire as-tu portée ?",
+      text: "",
+      garmin: { id: "shoe-1", name: "Evo SL 3" },
+      planned: { id: "shoe-2", name: "Speedgoat 6" },
+      context: "",
+      options: [],
+    };
+    const { queue } = buildToday(
+      input({
+        today: "2026-10-21",
+        panel: null,
+        debrief,
+        pairQuestion,
+      }),
     );
-    expect(latest).toMatchObject({
-      verdict: {
-        tone: "warning",
-        title: "Allure trop rapide",
-        body: "allure moyenne plus rapide que prévu.",
+    const withSession = buildToday(input({ debrief, pairQuestion })).queue;
+    expect(withSession).toHaveLength(3);
+    expect(withSession[0]).toMatchObject({
+      kind: "feeling",
+      activityId: "activity-1",
+    });
+    expect(queue.map((item) => [item.kind, item.label])).toEqual([
+      ["feeling", "ton ressenti d’hier"],
+      ["pair", "ta paire d’hier"],
+      ["legs", "tes jambes"],
+    ]);
+    expect(queue[0]).toMatchObject({
+      activityId: "activity-1",
+      activity: {
+        heading: "Hier",
+        title: "Footing · 50’",
+        family: "easy",
+        detail: "8,32 km · 6:02 /km · FC 142",
+        compliance: { pct: 98, partial: false },
+        href: "/activities/activity-1",
       },
-      feelingPrompt: "activity-1",
     });
     const noted = buildToday(
       input({
@@ -291,19 +321,21 @@ describe("today view", () => {
           ...debrief,
           feeling: feelingView({ source: "athlete", effort: 6, feel: 75 }),
         },
+        recovery: recoveryModel({
+          nights: [],
+          load: [],
+          checkin: {
+            day: "2026-10-21",
+            legs: "fresh",
+            soreness: null,
+            stress: null,
+            updatedAt: null,
+          },
+          races: [],
+          today: "2026-10-21",
+        }),
       }),
     );
-    expect(noted.latest?.feelingPrompt).toBeNull();
-  });
-
-  it("names an older activity by its date", () => {
-    const { latest } = buildToday(
-      input({ latest: { ...activity, id: "other", date: "2026-10-12" } }),
-    );
-    expect(latest).toMatchObject({
-      heading: "Dernière activité · lun. 12 oct.",
-      title: "Course à pied · 50’",
-      compliance: null,
-    });
+    expect(noted.queue).toEqual([]);
   });
 });

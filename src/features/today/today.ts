@@ -1,4 +1,3 @@
-import type { Verdict } from "@/features/plans/debrief/debrief";
 import type { DebriefView } from "@/features/plans/debrief/view";
 import {
   activityKind,
@@ -7,9 +6,11 @@ import {
   formatPace as formatActivityPace,
   type Activity,
 } from "@/features/activities/activities";
+import type { PairQuestion } from "@/features/gear/check-view";
 import type { MatchStatus } from "@/features/plans/matching/adherence";
 import { addDays } from "@/features/plans/model/dates";
 import type { PlanState } from "@/features/plans/model/plan";
+import { isQuality } from "@/features/plans/validation/input";
 import {
   formatDistance,
   formatDuration,
@@ -23,28 +24,16 @@ import {
   type SessionFamily,
 } from "@/features/plans/view/program";
 import type { SessionPanel } from "@/features/plans/view/session-panel";
-import { formatClock, formatInteger } from "@/features/progress/format";
-import { loadZone } from "@/features/progress/health";
+import { formatInteger } from "@/features/progress/format";
 import type { Readiness, RecoveryModel } from "@/features/progress/recovery";
 import {
-  formatSleep,
-  recoveryView,
-  type DeviationKey,
-} from "@/features/progress/recovery-view";
+  formIndicators,
+  todayVerdict,
+  type FormIndicator,
+  type TodayVerdict,
+} from "./verdict";
 
-export type TodayRace = {
-  id: string;
-  letter: string;
-  name: string;
-  days: number;
-};
-
-export type TodayHeader = {
-  date: string;
-  goal: TodayRace | null;
-  week: string | null;
-  next: TodayRace | null;
-};
+export type TodayHeader = { date: string };
 
 export type TodaySessionStat = { key: string; value: string; label: string };
 
@@ -54,6 +43,7 @@ export type TodaySession =
       panel: SessionPanel;
       stats: TodaySessionStat[];
       terrain: string | null;
+      quality: boolean;
       href: string;
     }
   | {
@@ -62,23 +52,12 @@ export type TodaySession =
     }
   | { kind: "none" };
 
-export type SignalTone = "warning" | "success" | "muted";
-
-export type ReadinessRow = {
-  key: "sleep" | "hrv" | "resting" | "load";
-  label: string;
-  value: string;
-  note: string;
-  direction: "up" | "down" | null;
-  tone: SignalTone;
-};
-
-export type TodayReadiness = {
+export type TodayForm = {
   score: number | null;
   level: string | null;
   tone: "success" | "warning" | "danger";
-  context: string | null;
-  rows: ReadinessRow[];
+  gap: string | null;
+  indicators: FormIndicator[];
 };
 
 export type TodayWeekDay = {
@@ -94,6 +73,7 @@ export type TodayWeekDay = {
 
 export type TodayWeek = {
   number: number;
+  total: number;
   blockName: string;
   days: TodayWeekDay[];
   done: { duration: string; distance: string | null };
@@ -102,34 +82,51 @@ export type TodayWeek = {
   href: string;
 };
 
-export type TodayUpcoming = {
-  key: string;
-  family: SessionFamily;
-  title: string;
-  detail: string | null;
-  when: string;
-  date: string;
-  href: string;
-};
-
-export type TodayLatest = {
+export type TodayActivity = {
   heading: string;
   title: string;
   family: SessionFamily;
   detail: string;
   compliance: { pct: number | null; partial: boolean } | null;
-  verdict: Verdict | null;
-  feelingPrompt: string | null;
+  href: string;
+};
+
+export type TodayQueueItem =
+  | {
+      kind: "feeling";
+      key: string;
+      label: string;
+      activityId: string;
+      activity: TodayActivity;
+    }
+  | {
+      kind: "pair";
+      key: string;
+      label: string;
+      question: PairQuestion;
+      activity: TodayActivity | null;
+    }
+  | { kind: "legs"; key: string; label: string; hint: string };
+
+export type TodayGoal = {
+  id: string;
+  letter: string;
+  name: string;
+  detail: string;
+  days: number;
+  block: { name: string; week: string } | null;
+  light: string | null;
   href: string;
 };
 
 export type TodayView = {
   header: TodayHeader;
   session: TodaySession;
-  readiness: TodayReadiness;
+  verdict: TodayVerdict | null;
+  form: TodayForm;
+  queue: TodayQueueItem[];
   week: TodayWeek | null;
-  upcoming: TodayUpcoming[];
-  latest: TodayLatest | null;
+  goal: TodayGoal | null;
 };
 
 export type TodayMatch = {
@@ -149,6 +146,8 @@ export type TodayInput = {
   recovery: RecoveryModel;
   latest: Activity | null;
   debrief?: DebriefView | null;
+  pairQuestion?: PairQuestion | null;
+  pain?: boolean;
 };
 
 const dayMs = 86_400_000;
@@ -165,9 +164,8 @@ const numericDate = new Intl.DateTimeFormat("fr-FR", {
   year: "numeric",
   timeZone: "UTC",
 });
-const hundredths = new Intl.NumberFormat("fr-FR", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
+const kilometers = new Intl.NumberFormat("fr-FR", {
+  maximumFractionDigits: 1,
 });
 
 const levelLabels: Record<Readiness["level"], string> = {
@@ -177,26 +175,12 @@ const levelLabels: Record<Readiness["level"], string> = {
   poor: "Faible",
 };
 
-const levelTones: Record<Readiness["level"], TodayReadiness["tone"]> = {
+const levelTones: Record<Readiness["level"], TodayForm["tone"]> = {
   high: "success",
   moderate: "warning",
   low: "danger",
   poor: "danger",
 };
-
-const causeLabels: Record<DeviationKey, string> = {
-  sleep: "c’est le sommeil",
-  hrv: "c’est la VFC",
-  resting: "c’est la FC au repos",
-  load: "c’est la charge",
-  legs: "ce sont les jambes",
-};
-
-const loadLabels = {
-  low: "charge basse",
-  productive: "zone productive",
-  high: "charge élevée",
-} as const;
 
 const statOrder = ["duration", "distance", "pace", "heart-rate", "intensity"];
 
@@ -206,17 +190,9 @@ function daysBetween(from: string, to: string) {
   );
 }
 
-function sign(value: number) {
-  return value > 0 ? "+" : value < 0 ? "−" : "±";
-}
-
 export function formatTodayDate(iso: string) {
   const value = new Date(`${iso}T00:00:00Z`);
   return `${weekday.format(value)} ${numericDate.format(value)}`;
-}
-
-function raceLetter(race: ProgramRace) {
-  return race.priority ?? "·";
 }
 
 function upcomingRaces(races: ProgramRace[], today: string) {
@@ -228,45 +204,70 @@ function upcomingRaces(races: ProgramRace[], today: string) {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
-function todayRace(race: ProgramRace & { date: string }, today: string) {
-  return {
-    id: race.id,
-    letter: raceLetter(race),
-    name: race.name,
-    days: daysBetween(today, race.date),
-  };
+function currentWeek(program: ProgramOverview | null) {
+  return (
+    program?.weeks.find((week) => week.weekKey === program.currentWeekKey) ??
+    null
+  );
 }
 
-function header(input: TodayInput): TodayHeader {
+function goal(input: TodayInput): TodayGoal | null {
   const races = upcomingRaces(input.races, input.today);
   const primary = input.plan?.plan.primaryRaceId ?? null;
-  const goal =
-    races.find((race) => race.id === primary) ??
+  const race =
+    races.find((item) => item.id === primary) ??
     [...races].sort(
       (a, b) =>
         (priorityRank[a.priority ?? ""] ?? 3) -
           (priorityRank[b.priority ?? ""] ?? 3) || a.date.localeCompare(b.date),
-    )[0] ??
-    null;
-  const next = races.find((race) => race !== goal) ?? null;
-  const program = input.program;
-  const current = program?.weeks.find(
-    (week) => week.weekKey === program.currentWeekKey,
+    )[0];
+  if (!race) return null;
+  const { program, today } = input;
+  const current = currentWeek(program);
+  const light = program?.weeks.find(
+    (week) => week.isLight && week.weekStart > today && !week.race,
   );
   return {
-    date: formatTodayDate(input.today),
-    goal: goal ? todayRace(goal, input.today) : null,
-    week:
+    id: race.id,
+    letter: race.priority ?? "·",
+    name: race.name,
+    detail: [
+      formatTodayDate(race.date),
+      race.distanceKm !== null && `${kilometers.format(race.distanceKm)} km`,
+      race.elevationGainM !== null &&
+        race.elevationGainM > 0 &&
+        `${formatInteger(race.elevationGainM)} m D+`,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    days: daysBetween(today, race.date),
+    block:
       current && program
-        ? `S${current.number} / ${program.weeks.length} · ${current.blockName}`
+        ? {
+            name: current.blockName,
+            week: `S${current.number} / ${program.weeks.length}`,
+          }
         : null,
-    next: next ? todayRace(next, input.today) : null,
+    light: light
+      ? `S${light.number} · dès le ${formatTodayDate(light.weekStart)}`
+      : null,
+    href: `/races/${race.id}`,
   };
+}
+
+function todayPlanSession(plan: PlanState | null, today: string) {
+  const key = todaySessionKey(plan, today);
+  return key
+    ? (plan?.sessions.find((item) => item.sessionKey === key) ?? null)
+    : null;
 }
 
 function session(input: TodayInput): TodaySession {
   const { panel, plan, today } = input;
   if (panel) {
+    const planned = plan?.sessions.find(
+      (item) => item.sessionKey === panel.sessionKey,
+    );
     const stats = statOrder
       .flatMap((key) => panel.stats.filter((stat) => stat.key === key))
       .slice(0, 4);
@@ -276,6 +277,7 @@ function session(input: TodayInput): TodaySession {
       stats,
       terrain:
         panel.stats.find((stat) => stat.key === "terrain")?.value ?? null,
+      quality: planned ? isQuality(planned) : false,
       href: `/plan?session=${encodeURIComponent(panel.sessionKey)}`,
     };
   }
@@ -293,118 +295,36 @@ function session(input: TodayInput): TodaySession {
     next: next
       ? {
           title: next.title,
-          when: formatLongDay(next.scheduledOn),
+          when: formatTodayDate(next.scheduledOn),
           href: `/plan?session=${encodeURIComponent(next.sessionKey)}`,
         }
       : null,
   };
 }
 
-function readiness(model: RecoveryModel): TodayReadiness {
-  const { sleep, hrv, restingHeartRate, load } = model;
-  const rows: ReadinessRow[] = [];
-  if (sleep) {
-    const gap = sleep.average === null ? null : sleep.last - sleep.average;
-    const minutes = gap === null ? 0 : Math.round(gap / 60);
-    rows.push({
-      key: "sleep",
-      label: "Sommeil",
-      value: formatSleep(sleep.last),
-      note:
-        gap === null
-          ? "moyenne en cours de calcul"
-          : `${sign(minutes)}${formatSleep(Math.abs(gap))} vs ta moyenne`,
-      direction: minutes < 0 ? "down" : minutes > 0 ? "up" : null,
-      tone: sleep.trend === "watch" ? "warning" : "muted",
-    });
-  }
-  if (hrv) {
-    const range = hrv.range;
-    const span = range
-      ? range.low === range.high
-        ? `${range.low}`
-        : `${range.low}–${range.high}`
-      : null;
-    rows.push({
-      key: "hrv",
-      label: "VFC",
-      value: `${formatInteger(hrv.last)} ms`,
-      note:
-        span === null
-          ? "plage en cours de calcul"
-          : hrv.position === "below"
-            ? `sous ta plage ${span}`
-            : hrv.position === "above"
-              ? `au-dessus de ta plage ${span}`
-              : `dans ta plage ${span}`,
-      direction:
-        hrv.position === "below"
-          ? "down"
-          : hrv.position === "above"
-            ? "up"
-            : null,
-      tone: hrv.position === "below" ? "warning" : "muted",
-    });
-  }
-  if (restingHeartRate) {
-    const gap =
-      restingHeartRate.median === null
-        ? null
-        : Math.round(restingHeartRate.last - restingHeartRate.median);
-    rows.push({
-      key: "resting",
-      label: "FC repos",
-      value: `${formatInteger(restingHeartRate.last)} bpm`,
-      note:
-        gap === null
-          ? "habitude en cours de calcul"
-          : `${sign(gap)}${formatInteger(Math.abs(gap))} vs d’habitude`,
-      direction: gap === null || gap === 0 ? null : gap > 0 ? "up" : "down",
-      tone: restingHeartRate.position === "above" ? "warning" : "muted",
-    });
-  }
-  if (load) {
-    const zone = loadZone(load.ratio);
-    rows.push({
-      key: "load",
-      label: "Charge",
-      value: hundredths.format(load.ratio),
-      note: loadLabels[zone],
-      direction: null,
-      tone: zone === "productive" ? "success" : "warning",
-    });
-  }
+function form(model: RecoveryModel): TodayForm {
   const score = model.readiness;
-  const worst =
-    score?.trend === "watch"
-      ? recoveryView(model)
-          .deviations.filter(
-            (item) => item.score !== null && item.score <= -0.25,
-          )
-          .sort((a, b) => a.score! - b.score!)[0]
-      : undefined;
-  const context = score
-    ? [
-        score.average !== null && `moy. 14 j : ${formatInteger(score.average)}`,
-        worst && causeLabels[worst.key],
-      ]
-        .filter(Boolean)
-        .join(" · ") || null
-    : null;
+  const gap =
+    score && score.average !== null
+      ? Math.round(score.today - score.average)
+      : null;
   return {
     score: score?.today ?? null,
     level: score ? levelLabels[score.level] : null,
     tone: score ? levelTones[score.level] : "warning",
-    context,
-    rows,
+    gap:
+      gap === null
+        ? null
+        : gap === 0
+          ? "dans ta moyenne 14 j"
+          : `${formatInteger(Math.abs(gap))} ${gap < 0 ? "sous" : "au-dessus de"} ta moyenne 14 j`,
+    indicators: formIndicators(model),
   };
 }
 
 function week(program: ProgramOverview | null): TodayWeek | null {
-  const current = program?.weeks.find(
-    (item) => item.weekKey === program.currentWeekKey,
-  );
-  if (!current) return null;
+  const current = currentWeek(program);
+  if (!current || !program) return null;
   const distance = (meters: number | null, estimated: boolean) =>
     meters === null
       ? null
@@ -418,6 +338,7 @@ function week(program: ProgramOverview | null): TodayWeek | null {
   };
   return {
     number: current.number,
+    total: program.weeks.length,
     blockName: current.blockName,
     days: current.days.map((day, index) => {
       const state = day.family === "rest" ? null : day.state;
@@ -467,79 +388,7 @@ function week(program: ProgramOverview | null): TodayWeek | null {
   };
 }
 
-function upcoming(input: TodayInput): TodayUpcoming[] {
-  const { plan, program, today } = input;
-  const items: TodayUpcoming[] = [];
-  const key = plan?.sessions
-    .filter(
-      (item) => item.isKey && item.kind !== "race" && item.scheduledOn > today,
-    )
-    .sort((a, b) => a.scheduledOn.localeCompare(b.scheduledOn))[0];
-  if (key)
-    items.push({
-      key: `session-${key.sessionKey}`,
-      family: sessionFamilyOf(key),
-      title: `${key.title} · ${formatDuration(key.targets.durationSeconds)}`,
-      detail:
-        [
-          key.targets.distanceMeters !== null &&
-            formatDistance(key.targets.distanceMeters),
-          key.targets.elevationGainMeters !== null &&
-            `${formatInteger(key.targets.elevationGainMeters)} m D+`,
-        ]
-          .filter(Boolean)
-          .join(" · ") || null,
-      when: formatLongDay(key.scheduledOn),
-      date: key.scheduledOn,
-      href: `/plan?session=${encodeURIComponent(key.sessionKey)}`,
-    });
-  if (program) {
-    const index = program.weeks.findIndex(
-      (item) => item.isLight && item.weekStart > today && !item.race,
-    );
-    const light = program.weeks[index];
-    if (light) {
-      const previous = program.weeks[index - 1];
-      items.push({
-        key: `week-${light.weekKey}`,
-        family: "easy",
-        title: "Semaine allégée",
-        detail: [
-          `S${light.number}`,
-          previous && previous.totals.durationSeconds > 0
-            ? `${formatDuration(light.totals.durationSeconds)} au lieu de ${formatDuration(previous.totals.durationSeconds)}`
-            : formatDuration(light.totals.durationSeconds),
-        ].join(" · "),
-        when: formatLongDay(light.weekStart),
-        date: light.weekStart,
-        href: `/plan?week=${light.weekStart}`,
-      });
-    }
-  }
-  const race = upcomingRaces(input.races, today).find(
-    (item) => item.date > today,
-  );
-  if (race)
-    items.push({
-      key: `race-${race.id}`,
-      family: "race",
-      title: race.name,
-      detail: [
-        race.priority && `Course ${race.priority}`,
-        race.targetSeconds !== null &&
-          `cible ${formatClock(race.targetSeconds)}`,
-        `J-${daysBetween(today, race.date)}`,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-      when: formatLongDay(race.date),
-      date: race.date,
-      href: `/races/${race.id}`,
-    });
-  return items.sort((a, b) => a.date.localeCompare(b.date));
-}
-
-function latest(input: TodayInput): TodayLatest | null {
+function latest(input: TodayInput): TodayActivity | null {
   const activity = input.latest;
   if (!activity) return null;
   const { today } = input;
@@ -548,10 +397,8 @@ function latest(input: TodayInput): TodayLatest | null {
       ? "Aujourd’hui"
       : activity.date === addDays(today, -1)
         ? "Hier"
-        : `Dernière activité · ${formatLongDay(activity.date)}`;
+        : formatTodayDate(activity.date);
   const match = input.matches.find((item) => item.activityId === activity.id);
-  const debrief =
-    input.debrief?.activityId === activity.id ? input.debrief : null;
   const session = match
     ? input.plan?.sessions.find((item) => item.sessionKey === match.sessionKey)
     : undefined;
@@ -585,7 +432,7 @@ function latest(input: TodayInput): TodayLatest | null {
           `FC ${formatInteger(activity.averageHeartRate)}`,
       ]
         .filter(Boolean)
-        .join(" · ") || formatLongDay(activity.date),
+        .join(" · ") || formatTodayDate(activity.date),
     compliance:
       match && (match.status === "completed" || match.status === "partial")
         ? {
@@ -596,17 +443,48 @@ function latest(input: TodayInput): TodayLatest | null {
             partial: match.status === "partial",
           }
         : null,
-    verdict: debrief
-      ? {
-          ...debrief.verdict,
-          body:
-            debrief.verdict.body.charAt(0).toLowerCase() +
-            debrief.verdict.body.slice(1),
-        }
-      : null,
-    feelingPrompt: debrief && !debrief.feeling ? activity.id : null,
     href: `/activities/${activity.id}`,
   };
+}
+
+function queue(input: TodayInput): TodayQueueItem[] {
+  const activity = latest(input);
+  const items: TodayQueueItem[] = [];
+  const suffix =
+    activity?.heading === "Hier"
+      ? " d’hier"
+      : activity?.heading === "Aujourd’hui"
+        ? " du jour"
+        : "";
+  const debrief =
+    input.latest && input.debrief?.activityId === input.latest.id
+      ? input.debrief
+      : null;
+  if (activity && input.latest && debrief && !debrief.feeling)
+    items.push({
+      kind: "feeling",
+      key: `feeling-${input.latest.id}`,
+      label: `ton ressenti${suffix}`,
+      activityId: input.latest.id,
+      activity,
+    });
+  const question = input.pairQuestion ?? null;
+  if (question)
+    items.push({
+      kind: "pair",
+      key: `pair-${question.activityId}`,
+      label: `ta paire${question.activityId === input.latest?.id ? suffix : ""}`,
+      question,
+      activity: question.activityId === input.latest?.id ? activity : null,
+    });
+  if (!input.recovery.checkin?.legs)
+    items.push({
+      kind: "legs",
+      key: "legs",
+      label: "tes jambes",
+      hint: "Ton ressenti complète la forme du jour.",
+    });
+  return items;
 }
 
 export function todaySessionKey(plan: PlanState | null, today: string) {
@@ -625,12 +503,35 @@ export function todaySessionKey(plan: PlanState | null, today: string) {
 }
 
 export function buildToday(input: TodayInput): TodayView {
+  const today = session(input);
+  const day = form(input.recovery);
+  const planned = todayPlanSession(input.plan, input.today);
+  const done =
+    today.kind === "session" &&
+    (today.panel.status === "done" || today.panel.status === "partial");
   return {
-    header: header(input),
-    session: session(input),
-    readiness: readiness(input.recovery),
+    header: { date: formatTodayDate(input.today) },
+    session: today,
+    verdict: done
+      ? null
+      : todayVerdict({
+          readiness: input.recovery.readiness,
+          indicators: day.indicators,
+          pain: input.pain ?? false,
+          session:
+            today.kind === "session"
+              ? {
+                  kind: "session",
+                  sessionKey: today.panel.sessionKey,
+                  title: planned?.title ?? today.panel.title,
+                  quality: today.quality,
+                  href: today.href,
+                }
+              : today,
+        }),
+    form: day,
+    queue: queue(input),
     week: week(input.program),
-    upcoming: upcoming(input),
-    latest: latest(input),
+    goal: goal(input),
   };
 }
