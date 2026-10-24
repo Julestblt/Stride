@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { CheckIcon, TriangleAlertIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GarminConnectionLabel } from "@/features/data-activity/components/connection-status";
@@ -35,6 +36,8 @@ import {
   readSettingsConnection,
   readStoredCounts,
 } from "@/server/settings/data";
+
+export const metadata: Metadata = { title: "Garmin · Réglages" };
 
 const categoryLabels = {
   activities: {

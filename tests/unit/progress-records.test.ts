@@ -262,7 +262,7 @@ describe("records presentation facts", () => {
       gap: "écart 0:21",
       tone: "warning",
     });
-    expect(view.reach?.coachHref).toMatch(/^\/coach\/nouvelle\?texte=/);
+    expect(view.reach?.coachHref).toMatch(/^\/coach\/new\?text=/);
     expect(view.speed.map((row) => [row.label, row.value, row.side])).toEqual([
       ["5K", null, null],
       ["10K", "45:00", "prévision 45:21"],

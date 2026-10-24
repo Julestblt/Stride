@@ -50,8 +50,8 @@ export function SessionSheet({
   const navigate = useCallback(
     (sessionKey: string | null) => {
       const query = new URLSearchParams(searchParams);
-      if (sessionKey) query.set("seance", sessionKey);
-      else query.delete("seance");
+      if (sessionKey) query.set("session", sessionKey);
+      else query.delete("session");
       const search = query.toString();
       router.replace(search ? `/plan?${search}` : "/plan", { scroll: false });
     },

@@ -25,7 +25,7 @@ import { ProgramTabs } from "../_components/program-hero";
 import { ProposalSheet } from "../_components/proposal-sheet";
 import { SessionSheet } from "../_components/session-sheet";
 
-export const metadata: Metadata = { title: "Programme complet · Plan" };
+export const metadata: Metadata = { title: "Plan" };
 
 export default async function PlanPage({
   searchParams,
@@ -33,15 +33,14 @@ export default async function PlanPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const proposition =
-    typeof query.proposition === "string" ? query.proposition : null;
-  const seance =
-    typeof query.seance === "string" && !proposition ? query.seance : null;
+  const proposalId = typeof query.proposal === "string" ? query.proposal : null;
+  const sessionKey =
+    typeof query.session === "string" && !proposalId ? query.session : null;
   const [overview, panel, paces, review] = await Promise.all([
     loadPlanOverview(context),
-    seance ? loadSessionPanel(context, seance) : null,
+    sessionKey ? loadSessionPanel(context, sessionKey) : null,
     loadIntensityPaces(context),
-    proposition ? loadProposalReview(context, proposition) : null,
+    proposalId ? loadProposalReview(context, proposalId) : null,
   ]);
   const reviewSheet = review && (
     <ProposalSheet key={review.id} review={review} />
@@ -60,7 +59,7 @@ export default async function PlanPage({
   const program =
     programs.find((item) => race !== null && item.raceId === race) ??
     programs[0];
-  const session = state.sessions.find((item) => item.sessionKey === seance);
+  const session = state.sessions.find((item) => item.sessionKey === sessionKey);
   const sessionWatch =
     watch.enabled && session
       ? watchState({
@@ -99,7 +98,7 @@ export default async function PlanPage({
             })}
           />
           <Link
-            href="/plan/historique"
+            href="/plan/history"
             className="flex min-h-9 shrink-0 items-center gap-2 rounded-surface border border-border px-3 text-[13px] text-muted hover:text-foreground max-sm:min-h-11"
           >
             <HistoryIcon aria-hidden="true" className="size-3.5" />

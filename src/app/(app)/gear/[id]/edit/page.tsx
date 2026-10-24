@@ -7,7 +7,7 @@ import { modelName } from "@/features/gear/view";
 import { requireAthlete } from "@/server/app/session";
 import { readShoe } from "@/server/gear/shoes";
 
-export const metadata: Metadata = { title: "Modifier la paire" };
+export const metadata: Metadata = { title: "Modifier la paire · Matériel" };
 
 export default async function EditShoeRoute({
   params,

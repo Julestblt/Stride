@@ -154,29 +154,24 @@ export function parseNotifications(rows: unknown) {
     });
 }
 
-export const notificationFilters = [
-  "toutes",
-  "a-traiter",
-  "staff",
-  "donnees",
-] as const;
+export const notificationFilters = ["all", "todo", "staff", "data"] as const;
 export type NotificationFilter = (typeof notificationFilters)[number];
 
 export const filterLabels: Record<NotificationFilter, string> = {
-  toutes: "Toutes",
-  "a-traiter": "À traiter",
+  all: "Toutes",
+  todo: "À traiter",
   staff: "Staff",
-  donnees: "Données",
+  data: "Données",
 };
 
 export function parseFilter(value: unknown): NotificationFilter {
-  return z.enum(notificationFilters).catch("toutes").parse(value);
+  return z.enum(notificationFilters).catch("all").parse(value);
 }
 
 export function filterHref(filter: NotificationFilter) {
-  return filter === "toutes"
+  return filter === "all"
     ? "/notifications"
-    : `/notifications?filtre=${filter}`;
+    : `/notifications?filter=${filter}`;
 }
 
 export const todoKinds = [
@@ -193,10 +188,10 @@ export const filterKinds: Record<
   NotificationFilter,
   readonly NotificationKind[]
 > = {
-  toutes: notificationKinds,
-  "a-traiter": todoKinds,
+  all: notificationKinds,
+  todo: todoKinds,
   staff: ["staff_reply", "staff_question"],
-  donnees: [
+  data: [
     "garmin_activity",
     "garmin_connection",
     "watch_workout",
@@ -219,14 +214,14 @@ export function matchesFilter(
   notification: Notification,
   filter: NotificationFilter,
 ) {
-  if (filter === "a-traiter") return isTodo(notification);
+  if (filter === "todo") return isTodo(notification);
   return filterKinds[filter].includes(notification.kind);
 }
 
 export function notificationHref(notification: Notification) {
   switch (notification.kind) {
     case "plan_proposal":
-      return `/plan?proposition=${notification.payload.proposalId}`;
+      return `/plan?proposal=${notification.payload.proposalId}`;
     case "garmin_activity":
     case "gear_mismatch":
       return `/activities/${notification.payload.activityId}`;

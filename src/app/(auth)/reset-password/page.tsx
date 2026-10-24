@@ -5,7 +5,7 @@ import { savePassword } from "@/server/auth/actions";
 import { createSupabaseServerClient } from "@/server/supabase/client";
 
 export const metadata: Metadata = {
-  title: "Nouveau mot de passe · Stride",
+  title: "Nouveau mot de passe",
   description:
     "Choisis un nouveau mot de passe Stride après avoir vérifié ton compte.",
 };

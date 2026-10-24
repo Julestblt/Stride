@@ -167,7 +167,7 @@ function Composer({
           pour continuer.
         </p>
         <Button asChild variant="outline" size="md" className="self-start">
-          <Link href="/coach/nouvelle">Nouvelle conversation</Link>
+          <Link href="/coach/new">Nouvelle conversation</Link>
         </Button>
       </div>
     );
@@ -639,10 +639,7 @@ export function CoachScreen({
                     size="icon"
                     className="ml-auto size-11 rounded-surface"
                   >
-                    <Link
-                      href="/coach/nouvelle"
-                      aria-label="Nouvelle conversation"
-                    >
+                    <Link href="/coach/new" aria-label="Nouvelle conversation">
                       <PlusIcon aria-hidden="true" />
                     </Link>
                   </Button>
@@ -658,7 +655,7 @@ export function CoachScreen({
                   <div className="flex items-baseline">
                     <MonoLabel size="nano">Ton staff</MonoLabel>
                     <Link
-                      href="/coach/equipe"
+                      href="/coach/team"
                       className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground"
                     >
                       Voir l’équipe
@@ -672,7 +669,7 @@ export function CoachScreen({
                     {staffAgents.map((agent) => (
                       <Link
                         key={agent}
-                        href="/coach/equipe"
+                        href="/coach/team"
                         aria-label={`${staff[agent].alt}, voir l’équipe`}
                         className="flex w-15.5 flex-col items-center gap-1.5 text-xs text-muted hover:text-foreground"
                       >

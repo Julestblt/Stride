@@ -5,7 +5,7 @@ import { GearFrame } from "@/features/gear/components/gear-frame";
 import { ShoeForm } from "@/features/gear/components/shoe-form";
 import { requireAthlete } from "@/server/app/session";
 
-export const metadata: Metadata = { title: "Ajouter une paire" };
+export const metadata: Metadata = { title: "Ajouter une paire · Matériel" };
 
 export default async function NewShoeRoute() {
   await requireAthlete();

@@ -18,7 +18,7 @@ export function PlanEmpty() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Button asChild>
-          <Link href="/coach/nouvelle?demande=plan">Demander un plan</Link>
+          <Link href="/coach/new?request=plan">Demander un plan</Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/settings/goals">Vérifier mes objectifs</Link>

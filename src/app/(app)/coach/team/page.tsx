@@ -4,7 +4,7 @@ import { requireAthlete } from "@/server/app/session";
 import { loadStaffUsage } from "@/server/coaching/staff";
 import { TeamScreen } from "../_components/team-screen";
 
-export const metadata: Metadata = { title: "L’équipe · Coach" };
+export const metadata: Metadata = { title: "Équipe · Coach" };
 
 export default async function CoachTeamPage() {
   const context = await requireAthlete();

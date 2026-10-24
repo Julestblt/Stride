@@ -37,7 +37,7 @@ function ConversationListLoading() {
               size="icon"
               className="ml-auto size-11 rounded-surface"
             >
-              <Link href="/coach/nouvelle" aria-label="Nouvelle conversation">
+              <Link href="/coach/new" aria-label="Nouvelle conversation">
                 <PlusIcon aria-hidden="true" />
               </Link>
             </Button>
@@ -71,7 +71,7 @@ function ConversationListLoading() {
             size="sm"
             className="ml-auto h-8 rounded-surface px-2.5"
           >
-            <Link href="/coach/nouvelle">
+            <Link href="/coach/new">
               <PlusIcon aria-hidden="true" />
               Nouvelle
             </Link>
@@ -218,7 +218,7 @@ export function CoachLoading({
 }: {
   view: "conversations" | "thread" | "new";
 }) {
-  const plan = useSearchParams().get("demande") === "plan";
+  const plan = useSearchParams().get("request") === "plan";
   const current = view !== "conversations";
   return (
     <LoadingScope

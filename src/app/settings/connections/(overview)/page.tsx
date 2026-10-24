@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { GarminConnectionLabel } from "@/features/data-activity/components/connection-status";
@@ -10,6 +11,8 @@ import {
   readSettingsConnection,
   readStoredCounts,
 } from "@/server/settings/data";
+
+export const metadata: Metadata = { title: "Connexions · Réglages" };
 
 export default async function ConnexionsSettingsPage() {
   const context = await requireAthlete();

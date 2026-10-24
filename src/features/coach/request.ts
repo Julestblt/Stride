@@ -17,8 +17,8 @@ export function parseRequestText(value: unknown) {
 
 export function coachRequestHref(text: string, sessionKey?: string | null) {
   const params = new URLSearchParams({
-    texte: text.slice(0, maximumRequestLength),
+    text: text.slice(0, maximumRequestLength),
   });
-  if (sessionKey) params.set("seance", sessionKey);
-  return `/coach/nouvelle?${params.toString()}`;
+  if (sessionKey) params.set("session", sessionKey);
+  return `/coach/new?${params.toString()}`;
 }

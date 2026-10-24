@@ -95,7 +95,7 @@ function LoadedBell({
   const [openAt, setOpenAt] = useState<string | null>(null);
   const open = openAt === location;
   const setOpen = (value: boolean) => setOpenAt(value ? location : null);
-  const [filter, setFilter] = useState<NotificationFilter>("toutes");
+  const [filter, setFilter] = useState<NotificationFilter>("all");
   const unread = feed?.unread ?? 0;
   const items = (feed?.items ?? []).filter((item) =>
     matchesFilter(item, filter),
@@ -148,7 +148,7 @@ function LoadedBell({
             {items.length ? (
               <NotificationList notifications={items} now={now} />
             ) : (
-              <NotificationEmpty filtered={filter !== "toutes"} />
+              <NotificationEmpty filtered={filter !== "all"} />
             )}
           </div>
           <Link

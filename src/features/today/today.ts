@@ -276,7 +276,7 @@ function session(input: TodayInput): TodaySession {
       stats,
       terrain:
         panel.stats.find((stat) => stat.key === "terrain")?.value ?? null,
-      href: `/plan?seance=${encodeURIComponent(panel.sessionKey)}`,
+      href: `/plan?session=${encodeURIComponent(panel.sessionKey)}`,
     };
   }
   if (!plan) return { kind: "none" };
@@ -294,7 +294,7 @@ function session(input: TodayInput): TodaySession {
       ? {
           title: next.title,
           when: formatLongDay(next.scheduledOn),
-          href: `/plan?seance=${encodeURIComponent(next.sessionKey)}`,
+          href: `/plan?session=${encodeURIComponent(next.sessionKey)}`,
         }
       : null,
   };
@@ -491,7 +491,7 @@ function upcoming(input: TodayInput): TodayUpcoming[] {
           .join(" · ") || null,
       when: formatLongDay(key.scheduledOn),
       date: key.scheduledOn,
-      href: `/plan?seance=${encodeURIComponent(key.sessionKey)}`,
+      href: `/plan?session=${encodeURIComponent(key.sessionKey)}`,
     });
   if (program) {
     const index = program.weeks.findIndex(

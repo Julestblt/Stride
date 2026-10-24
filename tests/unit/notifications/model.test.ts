@@ -40,7 +40,7 @@ describe("notification view", () => {
       family: "plan",
       title: "Claire propose : Raccourcir ton seuil",
       body: "4 × 6’",
-      href: `/plan?proposition=${proposalId}`,
+      href: `/plan?proposal=${proposalId}`,
       unread: true,
       todo: true,
       status: { label: "À traiter", tone: "warning" },
@@ -313,12 +313,12 @@ describe("Garmin notification view", () => {
       }),
       row({}),
     ]);
-    expect(sources.map((item) => matchesFilter(item, "donnees"))).toEqual([
+    expect(sources.map((item) => matchesFilter(item, "data"))).toEqual([
       true,
       true,
       false,
     ]);
-    expect(sources.map((item) => matchesFilter(item, "a-traiter"))).toEqual([
+    expect(sources.map((item) => matchesFilter(item, "todo"))).toEqual([
       false,
       true,
       true,
@@ -328,7 +328,7 @@ describe("Garmin notification view", () => {
 
 describe("notification target", () => {
   it("opens the notification link", () => {
-    expect(notificationTarget(row({}))).toBe(`/plan?proposition=${proposalId}`);
+    expect(notificationTarget(row({}))).toBe(`/plan?proposal=${proposalId}`);
   });
 
   it("falls back to the history for an unknown or invalid notification", () => {
@@ -350,19 +350,19 @@ describe("notification filters", () => {
   )!;
 
   it("reads the filter key from the query", () => {
-    expect(parseFilter("a-traiter")).toBe("a-traiter");
-    expect(parseFilter(["staff"])).toBe("toutes");
-    expect(parseFilter("inconnu")).toBe("toutes");
+    expect(parseFilter("todo")).toBe("todo");
+    expect(parseFilter(["staff"])).toBe("all");
+    expect(parseFilter("inconnu")).toBe("all");
   });
 
   it("matches each filter", () => {
-    expect(matchesFilter(proposal, "a-traiter")).toBe(true);
+    expect(matchesFilter(proposal, "todo")).toBe(true);
     expect(matchesFilter(proposal, "staff")).toBe(false);
     expect(matchesFilter(reply, "staff")).toBe(true);
-    expect(matchesFilter(reply, "a-traiter")).toBe(false);
-    expect(matchesFilter(reply, "donnees")).toBe(false);
-    expect(matchesFilter(proposal, "donnees")).toBe(false);
-    expect(matchesFilter(reply, "toutes")).toBe(true);
+    expect(matchesFilter(reply, "todo")).toBe(false);
+    expect(matchesFilter(reply, "data")).toBe(false);
+    expect(matchesFilter(proposal, "data")).toBe(false);
+    expect(matchesFilter(reply, "all")).toBe(true);
   });
 });
 

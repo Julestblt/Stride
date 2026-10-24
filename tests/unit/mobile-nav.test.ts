@@ -15,10 +15,10 @@ describe("mobileTabBarVisible", () => {
   );
 
   it("shows the tab bar on the team page", () => {
-    expect(mobileTabBarVisible("/coach/equipe")).toBe(true);
+    expect(mobileTabBarVisible("/coach/team")).toBe(true);
   });
 
-  it.each(["/coach/nouvelle", "/coach/5f0c7e8e-2b1a-4c1d-9d3e-0a1b2c3d4e5f"])(
+  it.each(["/coach/new", "/coach/5f0c7e8e-2b1a-4c1d-9d3e-0a1b2c3d4e5f"])(
     "hides the tab bar in the conversation %s",
     (pathname) => {
       expect(mobileTabBarVisible(pathname)).toBe(false);
@@ -30,7 +30,7 @@ describe("isActivePath", () => {
   it("matches the destination and its descendants", () => {
     expect(isActivePath("/activities", "/activities")).toBe(true);
     expect(isActivePath("/activities/abc", "/activities")).toBe(true);
-    expect(isActivePath("/coach/equipe", "/coach")).toBe(true);
+    expect(isActivePath("/coach/team", "/coach")).toBe(true);
   });
 
   it("ignores routes that only share a prefix", () => {

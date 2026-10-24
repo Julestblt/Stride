@@ -12,7 +12,7 @@ test("Historique lists proposals by month with decisions and versions", async ({
   await signIn(page);
   await page.goto("/plan");
   await page.getByRole("link", { name: "Historique 7 propositions" }).click();
-  await expect(page).toHaveURL("/plan/historique", { timeout: 20_000 });
+  await expect(page).toHaveURL("/plan/history", { timeout: 20_000 });
   await expect(
     page.getByRole("heading", { level: 1, name: "Historique du plan" }),
   ).toBeVisible();
@@ -65,13 +65,13 @@ test("Historique lists proposals by month with decisions and versions", async ({
     .getByRole("article", { name: "Raccourcir la séance" })
     .getByRole("link", { name: "Examiner" })
     .click();
-  await expect(page).toHaveURL(/\/plan\?proposition=/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/plan\?proposal=/, { timeout: 20_000 });
   await expect(page.getByRole("dialog")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL("/plan/historique");
+  await expect(page).toHaveURL("/plan/history");
 
   await page.getByRole("link", { name: /^Refusées · / }).click();
-  await expect(page).toHaveURL("/plan/historique?filtre=refusees");
+  await expect(page).toHaveURL("/plan/history?filter=rejected");
   await expect(
     page.getByRole("article", { name: "Ajouter des côtes courtes" }),
   ).toBeVisible();
@@ -83,7 +83,7 @@ test("Historique lists proposals by month with decisions and versions", async ({
 test("Historique fits a phone and leads back to the plan", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
-  await page.goto("/plan/historique");
+  await page.goto("/plan/history");
   await expect(
     page.getByRole("heading", { level: 1, name: "Historique du plan" }),
   ).toBeVisible({ timeout: 20_000 });
@@ -104,5 +104,5 @@ test("Historique fits a phone and leads back to the plan", async ({ page }) => {
   await expect(entry).toBeVisible();
   await page.screenshot({ path: "test-results/plan-mobile-history-link.png" });
   await entry.click();
-  await expect(page).toHaveURL("/plan/historique");
+  await expect(page).toHaveURL("/plan/history");
 });

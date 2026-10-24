@@ -14,7 +14,7 @@ const selected =
 const idle = "border-border text-muted-foreground hover:text-foreground";
 
 function label(filter: NotificationFilter, todo: number) {
-  return filter === "a-traiter" && todo > 0
+  return filter === "todo" && todo > 0
     ? `${filterLabels[filter]} · ${todo}`
     : filterLabels[filter];
 }

@@ -210,7 +210,7 @@ test("a new conversation asks Inès and keeps the thread after the turn", async 
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto("/coach/nouvelle");
+  await page.goto("/coach/new");
   let posted: unknown = null;
   await page.route("**/api/coach/turns", async (route) => {
     posted = route.request().postDataJSON();
@@ -430,7 +430,7 @@ test("context chips are picked with the keyboard, survive a failed send and reac
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto("/coach/nouvelle");
+  await page.goto("/coach/new");
   const trigger = page.getByRole("button", { name: addContext });
   await expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
   await trigger.click();
@@ -591,7 +591,7 @@ test("a stored message keeps its chips and answer mode hides the context control
 test("mobile picks context from a bottom sheet at 390", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
-  await page.goto("/coach/nouvelle");
+  await page.goto("/coach/new");
   const trigger = page.getByRole("button", { name: addContext });
   const triggerBox = await trigger.boundingBox();
   expect(Math.round(triggerBox!.height)).toBeGreaterThanOrEqual(44);
@@ -637,7 +637,7 @@ test("a new-plan proposal opens the review sheet and activates without an active
   await expect(card.getByText("Proposition · Nouveau plan")).toBeVisible();
   await expect(card.getByText("À toi de décider")).toBeVisible();
   await card.getByRole("link", { name: "Examiner" }).click();
-  await expect(page).toHaveURL(new RegExp(`proposition=${newPlanProposal}`), {
+  await expect(page).toHaveURL(new RegExp(`proposal=${newPlanProposal}`), {
     timeout: 20_000,
   });
   const sheet = page.getByRole("dialog");
@@ -690,7 +690,7 @@ test("the Plan empty state asks the Coach for a plan", async ({ page }) => {
   await signIn(page);
   await page.goto("/plan");
   await page.getByRole("link", { name: "Demander un plan" }).click();
-  await expect(page).toHaveURL("/coach/nouvelle?demande=plan");
+  await expect(page).toHaveURL("/coach/new?request=plan");
   await expect(
     page.getByRole("heading", { name: "Demande ton plan à Claire" }),
   ).toBeVisible();
@@ -704,14 +704,14 @@ test("a prefilled request starts the composer with its text", async ({
 }) => {
   await signIn(page);
   await page.goto(
-    `/coach/nouvelle?texte=${encodeURIComponent("Ma fatigue dépasse ma condition. Peux-tu alléger ma semaine ?")}`,
+    `/coach/new?text=${encodeURIComponent("Ma fatigue dépasse ma condition. Peux-tu alléger ma semaine ?")}`,
   );
   await expect(
     page.getByRole("textbox", { name: "Écrire au staff" }),
   ).toHaveValue(
     "Ma fatigue dépasse ma condition. Peux-tu alléger ma semaine ?",
   );
-  await page.goto(`/coach/nouvelle?texte=${"a".repeat(600)}`);
+  await page.goto(`/coach/new?text=${"a".repeat(600)}`);
   await expect(
     page.getByRole("textbox", { name: "Écrire au staff" }),
   ).toHaveValue("a".repeat(500));
@@ -811,7 +811,7 @@ test("mobile tab bar reaches the main screens and hides in a conversation", asyn
   await expect(page.getByRole("log", { name: "Messages" })).toBeVisible();
   await expect(tabs).toHaveCount(0);
 
-  await page.goto("/coach/equipe");
+  await page.goto("/coach/team");
   await expect(tabs.getByRole("link", { name: /^Coach/ })).toHaveAttribute(
     "aria-current",
     "page",
@@ -918,7 +918,7 @@ test("the team page shows the whole staff and changes faces everywhere", async (
   const coachLink = page.getByRole("link", { name: "Coach", exact: true });
   const coachItem = page.locator("li", { has: coachLink }).first();
   await coachItem.getByRole("link", { name: "L’équipe" }).click();
-  await expect(page).toHaveURL("/coach/equipe", { timeout: 20_000 });
+  await expect(page).toHaveURL("/coach/team", { timeout: 20_000 });
   await expect(
     coachItem.getByRole("link", { name: "L’équipe" }),
   ).toHaveAttribute("aria-current", "page");
@@ -982,7 +982,7 @@ test("the team page shows the whole staff and changes faces everywhere", async (
   ).toBeVisible();
   await expect(page.locator('img[src*="karim"]').first()).toBeAttached();
 
-  await page.goto("/coach/equipe");
+  await page.goto("/coach/team");
   await page
     .getByRole("group", { name: "Visage de coach" })
     .getByRole("button", { name: "Claire" })
@@ -1004,7 +1004,7 @@ test("mobile reaches the team page from the conversations list at 390", async ({
   await signIn(page);
   await page.goto("/coach");
   await page.getByRole("link", { name: "Voir l’équipe", exact: true }).click();
-  await expect(page).toHaveURL("/coach/equipe", { timeout: 20_000 });
+  await expect(page).toHaveURL("/coach/team", { timeout: 20_000 });
   await expect(
     page.getByRole("heading", {
       level: 1,

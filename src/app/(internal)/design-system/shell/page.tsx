@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
@@ -47,6 +48,8 @@ import {
 } from "@/components/stride/navigation";
 import { StrideMark } from "@/components/stride/stride-mark";
 import { SyncStatus } from "@/components/stride/sync-status";
+
+export const metadata: Metadata = { title: "Shell · Design system" };
 
 const shell = "/design-system/shell";
 

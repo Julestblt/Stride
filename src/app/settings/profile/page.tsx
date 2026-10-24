@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import { loadHeartRateZones } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
 import { readSettingsProfile } from "@/server/settings/profile";
 import { readRunningMaximum } from "@/server/heart-rate/maximum";
 import { readProfileMetrics } from "@/server/settings/data";
 import { ProfileForm } from "@/features/settings/components/profile-form";
+
+export const metadata: Metadata = { title: "Profil · Réglages" };
 
 export default async function ProfileSettingsPage() {
   const context = await requireAthlete();

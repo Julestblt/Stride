@@ -142,7 +142,7 @@ describe("session panel", () => {
       note: null,
       verdict: { tone: "success", title: "Séance réussie" },
       feeling: null,
-      coachHref: "/coach/nouvelle?seance=s-2026-10-20-1",
+      coachHref: "/coach/new?session=s-2026-10-20-1",
     });
   });
 

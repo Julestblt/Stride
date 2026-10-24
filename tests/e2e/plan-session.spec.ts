@@ -8,7 +8,7 @@ function signIn(page: Page) {
 }
 
 const sessionLinks = (page: Page) =>
-  page.locator('a[href*="seance="]').filter({ visible: true });
+  page.locator('a[href*="session="]').filter({ visible: true });
 
 test("a session opens in a side panel and navigates within the week", async ({
   page,
@@ -17,7 +17,7 @@ test("a session opens in a side panel and navigates within the week", async ({
   await signIn(page);
   await page.goto("/plan");
   await sessionLinks(page).filter({ hasText: /Seuil/ }).first().click();
-  await expect(page).toHaveURL(/\/plan\?.*seance=s-/, { timeout: 20_000 });
+  await expect(page).toHaveURL(/\/plan\?.*session=s-/, { timeout: 20_000 });
   const panel = page.getByRole("dialog");
   await expect(panel).toBeVisible();
   await expect(panel.getByRole("heading", { level: 2 })).toContainText("Seuil");
@@ -131,7 +131,7 @@ test("a session link loaded directly opens the panel", async ({ page }) => {
   await expect(page.locator("main h1")).toContainText("Marathon de Paris");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).not.toHaveURL(/seance=/);
+  await expect(page).not.toHaveURL(/session=/);
 });
 
 test("a session opens as a bottom sheet on a phone", async ({ page }) => {
@@ -185,7 +185,7 @@ test("a mobility session is checked in by hand and undone", async ({
   const strengthDay = new Date(`${monday}T00:00:00Z`);
   strengthDay.setUTCDate(strengthDay.getUTCDate() + 4);
   await page.goto(
-    `/plan?week=${monday}&seance=s-${strengthDay.toISOString().slice(0, 10)}-1`,
+    `/plan?week=${monday}&session=s-${strengthDay.toISOString().slice(0, 10)}-1`,
   );
   await expect(
     page.getByRole("dialog").getByRole("heading", { level: 2 }),
@@ -194,7 +194,7 @@ test("a mobility session is checked in by hand and undone", async ({
     page.getByRole("button", { name: "C’est fait", exact: true }),
   ).toHaveCount(0);
 
-  await page.goto(`/plan?week=${monday}&seance=s-${monday}-1`);
+  await page.goto(`/plan?week=${monday}&session=s-${monday}-1`);
   const panel = page.getByRole("dialog");
   await expect(panel.getByRole("heading", { level: 2 })).toHaveText(
     "Mobilité et marche",
@@ -261,7 +261,7 @@ test("a matched structured run shows its debrief and takes a feeling", async ({
   await expect(panel.getByRole("button", { name: "Modifier" })).toBeVisible();
 
   await panel.getByRole("link", { name: "En parler au coach" }).click();
-  await expect(page).toHaveURL(/\/coach\/nouvelle\?seance=s-/, {
+  await expect(page).toHaveURL(/\/coach\/new\?session=s-/, {
     timeout: 20_000,
   });
   await expect(

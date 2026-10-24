@@ -22,7 +22,7 @@ export type TodaySession = {
 };
 
 export function sessionHref(session: TodaySession) {
-  return `/plan?seance=${encodeURIComponent(session.sessionKey)}`;
+  return `/plan?session=${encodeURIComponent(session.sessionKey)}`;
 }
 
 export function lighterSessionHref(session: TodaySession) {

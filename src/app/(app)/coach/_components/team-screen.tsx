@@ -196,7 +196,7 @@ function CoachCard({ usage }: { usage: StaffUsage }) {
         </div>
         <div className="flex flex-wrap items-center gap-3 max-md:border-t max-md:border-border max-md:pt-3 md:mt-auto">
           <Button asChild size="md" className="rounded-surface max-md:hidden">
-            <Link href="/coach/nouvelle">Écrire à {coach.name}</Link>
+            <Link href="/coach/new">Écrire à {coach.name}</Link>
           </Button>
           <FaceRow agent="coach" className="max-md:w-full md:ml-auto" />
         </div>

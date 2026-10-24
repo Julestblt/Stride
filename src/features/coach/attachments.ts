@@ -102,7 +102,7 @@ export function attachmentHref(item: AttachmentRef) {
   const id = encodeURIComponent(item.id);
   if (item.kind === "activity") return `/activities/${id}`;
   if (item.kind === "race") return `/races/${id}`;
-  return `/plan?seance=${id}`;
+  return `/plan?session=${id}`;
 }
 
 export function attachmentDate(date: string | null) {

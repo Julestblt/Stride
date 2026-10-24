@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import {
   connectionNotice,
   guardOnboarding,
+  isOnboardingStep,
+  stepLabels,
 } from "@/features/onboarding/progress";
 import { OnboardingShell } from "@/features/onboarding/components/onboarding-shell";
 import { WelcomeStep } from "@/features/onboarding/components/welcome-step";
@@ -16,6 +19,15 @@ import { readProfile } from "@/server/onboarding/profile";
 import { loadKnownValues } from "@/server/onboarding/known-values";
 import { initialGarminScreen } from "@/features/onboarding/garmin-flow";
 import { getOnboardingRequest } from "@/server/onboarding/request";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ step: string }>;
+}): Promise<Metadata> {
+  const { step } = await params;
+  return { title: isOnboardingStep(step) ? stepLabels[step] : "Bienvenue" };
+}
+
 export default async function OnboardingStepPage({
   params,
 }: {

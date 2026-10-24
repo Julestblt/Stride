@@ -97,7 +97,7 @@ function proposalHref(current: URLSearchParams, proposalId: string) {
     const value = current.get(key);
     if (value) query.set(key, value);
   }
-  query.set("proposition", proposalId);
+  query.set("proposal", proposalId);
   return `/plan?${query}`;
 }
 

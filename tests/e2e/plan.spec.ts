@@ -111,11 +111,11 @@ test("the plan shows the stored program with the current week selected", async (
   await expect(current).toHaveAttribute("aria-pressed", "true");
 
   await page
-    .locator('a[href*="seance="]')
+    .locator('a[href*="session="]')
     .filter({ hasText: /Seuil/ })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/plan\?.*seance=s-\d{4}-\d{2}-\d{2}-/);
+  await expect(page).toHaveURL(/\/plan\?.*session=s-\d{4}-\d{2}-\d{2}-/);
   await expect(page.getByRole("dialog")).toContainText("Étapes");
   await expect(page.getByText("Brouillon", { exact: true })).toHaveCount(0);
 });
@@ -200,11 +200,11 @@ test("the program fits a phone and shows the selected week", async ({
     fullPage: true,
   });
   await page
-    .locator('a[href*="seance="]')
+    .locator('a[href*="session="]')
     .filter({ visible: true })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/plan\?.*seance=/);
+  await expect(page).toHaveURL(/\/plan\?.*session=/);
   await expect(page.getByRole("dialog")).toBeVisible();
 });
 
@@ -261,7 +261,7 @@ test("a race day opens its race page", async ({ page }) => {
 
 test("an unknown session leaves Plan without a panel", async ({ page }) => {
   await signIn(page, "plan@example.com");
-  const response = await page.goto("/plan?seance=s-2000-01-01-1");
+  const response = await page.goto("/plan?session=s-2000-01-01-1");
   expect(response?.status()).toBe(200);
   await expect(
     page.getByRole("heading", { level: 1, name: /Marathon de Paris$/ }),

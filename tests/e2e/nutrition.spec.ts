@@ -53,7 +53,7 @@ test("the nutrition page fits a phone", async ({ page }) => {
 test("the team shows every specialist with a face choice", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto("/coach/equipe");
+  await page.goto("/coach/team");
   for (const name of ["Inès", "Marc", "Hugo", "Léa"])
     await expect(
       page.getByRole("heading", { level: 3, name, exact: true }),

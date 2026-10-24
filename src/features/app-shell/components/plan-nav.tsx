@@ -148,7 +148,7 @@ export function PlanSidebarGroup({
   const week = params.get("week");
   const overview = pathname === "/plan" && !week && !params.get("race");
   const selected = pathname === "/plan" ? week : null;
-  const history = pathname === "/plan/historique";
+  const history = pathname === "/plan/history";
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Blocs</SidebarGroupLabel>
@@ -181,7 +181,7 @@ export function PlanSidebarGroup({
             className="min-h-7.5 gap-2 text-meta data-[active=true]:font-semibold"
           >
             <Link
-              href="/plan/historique"
+              href="/plan/history"
               aria-current={history ? "page" : undefined}
             >
               <HistoryIcon aria-hidden="true" className="size-3.5" />

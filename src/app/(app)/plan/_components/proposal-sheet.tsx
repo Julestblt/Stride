@@ -92,7 +92,7 @@ function Footer({
   const button = mobile ? "w-full" : "";
   const historyLink = (
     <Button asChild variant="outline" size="md" className={cn(button, "h-11")}>
-      <Link href="/plan/historique">Historique</Link>
+      <Link href="/plan/history">Historique</Link>
     </Button>
   );
 
@@ -199,7 +199,7 @@ export function ProposalSheet({ review }: { review: ProposalReview }) {
       return;
     }
     const query = new URLSearchParams(searchParams);
-    query.delete("proposition");
+    query.delete("proposal");
     const search = query.toString();
     router.replace(search ? `/plan?${search}` : "/plan", { scroll: false });
   }, [router, searchParams]);

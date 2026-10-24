@@ -12,11 +12,11 @@ describe("coach request prefill", () => {
       "2026-10-15:threshold",
     );
     const url = new URL(href, "https://stride.test");
-    expect(url.pathname).toBe("/coach/nouvelle");
-    expect(parseRequestText(url.searchParams.get("texte"))).toBe(
+    expect(url.pathname).toBe("/coach/new");
+    expect(parseRequestText(url.searchParams.get("text"))).toBe(
       "Allège le seuil de jeudi, mes jambes sont lourdes.",
     );
-    expect(url.searchParams.get("seance")).toBe("2026-10-15:threshold");
+    expect(url.searchParams.get("session")).toBe("2026-10-15:threshold");
   });
 
   it("ignores missing text and truncates long text", () => {

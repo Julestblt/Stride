@@ -44,7 +44,7 @@ test("an imported run marks its missed session as done on the next render", asyn
   await expect(missed).toHaveCount(0);
   await expect(
     page
-      .locator(`a[href*="seance=${sessionKey}"]`)
+      .locator(`a[href*="session=${sessionKey}"]`)
       .filter({ visible: true })
       .first(),
   ).toContainText(/Fait|Partiel/);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Design system | Stride",
+  title: "Design system",
   robots: { index: false, follow: false },
 };
 

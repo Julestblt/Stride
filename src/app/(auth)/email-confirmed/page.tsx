@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { createSupabaseServerClient } from "@/server/supabase/client";
 
-export const metadata: Metadata = { title: "E-mail confirmé · Stride" };
+export const metadata: Metadata = { title: "E-mail confirmé" };
 
 export default async function EmailConfirmedPage() {
   await connection();

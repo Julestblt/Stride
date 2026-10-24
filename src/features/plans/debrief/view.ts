@@ -252,7 +252,7 @@ export function buildDebriefView(input: DebriefViewInput): DebriefView | null {
           : "Tes tours ne correspondent pas aux étapes de la séance. Le débrief compare donc la séance dans son ensemble.",
     steps: debrief.steps.map(stepView),
     feeling: debrief.feeling ? feelingView(debrief.feeling) : null,
-    coachHref: `/coach/nouvelle?seance=${encodeURIComponent(input.session.sessionKey)}`,
-    planHref: `/plan?seance=${encodeURIComponent(input.session.sessionKey)}`,
+    coachHref: `/coach/new?session=${encodeURIComponent(input.session.sessionKey)}`,
+    planHref: `/plan?session=${encodeURIComponent(input.session.sessionKey)}`,
   };
 }
