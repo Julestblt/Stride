@@ -5,7 +5,7 @@ import { resendConfirmationLink, signUp } from "@/server/auth/actions";
 import { redirectIfAuthenticated } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: "Créer un compte · Stride",
+  title: "Créer un compte",
   description: "Crée ton compte Stride.",
 };
 

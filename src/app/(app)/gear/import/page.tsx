@@ -5,7 +5,9 @@ import { ImportForm } from "@/features/gear/components/import-form";
 import { requireAthlete } from "@/server/app/session";
 import { loadImportable } from "@/server/gear/load";
 
-export const metadata: Metadata = { title: "Importer depuis Garmin" };
+export const metadata: Metadata = {
+  title: "Importer depuis Garmin · Matériel",
+};
 
 export default async function ImportShoesRoute() {
   const context = await requireAthlete();

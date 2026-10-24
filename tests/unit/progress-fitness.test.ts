@@ -293,7 +293,7 @@ describe("condition chart", () => {
     ]);
     expect(advice.actions[0].href).toBe("/plan?week=2026-10-12");
     expect(advice.actions[1].href).toMatch(
-      /^\/coach\/nouvelle\?texte=Ma\+fatigue/,
+      /^\/coach\/new\?text=Ma\+fatigue/,
     );
     expect(loadAdvice(chart, null).actions).toHaveLength(1);
   });

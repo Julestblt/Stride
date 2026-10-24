@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { MonoLabel } from "@/components/stride/mono-label";
 import { cn } from "@/lib/utils";
-import type { HistoryFilter } from "@/features/plans/review/history";
+import {
+  historyFilters,
+  type HistoryFilter,
+} from "@/features/plans/review/history";
 import { requireAthlete } from "@/server/app/session";
 import { readPlanHistory } from "@/server/plans/proposals";
 import { PlanFrame } from "../_components/plan-frame";
@@ -10,17 +13,8 @@ import { HistoryEntry } from "./_components/history-entry";
 
 export const metadata: Metadata = { title: "Historique · Plan" };
 
-const filterSlugs: Record<HistoryFilter, string> = {
-  all: "tout",
-  pending: "a-decider",
-  applied: "appliquees",
-  rejected: "refusees",
-  other: "autres",
-};
-
 function filterOf(value: string | string[] | undefined): HistoryFilter {
-  const match = Object.entries(filterSlugs).find(([, slug]) => slug === value);
-  return match ? (match[0] as HistoryFilter) : "all";
+  return historyFilters.find((filter) => filter === value) ?? "all";
 }
 
 export default async function PlanHistoryPage({
@@ -29,7 +23,7 @@ export default async function PlanHistoryPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const history = await readPlanHistory(context, filterOf(query.filtre));
+  const history = await readPlanHistory(context, filterOf(query.filter));
   return (
     <PlanFrame
       crumbs={[{ label: "Plan", href: "/plan" }, { label: "Historique" }]}
@@ -57,8 +51,8 @@ export default async function PlanHistoryPage({
                   key={filter.key}
                   href={
                     filter.key === "all"
-                      ? "/plan/historique"
-                      : `/plan/historique?filtre=${filterSlugs[filter.key]}`
+                      ? "/plan/history"
+                      : `/plan/history?filter=${filter.key}`
                   }
                   aria-current={current ? "page" : undefined}
                   className={cn(

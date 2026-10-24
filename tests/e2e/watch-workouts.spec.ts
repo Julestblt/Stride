@@ -63,7 +63,7 @@ async function sentWeek() {
 }
 
 const sessionLinks = (page: Page) =>
-  page.locator('a[href*="seance="]').filter({ visible: true });
+  page.locator('a[href*="session="]').filter({ visible: true });
 
 test("turning sending on pushes the next seven days to the watch", async ({
   page,
@@ -124,7 +124,7 @@ test("a sent session shows its watch status and can be sent again", async ({
   await resend.click();
   await expect.poll(async () => (await calls()).length).toBe(before + 1);
   const last = (await calls()).at(-1);
-  const sessionKey = new URL(page.url()).searchParams.get("seance");
+  const sessionKey = new URL(page.url()).searchParams.get("session");
   expect(
     last?.body.workouts?.find(
       (workout) => workout.key === `${watchPlanId}:${sessionKey}`,

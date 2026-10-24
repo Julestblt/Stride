@@ -9,7 +9,7 @@ import {
 import { redirectIfAuthenticated } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: "Se connecter · Stride",
+  title: "Se connecter",
   description: "Connecte-toi à ton compte Stride.",
 };
 

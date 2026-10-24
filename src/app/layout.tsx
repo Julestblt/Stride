@@ -7,7 +7,7 @@ import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Stride",
+  title: { default: "Stride", template: "%s · Stride" },
   description: "Ton coach running personnel, sur route et en trail.",
   appleWebApp: {
     capable: true,

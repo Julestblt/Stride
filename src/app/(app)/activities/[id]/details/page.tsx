@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActivityFullDetail } from "@/features/activities/components/activity-full-detail";
@@ -13,6 +14,8 @@ import {
   readActivityDetail,
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
+
+export const metadata: Metadata = { title: "Détails · Activités" };
 
 export default async function ActivityDetailPage({
   params,

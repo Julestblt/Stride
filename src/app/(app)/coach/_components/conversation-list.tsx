@@ -136,7 +136,7 @@ export function ConversationList({
             size="sm"
             className="ml-auto h-8 rounded-surface px-2.5"
           >
-            <Link href="/coach/nouvelle">
+            <Link href="/coach/new">
               <PlusIcon aria-hidden="true" />
               Nouvelle
             </Link>

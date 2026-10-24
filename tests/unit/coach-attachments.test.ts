@@ -165,7 +165,7 @@ describe("attachment choices", () => {
       "mar. 06/10/2026",
     );
     expect(attachmentHref({ kind: "session", id: "w02-thu" })).toBe(
-      "/plan?seance=w02-thu",
+      "/plan?session=w02-thu",
     );
     expect(attachmentHref({ kind: "activity", id: "a1" })).toBe(
       "/activities/a1",
@@ -246,8 +246,8 @@ describe("attachment resolution", () => {
         },
       ],
       feeling: feelingView({ source: "athlete", effort: 8, feel: 25 }),
-      coachHref: "/coach/nouvelle?seance=w02-thu",
-      planHref: "/plan?seance=w02-thu",
+      coachHref: "/coach/new?session=w02-thu",
+      planHref: "/plan?session=w02-thu",
     };
     reads.loadSessionDebrief.mockResolvedValue(debrief);
     const resolved = await resolveAttachments(context, [

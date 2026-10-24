@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActivitiesView } from "@/features/activities/components/activities-view";
 import { ActivityDetail } from "@/features/activities/components/activity-detail";
@@ -17,6 +18,8 @@ import {
 } from "@/server/activities/activities";
 import { requireAthlete } from "@/server/app/session";
 import type { OnboardingContext } from "@/server/onboarding/context";
+
+export const metadata: Metadata = { title: "Activités" };
 
 async function FirstActivityDetail({
   context,

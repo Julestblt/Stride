@@ -148,7 +148,7 @@ describe("today view", () => {
       "Au seuil",
     ]);
     expect(session.terrain).toBe("Route");
-    expect(session.href).toBe("/plan?seance=s-2026-10-22-1");
+    expect(session.href).toBe("/plan?session=s-2026-10-22-1");
   });
 
   it("points to the next session on a rest day", () => {
@@ -158,7 +158,7 @@ describe("today view", () => {
       next: {
         title: "Footing",
         when: "dim. 25 oct.",
-        href: "/plan?seance=s-2026-10-25-1",
+        href: "/plan?session=s-2026-10-25-1",
       },
     });
   });

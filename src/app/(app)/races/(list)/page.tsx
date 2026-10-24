@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { EmptyState } from "@/features/races/components/race-ui";
 import {
   CalendarRow,
@@ -11,6 +12,8 @@ import { localToday } from "@/features/app-shell/shell";
 import { parseRacesView, seasonTimeline } from "@/features/races/overview";
 import { requireAthlete } from "@/server/app/session";
 import { readRacesOverview } from "@/server/races/overview";
+
+export const metadata: Metadata = { title: "Courses" };
 
 function plural(count: number, one: string, many: string) {
   return `${count} ${count > 1 ? many : one}`;

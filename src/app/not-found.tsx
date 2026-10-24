@@ -6,7 +6,7 @@ import { StandalonePage } from "@/features/not-found/components/standalone-page"
 import { getCurrentUser } from "@/server/auth/session";
 
 export const metadata: Metadata = {
-  title: "404 · Page introuvable | Stride",
+  title: { absolute: "Page introuvable · Stride" },
   description:
     "Cette page n'est pas sur le parcours. Revenez sur le bon chemin avec Stride.",
 };

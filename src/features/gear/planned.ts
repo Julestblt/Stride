@@ -301,7 +301,7 @@ export function weekShoes(
           .filter(Boolean)
           .join(" · "),
         pair: view?.chosen?.name ?? null,
-        href: `/plan?seance=${encodeURIComponent(session.sessionKey)}`,
+        href: `/plan?session=${encodeURIComponent(session.sessionKey)}`,
       };
     });
 }

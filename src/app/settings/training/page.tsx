@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import {
   PreferenceRow,
@@ -25,6 +26,8 @@ import { currentPeriods } from "@/features/settings/planning";
 import { readPlanningConstraints } from "@/server/plans/constraints";
 import { PushSettings } from "@/features/notifications/components/push-settings";
 import { readPushSettings } from "@/server/push/preferences";
+
+export const metadata: Metadata = { title: "Entraînement et coach · Réglages" };
 
 const weekdays = [
   { value: 1, short: "L", label: "Lundi" },

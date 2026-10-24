@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import { AppHeader } from "@/features/app-shell/components/app-header";
 import { RaceHeader } from "@/features/races/components/race-header";
 import { RaceBreadcrumb, RaceTabs } from "@/features/races/components/race-nav";
 import { loadRace } from "@/server/races/load";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { data } = await loadRace((await params).id);
+  return { title: `${data.race.name} · Courses` };
+}
 
 export default async function RaceLayout({
   children,

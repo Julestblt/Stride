@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Coach (spike) | Stride",
+  title: "Coach (spike)",
   robots: { index: false, follow: false },
 };
 

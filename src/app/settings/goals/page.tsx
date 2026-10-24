@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { SettingsNotice } from "@/features/settings/components/settings-notice";
@@ -25,6 +26,8 @@ import { requireAthlete } from "@/server/app/session";
 import { readGoals } from "@/server/onboarding/goals";
 import { readRaceCourses } from "@/server/races/courses";
 import { saveSettingsGoal } from "@/server/settings/actions";
+
+export const metadata: Metadata = { title: "Objectifs et courses · Réglages" };
 
 const focusLabels: Record<GoalFocus, string> = {
   general_fitness: "Forme générale",

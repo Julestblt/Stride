@@ -27,7 +27,7 @@ export function CoachNavItem({
 }) {
   const pathname = usePathname();
   const active = pathname === "/coach" || pathname.startsWith("/coach/");
-  const team = pathname === "/coach/equipe";
+  const team = pathname === "/coach/team";
   const waiting = coachWaiting(attention);
   return (
     <NavItem
@@ -56,10 +56,7 @@ export function CoachNavItem({
           </SidebarMenuSubItem>
           <SidebarMenuSubItem>
             <SidebarMenuSubButton asChild isActive={team} className={subClass}>
-              <Link
-                href="/coach/equipe"
-                aria-current={team ? "page" : undefined}
-              >
+              <Link href="/coach/team" aria-current={team ? "page" : undefined}>
                 L’équipe
                 <StaffStack
                   agents={staffAgents}

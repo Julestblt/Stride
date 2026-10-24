@@ -8,7 +8,7 @@ import { parseFilter } from "@/features/notifications/model";
 import { NotificationFilters } from "./notification-filters";
 
 export function NotificationsLoading() {
-  const filter = parseFilter(useSearchParams().get("filtre"));
+  const filter = parseFilter(useSearchParams().get("filter"));
   return (
     <>
       <AppHeader title="Notifications" />

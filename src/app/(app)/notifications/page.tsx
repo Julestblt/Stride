@@ -20,7 +20,7 @@ export default async function NotificationsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const [context, query] = await Promise.all([requireAthlete(), searchParams]);
-  const filter = parseFilter(query.filtre);
+  const filter = parseFilter(query.filter);
   const now = new Date();
   const [notifications, unread, todo] = await Promise.all([
     readNotifications(context, { filter, now }),
@@ -74,7 +74,7 @@ export default async function NotificationsPage({
             </div>
           ) : (
             <NotificationEmpty
-              filtered={filter !== "toutes"}
+              filtered={filter !== "all"}
               className="flex-1 pt-24"
             />
           )}

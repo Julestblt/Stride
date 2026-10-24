@@ -35,7 +35,7 @@ test("today shows the plan session, form, week and what comes next", async ({
   await expect(session.getByRole("heading", { level: 2 })).toBeVisible();
   const steps = session.getByRole("link", { name: "Voir les étapes" });
   if (await steps.count())
-    await expect(steps).toHaveAttribute("href", /^\/plan\?seance=s-/);
+    await expect(steps).toHaveAttribute("href", /^\/plan\?session=s-/);
   else
     await expect(
       session.getByRole("heading", { level: 2, name: "Repos" }),

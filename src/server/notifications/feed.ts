@@ -15,7 +15,7 @@ export async function readNotifications(
   context: OnboardingContext,
   {
     limit = 200,
-    filter = "toutes",
+    filter = "all",
     now = new Date(),
   }: { limit?: number; filter?: NotificationFilter; now?: Date } = {},
 ) {
@@ -27,7 +27,7 @@ export async function readNotifications(
     .eq("user_id", context.userId)
     .gte("occurred_at", windowStart(now).toISOString())
     .in("kind", [...kinds]);
-  if (filter === "a-traiter")
+  if (filter === "todo")
     query = query.is("resolved_at", null).or(todoPayloadFilter);
   const { data, error } = await query
     .order("occurred_at", { ascending: false })

@@ -202,7 +202,7 @@ export function ProgramExplorer({
             const query = new URLSearchParams();
             if (program.raceId) query.set("race", program.raceId);
             query.set("week", week.weekStart);
-            query.set("seance", sessionKey);
+            query.set("session", sessionKey);
             return `/plan?${query}`;
           }}
           proposals={proposals[week.weekStart]}
@@ -210,7 +210,7 @@ export function ProgramExplorer({
             const query = new URLSearchParams();
             if (program.raceId) query.set("race", program.raceId);
             query.set("week", week.weekStart);
-            query.set("proposition", proposalId);
+            query.set("proposal", proposalId);
             return `/plan?${query}`;
           }}
         />

@@ -2,7 +2,7 @@
 
 The Progression destination reads normalized garmin_mcp rows (`provider_activities`, `lap` rows of `provider_activity_segments`, `provider_activity_tracks` and `provider_observations`), the athlete's races and the active plan. `src/server/progress` loads them; pure functions in `src/features/progress` compute every value. Dates are the activity's local day; weeks start on Monday.
 
-Progression has three sections: Forme (`/progress`), Corps (`/progress/body`) and Records (`/progress/records`). Each page has one server loader that starts its reads in parallel (`loadFitness`, `loadBody`, `loadRecords`) and passes plain data to pure view builders. Every insight leads to the plan, the source activities or a prefilled Coach request: action links open `/coach/nouvelle?texte=…` (trimmed, at most 500 characters, with an optional `seance` attachment) and never create a proposal. The old `/progress/recovery` and `/progress/health` URLs redirect permanently to Corps and keep `view` and `date`.
+Progression has three sections: Forme (`/progress`), Corps (`/progress/body`) and Records (`/progress/records`). Each page has one server loader that starts its reads in parallel (`loadFitness`, `loadBody`, `loadRecords`) and passes plain data to pure view builders. Every insight leads to the plan, the source activities or a prefilled Coach request: action links open `/coach/new?text=…` (trimmed, at most 500 characters, with an optional `session` attachment) and never create a proposal. The old `/progress/recovery` and `/progress/health` URLs redirect permanently to Corps and keep `view` and `date`.
 
 ## Shared inputs
 

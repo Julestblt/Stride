@@ -32,7 +32,7 @@ test("Examiner opens the review of a ready proposal", async ({ page }) => {
     .filter({ visible: true })
     .first()
     .click();
-  await expect(page).toHaveURL(new RegExp(`proposition=${ready}`), {
+  await expect(page).toHaveURL(new RegExp(`proposal=${ready}`), {
     timeout: 20_000,
   });
   const sheet = page.getByRole("dialog");
@@ -60,13 +60,13 @@ test("Examiner opens the review of a ready proposal", async ({ page }) => {
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page).not.toHaveURL(/proposition=/);
+  await expect(page).not.toHaveURL(/proposal=/);
 });
 
 test("the review opens as a bottom sheet on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signIn(page);
-  await page.goto(`/plan?proposition=${ready}`);
+  await page.goto(`/plan?proposal=${ready}`);
   const sheet = page.getByRole("dialog");
   await expect(
     sheet.getByRole("heading", { name: "Raccourcir la séance" }),
@@ -84,7 +84,7 @@ test("rejecting leaves the plan unchanged and is listed as Refusée", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto(`/plan?proposition=${toReject}`);
+  await page.goto(`/plan?proposal=${toReject}`);
   const sheet = page.getByRole("dialog");
   await sheet.getByRole("button", { name: "Refuser" }).click({
     timeout: 20_000,
@@ -94,7 +94,7 @@ test("rejecting leaves the plan unchanged and is listed as Refusée", async ({
   );
   await expect(sheet.getByRole("button", { name: "Accepter" })).toHaveCount(0);
 
-  await page.goto("/plan/historique");
+  await page.goto("/plan/history");
   const entry = page.getByRole("article", { name: "Remplacer les côtes" });
   await expect(entry.getByText("Refusée", { exact: true })).toBeVisible();
   await expect(entry.getByText("Sur v3")).toBeVisible();
@@ -105,7 +105,7 @@ test("accepting applies the proposal and lists it as Appliquée", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto(`/plan?proposition=${toAccept}`);
+  await page.goto(`/plan?proposal=${toAccept}`);
   const sheet = page.getByRole("dialog");
   await expect(sheet.getByText("Supprimée", { exact: true })).toBeVisible({
     timeout: 20_000,
@@ -116,7 +116,7 @@ test("accepting applies the proposal and lists it as Appliquée", async ({
   ).toBeVisible({ timeout: 20_000 });
   await expect(sheet.getByRole("link", { name: "Historique" })).toBeVisible();
 
-  await page.goto("/plan/historique");
+  await page.goto("/plan/history");
   await expect(
     page.getByText(/^Marathon de Paris · version 4 en cours depuis le /),
   ).toBeVisible();
@@ -130,7 +130,7 @@ test("a proposal on an older version can no longer be accepted", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto(`/plan?proposition=${ready}`);
+  await page.goto(`/plan?proposal=${ready}`);
   const sheet = page.getByRole("dialog");
   await expect(
     sheet.getByText("Cette proposition ne peut plus être appliquée"),
@@ -146,7 +146,7 @@ test("another athlete's proposal is never shown", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
   for (const id of [foreign, "eeeeeeee-eeee-4eee-8eee-0000000000ff", "x"]) {
-    await page.goto(`/plan?proposition=${id}`);
+    await page.goto(`/plan?proposal=${id}`);
     await expect(
       page.locator("main").getByRole("heading", { level: 1 }),
     ).toBeVisible({ timeout: 20_000 });
@@ -159,7 +159,7 @@ test("an extension proposal shows the added race and the new plan end", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await signIn(page);
-  await page.goto(`/plan?proposition=${extension}`);
+  await page.goto(`/plan?proposal=${extension}`);
   const sheet = page.getByRole("dialog");
   await expect(
     sheet.getByRole("heading", {
@@ -182,7 +182,7 @@ test("an extension proposal shows the added race and the new plan end", async ({
     sheet.getByRole("link", { name: "Voir le programme prolongé" }),
   ).toHaveAttribute("href", "/plan?race=77777777-0000-4000-8000-000000000009");
 
-  await page.goto("/plan/historique");
+  await page.goto("/plan/history");
   const entry = page.getByRole("article", {
     name: "Ajoute le Trail des Lacs et prolonge le plan",
   });

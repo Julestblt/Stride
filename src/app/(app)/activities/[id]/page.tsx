@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActivitiesView } from "@/features/activities/components/activities-view";
@@ -25,6 +26,8 @@ import { loadPairChecks } from "@/server/gear/checks";
 import { reconcileGearNotificationsAfterResponse } from "@/server/notifications/garmin";
 import { ActivityDebrief } from "@/features/activities/components/activity-debrief";
 import { loadSessionDebrief } from "@/server/plans/debrief";
+
+export const metadata: Metadata = { title: "Activité · Activités" };
 
 export default async function ActivityPage({
   params,

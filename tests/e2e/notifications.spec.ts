@@ -85,7 +85,7 @@ test("the history page groups the last 30 days with filters", async ({
   await page.screenshot({ path: "test-results/notifications-history.png" });
 
   await filters.getByRole("link", { name: "Données" }).click();
-  await expect(page).toHaveURL("/notifications?filtre=donnees");
+  await expect(page).toHaveURL("/notifications?filter=data");
   await expect(
     page.getByRole("button", {
       name: /Nouvelle activité : Footing · 50’/,
@@ -109,10 +109,10 @@ test("opening a notification marks it read and follows its link", async ({
 }) => {
   await page.setViewportSize({ width: 1440, height: 1020 });
   await signIn(page);
-  await page.goto("/notifications?filtre=a-traiter");
+  await page.goto("/notifications?filter=todo");
   await page.getByRole("button", { name: "Voir la proposition" }).click();
   await expect(page).toHaveURL(
-    "/plan?proposition=eeeeeeee-eeee-4eee-8eee-cdcdcdcd0001",
+    "/plan?proposal=eeeeeeee-eeee-4eee-8eee-cdcdcdcd0001",
     { timeout: 20_000 },
   );
   await page.goto("/today");
@@ -139,7 +139,7 @@ test("a fresh Garmin run reaches the bell on the next load", async ({
       page.getByRole("button", { name: "Notifications, 4 non lues" }),
     ).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
-  await page.goto("/notifications?filtre=donnees");
+  await page.goto("/notifications?filter=data");
   await expect(
     page.getByRole("button", { name: /Nouvelle activité : Sortie longue/ }),
   ).toBeVisible();

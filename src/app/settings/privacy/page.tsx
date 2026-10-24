@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import {
   SettingsGroup,
@@ -5,6 +6,10 @@ import {
 } from "@/features/settings/components/settings-shell";
 import { requireAthlete } from "@/server/app/session";
 import { readStoredCounts } from "@/server/settings/data";
+
+export const metadata: Metadata = {
+  title: "Données et confidentialité · Réglages",
+};
 
 export default async function PrivacySettingsPage() {
   const context = await requireAthlete();

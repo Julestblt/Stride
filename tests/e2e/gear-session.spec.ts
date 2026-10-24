@@ -8,7 +8,7 @@ function signIn(page: Page) {
 }
 
 const sessionLinks = (page: Page) =>
-  page.locator('a[href*="seance="]').filter({ visible: true });
+  page.locator('a[href*="session="]').filter({ visible: true });
 
 test("a planned session shows its pair and keeps the athlete's choice", async ({
   page,
@@ -108,7 +108,7 @@ test("today shows the pair of a running session", async ({ page }) => {
     name: /^Paire (conseillée|choisie) : /,
   });
   test.skip((await chip.count()) === 0, "No running session today");
-  await expect(chip).toHaveAttribute("href", /^\/plan\?seance=s-/);
+  await expect(chip).toHaveAttribute("href", /^\/plan\?session=s-/);
   await page.screenshot({ path: "test-results/gear-today-desktop.png" });
 });
 

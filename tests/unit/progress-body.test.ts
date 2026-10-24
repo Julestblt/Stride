@@ -203,12 +203,12 @@ describe("Corps actions", () => {
       title: "Seuil",
       hard: true,
     };
-    expect(sessionHref(session)).toBe("/plan?seance=2026-10-14%3Aseuil%201");
+    expect(sessionHref(session)).toBe("/plan?session=2026-10-14%3Aseuil%201");
     const url = new URL(lighterSessionHref(session), "https://stride.test");
-    expect(url.pathname).toBe("/coach/nouvelle");
-    expect(url.searchParams.get("texte")).toBe(
+    expect(url.pathname).toBe("/coach/new");
+    expect(url.searchParams.get("text")).toBe(
       "Ma forme du jour est sous ma moyenne. Propose-moi une version allégée de « Seuil ».",
     );
-    expect(url.searchParams.get("seance")).toBe("2026-10-14:seuil 1");
+    expect(url.searchParams.get("session")).toBe("2026-10-14:seuil 1");
   });
 });

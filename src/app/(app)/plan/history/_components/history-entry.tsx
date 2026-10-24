@@ -14,7 +14,7 @@ export function HistoryEntry({ entry }: { entry: PlanHistoryEntry }) {
   const action = entry.reviewable ? (
     <Button asChild size="md" className="max-sm:h-11 max-sm:w-full">
       <ProposalLink
-        href={`/plan?proposition=${entry.id}`}
+        href={`/plan?proposal=${entry.id}`}
         prefetch={false}
         data-proposal-id={entry.id}
       >

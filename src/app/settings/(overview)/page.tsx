@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { DataActivityLink as Link } from "@/features/data-activity/components/navigation";
 import { Button } from "@/components/ui/button";
 import { StrideMark } from "@/components/stride/stride-mark";
@@ -20,6 +21,8 @@ import { getShellIdentity } from "@/server/app/shell";
 import { signOut } from "@/server/auth/actions";
 import { pushSummary } from "@/features/notifications/push";
 import { readPushSettings } from "@/server/push/preferences";
+
+export const metadata: Metadata = { title: "Réglages" };
 
 export default async function SettingsOverviewPage() {
   const context = await requireAthlete();

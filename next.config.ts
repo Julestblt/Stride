@@ -11,6 +11,29 @@ const nextConfig: NextConfig = {
       .map((origin) => origin.trim())
       .filter(Boolean),
   ],
+  async redirects() {
+    return [
+      { source: "/coach/equipe", destination: "/coach/team", permanent: true },
+      { source: "/coach/nouvelle", destination: "/coach/new", permanent: true },
+      {
+        source: "/plan/historique",
+        destination: "/plan/history",
+        permanent: true,
+      },
+      {
+        source: "/plan",
+        has: [{ type: "query", key: "proposition", value: "(?<id>.+)" }],
+        destination: "/plan?proposal=:id",
+        permanent: true,
+      },
+      {
+        source: "/plan",
+        has: [{ type: "query", key: "seance", value: "(?<key>.+)" }],
+        destination: "/plan?session=:key",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

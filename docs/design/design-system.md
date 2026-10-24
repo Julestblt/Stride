@@ -132,7 +132,7 @@ Errors and missing items stay inside the app shell, following the board's `Syste
 
 ## Responsive behavior
 
-Preserve information hierarchy from desktop to mobile. The references show a desktop contextual sidebar and inset work area; below `md`, the sidebar becomes a sheet and `AppShell` renders the mobile tab bar at the bottom of the inset, in flow: Aujourd’hui, Plan, the central Coach action with the pending-attention badge, Activités and Progression. The bar is hidden in conversations (`/coach/nouvelle`, `/coach/<thread>`), where the composer takes the bottom, and the fresh-data pill sits above it. Keep status and provenance visible at narrow widths. Each screen has desktop and mobile artboards on the [design board](design-board.md). Artboard HTML explains structure and exact values but must not be copied into production.
+Preserve information hierarchy from desktop to mobile. The references show a desktop contextual sidebar and inset work area; below `md`, the sidebar becomes a sheet and `AppShell` renders the mobile tab bar at the bottom of the inset, in flow: Aujourd’hui, Plan, the central Coach action with the pending-attention badge, Activités and Progression. The bar is hidden in conversations (`/coach/new`, `/coach/<thread>`), where the composer takes the bottom, and the fresh-data pill sits above it. Keep status and provenance visible at narrow widths. Each screen has desktop and mobile artboards on the [design board](design-board.md). Artboard HTML explains structure and exact values but must not be copied into production.
 
 ## Reference use
 

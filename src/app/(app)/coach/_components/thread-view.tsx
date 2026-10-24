@@ -202,7 +202,7 @@ function ProposalCard({
           variant={block.status === "pending" ? "default" : "outline"}
         >
           <ProposalLink
-            href={`/plan?proposition=${block.proposalId}`}
+            href={`/plan?proposal=${block.proposalId}`}
             data-proposal-id={block.proposalId}
           >
             {block.status === "pending" ? "Examiner" : "Voir la proposition"}

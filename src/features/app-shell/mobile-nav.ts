@@ -1,5 +1,5 @@
 const coachRoot = "/coach";
-const coachPagesWithTabs = new Set(["/coach/equipe"]);
+const coachPagesWithTabs = new Set(["/coach/team"]);
 
 export function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
